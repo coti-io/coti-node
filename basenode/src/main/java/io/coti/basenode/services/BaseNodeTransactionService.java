@@ -251,12 +251,10 @@ public class BaseNodeTransactionService implements ITransactionService {
         if (!transactionExists) {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> {
                 addToExplorerIndexes(transactionData);
-                propagateMissingTransaction(transactionData);
+                continueHandleMissingTransaction(transactionData);
             });
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
             transactionHelper.incrementTotalTransactions();
-            currencyService.handleMissingTransaction(transactionData);
-            continueHandleMissingTransaction(transactionData);
         } else {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes));
         }

@@ -165,7 +165,7 @@ public abstract class BaseNodeInitializationService {
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingTransaction(maxTransactionIndex, transactionData);
+                handleExistingTransaction(transactionData);
                 completedExistedTransactionNumber.incrementAndGet();
             });
             if (executorServicesInitiated.get()) {
@@ -203,13 +203,12 @@ public abstract class BaseNodeInitializationService {
         databaseConnector.init();
     }
 
-    private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData, boolean isClusterStampNewer) {
+    private void handleExistingTransaction(TransactionData transactionData) {
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addExistingTransactionOnInit(transactionData));
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap));
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addToExplorerIndexes(transactionData));
         currencyService.handleExistingTransaction(transactionData);
         mintingService.handleExistingTransaction(transactionData);
-        transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
     }
 
