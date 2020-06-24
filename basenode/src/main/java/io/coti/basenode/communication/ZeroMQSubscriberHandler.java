@@ -2,6 +2,7 @@ package io.coti.basenode.communication;
 
 import io.coti.basenode.communication.interfaces.ISubscriberHandler;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
