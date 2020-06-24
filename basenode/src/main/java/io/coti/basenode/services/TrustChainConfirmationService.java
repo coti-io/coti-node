@@ -36,14 +36,14 @@ public class TrustChainConfirmationService {
     }
 
     private void setTotalTrustScore(TransactionData parent) {
-        double maxSonsTotalTrustScore = 0;
+        double maxChildrenTotalTrustScore = 0;
 
         for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
             try {
                 TransactionData child = trustChainConfirmationCluster.get(transactionHash);
                 if (child != null && child.getTrustChainTrustScore()
-                        > maxSonsTotalTrustScore) {
-                    maxSonsTotalTrustScore = trustChainConfirmationCluster.get(transactionHash).getTrustChainTrustScore();
+                        > maxChildrenTotalTrustScore) {
+                    maxChildrenTotalTrustScore = child.getTrustChainTrustScore();
                 }
             } catch (Exception e) {
                 log.error("in setTotalSumScore: parent: {} child: {}", parent.getHash(), transactionHash);
@@ -52,8 +52,8 @@ public class TrustChainConfirmationService {
         }
 
         // updating parent trustChainTrustScore
-        if (parent.getTrustChainTrustScore() < parent.getSenderTrustScore() + maxSonsTotalTrustScore) {
-            parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxSonsTotalTrustScore);
+        if (parent.getTrustChainTrustScore() < parent.getSenderTrustScore() + maxChildrenTotalTrustScore) {
+            parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxChildrenTotalTrustScore);
         }
 
     }

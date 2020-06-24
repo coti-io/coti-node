@@ -5,18 +5,18 @@ import lombok.Data;
 import java.time.Instant;
 
 @Data
-public class ReducedTransactionData implements Comparable<ReducedTransactionData> {
+public class ExplorerTransactionData implements Comparable<ExplorerTransactionData> {
 
     private Hash transactionHash;
     private Instant attachmentTime;
 
-    public ReducedTransactionData(TransactionData transactionData) {
+    public ExplorerTransactionData(TransactionData transactionData) {
         transactionHash = transactionData.getHash();
         attachmentTime = transactionData.getAttachmentTime();
     }
 
     @Override
-    public int compareTo(ReducedTransactionData o) {
+    public int compareTo(ExplorerTransactionData o) {
         if (attachmentTime.equals(o.attachmentTime)) {
             return 0;
         }

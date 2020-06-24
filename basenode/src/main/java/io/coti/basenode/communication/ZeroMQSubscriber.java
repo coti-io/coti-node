@@ -46,11 +46,11 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     public void init() {
         initSockets();
         BlockingQueue<ZeroMQMessageData> messageQueue = ZeroMQSubscriberQueue.HEARTBEAT.getQueue();
-        queueNameToThreadMap.put(ZeroMQSubscriberQueue.HEARTBEAT.name(), new Thread(() -> this.handleMessagesQueueTask(messageQueue)));
+        queueNameToThreadMap.put(ZeroMQSubscriberQueue.HEARTBEAT.name(), new Thread(() -> this.handleMessagesQueueTask(messageQueue), ZeroMQSubscriberQueue.HEARTBEAT.name() + " subscriber"));
         subscriberHandler.init();
     }
 
-    public void initSockets() {
+    private void initSockets() {
         zeroMQContext = ZMQ.context(1);
         propagationReceiver = zeroMQContext.socket(SocketType.SUB);
         propagationReceiver.setHWM(10000);
@@ -67,7 +67,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         this.publisherNodeTypeToMessageTypesMap = publisherNodeTypeToMessageTypesMap;
         publisherNodeTypeToMessageTypesMap.forEach(((nodeType, classes) -> classes.forEach(messageType -> {
             ZeroMQSubscriberQueue queueEnum = ZeroMQSubscriberQueue.getQueueEnum(messageType);
-            queueNameToThreadMap.putIfAbsent(queueEnum.toString(), new Thread(() -> this.handleMessagesQueueTask(queueEnum.getQueue())));
+            queueNameToThreadMap.putIfAbsent(queueEnum.toString(), new Thread(() -> this.handleMessagesQueueTask(queueEnum.getQueue()), queueEnum.name() + " subscriber"));
         })));
     }
 

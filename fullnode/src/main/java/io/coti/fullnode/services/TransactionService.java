@@ -70,8 +70,8 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
 
-    private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
-    private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
+    private BlockingQueue<ExplorerTransactionData> explorerIndexQueue;
+    private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
 
@@ -363,12 +363,12 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public ResponseEntity<IResponse> getLastTransactions() {
         List<TransactionData> transactionsDataList = new ArrayList<>();
-        Iterator<ReducedTransactionData> iterator = explorerIndexedTransactionSet.descendingIterator();
+        Iterator<ExplorerTransactionData> iterator = explorerIndexedTransactionSet.descendingIterator();
         int count = 0;
 
         while (count < EXPLORER_LAST_TRANSACTIONS_NUMBER && iterator.hasNext()) {
-            ReducedTransactionData reducedTransactionData = iterator.next();
-            transactionsDataList.add(transactions.getByHash(reducedTransactionData.getTransactionHash()));
+            ExplorerTransactionData explorerTransactionData = iterator.next();
+            transactionsDataList.add(transactions.getByHash(explorerTransactionData.getTransactionHash()));
             count++;
         }
 
@@ -430,7 +430,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     public void addToExplorerIndexes(TransactionData transactionData) {
         try {
-            explorerIndexQueue.put(new ReducedTransactionData(transactionData));
+            explorerIndexQueue.put(new ExplorerTransactionData(transactionData));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -447,8 +447,8 @@ public class TransactionService extends BaseNodeTransactionService {
         while (!Thread.currentThread().isInterrupted()) {
 
             try {
-                ReducedTransactionData reducedTransactionData = explorerIndexQueue.take();
-                explorerIndexedTransactionSet.add(reducedTransactionData);
+                ExplorerTransactionData explorerTransactionData = explorerIndexQueue.take();
+                explorerIndexedTransactionSet.add(explorerTransactionData);
                 webSocketSender.notifyTotalTransactionsChange(explorerIndexedTransactionSet.size());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

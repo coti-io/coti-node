@@ -25,5 +25,5 @@ public interface IClusterService {
 
     ConcurrentHashMap<Hash, TransactionData> getCopyTrustChainConfirmationCluster();
 
-    List<Set<TransactionData>> getSourceListsByTrustScore();
+    List<Set<Hash>> getSourceSetsByTrustScore();
 }
