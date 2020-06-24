@@ -27,6 +27,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -141,7 +143,7 @@ public abstract class BaseNodeInitializationService {
         try {
             boolean isClusterStampNewer = clusterStampService.shouldUpdateClusterStampDBVersion();
             transactionService.resetOldClusterStampTransactions(isClusterStampNewer);
-            AtomicLong maxTransactionIndex = new AtomicLong(-1);
+            Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
             Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null);
@@ -149,14 +151,15 @@ public abstract class BaseNodeInitializationService {
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingTransaction(maxTransactionIndex, transactionData);
+                handleExistingTransaction(indexToTransactionMap, transactionData);
                 completedExistedTransactionNumber.incrementAndGet();
             });
             if (monitorExistingTransactions.isAlive()) {
                 monitorExistingTransactions.interrupt();
                 monitorExistingTransactions.join();
             }
-            confirmationService.setLastDspConfirmationIndex(maxTransactionIndex);
+            confirmationService.setLastDspConfirmationIndex(indexToTransactionMap);
+            indexToTransactionMap.clear();
             log.info("Finished to read existing transactions");
 
             if (networkService.getRecoveryServerAddress() != null) {
@@ -183,9 +186,9 @@ public abstract class BaseNodeInitializationService {
         databaseConnector.init();
     }
 
-    private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
+    private void handleExistingTransaction(Map<Long, ReducedExistingTransactionData> indexToTransactionMap, TransactionData transactionData) {
         clusterService.addExistingTransactionOnInit(transactionData);
-        confirmationService.insertSavedTransaction(transactionData, maxTransactionIndex);
+        confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap);
         currencyService.handleExistingTransaction(transactionData);
         mintingService.handleExistingTransaction(transactionData);
         transactionService.addToExplorerIndexes(transactionData);
