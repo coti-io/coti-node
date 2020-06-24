@@ -55,6 +55,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private IMintingService mintingService;
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
+    protected Map<Hash, Hash> lockTransactionHashMap = new ConcurrentHashMap<>();
+    private final Object lock = new Object();
 
     @Override
     public void init() {
@@ -142,13 +144,23 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
-        if (transactionHelper.isTransactionAlreadyPropagated(transactionData)) {
+        boolean isTransactionAlreadyPropagated;
+        try {
+            synchronized (addLockToLockMap(transactionData.getHash())) {
+                isTransactionAlreadyPropagated = transactionHelper.isTransactionAlreadyPropagated(transactionData);
+                if (!isTransactionAlreadyPropagated) {
+                    transactionHelper.startHandleTransaction(transactionData);
+                }
+            }
+        } finally {
+            removeLockFromLocksMap(transactionData.getHash());
+        }
+        if (isTransactionAlreadyPropagated) {
             removeTransactionHashFromUnconfirmed(transactionData);
             log.debug("Transaction already exists: {}", transactionData.getHash());
             return;
         }
         try {
-            transactionHelper.startHandleTransaction(transactionData);
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 return;
@@ -279,6 +291,20 @@ public class BaseNodeTransactionService implements ITransactionService {
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
     }
+
+    protected Hash addLockToLockMap(Hash hash) {
+        synchronized (lock) {
+            lockTransactionHashMap.putIfAbsent(hash, hash);
+            return lockTransactionHashMap.get(hash);
+        }
+    }
+
+    protected void removeLockFromLocksMap(Hash hash) {
+        synchronized (lock) {
+            lockTransactionHashMap.remove(hash);
+        }
+    }
+
 
     @Override
     public void resetOldClusterStampTransactions(boolean isClusterStampNewer) {
