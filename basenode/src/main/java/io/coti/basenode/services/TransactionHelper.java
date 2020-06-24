@@ -86,7 +86,8 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     private boolean transactionTimeFieldValid(Instant systemTime, Instant timeField) {
-        return timeField.isAfter(systemTime.minus(60, ChronoUnit.MINUTES)) && timeField.isBefore(systemTime.plus(10, ChronoUnit.MINUTES));
+        return true;
+//        return timeField.isAfter(systemTime.minus(60, ChronoUnit.MINUTES)) && timeField.isBefore(systemTime.plus(10, ChronoUnit.MINUTES));
     }
 
     @Override
