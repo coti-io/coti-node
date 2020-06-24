@@ -19,7 +19,7 @@ public class ClusterStampController {
     @Autowired
     private ClusterStampService clusterStampService;
 
-    @PostMapping(path = "newClusterStamps")
+    @PostMapping(path = "/newClusterStamp")
     public ResponseEntity<IResponse> setClusterStamps(@Valid @RequestBody SetNewClusterStampsRequest setNewClusterStampsRequest) {
         return clusterStampService.setNewClusterStamps(setNewClusterStampsRequest);
     }

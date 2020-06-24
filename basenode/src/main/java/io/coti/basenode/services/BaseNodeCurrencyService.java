@@ -108,7 +108,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
-    protected void setNativeCurrencyData(CurrencyData currencyData) {
+    @Override
+    public void setNativeCurrencyData(CurrencyData currencyData) {
         if (this.nativeCurrencyData != null) {
             throw new CurrencyException("Attempted to override existing native currency");
         }

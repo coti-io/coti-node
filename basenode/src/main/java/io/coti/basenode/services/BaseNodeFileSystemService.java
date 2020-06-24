@@ -75,6 +75,16 @@ public class BaseNodeFileSystemService {
         }
     }
 
+    public void copyFile(String sourceFilePath, String targetFilePath) {
+        try {
+            Path sourcePath = Paths.get(sourceFilePath);
+            Path targetPath = Paths.get(targetFilePath);
+            Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new FileSystemException(String.format("Copy file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
+    }
+
     public void createFile(String dirPath, String fileName) {
         String fullPath = dirPath + PATH_DELIMITER + fileName;
         File file = new File(fullPath);

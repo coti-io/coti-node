@@ -3,19 +3,20 @@ package io.coti.dspnode.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.messages.*;
+import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
+import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
+import io.coti.basenode.data.messages.StateMessageLastClusterStampIndexPayload;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.ClusterService;
-import io.coti.basenode.services.VotingTimeoutService;
 import io.coti.basenode.services.TransactionIndexService;
+import io.coti.basenode.services.VotingTimeoutService;
 import io.coti.basenode.services.interfaces.ITransactionPropagationCheckService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-
-import static java.lang.Math.min;
 
 @Slf4j
 @Service
@@ -38,7 +39,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {
 
-        if(stateMessageClusterstampInitiatedPayload.getDelay() < 0 ||
+        if (stateMessageClusterstampInitiatedPayload.getDelay() < 0 ||
                 stateMessageClusterstampInitiatedPayload.getDelay() > stateMessageClusterstampInitiatedPayload.getTimeout() ||
                 stateMessageClusterstampInitiatedPayload.getTimeout() > MAX_CLUSTERSTAMP_TIMEOUT) {
             log.error("Incorrect {} message parameters {}", stateMessageClusterstampInitiatedPayload.getGeneralMessageType(), stateMessageClusterstampInitiatedPayload.toString());
@@ -52,7 +53,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    public void clusterStampContinueWithIndex(StateMessage stateMessage){
+    public void clusterStampContinueWithIndex(StateMessage stateMessage) {
         votingTimeoutService.cancelEvent("CLUSTER_STUMP_INITIATE_TIMEOUT");
         if (!receiver.isMessageQueuePause()) {
             receiver.setMessageQueuePause();
@@ -61,7 +62,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    public void clusterStampContinueWithHash(StateMessage stateMessage){
+    public void clusterStampContinueWithHash(StateMessage stateMessage) {
         if (!receiver.isMessageQueuePause()) {
             receiver.setMessageQueuePause();
         }

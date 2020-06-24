@@ -11,12 +11,13 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 public class GetNetworkVotersResponse extends BaseResponse implements ISignValidatable, ISignable, IPropagatable {
 
-    @NotEmpty
+//    @NotEmpty
     private List<Hash> allCurrentValidators;
     @NotNull
     private Instant createTime = Instant.now();
@@ -25,8 +26,13 @@ public class GetNetworkVotersResponse extends BaseResponse implements ISignValid
     @NotEmpty
     private @Valid SignatureData signature;
 
+    public GetNetworkVotersResponse() {
+
+    }
+
     public GetNetworkVotersResponse(List<Hash> allCurrentValidators) {
-        this.allCurrentValidators = allCurrentValidators;
+        this.allCurrentValidators = new ArrayList<>();
+        this.allCurrentValidators.addAll(allCurrentValidators);
     }
 
     @Override
