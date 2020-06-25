@@ -1,6 +1,5 @@
 package io.coti.basenode.http;
 
-import io.coti.basenode.data.ClusterStampNameData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IPropagatable;
@@ -10,18 +9,31 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
-public class GetClusterStampFileNamesResponse extends BaseResponse implements ISignValidatable, ISignable, IPropagatable {
+public class GetNetworkVotersResponse extends BaseResponse implements ISignValidatable, ISignable, IPropagatable {
 
     @NotEmpty
-    private @Valid ClusterStampNameData clusterStampName;
-    @NotEmpty
-    private String clusterStampBucketName;
+    private List<Hash> allCurrentValidators;
+    @NotNull
+    private Instant createTime = Instant.now();
     @NotEmpty
     private @Valid Hash signerHash;
     @NotEmpty
     private @Valid SignatureData signature;
+
+    public GetNetworkVotersResponse() {
+
+    }
+
+    public GetNetworkVotersResponse(List<Hash> allCurrentValidators) {
+        this.allCurrentValidators = new ArrayList<>();
+        this.allCurrentValidators.addAll(allCurrentValidators);
+    }
 
     @Override
     public Hash getHash() {
@@ -32,4 +44,5 @@ public class GetClusterStampFileNamesResponse extends BaseResponse implements IS
     public void setHash(Hash hash) {
         this.signerHash = hash;
     }
+
 }

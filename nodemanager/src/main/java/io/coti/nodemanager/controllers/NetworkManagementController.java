@@ -1,5 +1,9 @@
 package io.coti.nodemanager.controllers;
 
+import io.coti.basenode.crypto.GetNetworkVotersCrypto;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.GetNetworkVotersRequest;
+import io.coti.basenode.http.GetNetworkVotersResponse;
 import io.coti.nodemanager.http.GetFullNetworkResponse;
 import io.coti.nodemanager.http.GetFullNetworkSummaryVerboseResponse;
 import io.coti.nodemanager.http.GetNetworkHistoryResponse;
@@ -8,9 +12,10 @@ import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/management")
@@ -21,6 +26,8 @@ public class NetworkManagementController {
     private INetworkHistoryService networkHistoryService;
     @Autowired
     private NetworkService networkService;
+    @Autowired
+    private GetNetworkVotersCrypto getNetworkVotersCrypto;
 
     @GetMapping(path = "/network_history")
     public ResponseEntity<GetNetworkHistoryResponse> getNetworkHistory() {
@@ -39,6 +46,22 @@ public class NetworkManagementController {
         GetFullNetworkSummaryVerboseResponse summaryVerboseResponse =
                 new GetFullNetworkSummaryVerboseResponse(networkService.getNetworkData());
         return ResponseEntity.ok(summaryVerboseResponse);
+    }
+
+    @GetMapping(path = "/validators")
+    public ResponseEntity<GetNetworkVotersResponse> getNetworkVoters() {
+        List<Hash> allCurrentValidators = networkService.getCurrentValidators();
+        GetNetworkVotersResponse getNetworkVotersResponse = new GetNetworkVotersResponse(allCurrentValidators);
+        getNetworkVotersCrypto.signMessage(getNetworkVotersResponse);
+        return ResponseEntity.ok(getNetworkVotersResponse);
+    }
+
+    @PostMapping(path = "/validators/zerospend")
+    public ResponseEntity<GetNetworkVotersResponse> getNetworkVotersZeroSpend(@Valid @RequestBody GetNetworkVotersRequest getNetworkVotersRequest) {
+        List<Hash> allCurrentValidators = networkService.getCurrentValidatorsZeroSpend(getNetworkVotersRequest);
+        GetNetworkVotersResponse getNetworkVotersResponse = new GetNetworkVotersResponse(allCurrentValidators);
+        getNetworkVotersCrypto.signMessage(getNetworkVotersResponse);
+        return ResponseEntity.ok(getNetworkVotersResponse);
     }
 
 

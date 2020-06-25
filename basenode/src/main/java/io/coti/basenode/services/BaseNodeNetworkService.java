@@ -53,7 +53,7 @@ public class BaseNodeNetworkService implements INetworkService {
     @Autowired
     private NetworkNodeCrypto networkNodeCrypto;
     @Autowired
-    private NodeRegistrationCrypto nodeRegistrationCrypto;
+    protected NodeRegistrationCrypto nodeRegistrationCrypto;
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -414,4 +414,8 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
+    @Override
+    public List<Hash> getCurrentValidators() {
+        throw new NetworkException("Attempted to get current validators.");
+    }
 }
