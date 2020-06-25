@@ -202,4 +202,12 @@ public class ClusterService implements IClusterService {
         return Collections.unmodifiableList(sourceListsByTrustScore);
     }
 
+    public long getMaxIndexOfNotConfirmed() {
+        return trustChainConfirmationCluster.values().stream()
+                .filter(transactionData -> transactionData.getDspConsensusResult() != null)
+                .mapToLong(transactionData -> transactionData.getDspConsensusResult().getIndex())
+                .min().orElse(0) - 1;
+    }
+
+
 }
