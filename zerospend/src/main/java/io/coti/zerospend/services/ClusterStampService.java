@@ -62,16 +62,16 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             uploadClusterStamp = true;
         }
         if (uploadClusterStamp) {
-            uploadCandidateClusterStamp();
+            uploadCandidateClusterStamp(clusterStampName);
         }
     }
 
-    private void uploadCandidateClusterStamp() {
+    private void uploadCandidateClusterStamp(ClusterStampNameData clusterStampNameData) {
         log.info("Starting to upload clusterstamp");
-        String candidateClusterStampFileName = getCandidateClusterStampFileName(clusterStampName);
+        String candidateClusterStampFileName = getCandidateClusterStampFileName(clusterStampNameData);
         uploadCandidateClusterStamp(candidateClusterStampFileName);
         SetNewClusterStampsRequest setNewClusterStampsRequest =
-                new SetNewClusterStampsRequest(candidateClusterStampBucketName, getCandidateClusterStampFileName(clusterStampName), getCandidateClusterStampHash());
+                new SetNewClusterStampsRequest(candidateClusterStampBucketName, candidateClusterStampFileName, getCandidateClusterStampHash());
 
         setNewClusterStampsRequest.setSignerHash(NodeCryptoHelper.getNodeHash());
         setNewClusterStampsRequest.setSignature(NodeCryptoHelper.signMessage(setNewClusterStampsRequestCrypto.getSignatureMessage(setNewClusterStampsRequest)));
@@ -117,7 +117,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp = true;
     }
 
-    private void createClusterStampFile_example() {
+    private void createNewClusterStampFile() {
         // Create cluster stamp hash
         boolean prepareClusterStampLines = true;
         Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
@@ -136,9 +136,14 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
 
         writeClusterStamp(clusterStampCreateTime);
+        String versionTimeMillisString = String.valueOf(clusterStampCreateTime.toEpochMilli());
+        candidateClusterStampName = new ClusterStampNameData(versionTimeMillisString, versionTimeMillisString);
 
         uploadClusterStamp = true;
-        clusterStampData = null;
+        uploadCandidateClusterStamp(candidateClusterStampName);
+        clearCandidateClusterStampFolder();
+        clearClusterStampFolderExceptForSingleFile(candidateClusterStampName);
+        clusterStampName = candidateClusterStampName;
     }
 
     @Override
@@ -258,7 +263,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {
 
-        createClusterStampFile_example();
+        createNewClusterStampFile();
 
         StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(generalVoteMessage.getVoteHash());
         StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);

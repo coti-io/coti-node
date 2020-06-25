@@ -30,8 +30,6 @@ public interface IClusterStampService {
 
     Hash getCandidateClusterStampHash();
 
-    void prepareCandidateClusterStampHash();
-
     void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, GeneralVoteMessage generalVoteMessage);
 
     default void calculateClusterStampDataAndHashesAndSendMessage() {}

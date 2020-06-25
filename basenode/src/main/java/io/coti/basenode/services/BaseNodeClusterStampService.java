@@ -37,7 +37,7 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.*;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.CLUSTERSTAMP_MAJOR_NOT_FOUND;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.CLUSTERSTAMP_NOT_FOUND;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 @Slf4j
@@ -94,7 +94,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private static final int CLUSTERSTAMP_VOTES_SEGMENT_CLUSTER_STAMP_HASH_INDEX = 5;
     private static final int CLUSTERSTAMP_VOTES_SEGMENT_CREATE_TIME_INDEX = 0;
     private static final int NETWORK_VALIDATORS_SNAPSHOT_VALID_SECONDS = 900;
+    public static final String FAILED_TO_DELETE_CLUSTERSTAMP_FILE = "Failed to delete clusterstamp file %s. Please delete manually and restart.";
     protected ClusterStampNameData clusterStampName;
+    protected ClusterStampNameData candidateClusterStampName;
+
     @Value("${clusterstamp.folder}")
     protected String clusterStampFolder;
     @Value("${candidate.clusterstamp.folder:}")
@@ -121,7 +124,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected String voterNodesDetails;
     protected List<String> validatorsVoteClusterStampSegmentLines;
     protected boolean filledMissingSegments;
-    protected ClusterStampData clusterStampData;
 
     protected String nodeManagerHttpAddress;
 
@@ -210,9 +212,24 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             try {
                 fileSystemService.deleteFile(candidateClusterStampFolder + candidateClusterStampFileName);
             } catch (Exception e) {
-                throw new ClusterStampException(String.format("Failed to delete clusterstamp file %s. Please delete manually and restart.", candidateClusterStampFileName), e);
+                throw new ClusterStampException(String.format(FAILED_TO_DELETE_CLUSTERSTAMP_FILE, candidateClusterStampFileName), e);
             }
         }
+    }
+
+    protected void clearClusterStampFolderExceptForSingleFile(ClusterStampNameData clusterStampNameData) {
+        String clusterStampFileName = getClusterStampFileName(clusterStampNameData);
+        List<String> clusterStampFileNames = fileSystemService.listFolderFileNames(clusterStampFolder);
+        for (String clusterStampFileNameListed : clusterStampFileNames) {
+            try {
+                if (!clusterStampFileName.equals(clusterStampFileNameListed)) {
+                    fileSystemService.deleteFile(clusterStampFolder + clusterStampFileNameListed);
+                }
+            } catch (Exception e) {
+                throw new ClusterStampException(String.format(FAILED_TO_DELETE_CLUSTERSTAMP_FILE, clusterStampFileNameListed), e);
+            }
+        }
+
     }
 
     private ClusterStampNameData validateNameAndGetClusterStampNameData(String clusterStampFileName) {
@@ -745,7 +762,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         try {
             fileSystemService.deleteFile(clusterStampFilePath);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Failed to delete clusterstamp file %s. Please delete manually and restart.", clusterStampFileName), e);
+            throw new ClusterStampException(String.format(FAILED_TO_DELETE_CLUSTERSTAMP_FILE, clusterStampFileName), e);
         }
     }
 
@@ -764,7 +781,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public ResponseEntity<IResponse> getRequiredClusterStampNames() {
         GetClusterStampFileNamesResponse getClusterStampFileNamesResponse = new GetClusterStampFileNamesResponse();
         if (clusterStampName == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(CLUSTERSTAMP_MAJOR_NOT_FOUND, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SerializableResponse(CLUSTERSTAMP_NOT_FOUND, STATUS_ERROR));
         }
         getClusterStampFileNamesResponse.setClusterStampName(clusterStampName);
         getClusterStampFileNamesResponse.setClusterStampBucketName(clusterStampBucketName);
@@ -866,7 +883,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     private void generateCurrencyLines(ClusterStampData clusterStampData, boolean prepareClusterStampLines) {
         for (CurrencyData currencyData : currencySortedMap.values()) {
-            if (currencyData.isConfirmed() && !currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+            if (currencyData.isConfirmed() && !currencyData.isNativeCurrency()) {
                 updateClusterStampDataByCurrencyData(clusterStampData, currencyData, prepareClusterStampLines);
             }
         }
@@ -907,8 +924,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         TreeMap<Hash, BigDecimal> sortedBalance = balanceService.getSortedBalance(nativeCurrencyHash);
         generateCurrencyBalanceLines(clusterStampData, nativeCurrencyHash, sortedBalance, prepareClusterStampLines);
         currencySortedMap.keySet().stream().map(symbol -> currencySortedMap.get(symbol))
-            .filter(additionalCurrencyData -> additionalCurrencyData.isConfirmed() && !additionalCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN))
-            .forEach(additionalCurrencyData -> generateCurrencyBalanceLines(clusterStampData, additionalCurrencyData.getHash(), sortedBalance, prepareClusterStampLines));
+                .filter(additionalCurrencyData -> additionalCurrencyData.isConfirmed() && !additionalCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN))
+                .forEach(additionalCurrencyData -> generateCurrencyBalanceLines(clusterStampData, additionalCurrencyData.getHash(), sortedBalance, prepareClusterStampLines));
     }
 
     private void generateCurrencyBalanceLines(ClusterStampData clusterStampData, Hash currencyHash, TreeMap<Hash, BigDecimal> sortedBalance, boolean prepareClusterStampLines) {
@@ -947,11 +964,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         this.candidateClusterStampHash = candidateClusterStampHash;
     }
 
-    public void prepareCandidateClusterStampHash() {
-        clearCandidateClusterStampRelatedFields();
-        prepareCandidateClusterStampHash(Instant.now(), false, new ClusterStampData(), false);
-    }
-
     protected void prepareCandidateClusterStampHash(Instant createTime, boolean prepareClusterStampLines, ClusterStampData clusterStampData, boolean onlyNativeCurrency) {
         CurrencyData nativeCurrency = currencyService.getNativeCurrency();
         if (nativeCurrency == null) {
@@ -986,6 +998,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         String versionTimeMillisString = String.valueOf(createTime.toEpochMilli());
         ClusterStampNameData newClusterStampNameData = new ClusterStampNameData(versionTimeMillisString, versionTimeMillisString);
         String candidateClusterStampFileName = getCandidateClusterStampFileName(newClusterStampNameData);
+
         String clusterStampFilename = candidateClusterStampFolder + candidateClusterStampFileName;
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(clusterStampFilename))) {
@@ -1032,15 +1045,12 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         filledMissingSegments = false;
     }
 
-
     @Override
     public void calculateClusterStampDataAndHashes() {
         boolean prepareClusterStampLines = true;
         clearCandidateClusterStampRelatedFields();
-        clusterStampCreateTime = Instant.now();
-        clusterStampData = new ClusterStampData();
-        prepareCandidateClusterStampHash(clusterStampCreateTime, prepareClusterStampLines, clusterStampData, false);
-
+        ClusterStampData clusterStampData = new ClusterStampData();
+        prepareCandidateClusterStampHash(Instant.now(), prepareClusterStampLines, clusterStampData, false);
     }
 
     @Override
@@ -1053,11 +1063,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     @Override
-    public boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload){
+    public boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload) {
         Hash clusterStampHash = getCandidateClusterStampHash();
         return clusterStampHash != null && clusterStampHash.equals(stateMessageClusterStampHashPayload.getClusterStampHash());
-
-
     }
 
 }

@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 public class GetNetworkVotersResponse extends BaseResponse implements ISignValidatable, ISignable, IPropagatable {
 
-//    @NotEmpty
+    @NotEmpty
     private List<Hash> allCurrentValidators;
     @NotNull
     private Instant createTime = Instant.now();
