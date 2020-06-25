@@ -25,6 +25,11 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
+    @Override
+    public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
+// todo
+    }
+
     public ResponseEntity<IResponse> setNewClusterStamps(SetNewClusterStampsRequest setNewClusterStampsRequest) {
         try {
             if (!setNewClusterStampsRequestCrypto.verifySignature(setNewClusterStampsRequest)) {

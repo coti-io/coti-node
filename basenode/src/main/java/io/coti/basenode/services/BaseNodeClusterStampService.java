@@ -833,6 +833,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampCurrencyData.setAmount(subtractedCurrencyAmount);
     }
 
+    @Override
+    public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
+        // implemented in subclasses
+    }
+
     private void updateClusterStampMaxIndex(long maxIndexOfNotConfirmedTransaction, ClusterStampData clusterStampData) {
         maxIndexOfNotConfirmed = maxIndexOfNotConfirmedTransaction;
         clusterStampData.incrementMessageByteSize(Long.BYTES);
@@ -1038,6 +1043,29 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         voterNodesDetails = null;
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         filledMissingSegments = false;
+    }
+
+    @Override
+    public void calculateClusterStampDataAndHashes() {
+        boolean prepareClusterStampLines = true;
+        clearCandidateClusterStampRelatedFields();
+        ClusterStampData clusterStampData = new ClusterStampData();
+        prepareCandidateClusterStampHash(Instant.now(), prepareClusterStampLines, clusterStampData, false);
+    }
+
+    @Override
+    public boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload) {
+        long lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
+        if (lastConfirmedIndex <= 0) {
+            lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
+        }
+        return lastConfirmedIndex == stateMessageLastClusterStampIndexPayload.getLastIndex();
+    }
+
+    @Override
+    public boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload) {
+        Hash clusterStampHash = getCandidateClusterStampHash();
+        return clusterStampHash != null && clusterStampHash.equals(stateMessageClusterStampHashPayload.getClusterStampHash());
     }
 
 }

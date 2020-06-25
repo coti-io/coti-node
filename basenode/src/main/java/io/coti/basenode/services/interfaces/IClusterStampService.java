@@ -20,8 +20,25 @@ public interface IClusterStampService {
 
     void getClusterStampFromRecoveryServer();
 
+    default void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {}
+
+    default void clusterStampContinueWithIndex(StateMessage stateMessage) {}
+
+    default void clusterStampContinueWithHash(StateMessage stateMessage) {}
+
+    void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload);
+
     Hash getCandidateClusterStampHash();
 
     void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, GeneralVoteMessage generalVoteMessage);
 
+    default void calculateClusterStampDataAndHashesAndSendMessage() {}
+
+    default void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {}
+
+    void calculateClusterStampDataAndHashes();
+
+    boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload);
+
+    boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload);
 }
