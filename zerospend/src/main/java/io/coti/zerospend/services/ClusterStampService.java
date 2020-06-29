@@ -234,8 +234,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    public void calculateClusterStampDataAndHashesAndSendMessage() {
-        calculateClusterStampDataAndHashes();
+    public void calculateClusterStampDataAndHashesAndSendMessage(Instant createTime) {
+        calculateClusterStampDataAndHashes(createTime);
         Hash clusterStampHash = getCandidateClusterStampHash();
 
         StateMessageClusterStampHashPayload stateMessageClusterStampBalanceHashPayload = new StateMessageClusterStampHashPayload(clusterStampHash);

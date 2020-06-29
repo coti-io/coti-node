@@ -1046,11 +1046,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     @Override
-    public void calculateClusterStampDataAndHashes() {
+    public void calculateClusterStampDataAndHashes(Instant clusterStampInitiateTime) {
         boolean prepareClusterStampLines = true;
         clearCandidateClusterStampRelatedFields();
         ClusterStampData clusterStampData = new ClusterStampData();
-        prepareCandidateClusterStampHash(Instant.now(), prepareClusterStampLines, clusterStampData, false);
+        prepareCandidateClusterStampHash(clusterStampInitiateTime, prepareClusterStampLines, clusterStampData, false);
     }
 
     @Override

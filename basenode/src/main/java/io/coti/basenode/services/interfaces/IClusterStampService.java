@@ -6,6 +6,8 @@ import io.coti.basenode.data.messages.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
 
+import java.time.Instant;
+
 public interface IClusterStampService {
 
     void init();
@@ -32,11 +34,11 @@ public interface IClusterStampService {
 
     void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, GeneralVoteMessage generalVoteMessage);
 
-    default void calculateClusterStampDataAndHashesAndSendMessage() {}
+    default void calculateClusterStampDataAndHashesAndSendMessage(Instant createTime) {}
 
     default void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {}
 
-    void calculateClusterStampDataAndHashes();
+    void calculateClusterStampDataAndHashes(Instant clusterStampInitiateTime);
 
     boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload);
 

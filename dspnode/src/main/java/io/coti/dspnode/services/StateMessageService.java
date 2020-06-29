@@ -27,7 +27,7 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 boolean vote = clusterStampService.checkLastConfirmedIndex((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload());
                 generalVoteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote);
                 if (vote) {
-                    clusterStampService.calculateClusterStampDataAndHashes();  // todo separate it to a thread
+                    clusterStampService.calculateClusterStampDataAndHashes(stateMessage.getCreateTime());  // todo separate it to a thread
                 }
                 break;
             case CLUSTER_STAMP_PREPARE_HASH:
