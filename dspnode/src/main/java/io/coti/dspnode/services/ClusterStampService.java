@@ -2,6 +2,7 @@ package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IReceiver;
+import io.coti.basenode.data.ClusterStampNameData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.messages.StateMessage;
 import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
@@ -69,6 +70,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
+        String clusterStampCreateTimeString = String.valueOf(this.clusterStampCreateTime.toEpochMilli());
+        clusterStampName = new ClusterStampNameData(clusterStampCreateTimeString, clusterStampCreateTimeString);
         propagationPublisher.propagate(stateMessage, Collections.singletonList(NodeType.FullNode));
     }
 }
