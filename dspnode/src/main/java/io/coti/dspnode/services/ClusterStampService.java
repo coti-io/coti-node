@@ -39,6 +39,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             return;
         }
 
+        clusterStampInitiateTimestamp = stateMessage.getCreateTime();
         votingTimeoutService.scheduleEvent("CLUSTER_STUMP_INITIATE_DELAY", stateMessageClusterstampInitiatedPayload.getDelay(), this::setResendingPause);
         votingTimeoutService.scheduleEvent("CLUSTER_STUMP_INITIATE_TIMEOUT", stateMessageClusterstampInitiatedPayload.getTimeout(), null); // todo toExecuteIfFinished should be set to emergency procedure
         receiver.setMessageQueuePause();

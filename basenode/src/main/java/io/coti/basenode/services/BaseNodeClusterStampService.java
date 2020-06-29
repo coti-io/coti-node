@@ -97,6 +97,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public static final String FAILED_TO_DELETE_CLUSTERSTAMP_FILE = "Failed to delete clusterstamp file %s. Please delete manually and restart.";
     protected ClusterStampNameData clusterStampName;
     protected ClusterStampNameData candidateClusterStampName;
+    protected Instant clusterStampInitiateTimestamp;
 
     @Value("${clusterstamp.folder}")
     protected String clusterStampFolder;
@@ -833,11 +834,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         clusterStampCurrencyData.setAmount(subtractedCurrencyAmount);
     }
 
-    @Override
-    public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
-        // implemented in subclasses
-    }
-
     private void updateClusterStampMaxIndex(long maxIndexOfNotConfirmedTransaction, ClusterStampData clusterStampData) {
         maxIndexOfNotConfirmed = maxIndexOfNotConfirmedTransaction;
         clusterStampData.incrementMessageByteSize(Long.BYTES);
@@ -1037,6 +1033,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     protected void clearCandidateClusterStampRelatedFields() {
         clusterStampCreateTime = null;
+        clusterStampInitiateTimestamp = null;
         maxIndexOfNotConfirmed = 0;
         currencyClusterStampSegmentLines = new ArrayList<>();
         balanceClusterStampSegmentLines = new ArrayList<>();
@@ -1047,10 +1044,19 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     @Override
     public void calculateClusterStampDataAndHashes() {
+        if (clusterStampInitiateTimestamp == null) {
+            // todo exception: initiate message was lost, CS data can't be created
+            return;
+        }
+        calculateClusterStampDataAndHashes(clusterStampInitiateTimestamp);
+    }
+
+    @Override
+    public void calculateClusterStampDataAndHashes(Instant clusterStampInitiateTime) {
         boolean prepareClusterStampLines = true;
         clearCandidateClusterStampRelatedFields();
         ClusterStampData clusterStampData = new ClusterStampData();
-        prepareCandidateClusterStampHash(Instant.now(), prepareClusterStampLines, clusterStampData, false);
+        prepareCandidateClusterStampHash(clusterStampInitiateTime, prepareClusterStampLines, clusterStampData, false);
     }
 
     @Override

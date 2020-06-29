@@ -187,6 +187,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     public ResponseEntity<IResponse> initiateClusterStamp() {
         StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload = new StateMessageClusterStampInitiatedPayload(CLUSTER_STAMP_INITIATED_DELAY, CLUSTER_STAMP_TIMEOUT);
         StateMessage stateMessage = new StateMessage(stateMessageClusterstampInitiatedPayload);
+        clusterStampInitiateTimestamp = stateMessage.getCreateTime();
         stateMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessage)));
         generalMessageCrypto.signMessage(stateMessage);
         propagationPublisher.propagate(stateMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
@@ -235,7 +236,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public void calculateClusterStampDataAndHashesAndSendMessage() {
-        calculateClusterStampDataAndHashes();
+        calculateClusterStampDataAndHashes(clusterStampInitiateTimestamp);  // todo there is no check of clusterStampInitiateTimestamp, but may be it is needed for emergency scenarious
         Hash clusterStampHash = getCandidateClusterStampHash();
 
         StateMessageClusterStampHashPayload stateMessageClusterStampBalanceHashPayload = new StateMessageClusterStampHashPayload(clusterStampHash);
