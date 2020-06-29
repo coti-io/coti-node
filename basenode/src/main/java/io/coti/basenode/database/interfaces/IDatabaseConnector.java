@@ -6,6 +6,8 @@ import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.util.List;
+
 public interface IDatabaseConnector {
 
     void init();
@@ -13,6 +15,12 @@ public interface IDatabaseConnector {
     void resetColumnFamilies();
 
     void resetTransactionColumnFamilies();
+
+    void resetColumnFamilies(List<String> resetColumnFamilyNames);
+
+    void dropColumnFamilies(List<String> dropColumnFamilies);
+
+    void createColumnFamily(String columnFamilyName);
 
     void generateDataBaseBackup(String backupPath);
 

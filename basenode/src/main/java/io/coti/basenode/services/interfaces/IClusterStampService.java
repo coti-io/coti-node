@@ -33,8 +33,7 @@ public interface IClusterStampService {
     default void clusterStampContinueWithHash(StateMessage stateMessage) {
     }
 
-    default void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
-    }
+    void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload);
 
     Hash getCandidateClusterStampHash();
 
