@@ -46,7 +46,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private DspVoteService dspVoteService;
 
-    private static final long CLUSTER_STAMP_TIMEOUT = 100;
     private static final long CLUSTER_STAMP_INITIATED_DELAY = 20;
     private static final long CLUSTER_STAMP_WAIT_TCC = 50;
     private static final int NUMBER_OF_RESENDS = 3;
@@ -263,6 +262,13 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {
+
+        StateMessageClusterStampContinuePayload stateMessageClusterStampContinuePayload = new StateMessageClusterStampContinuePayload(generalVoteMessage.getVoteHash());
+        StateMessage stateMessageContinue = new StateMessage(stateMessageClusterStampContinuePayload);
+        stateMessageContinue.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessageContinue)));
+        generalMessageCrypto.signMessage(stateMessageContinue);
+        log.info("Nodes can continue with transaction processing " + generalVoteMessage.getVoteHash().toString());
+        propagateRetries(Collections.singletonList(stateMessageContinue));
 
         createNewClusterStampFile(generalVoteService.getVoteResultVotersList(generalVoteMessage.getVoteHash()));
 

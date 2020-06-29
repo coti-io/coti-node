@@ -20,7 +20,6 @@ import java.util.Collections;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    private static final long MAX_CLUSTERSTAMP_TIMEOUT = 100;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -35,7 +34,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         if (stateMessageClusterstampInitiatedPayload.getDelay() < 0 ||
                 stateMessageClusterstampInitiatedPayload.getDelay() > stateMessageClusterstampInitiatedPayload.getTimeout() ||
-                stateMessageClusterstampInitiatedPayload.getTimeout() > MAX_CLUSTERSTAMP_TIMEOUT) {
+                stateMessageClusterstampInitiatedPayload.getTimeout() > CLUSTER_STAMP_TIMEOUT) {
             log.error("Incorrect {} message parameters {}", stateMessageClusterstampInitiatedPayload.getGeneralMessageType(), stateMessageClusterstampInitiatedPayload.toString());
             return;
         }

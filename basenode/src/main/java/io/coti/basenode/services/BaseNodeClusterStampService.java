@@ -125,6 +125,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected String voterNodesDetails;
     protected List<String> validatorsVoteClusterStampSegmentLines;
     protected boolean filledMissingSegments;
+    private boolean agreedHistoryNodesNumberEnough;
 
     protected String nodeManagerHttpAddress;
 
@@ -1072,6 +1073,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload) {
         Hash clusterStampHash = getCandidateClusterStampHash();
         return clusterStampHash != null && clusterStampHash.equals(stateMessageClusterStampHashPayload.getClusterStampHash());
+    }
+
+    @Override
+    public void setAgreedHistoryNodesNumberEnough() {
+        agreedHistoryNodesNumberEnough = true;
+    }
+
+    @Override
+    public boolean isAgreedHistoryNodesNumberEnough() {
+        return agreedHistoryNodesNumberEnough;
     }
 
 }
