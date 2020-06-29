@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -71,6 +72,19 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
         continueHandleGeneralVoteMessage(consensusReached, generalVoteMessage);
     }
 
+    @Override
+    public List<GeneralVoteMessage> getVoteResultVotersList(Hash voteHash) {
+        GeneralVoteResult generalVoteResult = generalVoteResults.getByHash(voteHash);
+        List<GeneralVoteMessage> voteResultVotersList = new ArrayList<>();
+        GeneralVoteClusterStampHashPayload generalVoteClusterStampHashPayload = new GeneralVoteClusterStampHashPayload();
+        generalVoteResult.getHashToVoteMapping().values().forEach(v -> {
+            GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(voteHash, v, generalVoteClusterStampHashPayload);
+            generalVoteMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(generalVoteMessage)));
+            voteResultVotersList.add(generalVoteMessage);
+        });
+        return voteResultVotersList;
+    }
+
     protected void continueHandleGeneralVoteMessage(boolean consensusReached, GeneralVoteMessage generalVoteMessage) {
         // implemented in subclasses
     }
@@ -95,40 +109,43 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
     }
 
     @Override
-    public void startCollectingVotes(StateMessage stateMessage) {
+    public void startCollectingVotes(StateMessage stateMessage, GeneralVoteMessage myVote) {
+        GeneralVote newVote = new GeneralVote(myVote);
         try {
             synchronized (generalVoteResultLockData.addLockToLockMap(stateMessage.getHash())) {
                 GeneralVoteResult generalVoteResult = generalVoteResults.getByHash(stateMessage.getHash());
                 if (generalVoteResult == null) {
                     generalVoteResult = new GeneralVoteResult(stateMessage.getHash(), stateMessage.getMessagePayload());
-                    generalVoteResults.put(generalVoteResult);
                 } else if (generalVoteResult.getTheMatter() == null) {
                     generalVoteResult.setTheMatter(stateMessage.getMessagePayload());
                 }
+                generalVoteResult.getHashToVoteMapping().put(newVote.getVoterHash(), newVote);
+                generalVoteResults.put(generalVoteResult);
             }
         } finally {
             generalVoteResultLockData.removeLockFromLocksMap(stateMessage.getHash());
         }
     }
 
-    private void castVote(MessagePayload messagePayload, Hash voteHash, boolean vote, String logMessage) {
+    private GeneralVoteMessage castVote(MessagePayload messagePayload, Hash voteHash, boolean vote, String logMessage) {
         GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(messagePayload, voteHash, vote);
         generalVoteMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(generalVoteMessage)));
         generalMessageCrypto.signMessage(generalVoteMessage);
         propagationPublisher.propagate(generalVoteMessage, Arrays.asList(NodeType.DspNode, NodeType.ZeroSpendServer, NodeType.NodeManager));
         log.info("Vote for " + logMessage + " " + (vote ? "True " : "False ") + generalVoteMessage.getHash().toString());
+        return generalVoteMessage;
     }
 
     @Override
-    public void castVoteForClusterStampIndex(Hash voteHash, boolean vote) {
+    public GeneralVoteMessage castVoteForClusterStampIndex(Hash voteHash, boolean vote) {
         GeneralVoteClusterStampIndexPayload generalVoteClusterStampIndexPayload = new GeneralVoteClusterStampIndexPayload();
-        castVote(generalVoteClusterStampIndexPayload, voteHash, vote, "clusterstamp highest index");
+        return castVote(generalVoteClusterStampIndexPayload, voteHash, vote, "clusterstamp highest index");
     }
 
     @Override
-    public void castVoteForClusterStampHash(Hash voteHash, boolean vote) {
+    public GeneralVoteMessage castVoteForClusterStampHash(Hash voteHash, boolean vote) {
         GeneralVoteClusterStampHashPayload generalVoteClusterStampHashPayload = new GeneralVoteClusterStampHashPayload();
-        castVote(generalVoteClusterStampHashPayload, voteHash, vote, "clusterstamp hash");
+        return castVote(generalVoteClusterStampHashPayload, voteHash, vote, "clusterstamp hash");
     }
 
     protected boolean incorrectMessageSender(GeneralVoteMessage generalVoteMessage) {

@@ -117,7 +117,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp = true;
     }
 
-    private void createNewClusterStampFile() {
+    private void createNewClusterStampFile(List<GeneralVoteMessage> generalVoteMessageList) {
         // Create cluster stamp hash
         boolean prepareClusterStampLines = true;
         Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
@@ -229,7 +229,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         StateMessage stateMessage = new StateMessage(stateMessageLastClusterStampIndexPayload);
         stateMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessage)));
         generalMessageCrypto.signMessage(stateMessage);
-        generalVoteService.startCollectingVotes(stateMessage);
+        generalVoteService.startCollectingVotes(stateMessage, createGeneralVoteMessage(Instant.now(), stateMessage.getHash()));
         log.info(String.format("Initiate voting for the last clusterstamp index %d %s", lastConfirmedIndex, stateMessage.getHash().toString()));
         propagateRetries(Collections.singletonList(stateMessage));
     }
@@ -243,7 +243,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         StateMessage stateBalanceHashMessage = new StateMessage(stateMessageClusterStampBalanceHashPayload);
         stateBalanceHashMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateBalanceHashMessage)));
         generalMessageCrypto.signMessage(stateBalanceHashMessage);
-        generalVoteService.startCollectingVotes(stateBalanceHashMessage);
+        generalVoteService.startCollectingVotes(stateBalanceHashMessage, createGeneralVoteMessage(Instant.now(), stateBalanceHashMessage.getHash()));
 //                //TODO 6/11/2020 tomer: Need to align exact messages
 //                clusterStampService.updateGeneralVoteMessageClusterStampSegment(true, stateBalanceHashMessage);
 
@@ -264,7 +264,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {
 
-        createNewClusterStampFile();
+        createNewClusterStampFile(generalVoteService.getVoteResultVotersList(generalVoteMessage.getVoteHash()));
 
         StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(generalVoteMessage.getVoteHash());
         StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);

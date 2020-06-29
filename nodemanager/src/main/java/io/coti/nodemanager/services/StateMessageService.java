@@ -26,7 +26,7 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 clusterStampService.clusterStampExecute(stateMessage, (StateMessageClusterStampExecutePayload) stateMessage.getMessagePayload());
                 break;
             case CLUSTER_STAMP_PREPARE_INDEX:
-                generalVoteService.startCollectingVotes(stateMessage);
+                generalVoteService.startCollectingVotes(stateMessage, null);
                 break;
             case CLUSTER_STAMP_INITIATED:
                 break;

@@ -23,17 +23,16 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 break;
             case CLUSTER_STAMP_PREPARE_INDEX:
                 clusterStampService.clusterStampContinueWithIndex(stateMessage);
-                generalVoteService.startCollectingVotes(stateMessage);
                 boolean vote = clusterStampService.checkLastConfirmedIndex((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload());
-                generalVoteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote);
+                generalVoteService.startCollectingVotes(stateMessage, generalVoteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote));
                 if (vote) {
                     clusterStampService.calculateClusterStampDataAndHashes();  // todo separate it to a thread
                 }
                 break;
             case CLUSTER_STAMP_PREPARE_HASH:
                 clusterStampService.clusterStampContinueWithHash(stateMessage);
-                generalVoteService.startCollectingVotes(stateMessage);
-                generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkClusterStampHash((StateMessageClusterStampHashPayload) stateMessage.getMessagePayload()));
+                generalVoteService.startCollectingVotes(stateMessage, generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(),
+                        clusterStampService.checkClusterStampHash((StateMessageClusterStampHashPayload) stateMessage.getMessagePayload())));
                 break;
             case CLUSTER_STAMP_EXECUTE:
                 clusterStampService.clusterStampExecute(stateMessage, (StateMessageClusterStampExecutePayload) stateMessage.getMessagePayload());
