@@ -82,16 +82,16 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
     }
 
     @Override
-    public List<GeneralVoteMessage> getVoteResultVotersList(Hash voteHash) {
+    public List<GeneralVoteMessage> getVoteResultVotesList(Hash voteHash) {
         GeneralVoteResult generalVoteResult = generalVoteResults.getByHash(voteHash);
-        List<GeneralVoteMessage> voteResultVotersList = new ArrayList<>();
+        List<GeneralVoteMessage> voteResultVotesList = new ArrayList<>();
         GeneralVoteClusterStampHashPayload generalVoteClusterStampHashPayload = new GeneralVoteClusterStampHashPayload();
         generalVoteResult.getHashToVoteMapping().values().forEach(v -> {
             GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(voteHash, v, generalVoteClusterStampHashPayload);
             generalVoteMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(generalVoteMessage)));
-            voteResultVotersList.add(generalVoteMessage);
+            voteResultVotesList.add(generalVoteMessage);
         });
-        return voteResultVotersList;
+        return voteResultVotesList;
     }
 
     protected void continueHandleGeneralVoteMessage(boolean consensusReached, boolean consensusPositive, GeneralVoteMessage generalVoteMessage) {
@@ -104,7 +104,7 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
 
     @Override
     public long calculateQuorumOfValidators(GeneralMessageType messageType) {
-        if (GeneralMessageType.CLUSTER_STAMP_HASH_HISTORY_NODE.equals(messageType)){
+        if (GeneralMessageType.CLUSTER_STAMP_HASH_HISTORY_NODE.equals(messageType)) {
             return REQUIRED_NUMBER_OF_GOOD_HISTORY_NODES;
         } else {
             long numberOfValidators = networkService.countDSPNodes();
@@ -128,6 +128,9 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
 
     @Override
     public void startCollectingVotes(StateMessage stateMessage, GeneralVoteMessage myVote) {
+        if (myVote == null) {
+            return;
+        }
         GeneralVote newVote = new GeneralVote(myVote);
         try {
             synchronized (generalVoteResultLockData.addLockToLockMap(stateMessage.getHash())) {

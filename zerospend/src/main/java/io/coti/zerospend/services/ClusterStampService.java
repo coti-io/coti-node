@@ -116,10 +116,12 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp = true;
     }
 
-    private void createNewClusterStampFile(List<GeneralVoteMessage> generalVoteMessageList) {
+    private void createNewClusterStampFile(Hash generalVoteMessageHash) {
+        List<GeneralVoteMessage> voteResultVotesList = generalVoteService.getVoteResultVotesList(generalVoteMessageHash);
+
         // Create cluster stamp hash
         boolean prepareClusterStampLines = true;
-        Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
+//        Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
 
         // Update with voters snapshot
         GetNetworkVotersResponse getNetworkVotersResponse = getNetworkVoters();
@@ -131,8 +133,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         // For each vote
-        GeneralVoteMessage generalVoteMessage = createGeneralVoteMessage(clusterStampCreateTime, clusterStampDataMessageHash);
-        updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
+        voteResultVotesList.forEach(generalVoteMessage -> {
+            if (generalVoteMessage.getVoteHash().equals(generalVoteMessageHash)) {
+                updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
+            }
+        });
 
         writeClusterStamp(clusterStampCreateTime);
         String versionTimeMillisString = String.valueOf(clusterStampCreateTime.toEpochMilli());
@@ -154,7 +159,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
 
-    private String generateClusterStampBalanceLineFromNewCurrency(ClusterStampData clusterStampData, CurrencyData currencyData) {
+    private String generateClusterStampBalanceLineFromNewCurrency(ClusterStampData clusterStampData, CurrencyData
+            currencyData) {
         if (currencyAddress == null) {
             throw new ClusterStampException("Unable to start zero spend server. Genesis address not found.");
         }
@@ -168,7 +174,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    protected void prepareOnlyForNativeGenesisAddressBalanceClusterStampSegment(ClusterStampData clusterStampData, boolean prepareClusterStampLines, CurrencyData nativeCurrency) {
+    protected void prepareOnlyForNativeGenesisAddressBalanceClusterStampSegment(ClusterStampData clusterStampData,
+                                                                                boolean prepareClusterStampLines, CurrencyData nativeCurrency) {
         if (nativeCurrency == null) {
             throw new ClusterStampException("Unable to start zero spend server. Native token not found.");
         }
@@ -270,7 +277,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         log.info("Nodes can continue with transaction processing " + generalVoteMessage.getVoteHash().toString());
         propagateRetries(Collections.singletonList(stateMessageContinue));
 
-        createNewClusterStampFile(generalVoteService.getVoteResultVotersList(generalVoteMessage.getVoteHash()));
+        createNewClusterStampFile(generalVoteMessage.getVoteHash());
 
         StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(generalVoteMessage.getVoteHash());
         StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);

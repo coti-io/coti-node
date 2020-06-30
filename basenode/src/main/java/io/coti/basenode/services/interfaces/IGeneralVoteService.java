@@ -19,7 +19,7 @@ public interface IGeneralVoteService {
 
     GeneralVoteMessage castVoteForClusterStampHash(Hash voteHash, boolean vote);
 
-    List<GeneralVoteMessage> getVoteResultVotersList(Hash voteHash);
+    List<GeneralVoteMessage> getVoteResultVotesList(Hash voteHash);
 
     long calculateQuorumOfValidators(GeneralMessageType messageType);
 

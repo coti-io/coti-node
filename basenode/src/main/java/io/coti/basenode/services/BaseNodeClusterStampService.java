@@ -1095,25 +1095,25 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         //todo pause transactions processing
 
         String tempColumnFamilyName = Transactions.class.getName() + "_temp";
-        databaseConnector.createColumnFamily(tempColumnFamilyName);
-
-        RocksIterator iterator = transactions.getIterator();
-        iterator.seekToFirst();
-        while (iterator.isValid()) {
-            TransactionData transactionData = (TransactionData) SerializationUtils.deserialize(iterator.value());
-                if (!transactionHelper.isConfirmed(transactionData) || transactionData.getDspConsensusResult().getIndex() > index) {
-                    databaseConnector.put(tempColumnFamilyName, transactionData.getHash().getBytes(), SerializationUtils.serialize(transactionData));
-                }
-            iterator.next();
-        }
-
-        databaseConnector.resetColumnFamilies(Collections.singletonList(Transactions.class.getName()));
-
-        //todo write back
-
-        databaseConnector.dropColumnFamilies(Collections.singletonList(tempColumnFamilyName));
-
-        //todo restart transactions processing
+//        databaseConnector.createColumnFamily(tempColumnFamilyName);
+//
+//        RocksIterator iterator = transactions.getIterator();
+//        iterator.seekToFirst();
+//        while (iterator.isValid()) {
+//            TransactionData transactionData = (TransactionData) SerializationUtils.deserialize(iterator.value());
+//                if (!transactionHelper.isConfirmed(transactionData) || transactionData.getDspConsensusResult().getIndex() > index) {
+//                    databaseConnector.put(tempColumnFamilyName, transactionData.getHash().getBytes(), SerializationUtils.serialize(transactionData));
+//                }
+//            iterator.next();
+//        }
+//
+//        databaseConnector.resetColumnFamilies(Collections.singletonList(Transactions.class.getName()));
+//
+//        //todo write back
+//
+//        databaseConnector.dropColumnFamilies(Collections.singletonList(tempColumnFamilyName));
+//
+//        //todo restart transactions processing
     }
 
 }
