@@ -2,7 +2,10 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.GeneralMessageCrypto;
-import io.coti.basenode.data.*;
+import io.coti.basenode.data.GeneralVoteResult;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.LockData;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.messages.*;
 import io.coti.basenode.model.GeneralVoteResults;
 import io.coti.basenode.services.interfaces.IGeneralVoteService;
@@ -52,14 +55,13 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
             return;
         }
         boolean consensusReached = false;
-        GeneralVote newVote = new GeneralVote(generalVoteMessage);
         try {
             synchronized (generalVoteResultLockData.addLockToLockMap(generalVoteMessage.getVoteHash())) {
                 GeneralVoteResult generalVoteResult = generalVoteResults.getByHash(generalVoteMessage.getVoteHash());
                 if (generalVoteResult == null) {
                     generalVoteResult = new GeneralVoteResult(generalVoteMessage.getVoteHash(), null);
                 }
-                generalVoteResult.getHashToVoteMapping().put(newVote.getVoterHash(), newVote);
+                generalVoteResult.getHashToVoteMapping().put(generalVoteMessage.getSignerHash(), generalVoteMessage);
                 if (!generalVoteResult.isConsensusReached()) {
                     consensusReached = checkConsensusAndSetResult(generalVoteResult);
                 }
@@ -76,13 +78,7 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
     public List<GeneralVoteMessage> getVoteResultVotersList(Hash voteHash) {
         GeneralVoteResult generalVoteResult = generalVoteResults.getByHash(voteHash);
         List<GeneralVoteMessage> voteResultVotersList = new ArrayList<>();
-        Hash clusterStampHash = ((StateMessageClusterStampHashPayload)generalVoteResult.getTheMatter()).getClusterStampHash();
-        StateMessageClusterStampHashPayload generalVoteClusterStampHashPayload = new StateMessageClusterStampHashPayload(clusterStampHash);
-        generalVoteResult.getHashToVoteMapping().values().forEach(v -> {
-            GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(voteHash, v, generalVoteClusterStampHashPayload);
-            generalVoteMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(generalVoteMessage)));
-            voteResultVotersList.add(generalVoteMessage);
-        });
+        generalVoteResult.getHashToVoteMapping().values().forEach(voteResultVotersList::add);
         return voteResultVotersList;
     }
 
@@ -97,7 +93,7 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
 
     private boolean checkConsensusAndSetResult(GeneralVoteResult generalVoteResult) {
         long quorumOfValidators = calculateQuorumOfValidators(networkService.countDSPNodes());
-        if (quorumOfValidators <= generalVoteResult.getHashToVoteMapping().values().stream().filter(v -> v.isVote()).count()) {
+        if (quorumOfValidators <= generalVoteResult.getHashToVoteMapping().values().stream().filter(GeneralVoteMessage::isVote).count()) {
             generalVoteResult.setConsensusReached(true);
             generalVoteResult.setConsensusPositive(true);
             return true;
@@ -114,7 +110,6 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
         if (myVote == null) {
             return;
         }
-        GeneralVote newVote = new GeneralVote(myVote);
         try {
             synchronized (generalVoteResultLockData.addLockToLockMap(stateMessage.getHash())) {
                 GeneralVoteResult generalVoteResult = generalVoteResults.getByHash(stateMessage.getHash());
@@ -123,7 +118,7 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
                 } else if (generalVoteResult.getTheMatter() == null) {
                     generalVoteResult.setTheMatter(stateMessage.getMessagePayload());
                 }
-                generalVoteResult.getHashToVoteMapping().put(newVote.getVoterHash(), newVote);
+                generalVoteResult.getHashToVoteMapping().put(myVote.getSignerHash(), myVote);
                 generalVoteResults.put(generalVoteResult);
             }
         } finally {
@@ -147,9 +142,9 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
     }
 
     @Override
-    public GeneralVoteMessage castVoteForClusterStampHash(Hash voteHash, boolean vote) {
-        GeneralVoteClusterStampHashPayload generalVoteClusterStampHashPayload = new GeneralVoteClusterStampHashPayload();
-        return castVote(generalVoteClusterStampHashPayload, voteHash, vote, "clusterstamp hash");
+    public GeneralVoteMessage castVoteForClusterStampHash(Hash voteHash, boolean vote, Hash clusterStampHash) {
+        StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload = new StateMessageClusterStampHashPayload(clusterStampHash);
+        return castVote(stateMessageClusterStampHashPayload, voteHash, vote, "clusterstamp hash");
     }
 
     protected boolean incorrectMessageSender(GeneralVoteMessage generalVoteMessage) {
