@@ -4,6 +4,8 @@ import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.data.messages.GeneralVoteMessage;
+import io.coti.basenode.data.messages.StateMessage;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
@@ -47,7 +49,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class, StateMessage.class, GeneralVoteMessage.class));
             publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
 
             communicationService.initSubscriber(NodeType.DspNode, publisherNodeTypeToMessageTypesMap);

@@ -25,4 +25,7 @@ public interface ITransactionPropagationCheckService {
     default void removeConfirmedReceiptTransaction(Hash transactionHash) {
     }
 
+    void setResendingPause();
+
+    void endResendingPause();
 }

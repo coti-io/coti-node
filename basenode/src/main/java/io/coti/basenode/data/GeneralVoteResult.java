@@ -25,6 +25,8 @@ public class GeneralVoteResult implements IEntity {
         this.hash = hash;
         this.theMatter = theMatter;
         hashToVoteMapping = new HashMap<>();
+        this.isConsensusReached = false;
+        this.isConsensusPositive = false;
     }
 
 }

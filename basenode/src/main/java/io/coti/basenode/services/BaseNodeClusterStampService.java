@@ -97,6 +97,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public static final String FAILED_TO_DELETE_CLUSTERSTAMP_FILE = "Failed to delete clusterstamp file %s. Please delete manually and restart.";
     protected ClusterStampNameData clusterStampName;
     protected ClusterStampNameData candidateClusterStampName;
+    protected Instant clusterStampInitiateTimestamp;
 
     @Value("${clusterstamp.folder}")
     protected String clusterStampFolder;
@@ -983,7 +984,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     protected GeneralVoteMessage createGeneralVoteMessage(Instant createTime, Hash clusterStampDataMessageHash) {
-        StateMessageClusterStampHashPayload messagePayload = new StateMessageClusterStampHashPayload(clusterStampDataMessageHash);
+        GeneralVoteClusterStampHashPayload messagePayload = new GeneralVoteClusterStampHashPayload(clusterStampDataMessageHash);
         GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(messagePayload, clusterStampDataMessageHash, true, createTime);
         generalMessageCrypto.signMessage(generalVoteMessage);
         return generalVoteMessage;
@@ -1032,12 +1033,45 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     protected void clearCandidateClusterStampRelatedFields() {
         clusterStampCreateTime = null;
+        clusterStampInitiateTimestamp = null;
         maxIndexOfNotConfirmed = 0;
         currencyClusterStampSegmentLines = new ArrayList<>();
         balanceClusterStampSegmentLines = new ArrayList<>();
         voterNodesDetails = null;
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         filledMissingSegments = false;
+    }
+
+    @Override
+    public void calculateClusterStampDataAndHashes() {
+        if (clusterStampInitiateTimestamp == null) {
+            // todo exception: initiate message was lost, CS data can't be created
+            return;
+        }
+        calculateClusterStampDataAndHashes(clusterStampInitiateTimestamp);
+    }
+
+    @Override
+    public void calculateClusterStampDataAndHashes(Instant clusterStampInitiateTime) {
+        boolean prepareClusterStampLines = true;
+        clearCandidateClusterStampRelatedFields();
+        ClusterStampData clusterStampData = new ClusterStampData();
+        prepareCandidateClusterStampHash(clusterStampInitiateTime, prepareClusterStampLines, clusterStampData, false);
+    }
+
+    @Override
+    public boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload) {
+        long lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
+        if (lastConfirmedIndex <= 0) {
+            lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
+        }
+        return lastConfirmedIndex == stateMessageLastClusterStampIndexPayload.getLastIndex();
+    }
+
+    @Override
+    public boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload) {
+        Hash clusterStampHash = getCandidateClusterStampHash();
+        return clusterStampHash != null && clusterStampHash.equals(stateMessageClusterStampHashPayload.getClusterStampHash());
     }
 
 }

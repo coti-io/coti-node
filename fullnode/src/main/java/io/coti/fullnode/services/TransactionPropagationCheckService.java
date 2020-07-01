@@ -77,6 +77,9 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     private void sendUnconfirmedReceivedTransactionsFullNode() {
+        if (resendingPause) {
+            return;
+        }
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
@@ -96,7 +99,6 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         Hash transactionHash = entry.getKey();
         UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData = (UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue();
         try {
-
             synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 TransactionData transactionData = transactions.getByHash(entry.getKey());
                 if (transactionData == null) {
@@ -114,4 +116,5 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     private void sendUnconfirmedReceivedTransactionsFullNode(TransactionData transactionData) {
         networkService.sendDataToConnectedDspNodes(transactionData);
     }
+
 }
