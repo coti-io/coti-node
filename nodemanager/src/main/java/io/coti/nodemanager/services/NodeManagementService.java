@@ -1,14 +1,14 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.LockData;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
+import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.AddressResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkNodeRecordValidationException;
@@ -26,11 +26,13 @@ import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.SerializationUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -78,10 +80,19 @@ public class NodeManagementService implements INodeManagementService {
     @Value("${propagation.port}")
     private String propagationPort;
     private final LockData nodeHashLockData = new LockData();
+    @Autowired
+    private ICommunicationService communicationService;
 
     @Override
     public void init() {
         networkService.setNodeManagerPropagationAddress("tcp://" + nodeManagerIp + ":" + propagationPort);
+
+        activeNodes.forEach(activeNode ->  {
+            if (activeNode.getNetworkNodeData().getNodeType() == NodeType.DspNode || activeNode.getNetworkNodeData().getNodeType() == NodeType.ZeroSpendServer) {
+                communicationService.addSubscription(activeNode.getNetworkNodeData().getPropagationFullAddress(), activeNode.getNetworkNodeData().getNodeType());
+            }
+        });
+
     }
 
     public void propagateNetworkChanges() {
@@ -99,6 +110,9 @@ public class NodeManagementService implements INodeManagementService {
             activeNodes.put(activeNodeData);
             addNodeHistory(networkNodeData, NetworkNodeStatus.ACTIVE, Instant.now());
             healthCheckService.initNodeMonitorThreadIfAbsent(Executors.defaultThreadFactory(), networkNodeData);
+            if (networkNodeData.getNodeType() == NodeType.DspNode || networkNodeData.getNodeType() == NodeType.ZeroSpendServer) {
+                communicationService.addSubscription(networkNodeData.getPropagationFullAddress(), networkNodeData.getNodeType());
+            }
             propagateNetworkChanges();
             Thread.sleep(3000); // a delay for other nodes to make changes with the newly added node
             return ResponseEntity.status(HttpStatus.OK).body(String.format(NODE_ADDED_TO_NETWORK, networkNodeData.getNodeHash()));
@@ -111,6 +125,16 @@ public class NodeManagementService implements INodeManagementService {
         }
 
     }
+
+    public void deleteNodeRecord(NetworkNodeData networkNodeData) {
+        log.info("Deleting {} of address {} and port {}", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
+        addNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE, Instant.now());
+        activeNodes.delete(networkNodeData);
+        if (networkNodeData.getNodeType() == NodeType.DspNode || networkNodeData.getNodeType() == NodeType.ZeroSpendServer) {
+            communicationService.removeSubscription(networkNodeData.getPropagationFullAddress(), networkNodeData.getNodeType());
+        }
+    }
+
 
     private void validateReservedHostToNode(NetworkNodeData networkNodeData) {
         if (networkNodeData.getNodeType().equals(NodeType.FullNode)) {

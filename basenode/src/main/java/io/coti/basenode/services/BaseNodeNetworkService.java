@@ -415,7 +415,29 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
+    public NodeType getNetworkNodeType(Hash nodeHash) {
+        Optional<NetworkNodeData> node = singleNodeNetworkDataMap.values().stream().filter(Objects::nonNull).filter(nodeData -> nodeData.getNodeHash().equals(nodeHash)).findFirst();
+        if (node.isPresent()) {
+            return node.get().getNodeType();
+        }
+        for (Map.Entry<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMap : multipleNodeMaps.entrySet()) {
+            node = multipleNodeMap.getValue().values().stream().filter(Objects::nonNull).filter(nodeData -> nodeData.getNodeHash().equals(nodeHash)).findFirst();
+            if (node.isPresent()) {
+                return multipleNodeMap.getKey();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public long countDSPNodes() {
+        return multipleNodeMaps.get(NodeType.DspNode).entrySet().size();
+    }
+
+    @Override
     public List<Hash> getCurrentValidators() {
         throw new NetworkException("Attempted to get current validators.");
     }
 }
+
+

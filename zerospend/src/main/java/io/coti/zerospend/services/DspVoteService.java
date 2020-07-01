@@ -38,6 +38,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
     private final LockData transactionHashLockData = new LockData();
     private Map<Hash, HashSet<TransactionDspVote>> missingTransactionsAwaitingHandling;
+    private boolean sumAndSaveVotesPause;
 
     @Override
     public void init() {
@@ -121,6 +122,9 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     @Scheduled(fixedDelay = 1000)
     private void sumAndSaveVotes() {
+        if (sumAndSaveVotesPause) {
+            return;
+        }
         for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet :
                 transactionHashToVotesListMapping.entrySet()) {
             Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
@@ -193,5 +197,13 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 .count();
         long totalVotersCount = currentVotes.getLegalVoterDspHashes().size();
         return negativeVotersCount > totalVotersCount / 2;
+    }
+
+    public void setSumAndSaveVotesPause(){
+        sumAndSaveVotesPause = true;
+    }
+
+    public void endSumAndSaveVotesPause(){
+        sumAndSaveVotesPause = false;
     }
 }
