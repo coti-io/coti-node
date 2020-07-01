@@ -96,10 +96,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp = true;
     }
 
-    private void createNewClusterStampFile() {
+    private void createNewClusterStampFile(List<GeneralVoteMessage> generalVoteMessageList) {
         // Create cluster stamp hash
+
         boolean prepareClusterStampLines = true;
-        Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
 
         // Update with voters snapshot
         GetNetworkVotersResponse getNetworkVotersResponse = getNetworkVoters();
@@ -111,8 +111,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         // For each vote
-        GeneralVoteMessage generalVoteMessage = createGeneralVoteMessage(clusterStampCreateTime, clusterStampDataMessageHash);
-        updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
+        generalVoteMessageList.forEach(v -> updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, v));
 
         writeClusterStamp(clusterStampCreateTime);
         String versionTimeMillisString = String.valueOf(clusterStampCreateTime.toEpochMilli());

@@ -470,7 +470,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private boolean addOwnNodeGeneralVoteMessage(String clusterStampFileName, boolean prepareClusterStampLines, ArrayList<GeneralVoteMessage> generalVoteMessages, Hash clusterStampDataMessageHash) {
-        StateMessageClusterStampHashPayload messagePayload = new StateMessageClusterStampHashPayload(clusterStampDataMessageHash);
+        GeneralVoteClusterStampHashPayload messagePayload = new GeneralVoteClusterStampHashPayload(clusterStampDataMessageHash);
         GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(messagePayload, clusterStampDataMessageHash, true, clusterStampCreateTime);
         generalMessageCrypto.signMessage(generalVoteMessage);
         updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
@@ -608,7 +608,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         long positiveVotesAmount = generalVoteMessages.stream().filter(generalVoteMessage ->
                 generalVoteMessage.isVote() &&
                         allCurrentValidators.contains(generalVoteMessage.getSignerHash()) &&
-                        ((StateMessageClusterStampHashPayload) generalVoteMessage.getMessagePayload()).getClusterStampHash().equals(clusterStampDataMessageHash) &&
+                        ((GeneralVoteClusterStampHashPayload) generalVoteMessage.getMessagePayload()).getClusterStampHash().equals(clusterStampDataMessageHash) &&
                         getNetworkVotersResponse.getCreateTime().plusSeconds(NETWORK_VALIDATORS_SNAPSHOT_VALID_SECONDS).isAfter(generalVoteMessage.getCreateTime())
         ).count();
         if (positiveVotesAmount < getExpectedMajority(allCurrentValidators.size())) {
@@ -637,7 +637,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         boolean vote = Boolean.parseBoolean(lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_VOTE_INDEX]);
         Hash clusterStampHash = new Hash(lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_CLUSTER_STAMP_HASH_INDEX]);
 
-        StateMessageClusterStampHashPayload messagePayload = new StateMessageClusterStampHashPayload(clusterStampHash);
+        GeneralVoteClusterStampHashPayload messagePayload = new GeneralVoteClusterStampHashPayload(clusterStampHash);
         GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(messagePayload, clusterStampHash, vote, generalVoteMessageCreateTime);
         generalVoteMessage.setSignature(new SignatureData(voteSignatureR, voteSignatureS));
         generalVoteMessage.setSignerHash(signerHash);
@@ -666,7 +666,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         String voteSignatureR = generalVoteMessage.getSignature().getR();
         String voteSignatureS = generalVoteMessage.getSignature().getS();
         boolean vote = generalVoteMessage.isVote();
-        Hash clusterStampHash = ((StateMessageClusterStampHashPayload) generalVoteMessage.getMessagePayload()).getClusterStampHash();
+        Hash clusterStampHash = ((GeneralVoteClusterStampHashPayload) generalVoteMessage.getMessagePayload()).getClusterStampHash();
 
         StringBuilder sb = new StringBuilder();
         String line = sb.append(generalVoteMessageCreateTime.toEpochMilli()).append(CLUSTERSTAMP_DELIMITER).append(signerHash.toHexString()).append(CLUSTERSTAMP_DELIMITER).
@@ -908,7 +908,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         } catch (ClusterStampException e) {
             throw new ClusterStampException("Unable to calculate cluster stamp data message hash.");
         }
-        return streamArray != null ? new Hash(streamArray) : null;
+        return streamArray != null ? CryptoHelper.cryptoHash(streamArray) : null;
     }
 
     protected void prepareOnlyForNativeGenesisAddressBalanceClusterStampSegment(ClusterStampData clusterStampData, boolean prepareClusterStampLines, CurrencyData nativeCurrency) {
