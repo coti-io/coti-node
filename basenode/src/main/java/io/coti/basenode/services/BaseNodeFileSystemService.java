@@ -10,7 +10,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -60,6 +62,26 @@ public class BaseNodeFileSystemService {
             Files.delete(Paths.get(filePath));
         } catch (Exception e) {
             throw new FileSystemException(String.format("Delete file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
+    }
+
+    public void renameFile(String sourceFilePath, String targetFilePath) {
+        try {
+            Path sourcePath = Paths.get(sourceFilePath);
+            Path targetPath = Paths.get(targetFilePath);
+            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new FileSystemException(String.format("Rename file error. %s: %s", e.getClass().getName(), e.getMessage()));
+        }
+    }
+
+    public void copyFile(String sourceFilePath, String targetFilePath) {
+        try {
+            Path sourcePath = Paths.get(sourceFilePath);
+            Path targetPath = Paths.get(targetFilePath);
+            Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new FileSystemException(String.format("Copy file error. %s: %s", e.getClass().getName(), e.getMessage()));
         }
     }
 
