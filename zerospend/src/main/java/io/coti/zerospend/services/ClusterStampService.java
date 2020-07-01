@@ -117,10 +117,11 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp = true;
     }
 
-    private void createNewClusterStampFile(List<GeneralVoteMessage> generalVoteMessageList) {
+    private void createNewClusterStampFile(Hash voteHash) {
         // Create cluster stamp hash
+
+        List<GeneralVoteMessage> generalVoteMessageList = generalVoteService.getVoteResultVotersList(voteHash);
         boolean prepareClusterStampLines = true;
-        Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
 
         // Update with voters snapshot
         GetNetworkVotersResponse getNetworkVotersResponse = getNetworkVoters();
@@ -132,8 +133,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         // For each vote
-        GeneralVoteMessage generalVoteMessage = createGeneralVoteMessage(clusterStampCreateTime, clusterStampDataMessageHash);
-        updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
+        generalVoteMessageList.forEach(v -> updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, v));
 
         writeClusterStamp(clusterStampCreateTime);
         String versionTimeMillisString = String.valueOf(clusterStampCreateTime.toEpochMilli());
@@ -239,15 +239,15 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         calculateClusterStampDataAndHashes(clusterStampInitiateTimestamp);  // todo there is no check of clusterStampInitiateTimestamp, but may be it is needed for emergency scenarious
         Hash clusterStampHash = getCandidateClusterStampHash();
 
-        StateMessageClusterStampHashPayload stateMessageClusterStampBalanceHashPayload = new StateMessageClusterStampHashPayload(clusterStampHash);
-        StateMessage stateBalanceHashMessage = new StateMessage(stateMessageClusterStampBalanceHashPayload);
-        stateBalanceHashMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateBalanceHashMessage)));
-        generalMessageCrypto.signMessage(stateBalanceHashMessage);
-        generalVoteService.startCollectingVotes(stateBalanceHashMessage, createGeneralVoteMessage(Instant.now(), stateBalanceHashMessage.getHash()));
+        StateMessageClusterStampHashPayload stateMessageClusterstampHashForVotePayload = new StateMessageClusterStampHashPayload(clusterStampHash);
+        StateMessage stateMessageClusterstampHashForVote = new StateMessage(stateMessageClusterstampHashForVotePayload);
+        stateMessageClusterstampHashForVote.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessageClusterstampHashForVote)));
+        generalMessageCrypto.signMessage(stateMessageClusterstampHashForVote);
+        generalVoteService.startCollectingVotes(stateMessageClusterstampHashForVote, createGeneralVoteMessage(Instant.now(), clusterStampHash));
 //                //TODO 6/11/2020 tomer: Need to align exact messages
-//                clusterStampService.updateGeneralVoteMessageClusterStampSegment(true, stateBalanceHashMessage);
+//                clusterStampService.updateGeneralVoteMessageClusterStampSegment(true, stateMessageClusterstampHashForVote);
 
-        log.info(String.format("Initiate voting for the balance clusterstamp hash %s %s", clusterStampHash.toHexString(), stateBalanceHashMessage.getHash().toString()));
+        log.info(String.format("Initiate voting for the balance clusterstamp hash %s %s", clusterStampHash.toHexString(), stateMessageClusterstampHashForVote.getHash().toString()));
 
 //                StateMessageClusterStampHashPayload stateMessageClusterStampCurrencyHashPayload = new StateMessageClusterStampHashPayload(clusterStampCurrencyHash);
 //                StateMessage stateCurrencyHashMessage = new StateMessage(stateMessageClusterStampCurrencyHashPayload);
@@ -257,20 +257,20 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 //                log.info(String.format("Initiate voting for the currency clusterstamp hash %s %s", clusterStampCurrencyHash.toHexString(), stateCurrencyHashMessage.getHash().toString()));
 //                propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
 
-        propagateRetries(Collections.singletonList(stateBalanceHashMessage));
-//        propagateRetries(Arrays.asList(stateBalanceHashMessage, stateCurrencyHashMessage));
+        propagateRetries(Collections.singletonList(stateMessageClusterstampHashForVote));
+//        propagateRetries(Arrays.asList(stateMessageClusterstampHashForVote, stateCurrencyHashMessage));
     }
 
     @Override
-    public void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {
+    public void doClusterStampAfterVoting(Hash voteHash) {
 
-        createNewClusterStampFile(generalVoteService.getVoteResultVotersList(generalVoteMessage.getVoteHash()));
+        createNewClusterStampFile(voteHash);
 
-        StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(generalVoteMessage.getVoteHash());
+        StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(voteHash);
         StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);
         stateMessageExecute.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessageExecute)));
         generalMessageCrypto.signMessage(stateMessageExecute);
-        log.info("Initiate clusterstamp execution " + generalVoteMessage.getVoteHash().toString());
+        log.info("Initiate clusterstamp execution " + voteHash.toString());
         propagateRetries(Collections.singletonList(stateMessageExecute));
 
         //todo clean clusterStampService.clusterstampdata

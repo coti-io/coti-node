@@ -24,7 +24,7 @@ public class GeneralVoteService extends BaseNodeGeneralVoteService {
                 clusterStampService.calculateClusterStampDataAndHashesAndSendMessage(); // todo separate it to a thread
                 break;
             case CLUSTER_STAMP_HASH_VOTE:
-                clusterStampService.doClusterStampAfterVoting(generalVoteMessage);
+                clusterStampService.doClusterStampAfterVoting(generalVoteMessage.getVoteHash());
                 break;
             default:
                 log.error("Unexpected vote type: {}", generalVoteMessage.getMessagePayload().getGeneralMessageType());

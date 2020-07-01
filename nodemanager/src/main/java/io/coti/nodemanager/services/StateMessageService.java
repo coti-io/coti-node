@@ -28,6 +28,8 @@ public class StateMessageService extends BaseNodeStateMessageService {
             case CLUSTER_STAMP_PREPARE_INDEX:
                 generalVoteService.startCollectingVotes(stateMessage, null);
                 break;
+            case CLUSTER_STAMP_PREPARE_HASH:
+                break;
             case CLUSTER_STAMP_INITIATED:
                 break;
             default:

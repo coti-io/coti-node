@@ -22,11 +22,14 @@ public interface IClusterStampService {
 
     void getClusterStampFromRecoveryServer();
 
-    default void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {}
+    default void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {
+    }
 
-    default void clusterStampContinueWithIndex(StateMessage stateMessage) {}
+    default void clusterStampContinueWithIndex(StateMessage stateMessage) {
+    }
 
-    default void clusterStampContinueWithHash(StateMessage stateMessage) {}
+    default void clusterStampContinueWithHash(StateMessage stateMessage) {
+    }
 
     default void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
     }
@@ -35,9 +38,11 @@ public interface IClusterStampService {
 
     void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, GeneralVoteMessage generalVoteMessage);
 
-    default void calculateClusterStampDataAndHashesAndSendMessage() {}
+    default void calculateClusterStampDataAndHashesAndSendMessage() {
+    }
 
-    default void doClusterStampAfterVoting(GeneralVoteMessage generalVoteMessage) {}
+    default void doClusterStampAfterVoting(Hash voteHash) {
+    }
 
     void calculateClusterStampDataAndHashes();
 

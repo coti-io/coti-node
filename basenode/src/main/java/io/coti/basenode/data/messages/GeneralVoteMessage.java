@@ -1,6 +1,5 @@
 package io.coti.basenode.data.messages;
 
-import io.coti.basenode.data.GeneralVote;
 import io.coti.basenode.data.Hash;
 import lombok.Data;
 
@@ -22,15 +21,6 @@ public class GeneralVoteMessage extends GeneralMessage {
         super(messagePayload, createTime);
         this.voteHash = voteHash;
         this.vote = vote;
-    }
-
-    public GeneralVoteMessage(Hash voteHash, GeneralVote generalVote, MessagePayload messagePayload) {
-        super(messagePayload);
-        this.voteHash = voteHash;
-        this.vote = generalVote.isVote();
-        this.setCreateTime(generalVote.getVoteTime());
-        this.setSignerHash(generalVote.getVoterHash());
-        this.setSignature(generalVote.getSignature());
     }
 
     private GeneralVoteMessage() {

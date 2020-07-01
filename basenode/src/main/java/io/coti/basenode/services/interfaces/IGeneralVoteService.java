@@ -1,7 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.messages.GeneralVoteMessage;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.messages.GeneralVoteMessage;
 import io.coti.basenode.data.messages.StateMessage;
 
 import java.util.List;
@@ -16,7 +16,7 @@ public interface IGeneralVoteService {
 
     GeneralVoteMessage castVoteForClusterStampIndex(Hash voteHash, boolean vote);
 
-    GeneralVoteMessage castVoteForClusterStampHash(Hash voteHash, boolean vote);
+    GeneralVoteMessage castVoteForClusterStampHash(Hash voteHash, boolean vote, Hash clusterStampHash);
 
     List<GeneralVoteMessage> getVoteResultVotersList(Hash voteHash);
 
