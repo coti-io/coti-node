@@ -294,8 +294,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         connectedNodes.forEach((serverAddress, connectedNodeData) -> {
             if (Duration.between(connectedNodeData.getLastConnectionTime(), Instant.now()).toMillis() > HEARTBEAT_INTERVAL) {
                 log.info("Publisher heartbeat message timeout: server = {}, lastHeartBeat = {}", serverAddress, connectedNodeData.getLastConnectionTime());
-                unsubscribeAll(serverAddress, connectedNodeData.getNodeType());
-                connectAndSubscribeToServer(serverAddress, connectedNodeData.getNodeType());
+//                unsubscribeAll(serverAddress, connectedNodeData.getNodeType());
+//                connectAndSubscribeToServer(serverAddress, connectedNodeData.getNodeType());
             }
         });
     }
