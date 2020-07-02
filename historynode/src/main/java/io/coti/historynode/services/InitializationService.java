@@ -28,6 +28,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private ICommunicationService communicationService;
     @Value("${server.port}")
     private String serverPort;
+    @Value("${propagation.port}")
+    private String propagationPort;
     @Value("${server.url}")
     private String webServerUrl;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
@@ -45,6 +47,7 @@ public class InitializationService extends BaseNodeInitializationService {
             publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
 
             communicationService.initSubscriber(NodeType.HistoryNode, publisherNodeTypeToMessageTypesMap);
+            communicationService.initPublisher(propagationPort, NodeType.HistoryNode);
 
             NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
             if (zerospendNetworkNodeData == null) {
@@ -73,6 +76,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @Override
     protected NetworkNodeData createNodeProperties() {
         NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.HistoryNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;
     }

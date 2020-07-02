@@ -4,7 +4,6 @@ import io.coti.basenode.data.messages.StateMessage;
 import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
 import io.coti.basenode.services.BaseNodeStateMessageService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
-import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,9 +14,6 @@ public class StateMessageService extends BaseNodeStateMessageService {
 
     @Autowired
     private IClusterStampService clusterStampService;
-    @Autowired
-    private IGeneralVoteService generalVoteService;
-
 
     @Override
     public void continueHandleStateMessage(StateMessage stateMessage) {
@@ -31,6 +27,9 @@ public class StateMessageService extends BaseNodeStateMessageService {
             case CLUSTER_STAMP_PREPARE_HASH:
                 break;
             case CLUSTER_STAMP_INITIATED:
+                break;
+            case CLUSTER_STAMP_CONTINUE:
+                // todo
                 break;
             default:
                 log.error("Unexpected message type: {}", stateMessage.getMessagePayload().getGeneralMessageType());

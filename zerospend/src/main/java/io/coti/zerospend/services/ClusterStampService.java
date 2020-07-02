@@ -46,7 +46,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private DspVoteService dspVoteService;
 
-    private static final long CLUSTER_STAMP_TIMEOUT = 100;
     private static final long CLUSTER_STAMP_INITIATED_DELAY = 20;
     private static final long CLUSTER_STAMP_WAIT_TCC = 50;
     private static final int NUMBER_OF_RESENDS = 3;
@@ -212,24 +211,24 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         Instant waitForTCCTill = Instant.now().plusSeconds(CLUSTER_STAMP_WAIT_TCC);
 
-        long lastConfirmedIndex = 0;
+        lastConfirmedIndexForClusterStamp = 0;
         while (Instant.now().isBefore(waitForTCCTill)) {
-            lastConfirmedIndex = clusterService.getMaxIndexOfNotConfirmed();
-            if (lastConfirmedIndex == 0) {
+            lastConfirmedIndexForClusterStamp = clusterService.getMaxIndexOfNotConfirmed();
+            if (lastConfirmedIndexForClusterStamp == 0) {
                 break;
             }
             Thread.sleep(1000);
         }
-        if (lastConfirmedIndex <= 0) {
-            lastConfirmedIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
+        if (lastConfirmedIndexForClusterStamp <= 0) {
+            lastConfirmedIndexForClusterStamp = transactionIndexService.getLastTransactionIndexData().getIndex();
         }
 
-        StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload = new StateMessageLastClusterStampIndexPayload(lastConfirmedIndex);
+        StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload = new StateMessageLastClusterStampIndexPayload(lastConfirmedIndexForClusterStamp);
         StateMessage stateMessage = new StateMessage(stateMessageLastClusterStampIndexPayload);
         stateMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessage)));
         generalMessageCrypto.signMessage(stateMessage);
         generalVoteService.startCollectingVotes(stateMessage, createGeneralVoteMessage(Instant.now(), stateMessage.getHash()));
-        log.info(String.format("Initiate voting for the last clusterstamp index %d %s", lastConfirmedIndex, stateMessage.getHash().toString()));
+        log.info(String.format("Initiate voting for the last clusterstamp index %d %s", lastConfirmedIndexForClusterStamp, stateMessage.getHash().toString()));
         propagateRetries(Collections.singletonList(stateMessage));
     }
 
@@ -256,6 +255,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 //                log.info(String.format("Initiate voting for the currency clusterstamp hash %s %s", clusterStampCurrencyHash.toHexString(), stateCurrencyHashMessage.getHash().toString()));
 //                propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
 
+        generalVoteService.clearClusterStampHashVoteDone();
         propagateRetries(Collections.singletonList(stateMessageClusterstampHashForVote));
 //        propagateRetries(Arrays.asList(stateMessageClusterstampHashForVote, stateCurrencyHashMessage));
     }
@@ -263,13 +263,21 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void doClusterStampAfterVoting(Hash voteHash) {
 
+        StateMessageClusterStampContinuePayload stateMessageClusterStampContinuePayload = new StateMessageClusterStampContinuePayload(voteHash);
+        StateMessage stateMessageContinue = new StateMessage(stateMessageClusterStampContinuePayload);
+        stateMessageContinue.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessageContinue)));
+        generalMessageCrypto.signMessage(stateMessageContinue);
+        log.info("Nodes can continue with transaction processing " + voteHash.toString());
+        propagateRetries(Collections.singletonList(stateMessageContinue));
+
         createNewClusterStampFile(generalVoteService.getVoteResultVotersList(voteHash));
 
-        StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(voteHash);
+        StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload = new StateMessageClusterStampExecutePayload(voteHash, lastConfirmedIndexForClusterStamp);
         StateMessage stateMessageExecute = new StateMessage(stateMessageClusterStampExecutePayload);
         stateMessageExecute.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateMessageExecute)));
         generalMessageCrypto.signMessage(stateMessageExecute);
         log.info("Initiate clusterstamp execution " + voteHash.toString());
+        clusterStampExecute(stateMessageExecute, stateMessageClusterStampExecutePayload);   //todo may be separate thread
         propagateRetries(Collections.singletonList(stateMessageExecute));
 
         //todo clean clusterStampService.clusterstampdata

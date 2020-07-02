@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.messages.*;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.exceptions.FileSystemException;
@@ -13,12 +14,12 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
-import io.coti.basenode.model.GeneralVoteResults;
 import io.coti.basenode.model.LastClusterStampVersions;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -125,6 +126,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected String voterNodesDetails;
     protected List<String> validatorsVoteClusterStampSegmentLines;
     protected boolean filledMissingSegments;
+    private boolean agreedHistoryNodesNumberEnough;
+    protected long lastConfirmedIndexForClusterStamp = 0;
 
     protected String nodeManagerHttpAddress;
 
@@ -155,8 +158,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Autowired
     protected IMintingService mintingService;
     @Autowired
-    protected GeneralVoteResults generalVoteResults;
-    @Autowired
     protected RestTemplate restTemplate;
     @Autowired
     private ClusterService clusterService;
@@ -168,6 +169,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected GetNetworkVotersCrypto getNetworkVotersCrypto;
     @Autowired
     protected SetNewClusterStampsRequestCrypto setNewClusterStampsRequestCrypto;
+    @Autowired
+    private IDatabaseConnector databaseConnector;
+    @Autowired
+    private TransactionHelper transactionHelper;
 
     @Override
     public void init() {
@@ -1072,6 +1077,58 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     public boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload) {
         Hash clusterStampHash = getCandidateClusterStampHash();
         return clusterStampHash != null && clusterStampHash.equals(stateMessageClusterStampHashPayload.getClusterStampHash());
+    }
+
+    @Override
+    public void setAgreedHistoryNodesNumberEnough() {
+        agreedHistoryNodesNumberEnough = true;
+    }
+
+    @Override
+    public boolean isAgreedHistoryNodesNumberEnough() {
+        return agreedHistoryNodesNumberEnough;
+    }
+
+    @Override
+    public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
+
+        //todo pause transactions processing
+
+        String tempColumnFamilyName = Transactions.class.getName() + "_temp";
+        databaseConnector.createColumnFamily(tempColumnFamilyName);
+
+        RocksIterator iterator = transactions.getIterator();
+        iterator.seekToFirst();
+        long movedTransactionsCounter = 0;
+        while (iterator.isValid()) {
+            byte[] rawTransactionData = iterator.value();
+            TransactionData transactionData = (TransactionData) SerializationUtils.deserialize(iterator.value());
+            if (!transactionHelper.isConfirmed(transactionData) || transactionData.getDspConsensusResult().getIndex() > stateMessageClusterStampExecutePayload.getLastIndex()) {
+                databaseConnector.put(tempColumnFamilyName, transactionData.getHash().getBytes(), rawTransactionData);
+            } else {
+                movedTransactionsCounter++;
+            }
+            iterator.next();
+        }
+
+        databaseConnector.resetColumnFamilies(Collections.singletonList(Transactions.class.getName()));
+
+        RocksIterator iteratorBack = databaseConnector.getIterator(tempColumnFamilyName);
+        iteratorBack.seekToFirst();
+        while (iteratorBack.isValid()) {
+            databaseConnector.put(Transactions.class.getName(), iteratorBack.key(), iteratorBack.value());
+            iteratorBack.next();
+        }
+
+        databaseConnector.dropColumnFamilies(Collections.singletonList(tempColumnFamilyName));
+        log.info("{} transactions are moved out from the actual database and kept by the history nodes", movedTransactionsCounter);
+
+        //todo restart transactions processing
+    }
+
+    @Override
+    public void clusterStampContinueWithIndex(StateMessage stateMessage) {
+        lastConfirmedIndexForClusterStamp = ((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload()).getLastIndex();
     }
 
 }

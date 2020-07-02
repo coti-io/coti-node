@@ -1,6 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.messages.GeneralMessageType;
 import io.coti.basenode.data.messages.GeneralVoteMessage;
 import io.coti.basenode.data.messages.StateMessage;
 
@@ -20,6 +21,7 @@ public interface IGeneralVoteService {
 
     List<GeneralVoteMessage> getVoteResultVotersList(Hash voteHash);
 
-    long calculateQuorumOfValidators(long numberOfValidators);
+    long calculateQuorumOfValidators(GeneralMessageType messageType);
 
+    void clearClusterStampHashVoteDone();
 }

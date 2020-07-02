@@ -8,13 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 @Slf4j
 @Service
 public class StateMessageService extends BaseNodeStateMessageService {
 
     @Autowired
     private IClusterStampService clusterStampService;
-
 
     @Override
     public void continueHandleStateMessage(StateMessage stateMessage) {
@@ -35,6 +36,26 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 Hash candidateClusterStampHash = clusterStampService.getCandidateClusterStampHash();
                 generalVoteService.startCollectingVotes(stateMessage, generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(),
                         clusterStampService.checkClusterStampHash((StateMessageClusterStampHashPayload) stateMessage.getMessagePayload()), candidateClusterStampHash));
+                Thread waitForHistoryNodesAndCastVote = new Thread(() -> {
+                    try {
+                        Instant waitForHistoryNodesTill = Instant.now().plusSeconds(clusterStampService.CLUSTER_STAMP_TIMEOUT);
+                        while (Instant.now().isBefore(waitForHistoryNodesTill)) {
+                            if (clusterStampService.isAgreedHistoryNodesNumberEnough()) {
+                                generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkClusterStampHash((StateMessageClusterStampHashPayload) stateMessage.getMessagePayload()), candidateClusterStampHash);
+                                break;
+                            }
+                            Thread.sleep(1000);
+                        }
+                    } catch (InterruptedException e) {
+                        log.info(String.format("WaitForHistoryNodesAndCastVote interrupted %s", e));
+                        Thread.currentThread().interrupt();
+                    }
+                });
+                waitForHistoryNodesAndCastVote.start();
+
+                break;
+            case CLUSTER_STAMP_CONTINUE:
+                clusterStampService.clusterStampContinue(stateMessage);
                 break;
             case CLUSTER_STAMP_EXECUTE:
                 clusterStampService.clusterStampExecute(stateMessage, (StateMessageClusterStampExecutePayload) stateMessage.getMessagePayload());

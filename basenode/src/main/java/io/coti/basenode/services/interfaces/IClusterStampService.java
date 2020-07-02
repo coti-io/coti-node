@@ -10,6 +10,8 @@ import java.time.Instant;
 
 public interface IClusterStampService {
 
+    long CLUSTER_STAMP_TIMEOUT = 100;
+
     void init();
 
     boolean shouldUpdateClusterStampDBVersion();
@@ -25,14 +27,12 @@ public interface IClusterStampService {
     default void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {
     }
 
-    default void clusterStampContinueWithIndex(StateMessage stateMessage) {
-    }
+    void clusterStampContinueWithIndex(StateMessage stateMessage);
 
     default void clusterStampContinueWithHash(StateMessage stateMessage) {
     }
 
-    default void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
-    }
+    void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload);
 
     Hash getCandidateClusterStampHash();
 
@@ -51,4 +51,10 @@ public interface IClusterStampService {
     boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload);
 
     boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload);
+
+    void setAgreedHistoryNodesNumberEnough();
+
+    boolean isAgreedHistoryNodesNumberEnough();
+
+    default void clusterStampContinue(StateMessage stateMessage) {}
 }

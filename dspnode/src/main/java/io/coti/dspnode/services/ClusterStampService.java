@@ -20,7 +20,6 @@ import java.util.Collections;
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
 
-    private static final long MAX_CLUSTERSTAMP_TIMEOUT = 100;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -35,7 +34,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         if (stateMessageClusterstampInitiatedPayload.getDelay() < 0 ||
                 stateMessageClusterstampInitiatedPayload.getDelay() > stateMessageClusterstampInitiatedPayload.getTimeout() ||
-                stateMessageClusterstampInitiatedPayload.getTimeout() > MAX_CLUSTERSTAMP_TIMEOUT) {
+                stateMessageClusterstampInitiatedPayload.getTimeout() > CLUSTER_STAMP_TIMEOUT) {
             log.error("Incorrect {} message parameters {}", stateMessageClusterstampInitiatedPayload.getGeneralMessageType(), stateMessageClusterstampInitiatedPayload.toString());
             return;
         }
@@ -49,6 +48,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public void clusterStampContinueWithIndex(StateMessage stateMessage) {
+        super.clusterStampContinueWithIndex(stateMessage);
         votingTimeoutService.cancelEvent("CLUSTER_STUMP_INITIATE_TIMEOUT");
         if (!receiver.isMessageQueuePause()) {
             receiver.setMessageQueuePause();
@@ -70,8 +70,18 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
+        if (lastConfirmedIndexForClusterStamp != stateMessageClusterStampExecutePayload.getLastIndex()) {
+            log.error("Incorrect index in the CLUSTER_STAMP_EXECUTE message {} {}", lastConfirmedIndexForClusterStamp, stateMessageClusterStampExecutePayload.getLastIndex());
+            return;
+        }
         String clusterStampCreateTimeString = String.valueOf(this.clusterStampCreateTime.toEpochMilli());
         clusterStampName = new ClusterStampNameData(clusterStampCreateTimeString, clusterStampCreateTimeString);
+        propagationPublisher.propagate(stateMessage, Collections.singletonList(NodeType.FullNode));
+        super.clusterStampExecute(stateMessage, stateMessageClusterStampExecutePayload);
+    }
+
+    @Override
+    public void clusterStampContinue(StateMessage stateMessage) {
         propagationPublisher.propagate(stateMessage, Collections.singletonList(NodeType.FullNode));
     }
 }

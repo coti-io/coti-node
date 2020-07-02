@@ -51,6 +51,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class, StateMessage.class, GeneralVoteMessage.class));
             publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.HistoryNode, Collections.singletonList(GeneralVoteMessage.class));
 
             communicationService.initSubscriber(NodeType.DspNode, publisherNodeTypeToMessageTypesMap);
             NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
@@ -74,6 +75,7 @@ public class InitializationService extends BaseNodeInitializationService {
                     .filter(dspNode -> !dspNode.equals(networkService.getNetworkNodeData()))
                     .collect(Collectors.toList());
             networkService.addListToSubscription(dspNetworkNodeDataList);
+            networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.HistoryNode).values());
             if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
                 networkService.addListToSubscription(new ArrayList<>(Collections.singletonList(networkService.getSingleNodeData(NodeType.FinancialServer))));
             }

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 
@@ -72,6 +73,8 @@ public class InitializationService {
 
             publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(StateMessage.class, GeneralVoteMessage.class));
             publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(StateMessage.class, GeneralVoteMessage.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.HistoryNode, Collections.singletonList(GeneralVoteMessage.class));
+
             communicationService.initSubscriber(NodeType.NodeManager, publisherNodeTypeToMessageTypesMap);
 
             insertActiveNodesToMemory();

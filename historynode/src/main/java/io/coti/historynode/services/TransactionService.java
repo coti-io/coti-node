@@ -56,11 +56,14 @@ public class TransactionService extends BaseNodeTransactionService {
     private ChunkService chunkService;
     @Autowired
     private HttpJacksonSerializer jacksonSerializer;
+    private boolean historyProcessingPaused = false;
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         log.debug("Continue to handle propagated transaction {} by history node", transactionData.getHash());
-        addToHistoryTransactionIndexes(transactionData);
+        if (!historyProcessingPaused) {
+            addToHistoryTransactionIndexes(transactionData);
+        }
     }
 
     public void getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest, HttpServletResponse response) {
@@ -227,6 +230,14 @@ public class TransactionService extends BaseNodeTransactionService {
 
     protected ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
         return storageConnector.storeInStorage(url, addEntitiesBulkRequest, AddHistoryEntitiesResponse.class);
+    }
+
+    public void setHistoryProcessingPause() {
+        this.historyProcessingPaused = true;
+    }
+
+    public void endHistoryProcessingPause(String ignored) {
+        this.historyProcessingPaused = false;
     }
 
 }

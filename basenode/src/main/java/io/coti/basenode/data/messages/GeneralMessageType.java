@@ -6,6 +6,8 @@ public enum GeneralMessageType {
     CLUSTER_STAMP_INDEX_VOTE(GeneralVoteClusterStampIndexPayload.class),
     CLUSTER_STAMP_PREPARE_HASH(StateMessageClusterStampHashPayload.class),
     CLUSTER_STAMP_HASH_VOTE(GeneralVoteClusterStampHashPayload.class),
+    CLUSTER_STAMP_HASH_HISTORY_NODE(GeneralVoteClusterStampHistoryNodeAgreedHashPayload.class),
+    CLUSTER_STAMP_CONTINUE(StateMessageClusterStampContinuePayload.class),
     CLUSTER_STAMP_EXECUTE(StateMessageClusterStampExecutePayload.class);
 
     private Class<? extends MessagePayload> messagePayload;

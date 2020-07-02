@@ -9,20 +9,22 @@ import java.nio.ByteBuffer;
 public class StateMessageClusterStampExecutePayload extends MessagePayload {
 
     private Hash voteHash;
+    private long lastIndex;
 
     public StateMessageClusterStampExecutePayload() {
     }
 
-    public StateMessageClusterStampExecutePayload(Hash voteHash) {
+    public StateMessageClusterStampExecutePayload(Hash voteHash, long lastIndex) {
         super(GeneralMessageType.CLUSTER_STAMP_EXECUTE);
         this.voteHash = voteHash;
+        this.lastIndex = lastIndex;
     }
 
     @Override
     public byte[] getMessageInBytes() {
         byte[] broadcastTypeBytes = generalMessageType.name().getBytes();
         byte[] voteHashInBytes = voteHash.getBytes();
-        return ByteBuffer.allocate(broadcastTypeBytes.length + voteHashInBytes.length).put(broadcastTypeBytes).put(voteHashInBytes).array();
+        return ByteBuffer.allocate(broadcastTypeBytes.length + voteHashInBytes.length + Long.BYTES).put(broadcastTypeBytes).put(voteHashInBytes).putLong(lastIndex).array();
     }
 
 }

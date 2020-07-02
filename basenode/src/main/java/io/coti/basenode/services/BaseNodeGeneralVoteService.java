@@ -5,16 +5,15 @@ import io.coti.basenode.crypto.GeneralMessageCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.messages.*;
 import io.coti.basenode.model.GeneralVoteResults;
+import io.coti.basenode.services.interfaces.IClusterStampService;
 import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -28,17 +27,24 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
     protected GeneralMessageCrypto generalMessageCrypto;
     @Autowired
     protected GeneralVoteResults generalVoteResults;
+    @Autowired
+    protected IClusterStampService clusterStampService;
+
     protected final LockData generalVoteResultLockData = new LockData();
     private static final int CONSENSUS_A = 1;
     private static final int CONSENSUS_B = 2;
     private static final int CONSENSUS_C = 0;
+    private static final long REQUIRED_NUMBER_OF_GOOD_HISTORY_NODES = 1;
 
     private EnumMap<NodeType, List<GeneralMessageType>> publisherNodeTypeToGeneralVoteTypesMap = new EnumMap<>(NodeType.class);
+    protected boolean clusterStampHashVoteDone;
 
     public void init() {
         publisherNodeTypeToGeneralVoteTypesMap.put(NodeType.DspNode,
                 Arrays.asList(GeneralMessageType.CLUSTER_STAMP_INDEX_VOTE,
                         GeneralMessageType.CLUSTER_STAMP_HASH_VOTE));
+        publisherNodeTypeToGeneralVoteTypesMap.put(NodeType.HistoryNode,
+                Collections.singletonList(GeneralMessageType.CLUSTER_STAMP_HASH_HISTORY_NODE));
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -52,23 +58,33 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
             return;
         }
         boolean consensusReached = false;
+        boolean consensusPositive = false;
+        Hash generalVoteResultsHash = voteCombinedHash(generalVoteMessage.getMessagePayload().getGeneralMessageType(), generalVoteMessage.getVoteHash());
         try {
-            synchronized (generalVoteResultLockData.addLockToLockMap(generalVoteMessage.getVoteHash())) {
-                GeneralVoteResult generalVoteResult = generalVoteResults.getByHash(generalVoteMessage.getVoteHash());
+            synchronized (generalVoteResultLockData.addLockToLockMap(generalVoteResultsHash)) {
+                GeneralVoteResult generalVoteResult = generalVoteResults.getByHash(generalVoteResultsHash);
                 if (generalVoteResult == null) {
-                    generalVoteResult = new GeneralVoteResult(generalVoteMessage.getVoteHash(), null);
+                    generalVoteResult = new GeneralVoteResult(generalVoteResultsHash, null);
                 }
-                generalVoteResult.getHashToVoteMapping().put(generalVoteMessage.getSignerHash(), generalVoteMessage);
+                generalVoteResult.getHashToVoteMapping().put(generalVoteResultsHash, generalVoteMessage);
                 if (!generalVoteResult.isConsensusReached()) {
-                    consensusReached = checkConsensusAndSetResult(generalVoteResult);
+                    consensusReached = checkConsensusAndSetResult(generalVoteResult, generalVoteMessage.getMessagePayload().getGeneralMessageType());
+                }
+                if (consensusReached) {
+                    consensusPositive = generalVoteResult.isConsensusPositive();
                 }
                 generalVoteResults.put(generalVoteResult);
             }
         } finally {
-            generalVoteResultLockData.removeLockFromLocksMap(generalVoteMessage.getVoteHash());
+            generalVoteResultLockData.removeLockFromLocksMap(generalVoteResultsHash);
         }
 
-        continueHandleGeneralVoteMessage(consensusReached, generalVoteMessage);
+        continueHandleGeneralVoteMessage(consensusReached, consensusPositive, generalVoteMessage);
+    }
+
+    private Hash voteCombinedHash(GeneralMessageType messageType, Hash voteHash) {
+        byte[] voteHashBytes = voteHash.getBytes();
+        return new Hash(ByteBuffer.allocate(Integer.BYTES + voteHashBytes.length).putInt(messageType.ordinal()).put(voteHashBytes).array());
     }
 
     @Override
@@ -77,17 +93,26 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
         return new ArrayList<>(generalVoteResult.getHashToVoteMapping().values());
     }
 
-    protected void continueHandleGeneralVoteMessage(boolean consensusReached, GeneralVoteMessage generalVoteMessage) {
-        // implemented in subclasses
+    protected void continueHandleGeneralVoteMessage(boolean consensusReached, boolean consensusPositive, GeneralVoteMessage generalVoteMessage) {
+        if (GeneralMessageType.CLUSTER_STAMP_HASH_HISTORY_NODE.equals(generalVoteMessage.getMessagePayload().getGeneralMessageType())) {
+            if (consensusReached && consensusPositive) {
+                clusterStampService.setAgreedHistoryNodesNumberEnough();
+            }
+        }
     }
 
     @Override
-    public long calculateQuorumOfValidators(long numberOfValidators) {
-        return numberOfValidators * CONSENSUS_A / CONSENSUS_B + CONSENSUS_C;
+    public long calculateQuorumOfValidators(GeneralMessageType messageType) {
+        if (GeneralMessageType.CLUSTER_STAMP_HASH_HISTORY_NODE.equals(messageType)){
+            return REQUIRED_NUMBER_OF_GOOD_HISTORY_NODES;
+        } else {
+            long numberOfValidators = networkService.countDSPNodes();
+            return numberOfValidators * CONSENSUS_A / CONSENSUS_B + CONSENSUS_C;
+        }
     }
 
-    private boolean checkConsensusAndSetResult(GeneralVoteResult generalVoteResult) {
-        long quorumOfValidators = calculateQuorumOfValidators(networkService.countDSPNodes());
+    private boolean checkConsensusAndSetResult(GeneralVoteResult generalVoteResult, GeneralMessageType messageType) {
+        long quorumOfValidators = calculateQuorumOfValidators(messageType);
         if (quorumOfValidators <= generalVoteResult.getHashToVoteMapping().values().stream().filter(v -> v.isVote()).count()) {
             generalVoteResult.setConsensusReached(true);
             generalVoteResult.setConsensusPositive(true);
@@ -120,7 +145,7 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
         }
     }
 
-    private GeneralVoteMessage castVote(MessagePayload messagePayload, Hash voteHash, boolean vote, String logMessage) {
+    protected GeneralVoteMessage castVote(MessagePayload messagePayload, Hash voteHash, boolean vote, String logMessage) {
         GeneralVoteMessage generalVoteMessage = new GeneralVoteMessage(messagePayload, voteHash, vote);
         generalVoteMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(generalVoteMessage)));
         generalMessageCrypto.signMessage(generalVoteMessage);
@@ -154,4 +179,10 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
         }
         return false;
     }
+
+    @Override
+    public void clearClusterStampHashVoteDone() {
+        clusterStampHashVoteDone = false;
+    }
+
 }

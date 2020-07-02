@@ -36,7 +36,7 @@ public interface INetworkService {
 
     void addListToSubscription(Collection<NetworkNodeData> nodeDataList);
 
-    void handleConnectedDspNodesChange(List<NetworkNodeData> connectedDspNodes, Map<Hash, NetworkNodeData> newDspNodeMap, NodeType nodeType);
+    void handleConnectedNodesChange(NodeType nodesInTheMaps, NetworkData newNetworkData, NodeType nodeType);
 
     void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType, NodeType connectingNodeType);
 
