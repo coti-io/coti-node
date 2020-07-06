@@ -3,7 +3,6 @@ package io.coti.nodemanager.services;
 import io.coti.basenode.data.messages.ExecuteClusterStampStateMessageData;
 import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.data.messages.StateMessageType;
-import io.coti.basenode.data.messages.VoteMessageType;
 import io.coti.basenode.services.BaseNodeStateMessageService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
 import lombok.extern.slf4j.Slf4j;

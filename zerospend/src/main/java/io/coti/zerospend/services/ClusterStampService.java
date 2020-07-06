@@ -269,7 +269,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         log.info("Nodes can continue with transaction processing " + voteHash.toString());
         propagateRetries(Collections.singletonList(continueClusterStampStateMessageData));
 
-        createNewClusterStampFile(generalVoteService.getVoteResultVotersList(voteHash));
+        createNewClusterStampFile(generalVoteService.getVoteResultVotersList(VoteMessageType.CLUSTER_STAMP_HASH_VOTE, voteHash));
 
         ExecuteClusterStampStateMessageData executeClusterStampStateMessageData = new ExecuteClusterStampStateMessageData(voteHash, lastConfirmedIndexForClusterStamp, Instant.now());
         executeClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(executeClusterStampStateMessageData)));

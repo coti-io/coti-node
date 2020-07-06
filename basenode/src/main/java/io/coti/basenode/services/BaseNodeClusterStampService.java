@@ -673,9 +673,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         Hash clusterStampHash = ((HashClusterStampVoteMessageData) generalVoteMessage).getClusterStampHash();
 
         StringBuilder sb = new StringBuilder();
-        String line = sb.append(generalVoteMessageCreateTime.toEpochMilli()).append(CLUSTERSTAMP_DELIMITER).append(signerHash.toHexString()).append(CLUSTERSTAMP_DELIMITER).
-                append(voteSignatureR).append(CLUSTERSTAMP_DELIMITER).append(voteSignatureS).append(CLUSTERSTAMP_DELIMITER).
-                append(vote).append(CLUSTERSTAMP_DELIMITER).append(clusterStampHash).append(CLUSTERSTAMP_DELIMITER).toString();
+        String line = sb.append(generalVoteMessageCreateTime.toEpochMilli()).append(CLUSTERSTAMP_DELIMITER)
+                .append(signerHash.toHexString()).append(CLUSTERSTAMP_DELIMITER)
+                .append(voteSignatureR).append(CLUSTERSTAMP_DELIMITER).append(voteSignatureS).append(CLUSTERSTAMP_DELIMITER)
+                .append(vote).append(CLUSTERSTAMP_DELIMITER)
+                .append(clusterStampHash).append(CLUSTERSTAMP_DELIMITER).toString();
         validatorsVoteClusterStampSegmentLines.add(line);
     }
 

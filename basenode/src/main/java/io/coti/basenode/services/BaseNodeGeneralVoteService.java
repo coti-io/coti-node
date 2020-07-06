@@ -70,7 +70,7 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
                 if (voteResult == null) {
                     voteResult = new VoteResult(generalVoteResultsHash, null);
                 }
-                voteResult.getHashToVoteMapping().put(generalVoteResultsHash, voteMessageData);
+                voteResult.getHashToVoteMapping().put(voteMessageData.getSignerHash(), voteMessageData);
                 if (!voteResult.isConsensusReached()) {
                     consensusReached = checkConsensusAndSetResult(voteResult, VoteMessageType.getName(voteMessageData.getClass()));
                 }
@@ -92,8 +92,9 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
     }
 
     @Override
-    public List<VoteMessageData> getVoteResultVotersList(Hash voteHash) {
-        VoteResult voteResult = generalVoteResults.getByHash(voteHash);
+    public List<VoteMessageData> getVoteResultVotersList(VoteMessageType voteType, Hash voteHash) {
+        Hash generalVoteResultsHash = voteCombinedHash(voteType, voteHash);
+        VoteResult voteResult = generalVoteResults.getByHash(generalVoteResultsHash);
         return new ArrayList<>(voteResult.getHashToVoteMapping().values());
     }
 
@@ -130,11 +131,17 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
 
     @Override
     public void startCollectingVotes(StateMessageData stateMessage, VoteMessageData myVote) {
+        Hash generalVoteResultsHash;
+        if (myVote != null) {
+            generalVoteResultsHash = voteCombinedHash(Objects.requireNonNull(VoteMessageType.getName(myVote.getClass())), myVote.getVoteHash());
+        } else {
+            generalVoteResultsHash = stateMessage.getHash();
+        }
         try {
-            synchronized (generalVoteResultLockData.addLockToLockMap(stateMessage.getHash())) {
-                VoteResult voteResult = generalVoteResults.getByHash(stateMessage.getHash());
+            synchronized (generalVoteResultLockData.addLockToLockMap(generalVoteResultsHash)) {
+                VoteResult voteResult = generalVoteResults.getByHash(generalVoteResultsHash);
                 if (voteResult == null) {
-                    voteResult = new VoteResult(stateMessage.getHash(), stateMessage);
+                    voteResult = new VoteResult(generalVoteResultsHash, stateMessage);
                 } else if (voteResult.getTheMatterOfVoting() == null) {
                     voteResult.setTheMatterOfVoting(stateMessage);
                 }
@@ -144,7 +151,7 @@ public class BaseNodeGeneralVoteService implements IGeneralVoteService {
                 generalVoteResults.put(voteResult);
             }
         } finally {
-            generalVoteResultLockData.removeLockFromLocksMap(stateMessage.getHash());
+            generalVoteResultLockData.removeLockFromLocksMap(generalVoteResultsHash);
         }
     }
 

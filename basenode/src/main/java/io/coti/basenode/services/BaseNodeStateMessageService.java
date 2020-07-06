@@ -4,7 +4,6 @@ import io.coti.basenode.crypto.StateMessageCrypto;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.data.messages.StateMessageType;
-import io.coti.basenode.data.messages.VoteMessageType;
 import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IStateMessageService;
@@ -59,7 +58,7 @@ public class BaseNodeStateMessageService implements IStateMessageService {
     protected boolean incorrectMessageSender(StateMessageData stateMessage) {
         NodeType nodeType = networkService.getNetworkNodeType(stateMessage.getSignerHash());
         return !publisherNodeTypeToGeneralMessageTypesMap.containsKey(nodeType) ||
-                !publisherNodeTypeToGeneralMessageTypesMap.get(nodeType).contains(VoteMessageType.getName(stateMessage.getClass()));
+                !publisherNodeTypeToGeneralMessageTypesMap.get(nodeType).contains(StateMessageType.getName(stateMessage.getClass()));
     }
 
     protected boolean incorrectMessageSenderSignature(StateMessageData stateMessage) {
