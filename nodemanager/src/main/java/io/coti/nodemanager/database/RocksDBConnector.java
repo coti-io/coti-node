@@ -1,7 +1,7 @@
 package io.coti.nodemanager.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.basenode.model.GeneralVoteResults;
+import io.coti.basenode.model.VoteResults;
 import io.coti.nodemanager.model.*;
 import org.rocksdb.RocksDB;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +26,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 NodeDailyActivities.class.getName(),
                 StakingNodes.class.getName(),
                 ReservedHosts.class.getName(),
-                GeneralVoteResults.class.getName());
+                VoteResults.class.getName());
     }
 
     @Override

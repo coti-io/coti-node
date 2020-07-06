@@ -1,7 +1,7 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.data.messages.VoteMessageData;
-import io.coti.basenode.services.BaseNodeGeneralVoteService;
+import io.coti.basenode.services.BaseNodeVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +11,7 @@ import static io.coti.basenode.data.messages.VoteMessageType.getName;
 
 @Slf4j
 @Service
-public class GeneralVoteService extends BaseNodeGeneralVoteService {
+public class VoteService extends BaseNodeVoteService {
 
     @Override
     protected void continueHandleGeneralVoteMessage(boolean consensusReached, boolean consensusPositive, VoteMessageData voteMessage) {

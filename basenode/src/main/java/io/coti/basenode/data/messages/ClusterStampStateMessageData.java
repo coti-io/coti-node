@@ -7,10 +7,10 @@ import java.time.Instant;
 @Data
 public abstract class ClusterStampStateMessageData extends StateMessageData {
 
-    public ClusterStampStateMessageData() {
+    protected ClusterStampStateMessageData() {
     }
 
-    public ClusterStampStateMessageData(Instant createTime) {
+    protected ClusterStampStateMessageData(Instant createTime) {
         super(createTime);
     }
 }

@@ -45,7 +45,7 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
     VOTE_MESSAGE(VoteMessageData.class) {
         @Override
         public Consumer<Object> getHandler(NodeType publisherNodeType) {
-            return generalVote -> generalVoteService.handleGeneralVoting((VoteMessageData) generalVote);
+            return voteMessage -> voteService.handleVoteMessage((VoteMessageData) voteMessage);
         }
     };
 
@@ -54,7 +54,7 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
     protected IDspVoteService dspVoteService;
     protected INetworkService networkService;
     protected IStateMessageService stateMessageService;
-    protected IGeneralVoteService generalVoteService;
+    protected IVoteService voteService;
     private Class<? extends IPropagatable> messageTypeClass;
 
     SubscriberMessageType(Class<? extends IPropagatable> messageTypeClass) {

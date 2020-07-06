@@ -7,11 +7,11 @@ import io.coti.basenode.data.messages.VoteMessageType;
 
 import java.util.List;
 
-public interface IGeneralVoteService {
+public interface IVoteService {
 
     void init();
 
-    void handleGeneralVoting(VoteMessageData generalVoteMessage);
+    void handleVoteMessage(VoteMessageData generalVoteMessage);
 
     void startCollectingVotes(StateMessageData voteHash, VoteMessageData myVote);
 

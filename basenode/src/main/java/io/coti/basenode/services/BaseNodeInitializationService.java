@@ -111,7 +111,7 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private IStateMessageService stateMessageService;
     @Autowired
-    private IGeneralVoteService generalVoteService;
+    private IVoteService generalVoteService;
     @Autowired
     private VotingTimeoutService votingTimeoutService;
 

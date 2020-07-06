@@ -11,15 +11,10 @@ public abstract class VoteMessageData extends MessageData {
     protected Hash voteHash;
     protected boolean vote;
 
-    public VoteMessageData() {
+    protected VoteMessageData() {
     }
 
-    public VoteMessageData(Hash voteHash, boolean vote) {
-        this.voteHash = voteHash;
-        this.vote = vote;
-    }
-
-    public VoteMessageData(Hash voteHash, boolean vote, Instant createTime) {
+    protected VoteMessageData(Hash voteHash, boolean vote, Instant createTime) {
         super(createTime);
         this.voteHash = voteHash;
         this.vote = vote;

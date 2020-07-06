@@ -8,7 +8,7 @@ import java.time.Instant;
 @Data
 public class ContinueClusterStampStateMessageData extends ClusterStampStateMessageData {
 
-    public ContinueClusterStampStateMessageData() {
+    private ContinueClusterStampStateMessageData() {
     }
 
     public ContinueClusterStampStateMessageData(Instant createTime) {

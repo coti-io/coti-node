@@ -13,18 +13,19 @@ import java.time.Instant;
 @Data
 public abstract class MessageData implements IPropagatable, ISignable, ISignValidatable {
 
-    private Instant createTime;
-    private Hash hash;
-    private Hash signerHash;
-    private SignatureData signatureData;
+    protected Instant createTime;
+    protected Hash hash;
+    protected Hash signerHash;
+    protected SignatureData signatureData;
 
-    public MessageData(Instant createTime) {
+    protected MessageData() {
+    }
+
+    protected MessageData(Instant createTime) {
         this.createTime = createTime;
     }
 
-    public MessageData() {
-    }
-
+    @JsonIgnore
     public abstract byte[] getMessageInBytes();
 
     @Override
@@ -36,15 +37,5 @@ public abstract class MessageData implements IPropagatable, ISignable, ISignVali
     @Override
     public void setSignature(SignatureData signature) {
         this.signatureData = signature;
-    }
-
-    @Override
-    public Hash getSignerHash() {
-        return signerHash;
-    }
-
-    @Override
-    public void setSignerHash(Hash signerHash) {
-        this.signerHash = signerHash;
     }
 }
