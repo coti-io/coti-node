@@ -11,7 +11,7 @@ public class HashClusterStampVoteMessageData extends ClusterStampVoteMessageData
 
     private Hash clusterStampHash;
 
-    public HashClusterStampVoteMessageData() {
+    private HashClusterStampVoteMessageData() {
     }
 
     public HashClusterStampVoteMessageData(Hash clusterStampHash, Hash voteHash, boolean vote, Instant createTime) {

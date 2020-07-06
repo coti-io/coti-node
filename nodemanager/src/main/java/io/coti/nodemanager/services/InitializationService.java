@@ -53,7 +53,7 @@ public class InitializationService {
     @Autowired
     private IStateMessageService stateMessageService;
     @Autowired
-    private IGeneralVoteService generalVoteService;
+    private IVoteService generalVoteService;
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired

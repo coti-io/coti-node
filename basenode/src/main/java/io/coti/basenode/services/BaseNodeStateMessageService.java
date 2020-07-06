@@ -4,9 +4,9 @@ import io.coti.basenode.crypto.StateMessageCrypto;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.data.messages.StateMessageType;
-import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IStateMessageService;
+import io.coti.basenode.services.interfaces.IVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,12 +25,11 @@ public class BaseNodeStateMessageService implements IStateMessageService {
     @Autowired
     private StateMessageCrypto stateMessageCrypto;
     @Autowired
-    protected IGeneralVoteService generalVoteService;
-
-    private EnumMap<NodeType, List<StateMessageType>> publisherNodeTypeToGeneralMessageTypesMap = new EnumMap<>(NodeType.class);
+    protected IVoteService voteService;
+    private final EnumMap<NodeType, List<StateMessageType>> publisherNodeTypeToStateMessageTypesMap = new EnumMap<>(NodeType.class);
 
     public void init() {
-        publisherNodeTypeToGeneralMessageTypesMap.put(NodeType.ZeroSpendServer,
+        publisherNodeTypeToStateMessageTypesMap.put(NodeType.ZeroSpendServer,
                 Arrays.asList(StateMessageType.CLUSTER_STAMP_INITIATED,
                         StateMessageType.CLUSTER_STAMP_PREPARE_INDEX,
                         StateMessageType.CLUSTER_STAMP_PREPARE_HASH,
@@ -57,8 +56,8 @@ public class BaseNodeStateMessageService implements IStateMessageService {
 
     protected boolean incorrectMessageSender(StateMessageData stateMessage) {
         NodeType nodeType = networkService.getNetworkNodeType(stateMessage.getSignerHash());
-        return !publisherNodeTypeToGeneralMessageTypesMap.containsKey(nodeType) ||
-                !publisherNodeTypeToGeneralMessageTypesMap.get(nodeType).contains(StateMessageType.getName(stateMessage.getClass()));
+        return !publisherNodeTypeToStateMessageTypesMap.containsKey(nodeType) ||
+                !publisherNodeTypeToStateMessageTypesMap.get(nodeType).contains(StateMessageType.getName(stateMessage.getClass()));
     }
 
     protected boolean incorrectMessageSenderSignature(StateMessageData stateMessage) {

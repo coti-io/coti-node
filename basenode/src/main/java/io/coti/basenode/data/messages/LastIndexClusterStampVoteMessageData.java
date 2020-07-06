@@ -9,7 +9,7 @@ import java.time.Instant;
 @Data
 public class LastIndexClusterStampVoteMessageData extends ClusterStampVoteMessageData {
 
-    public LastIndexClusterStampVoteMessageData() {
+    private LastIndexClusterStampVoteMessageData() {
     }
 
     public LastIndexClusterStampVoteMessageData(Hash voteHash, boolean vote, Instant createTime) {

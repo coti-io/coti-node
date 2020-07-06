@@ -13,7 +13,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.ClusterService;
 import io.coti.basenode.services.TransactionIndexService;
-import io.coti.basenode.services.interfaces.IGeneralVoteService;
+import io.coti.basenode.services.interfaces.IVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +45,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    private IGeneralVoteService generalVoteService;
+    private IVoteService generalVoteService;
     @Autowired
     private DspVoteService dspVoteService;
 

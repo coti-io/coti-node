@@ -7,10 +7,10 @@ import java.time.Instant;
 @Data
 public abstract class StateMessageData extends MessageData {
 
-    public StateMessageData() {
+    protected StateMessageData() {
     }
 
-    public StateMessageData(Instant createTime) {
+    protected StateMessageData(Instant createTime) {
         super(createTime);
     }
 

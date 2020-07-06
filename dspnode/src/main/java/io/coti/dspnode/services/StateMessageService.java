@@ -29,7 +29,7 @@ public class StateMessageService extends BaseNodeStateMessageService {
             case CLUSTER_STAMP_PREPARE_INDEX:
                 clusterStampService.clusterStampContinueWithIndex((LastIndexClusterStampStateMessageData) stateMessage);
                 boolean vote = clusterStampService.checkLastConfirmedIndex((LastIndexClusterStampStateMessageData) stateMessage);
-                generalVoteService.startCollectingVotes(stateMessage, generalVoteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote));
+                voteService.startCollectingVotes(stateMessage, voteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote));
                 if (vote) {
                     clusterStampService.calculateClusterStampDataAndHashes();  // todo separate it to a thread
                 }
@@ -37,14 +37,14 @@ public class StateMessageService extends BaseNodeStateMessageService {
             case CLUSTER_STAMP_PREPARE_HASH:
                 clusterStampService.clusterStampContinueWithHash(stateMessage);
                 Hash candidateClusterStampHash = clusterStampService.getCandidateClusterStampHash();
-                generalVoteService.startCollectingVotes(stateMessage, generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(),
+                voteService.startCollectingVotes(stateMessage, voteService.castVoteForClusterStampHash(stateMessage.getHash(),
                         clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash));
                 Thread waitForHistoryNodesAndCastVote = new Thread(() -> {
                     try {
                         Instant waitForHistoryNodesTill = Instant.now().plusSeconds(clusterStampService.CLUSTER_STAMP_TIMEOUT);
                         while (Instant.now().isBefore(waitForHistoryNodesTill)) {
                             if (clusterStampService.isAgreedHistoryNodesNumberEnough()) {
-                                generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash);
+                                voteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash);
                                 break;
                             }
                             Thread.sleep(1000);

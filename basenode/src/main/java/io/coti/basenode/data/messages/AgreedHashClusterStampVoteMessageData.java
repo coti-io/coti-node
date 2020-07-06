@@ -11,7 +11,7 @@ public class AgreedHashClusterStampVoteMessageData extends ClusterStampVoteMessa
 
     private Hash clusterStampHash;
 
-    public AgreedHashClusterStampVoteMessageData() {
+    private AgreedHashClusterStampVoteMessageData() {
     }
 
     public AgreedHashClusterStampVoteMessageData(Hash clusterStampHash, Hash voteHash, boolean vote, Instant createTime) {

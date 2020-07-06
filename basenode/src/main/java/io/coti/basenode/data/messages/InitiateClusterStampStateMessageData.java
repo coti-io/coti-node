@@ -11,7 +11,7 @@ public class InitiateClusterStampStateMessageData extends ClusterStampStateMessa
     private long delay;
     private long timeout;
 
-    public InitiateClusterStampStateMessageData() {
+    private InitiateClusterStampStateMessageData() {
     }
 
     public InitiateClusterStampStateMessageData(long delay, long timeout, Instant createTime) {

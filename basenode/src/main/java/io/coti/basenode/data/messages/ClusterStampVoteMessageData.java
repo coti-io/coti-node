@@ -8,15 +8,10 @@ import java.time.Instant;
 @Data
 public abstract class ClusterStampVoteMessageData extends VoteMessageData {
 
-
-    public ClusterStampVoteMessageData() {
+    protected ClusterStampVoteMessageData() {
     }
 
-    public ClusterStampVoteMessageData(Hash voteHash, boolean vote) {
-        super(voteHash, vote);
-    }
-
-    public ClusterStampVoteMessageData(Hash voteHash, boolean vote, Instant createTime) {
+    protected ClusterStampVoteMessageData(Hash voteHash, boolean vote, Instant createTime) {
         super(voteHash, vote, createTime);
     }
 }
