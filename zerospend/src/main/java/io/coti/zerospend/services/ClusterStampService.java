@@ -119,11 +119,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp = true;
     }
 
-    private void createNewClusterStampFile(List<VoteMessageData> generalVoteMessageList) {
-        // Create cluster stamp hash
-
-        boolean prepareClusterStampLines = true;
-
+    private void addVotesAndUploadNewClusterStampFile(List<VoteMessageData> generalVoteMessageList) {
         // Update with voters snapshot
         GetNetworkVotersResponse getNetworkVotersResponse = getNetworkVoters();
         if (!getNetworkVotersCrypto.verifySignature(getNetworkVotersResponse)) {
@@ -134,7 +130,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         // For each vote
-        generalVoteMessageList.forEach(v -> updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, v));
+        generalVoteMessageList.forEach(v -> updateGeneralVoteMessageClusterStampSegment(true, v));
 
         writeClusterStamp(clusterStampCreateTime);
         String versionTimeMillisString = String.valueOf(clusterStampCreateTime.toEpochMilli());
@@ -242,18 +238,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         hashClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(hashClusterStampStateMessageData)));
         stateMessageCrypto.signMessage(hashClusterStampStateMessageData);
         generalVoteService.startCollectingVotes(hashClusterStampStateMessageData, createHashVoteMessage(Instant.now(), hashClusterStampStateMessageData.getHash(), clusterStampHash));
-//                //TODO 6/11/2020 tomer: Need to align exact messages
-//                clusterStampService.updateGeneralVoteMessageClusterStampSegment(true, hashClusterStampStateMessageData);
 
         log.info(String.format("Initiate voting for the balance clusterstamp hash %s %s", clusterStampHash.toHexString(), hashClusterStampStateMessageData.getHash().toString()));
-
-//                StateMessageClusterStampHashPayload stateMessageClusterStampCurrencyHashPayload = new StateMessageClusterStampHashPayload(clusterStampCurrencyHash);
-//                StateMessage stateCurrencyHashMessage = new StateMessage(stateMessageClusterStampCurrencyHashPayload);
-//                stateCurrencyHashMessage.setHash(new Hash(generalMessageCrypto.getSignatureMessage(stateCurrencyHashMessage)));
-//                generalMessageCrypto.signMessage(stateCurrencyHashMessage);
-//                startCollectingVotes(stateCurrencyHashMessage);
-//                log.info(String.format("Initiate voting for the currency clusterstamp hash %s %s", clusterStampCurrencyHash.toHexString(), stateCurrencyHashMessage.getHash().toString()));
-//                propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
 
         generalVoteService.clearClusterStampHashVoteDone();
         propagateRetries(Collections.singletonList(hashClusterStampStateMessageData));
@@ -269,7 +255,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         log.info("Nodes can continue with transaction processing " + voteHash.toString());
         propagateRetries(Collections.singletonList(continueClusterStampStateMessageData));
 
-        createNewClusterStampFile(generalVoteService.getVoteResultVotersList(voteHash));
+        addVotesAndUploadNewClusterStampFile(generalVoteService.getVoteResultVotersList(voteHash));
 
         ExecuteClusterStampStateMessageData executeClusterStampStateMessageData = new ExecuteClusterStampStateMessageData(voteHash, lastConfirmedIndexForClusterStamp, Instant.now());
         executeClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(executeClusterStampStateMessageData)));

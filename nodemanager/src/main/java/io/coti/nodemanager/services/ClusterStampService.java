@@ -53,7 +53,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             String clusterStampFilePath = candidateClusterStampFolder + clusterStampFileNameFinal;
             fileSystemService.renameFile(candidateClusterStampFolder + clusterStampFileName, clusterStampFilePath);
             clusterStampName = clusterStampNameData;
-            loadClusterStamp(clusterStampNameData, candidateClusterStampFolder, false, true, false);
+            loadClusterStamp(clusterStampNameData, candidateClusterStampFolder, false, true);
             Hash candidateClusterStampHash = getCandidateClusterStampHash();
             if (!candidateClusterStampHash.equals(expectedClusterStampHash)) {
                 throw new ClusterStampValidationException(String.format("Bad candidate cluster stamp file name: %s. expected hash %s failed to match calculated hash %s.", clusterStampFileName, expectedClusterStampHash, candidateClusterStampHash));
