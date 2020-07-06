@@ -32,10 +32,9 @@ public class NetworkService extends BaseNodeNetworkService {
     public void handleNetworkChanges(NetworkData newNetworkData) {
         super.handleNetworkChanges(newNetworkData);
 
+        handleConnectedNodesChange(NodeType.DspNode, newNetworkData, NodeType.FullNode);
+
         Map<Hash, NetworkNodeData> newDspNodeMap = newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode);
-
-        handleConnectedDspNodesChange(connectedDspNodes, newDspNodeMap, NodeType.FullNode);
-
         if (connectedDspNodes.size() < 2) {
             List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newDspNodeMap.values(), connectedDspNodes));
             Collections.shuffle(dspNodesToConnect);

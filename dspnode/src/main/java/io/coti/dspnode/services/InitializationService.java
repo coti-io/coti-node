@@ -4,6 +4,8 @@ import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.data.messages.VoteMessageData;
+import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
@@ -47,8 +49,9 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class, StateMessageData.class, VoteMessageData.class));
             publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.HistoryNode, Collections.singletonList(VoteMessageData.class));
 
             communicationService.initSubscriber(NodeType.DspNode, publisherNodeTypeToMessageTypesMap);
             NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
@@ -72,6 +75,7 @@ public class InitializationService extends BaseNodeInitializationService {
                     .filter(dspNode -> !dspNode.equals(networkService.getNetworkNodeData()))
                     .collect(Collectors.toList());
             networkService.addListToSubscription(dspNetworkNodeDataList);
+            networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.HistoryNode).values());
             if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
                 networkService.addListToSubscription(new ArrayList<>(Collections.singletonList(networkService.getSingleNodeData(NodeType.FinancialServer))));
             }

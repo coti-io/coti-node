@@ -9,6 +9,8 @@ import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.data.messages.VoteMessageData;
+import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +37,7 @@ public class CommunicationService implements ICommunicationService {
         propagationSubscriber.init();
         propagationSubscriber.setSubscriberNodeType(subscriberNodeType);
         initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Collections.singletonList(NetworkData.class));
-        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class));
+        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, StateMessageData.class, VoteMessageData.class));
         propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(initialPublisherNodeTypeToMessageTypesMap);
     }
 

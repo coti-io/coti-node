@@ -63,7 +63,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 Currencies.class.getName(),
                 CurrencyNameIndexes.class.getName(),
                 LastClusterStampVersions.class.getName(),
-                UserCurrencyIndexes.class.getName()
+                UserCurrencyIndexes.class.getName(),
+                GeneralVoteResults.class.getName()
         ));
         resetTransactionColumnFamilyNames = new ArrayList<>(Arrays.asList(
                 Transactions.class.getName(),
@@ -145,13 +146,26 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         resetColumnFamilies(resetTransactionColumnFamilyNames);
     }
 
-    private void resetColumnFamilies(List<String> resetColumnFamilyNames) {
+    @Override
+    public void resetColumnFamilies(List<String> resetColumnFamilyNames) {
         resetColumnFamilyNames = Optional.ofNullable(resetColumnFamilyNames).orElse(this.resetColumnFamilyNames);
         dropAndCreateColumnFamilies(resetColumnFamilyNames, true);
     }
 
-    private void dropColumnFamilies(List<String> dropColumnFamilies) {
+    @Override
+    public void dropColumnFamilies(List<String> dropColumnFamilies) {
         dropAndCreateColumnFamilies(dropColumnFamilies, false);
+    }
+
+
+    @Override
+    public void createColumnFamily(String columnFamilyName){
+        try {
+            ColumnFamilyHandle columnFamilyHandle = db.createColumnFamily(new ColumnFamilyDescriptor(columnFamilyName.getBytes()));
+            classNameToColumnFamilyHandleMapping.put(columnFamilyName, columnFamilyHandle);
+        } catch (Exception e) {
+            throw new DataBaseException("Error creating column family", e);
+        }
     }
 
     private void dropAndCreateColumnFamilies(List<String> columnFamilyNames, boolean create) {

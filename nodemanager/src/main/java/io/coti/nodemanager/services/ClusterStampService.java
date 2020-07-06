@@ -2,8 +2,7 @@ package io.coti.nodemanager.services;
 
 import io.coti.basenode.data.ClusterStampNameData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.messages.StateMessage;
-import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
+import io.coti.basenode.data.messages.ExecuteClusterStampStateMessageData;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.http.Response;
@@ -24,6 +23,11 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Slf4j
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
+
+    @Override
+    public void clusterStampExecute(ExecuteClusterStampStateMessageData executeClusterStampStateMessageData) {
+// todo
+    }
 
     public ResponseEntity<IResponse> setNewClusterStamps(SetNewClusterStampsRequest setNewClusterStampsRequest) {
         try {

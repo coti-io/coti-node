@@ -6,6 +6,8 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.data.messages.VoteMessageData;
+import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
@@ -26,6 +28,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private ICommunicationService communicationService;
     @Value("${server.port}")
     private String serverPort;
+    @Value("${propagation.port}")
+    private String propagationPort;
     @Value("${server.url}")
     private String webServerUrl;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
@@ -39,10 +43,11 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class, StateMessageData.class, VoteMessageData.class));
             publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
 
             communicationService.initSubscriber(NodeType.HistoryNode, publisherNodeTypeToMessageTypesMap);
+            communicationService.initPublisher(propagationPort, NodeType.HistoryNode);
 
             NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
             if (zerospendNetworkNodeData == null) {
@@ -71,6 +76,7 @@ public class InitializationService extends BaseNodeInitializationService {
     @Override
     protected NetworkNodeData createNodeProperties() {
         NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.HistoryNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;
     }

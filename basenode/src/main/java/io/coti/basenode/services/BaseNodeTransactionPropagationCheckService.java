@@ -28,6 +28,7 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     protected UnconfirmedReceivedTransactionHashes unconfirmedReceivedTransactionHashes;
     protected Map<Hash, UnconfirmedReceivedTransactionHashData> unconfirmedReceivedTransactionHashesMap;
     protected final LockData transactionHashLockData = new LockData();
+    protected boolean resendingPause = false;
 
     @Override
     public void init() {
@@ -61,5 +62,15 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
         if (unconfirmedReceivedTransactionHashesMap != null && unconfirmedReceivedTransactionHashesMap.containsKey(transactionHash)) {
             removeConfirmedReceiptTransaction(transactionHash);
         }
+    }
+
+    @Override
+    public void setResendingPause() {
+        this.resendingPause = true;
+    }
+
+    @Override
+    public void endResendingPause() {
+        this.resendingPause = false;
     }
 }

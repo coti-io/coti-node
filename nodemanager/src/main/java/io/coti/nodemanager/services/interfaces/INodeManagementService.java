@@ -29,4 +29,6 @@ public interface INodeManagementService {
     ResponseEntity<IResponse> addSingleNodeEvent(AddNodeSingleEventRequest request);
 
     ResponseEntity<IResponse> addPairNodeEvent(AddNodePairEventRequest request);
+
+    void deleteNodeRecord(NetworkNodeData networkNodeData);
 }

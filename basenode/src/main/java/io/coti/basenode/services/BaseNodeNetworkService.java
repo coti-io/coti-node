@@ -11,6 +11,7 @@ import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
@@ -292,36 +294,55 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public void handleConnectedDspNodesChange(List<NetworkNodeData> connectedDspNodes, Map<Hash, NetworkNodeData> newDspNodeMap, NodeType nodeType) {
-        connectedDspNodes.removeIf(dspNode -> {
-            boolean remove = !(newDspNodeMap.containsKey(dspNode.getNodeHash()) && newDspNodeMap.get(dspNode.getNodeHash()).getAddress().equals(dspNode.getAddress()));
+    public void handleConnectedNodesChange(NodeType nodesInTheMaps, NetworkData newNetworkData, NodeType nodeType) {
+
+        Map<Hash, NetworkNodeData> newNodeMap = newNetworkData.getMultipleNodeMaps().get(nodesInTheMaps);
+        List<NetworkNodeData> connectedNodes;
+        if (nodesInTheMaps.equals(nodeType)) {
+            connectedNodes = getMapFromFactory(nodesInTheMaps).values().stream()
+                    .filter(node -> !node.equals(networkNodeData))
+                    .collect(Collectors.toList());
+        } else {
+            connectedNodes = new ArrayList<>(getMapFromFactory(nodesInTheMaps).values());
+        }
+
+        connectedNodes.removeIf(node -> {
+            boolean remove = !(newNodeMap.containsKey(node.getNodeHash()) && newNodeMap.get(node.getNodeHash()).getAddress().equals(node.getAddress()));
             if (remove) {
-                handleConnectedDspNodeRemove(dspNode);
+                handleConnectedNodeRemove(node, nodesInTheMaps);
             } else {
-                NetworkNodeData newDspNode = newDspNodeMap.get(dspNode.getNodeHash());
-                if (!newDspNode.getPropagationPort().equals(dspNode.getPropagationPort())) {
-                    communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
-                    communicationService.addSubscription(newDspNode.getPropagationFullAddress(), NodeType.DspNode);
+                NetworkNodeData newNode = newNodeMap.get(node.getNodeHash());
+                if (!newNode.getPropagationPort().equals(node.getPropagationPort())) {
+                    communicationService.removeSubscription(node.getPropagationFullAddress(), nodesInTheMaps);
+                    communicationService.addSubscription(newNode.getPropagationFullAddress(), nodesInTheMaps);
                 }
-                if (nodeType.equals(NodeType.FullNode) && !newDspNode.getReceivingPort().equals(dspNode.getReceivingPort())) {
-                    communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
-                    communicationService.addSender(newDspNode.getReceivingFullAddress());
+                if (nodeType.equals(NodeType.FullNode) && !newNode.getReceivingPort().equals(node.getReceivingPort())) {
+                    communicationService.removeSender(node.getReceivingFullAddress(), nodesInTheMaps);
+                    communicationService.addSender(newNode.getReceivingFullAddress());
                 }
-                if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress()) && !newDspNode.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
-                    recoveryServerAddress = newDspNode.getHttpFullAddress();
+                if (recoveryServerAddress != null && recoveryServerAddress.equals(node.getHttpFullAddress()) && !newNode.getHttpFullAddress().equals(node.getHttpFullAddress())) {
+                    recoveryServerAddress = newNode.getHttpFullAddress();
                 }
-                dspNode.clone(newDspNode);
+                node.clone(newNode);
             }
             return remove;
         });
 
+        List<NetworkNodeData> nodesToConnect = new ArrayList<>(CollectionUtils.subtract(newNetworkData.getMultipleNodeMaps().get(nodesInTheMaps).values(), connectedNodes));
+
+        if (nodesInTheMaps.equals(nodeType)) {
+            nodesToConnect.removeIf(node -> node.equals(networkNodeData));
+        }
+
+        addListToSubscription(nodesToConnect);
+
     }
 
-    private void handleConnectedDspNodeRemove(NetworkNodeData dspNode) {
-        log.info("Disconnecting from dsp {} from subscribing and receiving", dspNode.getAddress());
-        communicationService.removeSubscription(dspNode.getPropagationFullAddress(), NodeType.DspNode);
-        communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
-        if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
+    private void handleConnectedNodeRemove(NetworkNodeData node, NodeType nodeToRemove) {
+        log.info("Disconnecting from {} {} from subscribing and receiving", nodeToRemove.name(), node.getAddress());
+        communicationService.removeSubscription(node.getPropagationFullAddress(), nodeToRemove);
+        communicationService.removeSender(node.getReceivingFullAddress(), nodeToRemove);
+        if (recoveryServerAddress != null && recoveryServerAddress.equals(node.getHttpFullAddress())) {
             recoveryServerAddress = null;
         }
     }
@@ -415,7 +436,29 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
+    public NodeType getNetworkNodeType(Hash nodeHash) {
+        Optional<NetworkNodeData> node = singleNodeNetworkDataMap.values().stream().filter(Objects::nonNull).filter(nodeData -> nodeData.getNodeHash().equals(nodeHash)).findFirst();
+        if (node.isPresent()) {
+            return node.get().getNodeType();
+        }
+        for (Map.Entry<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMap : multipleNodeMaps.entrySet()) {
+            node = multipleNodeMap.getValue().values().stream().filter(Objects::nonNull).filter(nodeData -> nodeData.getNodeHash().equals(nodeHash)).findFirst();
+            if (node.isPresent()) {
+                return multipleNodeMap.getKey();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public long countDSPNodes() {
+        return multipleNodeMaps.get(NodeType.DspNode).entrySet().size();
+    }
+
+    @Override
     public List<Hash> getCurrentValidators() {
         throw new NetworkException("Attempted to get current validators.");
     }
 }
+
+

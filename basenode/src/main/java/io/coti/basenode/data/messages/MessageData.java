@@ -11,26 +11,21 @@ import lombok.Data;
 import java.time.Instant;
 
 @Data
-public class GeneralMessage implements IPropagatable, ISignable, ISignValidatable {
+public abstract class MessageData implements IPropagatable, ISignable, ISignValidatable {
 
-    private MessagePayload messagePayload;
     private Instant createTime;
     private Hash hash;
     private Hash signerHash;
     private SignatureData signatureData;
 
-    public GeneralMessage(MessagePayload messagePayload) {
-        this.messagePayload = messagePayload;
-        this.createTime = Instant.now();
-    }
-
-    public GeneralMessage(MessagePayload messagePayload, Instant createTime) {
-        this.messagePayload = messagePayload;
+    public MessageData(Instant createTime) {
         this.createTime = createTime;
     }
 
-    public GeneralMessage() {
+    public MessageData() {
     }
+
+    public abstract byte[] getMessageInBytes();
 
     @Override
     @JsonIgnore
