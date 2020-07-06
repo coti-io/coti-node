@@ -104,7 +104,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     log.error("Error at subscriber thread", e);
                 }
             }
-            propagationReceiver.monitor(null, ZMQ.EVENT_ALL);
             propagationReceiver.close();
         }, "LISTEN SUB");
         propagationReceiverThread.start();
@@ -113,9 +112,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private void startMonitorThread() {
         monitorThread = new Thread(() -> {
             AtomicBoolean contextTerminated = new AtomicBoolean(false);
-            while (!contextTerminated.get() && !Thread.currentThread().isInterrupted()) {
+            AtomicBoolean monitorStopped = new AtomicBoolean(false);
+            while (!(monitorStopped.get() && contextTerminated.get()) && !Thread.currentThread().isInterrupted()) {
                 try {
-                    getEvent(contextTerminated);
+                    getEvent(contextTerminated, monitorStopped);
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
                         contextTerminated.set(true);
@@ -131,11 +131,14 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         monitorThread.start();
     }
 
-    private void getEvent(AtomicBoolean contextTerminated) {
+    private void getEvent(AtomicBoolean contextTerminated, AtomicBoolean monitorStopped) {
         ZMQ.Event event = ZMQ.Event.recv(monitorSocket);
         if (event != null && monitorInitialized) {
             String address = event.getAddress();
             ZeroMQEvent zeroMQEvent = ZeroMQEvent.getEvent(event.getEvent());
+            if (zeroMQEvent.equals(ZeroMQEvent.MONITOR_STOPPED)) {
+                monitorStopped.set(true);
+            }
             log.info("ZeroMQ subscriber {} for address {}", zeroMQEvent, address);
         }
         if (event == null) {
