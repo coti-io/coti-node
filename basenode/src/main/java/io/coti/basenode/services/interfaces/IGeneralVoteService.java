@@ -1,9 +1,9 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.messages.GeneralMessageType;
-import io.coti.basenode.data.messages.GeneralVoteMessage;
-import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.VoteMessageData;
+import io.coti.basenode.data.messages.StateMessageData;
+import io.coti.basenode.data.messages.VoteMessageType;
 
 import java.util.List;
 
@@ -11,17 +11,17 @@ public interface IGeneralVoteService {
 
     void init();
 
-    void handleGeneralVoting(GeneralVoteMessage generalVoteMessage);
+    void handleGeneralVoting(VoteMessageData generalVoteMessage);
 
-    void startCollectingVotes(StateMessage voteHash, GeneralVoteMessage myVote);
+    void startCollectingVotes(StateMessageData voteHash, VoteMessageData myVote);
 
-    GeneralVoteMessage castVoteForClusterStampIndex(Hash voteHash, boolean vote);
+    VoteMessageData castVoteForClusterStampIndex(Hash voteHash, boolean vote);
 
-    GeneralVoteMessage castVoteForClusterStampHash(Hash voteHash, boolean vote, Hash clusterStampHash);
+    VoteMessageData castVoteForClusterStampHash(Hash voteHash, boolean vote, Hash clusterStampHash);
 
-    List<GeneralVoteMessage> getVoteResultVotersList(Hash voteHash);
+    List<VoteMessageData> getVoteResultVotersList(Hash voteHash);
 
-    long calculateQuorumOfValidators(GeneralMessageType messageType);
+    long calculateQuorumOfValidators(VoteMessageType messageType);
 
     void clearClusterStampHashVoteDone();
 }

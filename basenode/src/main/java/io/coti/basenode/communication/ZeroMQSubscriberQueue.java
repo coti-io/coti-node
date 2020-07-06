@@ -3,8 +3,8 @@ package io.coti.basenode.communication;
 import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.data.messages.GeneralVoteMessage;
-import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.VoteMessageData;
+import io.coti.basenode.data.messages.StateMessageData;
 
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -15,7 +15,7 @@ public enum ZeroMQSubscriberQueue {
     NETWORK(new HashSet<>(Collections.singletonList(NetworkData.class))),
     ADDRESS(new HashSet<>(Collections.singletonList(AddressData.class))),
     TRANSACTION(new HashSet<>(Arrays.asList(TransactionData.class, DspConsensusResult.class))),
-    GENERAL_MESSAGE(new HashSet<>(Arrays.asList(StateMessage.class, GeneralVoteMessage.class)));
+    MESSAGE_DATA(new HashSet<>(Arrays.asList(StateMessageData.class, VoteMessageData.class)));
 
     private BlockingQueue<ZeroMQMessageData> queue = new LinkedBlockingQueue<>();
 

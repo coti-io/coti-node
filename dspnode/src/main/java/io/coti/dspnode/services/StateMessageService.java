@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Objects;
+
+import static io.coti.basenode.data.messages.StateMessageType.getName;
 
 @Slf4j
 @Service
@@ -18,14 +21,14 @@ public class StateMessageService extends BaseNodeStateMessageService {
     private IClusterStampService clusterStampService;
 
     @Override
-    public void continueHandleStateMessage(StateMessage stateMessage) {
-        switch (stateMessage.getMessagePayload().getGeneralMessageType()) {
+    public void continueHandleStateMessage(StateMessageData stateMessage) {
+        switch (Objects.requireNonNull(getName(stateMessage.getClass()))) {
             case CLUSTER_STAMP_INITIATED:
-                clusterStampService.clusterStampInitiate(stateMessage, (StateMessageClusterStampInitiatedPayload) stateMessage.getMessagePayload());
+                clusterStampService.clusterStampInitiate(stateMessage, (InitiateClusterStampStateMessageData) stateMessage);
                 break;
             case CLUSTER_STAMP_PREPARE_INDEX:
-                clusterStampService.clusterStampContinueWithIndex(stateMessage);
-                boolean vote = clusterStampService.checkLastConfirmedIndex((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload());
+                clusterStampService.clusterStampContinueWithIndex((LastIndexClusterStampStateMessageData) stateMessage);
+                boolean vote = clusterStampService.checkLastConfirmedIndex((LastIndexClusterStampStateMessageData) stateMessage);
                 generalVoteService.startCollectingVotes(stateMessage, generalVoteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote));
                 if (vote) {
                     clusterStampService.calculateClusterStampDataAndHashes();  // todo separate it to a thread
@@ -35,13 +38,13 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 clusterStampService.clusterStampContinueWithHash(stateMessage);
                 Hash candidateClusterStampHash = clusterStampService.getCandidateClusterStampHash();
                 generalVoteService.startCollectingVotes(stateMessage, generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(),
-                        clusterStampService.checkClusterStampHash((StateMessageClusterStampHashPayload) stateMessage.getMessagePayload()), candidateClusterStampHash));
+                        clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash));
                 Thread waitForHistoryNodesAndCastVote = new Thread(() -> {
                     try {
                         Instant waitForHistoryNodesTill = Instant.now().plusSeconds(clusterStampService.CLUSTER_STAMP_TIMEOUT);
                         while (Instant.now().isBefore(waitForHistoryNodesTill)) {
                             if (clusterStampService.isAgreedHistoryNodesNumberEnough()) {
-                                generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkClusterStampHash((StateMessageClusterStampHashPayload) stateMessage.getMessagePayload()), candidateClusterStampHash);
+                                generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash);
                                 break;
                             }
                             Thread.sleep(1000);
@@ -55,13 +58,13 @@ public class StateMessageService extends BaseNodeStateMessageService {
 
                 break;
             case CLUSTER_STAMP_CONTINUE:
-                clusterStampService.clusterStampContinue(stateMessage);
+                clusterStampService.clusterStampContinue((ContinueClusterStampStateMessageData) stateMessage);
                 break;
             case CLUSTER_STAMP_EXECUTE:
-                clusterStampService.clusterStampExecute(stateMessage, (StateMessageClusterStampExecutePayload) stateMessage.getMessagePayload());
+                clusterStampService.clusterStampExecute((ExecuteClusterStampStateMessageData) stateMessage);
                 break;
             default:
-                log.error("Unexpected message type: {}", stateMessage.getMessagePayload().getGeneralMessageType());
+                log.error("Unexpected message type: {}", StateMessageType.getName(stateMessage.getClass()));
         }
     }
 

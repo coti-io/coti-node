@@ -8,6 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
+import static io.coti.basenode.data.messages.StateMessageType.getName;
+
 @Slf4j
 @Service
 public class StateMessageService extends BaseNodeStateMessageService {
@@ -19,15 +23,15 @@ public class StateMessageService extends BaseNodeStateMessageService {
 
 
     @Override
-    public void continueHandleStateMessage(StateMessage stateMessage) {
-        switch (stateMessage.getMessagePayload().getGeneralMessageType()) {
+    public void continueHandleStateMessage(StateMessageData stateMessage) {
+        switch (Objects.requireNonNull(getName(stateMessage.getClass()))) {
             case CLUSTER_STAMP_INITIATED:
-                clusterStampService.clusterStampInitiate(stateMessage, (StateMessageClusterStampInitiatedPayload) stateMessage.getMessagePayload());
+                clusterStampService.clusterStampInitiate(stateMessage, (InitiateClusterStampStateMessageData) stateMessage);
                 break;
             case CLUSTER_STAMP_PREPARE_INDEX:
-                clusterStampService.clusterStampContinueWithIndex(stateMessage);
+                clusterStampService.clusterStampContinueWithIndex((LastIndexClusterStampStateMessageData) stateMessage);
                 transactionService.setHistoryProcessingPause(); // todo check to restart it
-                boolean vote = clusterStampService.checkLastConfirmedIndex((StateMessageLastClusterStampIndexPayload) stateMessage.getMessagePayload());
+                boolean vote = clusterStampService.checkLastConfirmedIndex((LastIndexClusterStampStateMessageData) stateMessage);
                 if (vote) {
                     clusterStampService.calculateClusterStampDataAndHashes();  // todo separate it to a thread
                 }
@@ -35,13 +39,13 @@ public class StateMessageService extends BaseNodeStateMessageService {
             case CLUSTER_STAMP_PREPARE_HASH:
                 Hash candidateClusterStampHash = clusterStampService.getCandidateClusterStampHash();
                 generalVoteService.castVoteForClusterStampHash(stateMessage.getHash(),
-                        clusterStampService.checkClusterStampHash((StateMessageClusterStampHashPayload) stateMessage.getMessagePayload()), candidateClusterStampHash);
+                        clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash);
                 break;
             case CLUSTER_STAMP_CONTINUE:
                 // todo
                 break;
             case CLUSTER_STAMP_EXECUTE:
-                clusterStampService.clusterStampExecute(stateMessage, (StateMessageClusterStampExecutePayload) stateMessage.getMessagePayload());
+                clusterStampService.clusterStampExecute((ExecuteClusterStampStateMessageData) stateMessage);
                 break;
             default:
         }

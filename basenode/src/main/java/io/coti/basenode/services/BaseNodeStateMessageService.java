@@ -1,9 +1,10 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.GeneralMessageCrypto;
+import io.coti.basenode.crypto.StateMessageCrypto;
 import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.messages.GeneralMessageType;
-import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.StateMessageData;
+import io.coti.basenode.data.messages.StateMessageType;
+import io.coti.basenode.data.messages.VoteMessageType;
 import io.coti.basenode.services.interfaces.IGeneralVoteService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IStateMessageService;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -22,25 +24,25 @@ public class BaseNodeStateMessageService implements IStateMessageService {
     @Autowired
     private INetworkService networkService;
     @Autowired
-    private GeneralMessageCrypto generalMessageCrypto;
+    private StateMessageCrypto stateMessageCrypto;
     @Autowired
     protected IGeneralVoteService generalVoteService;
 
-    private EnumMap<NodeType, List<GeneralMessageType>> publisherNodeTypeToGeneralMessageTypesMap = new EnumMap<>(NodeType.class);
+    private EnumMap<NodeType, List<StateMessageType>> publisherNodeTypeToGeneralMessageTypesMap = new EnumMap<>(NodeType.class);
 
     public void init() {
         publisherNodeTypeToGeneralMessageTypesMap.put(NodeType.ZeroSpendServer,
-                Arrays.asList(GeneralMessageType.CLUSTER_STAMP_INITIATED,
-                        GeneralMessageType.CLUSTER_STAMP_PREPARE_INDEX,
-                        GeneralMessageType.CLUSTER_STAMP_PREPARE_HASH,
-                        GeneralMessageType.CLUSTER_STAMP_CONTINUE,
-                        GeneralMessageType.CLUSTER_STAMP_EXECUTE));
+                Arrays.asList(StateMessageType.CLUSTER_STAMP_INITIATED,
+                        StateMessageType.CLUSTER_STAMP_PREPARE_INDEX,
+                        StateMessageType.CLUSTER_STAMP_PREPARE_HASH,
+                        StateMessageType.CLUSTER_STAMP_CONTINUE,
+                        StateMessageType.CLUSTER_STAMP_EXECUTE));
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
     @Override
-    public void handleStateMessage(StateMessage stateMessage) {
-        log.info("State message received: " + stateMessage.getMessagePayload().getGeneralMessageType().toString());
+    public void handleStateMessage(StateMessageData stateMessage) {
+        log.info("State message received: " + Objects.requireNonNull(StateMessageType.getName(stateMessage.getClass())).toString());
         if (incorrectMessageSender(stateMessage)) {
             return;
         }
@@ -50,18 +52,18 @@ public class BaseNodeStateMessageService implements IStateMessageService {
         continueHandleStateMessage(stateMessage);
     }
 
-    protected void continueHandleStateMessage(StateMessage stateMessage) {
+    protected void continueHandleStateMessage(StateMessageData stateMessage) {
         // implemented in subclasses
     }
 
-    protected boolean incorrectMessageSender(StateMessage stateMessage) {
+    protected boolean incorrectMessageSender(StateMessageData stateMessage) {
         NodeType nodeType = networkService.getNetworkNodeType(stateMessage.getSignerHash());
         return !publisherNodeTypeToGeneralMessageTypesMap.containsKey(nodeType) ||
-                !publisherNodeTypeToGeneralMessageTypesMap.get(nodeType).contains(stateMessage.getMessagePayload().getGeneralMessageType());
+                !publisherNodeTypeToGeneralMessageTypesMap.get(nodeType).contains(VoteMessageType.getName(stateMessage.getClass()));
     }
 
-    protected boolean incorrectMessageSenderSignature(StateMessage stateMessage) {
-        if (!generalMessageCrypto.verifySignature(stateMessage)) {
+    protected boolean incorrectMessageSenderSignature(StateMessageData stateMessage) {
+        if (!stateMessageCrypto.verifySignature(stateMessage)) {
             log.error("State message signature verification failed: {}", stateMessage);
             return true;
         }

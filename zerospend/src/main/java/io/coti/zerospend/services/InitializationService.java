@@ -7,7 +7,7 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionDspVote;
 import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.data.messages.GeneralVoteMessage;
+import io.coti.basenode.data.messages.VoteMessageData;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -56,7 +56,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.getNetwork();
 
             publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
-            publisherNodeTypeToMessageTypesMap.put(NodeType.HistoryNode, Collections.singletonList(GeneralVoteMessage.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.HistoryNode, Collections.singletonList(VoteMessageData.class));
 
             communicationService.initSubscriber(NodeType.ZeroSpendServer, publisherNodeTypeToMessageTypesMap);
 

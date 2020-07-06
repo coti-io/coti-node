@@ -24,19 +24,19 @@ public interface IClusterStampService {
 
     void getClusterStampFromRecoveryServer();
 
-    default void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {
+    default void clusterStampInitiate(StateMessageData stateMessage, InitiateClusterStampStateMessageData initiateClusterStampStateMessageData) {
     }
 
-    void clusterStampContinueWithIndex(StateMessage stateMessage);
+    void clusterStampContinueWithIndex(LastIndexClusterStampStateMessageData lastIndexClusterStampStateMessageData);
 
-    default void clusterStampContinueWithHash(StateMessage stateMessage) {
+    default void clusterStampContinueWithHash(StateMessageData stateMessage) {
     }
 
-    void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload);
+    void clusterStampExecute(ExecuteClusterStampStateMessageData executeClusterStampStateMessageData);
 
     Hash getCandidateClusterStampHash();
 
-    void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, GeneralVoteMessage generalVoteMessage);
+    void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, VoteMessageData generalVoteMessage);
 
     default void calculateClusterStampDataAndHashesAndSendMessage() {
     }
@@ -48,13 +48,13 @@ public interface IClusterStampService {
 
     void calculateClusterStampDataAndHashes(Instant clusterStampInitiateTime);
 
-    boolean checkLastConfirmedIndex(StateMessageLastClusterStampIndexPayload stateMessageLastClusterStampIndexPayload);
+    boolean checkLastConfirmedIndex(LastIndexClusterStampStateMessageData stateMessageLastClusterStampIndexPayload);
 
-    boolean checkClusterStampHash(StateMessageClusterStampHashPayload stateMessageClusterStampHashPayload);
+    boolean checkClusterStampHash(HashClusterStampStateMessageData hashClusterStampStateMessageData);
 
     void setAgreedHistoryNodesNumberEnough();
 
     boolean isAgreedHistoryNodesNumberEnough();
 
-    default void clusterStampContinue(StateMessage stateMessage) {}
+    default void clusterStampContinue(ContinueClusterStampStateMessageData continueClusterStampStateMessageData) {}
 }

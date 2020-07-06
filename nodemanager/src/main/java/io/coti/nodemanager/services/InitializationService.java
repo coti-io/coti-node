@@ -3,8 +3,8 @@ package io.coti.nodemanager.services;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.data.messages.GeneralVoteMessage;
-import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.VoteMessageData;
+import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.interfaces.*;
@@ -71,9 +71,9 @@ public class InitializationService {
             dbRecoveryService.init();
             networkService.init();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(StateMessage.class, GeneralVoteMessage.class));
-            publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(StateMessage.class, GeneralVoteMessage.class));
-            publisherNodeTypeToMessageTypesMap.put(NodeType.HistoryNode, Collections.singletonList(GeneralVoteMessage.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(StateMessageData.class, VoteMessageData.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(StateMessageData.class, VoteMessageData.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.HistoryNode, Collections.singletonList(VoteMessageData.class));
 
             communicationService.initSubscriber(NodeType.NodeManager, publisherNodeTypeToMessageTypesMap);
 

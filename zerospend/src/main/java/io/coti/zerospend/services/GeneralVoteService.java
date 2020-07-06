@@ -1,25 +1,29 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.data.messages.GeneralVoteMessage;
+import io.coti.basenode.data.messages.VoteMessageData;
 import io.coti.basenode.services.BaseNodeGeneralVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
+
+import static io.coti.basenode.data.messages.VoteMessageType.getName;
 
 @Slf4j
 @Service
 public class GeneralVoteService extends BaseNodeGeneralVoteService {
 
     @Override
-    protected void continueHandleGeneralVoteMessage(boolean consensusReached, boolean consensusPositive, GeneralVoteMessage generalVoteMessage) {
+    protected void continueHandleGeneralVoteMessage(boolean consensusReached, boolean consensusPositive, VoteMessageData voteMessage) {
         if (!consensusReached) {
             return;
         }
-        switch (generalVoteMessage.getMessagePayload().getGeneralMessageType()) {
-            case CLUSTER_STAMP_HASH_HISTORY_NODE:
+        switch (Objects.requireNonNull(getName(voteMessage.getClass()))) {
+            case CLUSTER_STAMP_AGREED_HASH_HISTORY_NODE:
                 if (consensusPositive) {
                     clusterStampService.setAgreedHistoryNodesNumberEnough();
                     if (clusterStampHashVoteDone) {
-                        clusterStampService.doClusterStampAfterVoting(generalVoteMessage.getVoteHash());
+                        clusterStampService.doClusterStampAfterVoting(voteMessage.getVoteHash());
                     }
                 }
                 break;
@@ -29,11 +33,11 @@ public class GeneralVoteService extends BaseNodeGeneralVoteService {
             case CLUSTER_STAMP_HASH_VOTE:
                 clusterStampHashVoteDone = true;
                 if (clusterStampService.isAgreedHistoryNodesNumberEnough()){
-                    clusterStampService.doClusterStampAfterVoting(generalVoteMessage.getVoteHash());
+                    clusterStampService.doClusterStampAfterVoting(voteMessage.getVoteHash());
                 }
                 break;
             default:
-                log.error("Unexpected vote type: {}", generalVoteMessage.getMessagePayload().getGeneralMessageType());
+                log.error("Unexpected vote type: {}", voteMessage.getClass());
         }
     }
 }

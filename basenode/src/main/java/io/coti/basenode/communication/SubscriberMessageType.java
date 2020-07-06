@@ -3,8 +3,8 @@ package io.coti.basenode.communication;
 import io.coti.basenode.communication.interfaces.ISubscriberMessageType;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.data.messages.GeneralVoteMessage;
-import io.coti.basenode.data.messages.StateMessage;
+import io.coti.basenode.data.messages.VoteMessageData;
+import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,16 +36,16 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
             return networkData -> networkService.handleNetworkChanges((NetworkData) networkData);
         }
     },
-    STATE_MESSAGE(StateMessage.class) {
+    STATE_MESSAGE(StateMessageData.class) {
         @Override
         public Consumer<Object> getHandler(NodeType publisherNodeType) {
-            return stateMessage -> stateMessageService.handleStateMessage((StateMessage) stateMessage);
+            return stateMessage -> stateMessageService.handleStateMessage((StateMessageData) stateMessage);
         }
     },
-    VOTE_MESSAGE(GeneralVoteMessage.class) {
+    VOTE_MESSAGE(VoteMessageData.class) {
         @Override
         public Consumer<Object> getHandler(NodeType publisherNodeType) {
-            return generalVote -> generalVoteService.handleGeneralVoting((GeneralVoteMessage) generalVote);
+            return generalVote -> generalVoteService.handleGeneralVoting((VoteMessageData) generalVote);
         }
     };
 

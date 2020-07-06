@@ -1,8 +1,8 @@
 package io.coti.historynode.services;
 
-import io.coti.basenode.data.messages.StateMessage;
-import io.coti.basenode.data.messages.StateMessageClusterStampExecutePayload;
-import io.coti.basenode.data.messages.StateMessageClusterStampInitiatedPayload;
+import io.coti.basenode.data.messages.ExecuteClusterStampStateMessageData;
+import io.coti.basenode.data.messages.InitiateClusterStampStateMessageData;
+import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,16 +12,16 @@ import org.springframework.stereotype.Service;
 public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
-    public void clusterStampInitiate(StateMessage stateMessage, StateMessageClusterStampInitiatedPayload stateMessageClusterstampInitiatedPayload) {
+    public void clusterStampInitiate(StateMessageData stateMessage, InitiateClusterStampStateMessageData initiateClusterStampStateMessageData) {
         clusterStampInitiateTimestamp = stateMessage.getCreateTime();
     }
 
     @Override
-    public void clusterStampExecute(StateMessage stateMessage, StateMessageClusterStampExecutePayload stateMessageClusterStampExecutePayload) {
-        if (lastConfirmedIndexForClusterStamp != stateMessageClusterStampExecutePayload.getLastIndex()) {
-            log.error("Incorrect index in the CLUSTER_STAMP_EXECUTE message {} {}", lastConfirmedIndexForClusterStamp, stateMessageClusterStampExecutePayload.getLastIndex());
+    public void clusterStampExecute(ExecuteClusterStampStateMessageData executeClusterStampStateMessageData) {
+        if (lastConfirmedIndexForClusterStamp != executeClusterStampStateMessageData.getLastIndex()) {
+            log.error("Incorrect index in the CLUSTER_STAMP_EXECUTE message {} {}", lastConfirmedIndexForClusterStamp, executeClusterStampStateMessageData.getLastIndex());
             return;
         }
-        super.clusterStampExecute(stateMessage, stateMessageClusterStampExecutePayload);
+        super.clusterStampExecute(executeClusterStampStateMessageData);
     }
 }

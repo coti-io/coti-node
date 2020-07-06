@@ -1,16 +1,16 @@
 package io.coti.basenode.crypto;
 
-import io.coti.basenode.data.messages.GeneralVoteMessage;
+import io.coti.basenode.data.messages.VoteMessageData;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 
 @Component
-public class GeneralVoteCrypto extends SignatureCrypto<GeneralVoteMessage> {
+public class VoteMessageCrypto extends SignatureCrypto<VoteMessageData> {
 
     @Override
-    public byte[] getSignatureMessage(GeneralVoteMessage generalVoteMessage) {
-        byte[] stateMessageInBytes = generalVoteMessage.getMessagePayload().getMessageInBytes();
+    public byte[] getSignatureMessage(VoteMessageData generalVoteMessage) {
+        byte[] stateMessageInBytes = generalVoteMessage.getMessageInBytes();
         byte[] voteHashInBytes = generalVoteMessage.getVoteHash().getBytes();
 
         ByteBuffer broadcastDataBuffer = ByteBuffer.allocate(Long.BYTES + stateMessageInBytes.length + voteHashInBytes.length + 1)
