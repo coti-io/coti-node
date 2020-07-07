@@ -27,7 +27,7 @@ public class ZeroMQSubscriberHandler implements ISubscriberHandler {
     @Autowired
     private IStateMessageService stateMessageService;
     @Autowired
-    private IVoteService generalVoteService;
+    private IVoteService voteService;
 
     @Override
     public void init() {
@@ -44,7 +44,7 @@ public class ZeroMQSubscriberHandler implements ISubscriberHandler {
         subscriberMessageType.dspVoteService = dspVoteService;
         subscriberMessageType.networkService = networkService;
         subscriberMessageType.stateMessageService = stateMessageService;
-        subscriberMessageType.voteService = generalVoteService;
+        subscriberMessageType.voteService = voteService;
     }
 
     @Override

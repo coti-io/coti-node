@@ -43,6 +43,7 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
     }
 
     public boolean isNativeCurrency() {
-        return getCurrencyTypeData() != null && getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN);
+        return getCurrencyTypeData() != null && getCurrencyTypeData().getCurrencyType() != null
+                && getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN);
     }
 }
