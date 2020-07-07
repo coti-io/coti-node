@@ -11,7 +11,7 @@ public class HashClusterStampStateMessageData extends ClusterStampStateMessageDa
 
     private Hash clusterStampHash;
 
-    public HashClusterStampStateMessageData() {
+    private HashClusterStampStateMessageData() {
     }
 
     public HashClusterStampStateMessageData(Hash clusterStampHash, Instant createTime) {

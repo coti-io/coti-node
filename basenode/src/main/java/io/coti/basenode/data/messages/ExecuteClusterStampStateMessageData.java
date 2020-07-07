@@ -12,7 +12,7 @@ public class ExecuteClusterStampStateMessageData extends ClusterStampStateMessag
     private Hash voteHash;
     private long lastIndex;
 
-    public ExecuteClusterStampStateMessageData() {
+    private ExecuteClusterStampStateMessageData() {
     }
 
     public ExecuteClusterStampStateMessageData(Hash voteHash, long lastIndex, Instant createTime) {

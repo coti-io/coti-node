@@ -91,8 +91,8 @@ public class BaseNodeVoteService implements IVoteService {
 
     @Override
     public List<VoteMessageData> getVoteResultVotersList(VoteMessageType voteType, Hash voteHash) {
-        Hash generalVoteResultsHash = voteCombinedHash(voteType, voteHash);
-        VoteResult voteResult = voteResults.getByHash(generalVoteResultsHash);
+        Hash voteResultHash = voteCombinedHash(voteType, voteHash);
+        VoteResult voteResult = voteResults.getByHash(voteResultHash);
         return new ArrayList<>(voteResult.getHashToVoteMapping().values());
     }
 
@@ -129,17 +129,17 @@ public class BaseNodeVoteService implements IVoteService {
 
     @Override
     public void startCollectingVotes(StateMessageData stateMessage, VoteMessageData myVote) {
-        Hash generalVoteResultsHash;
+        Hash voteResultsHash;
         if (myVote != null) {
-            generalVoteResultsHash = voteCombinedHash(Objects.requireNonNull(VoteMessageType.getName(myVote.getClass())), myVote.getVoteHash());
+            voteResultsHash = voteCombinedHash(Objects.requireNonNull(VoteMessageType.getName(myVote.getClass())), myVote.getVoteHash());
         } else {
-            generalVoteResultsHash = stateMessage.getHash();
+            voteResultsHash = stateMessage.getHash();
         }
         try {
-            synchronized (voteResultLockData.addLockToLockMap(generalVoteResultsHash)) {
-                VoteResult voteResult = voteResults.getByHash(generalVoteResultsHash);
+            synchronized (voteResultLockData.addLockToLockMap(voteResultsHash)) {
+                VoteResult voteResult = voteResults.getByHash(voteResultsHash);
                 if (voteResult == null) {
-                    voteResult = new VoteResult(generalVoteResultsHash, stateMessage);
+                    voteResult = new VoteResult(voteResultsHash, stateMessage);
                 } else if (voteResult.getTheMatterOfVoting() == null) {
                     voteResult.setTheMatterOfVoting(stateMessage);
                 }
@@ -149,7 +149,7 @@ public class BaseNodeVoteService implements IVoteService {
                 voteResults.put(voteResult);
             }
         } finally {
-            voteResultLockData.removeLockFromLocksMap(generalVoteResultsHash);
+            voteResultLockData.removeLockFromLocksMap(voteResultsHash);
         }
     }
 

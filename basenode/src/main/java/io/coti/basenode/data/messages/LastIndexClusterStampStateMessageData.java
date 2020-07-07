@@ -10,7 +10,7 @@ public class LastIndexClusterStampStateMessageData extends ClusterStampStateMess
 
     private long lastIndex;
 
-    public LastIndexClusterStampStateMessageData() {
+    private LastIndexClusterStampStateMessageData() {
     }
 
     public LastIndexClusterStampStateMessageData(long lastIndex, Instant createTime) {
