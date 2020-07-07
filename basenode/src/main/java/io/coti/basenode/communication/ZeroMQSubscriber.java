@@ -104,7 +104,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     log.error("Error at subscriber thread", e);
                 }
             }
-            propagationReceiver.monitor(null, ZMQ.EVENT_ALL);
             propagationReceiver.close();
         }, "LISTEN SUB");
         propagationReceiverThread.start();
