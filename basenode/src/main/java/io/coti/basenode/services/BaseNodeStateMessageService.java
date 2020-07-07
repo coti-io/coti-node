@@ -58,8 +58,9 @@ public class BaseNodeStateMessageService implements IStateMessageService {
 
     protected boolean incorrectMessageSender(StateMessageData stateMessage) {
         NodeType nodeType = networkService.getNetworkNodeType(stateMessage.getSignerHash());
-        return !publisherNodeTypeToGeneralMessageTypesMap.containsKey(nodeType) ||
-                !publisherNodeTypeToGeneralMessageTypesMap.get(nodeType).contains(VoteMessageType.getName(stateMessage.getClass()));
+        return !publisherNodeTypeToGeneralMessageTypesMap.containsKey(nodeType);
+//        return !publisherNodeTypeToGeneralMessageTypesMap.containsKey(nodeType) ||
+//                !publisherNodeTypeToGeneralMessageTypesMap.get(nodeType).contains(VoteMessageType.getName(stateMessage.getClass()));
     }
 
     protected boolean incorrectMessageSenderSignature(StateMessageData stateMessage) {
