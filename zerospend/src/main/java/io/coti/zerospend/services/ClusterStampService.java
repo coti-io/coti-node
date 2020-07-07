@@ -119,11 +119,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         uploadClusterStamp = true;
     }
 
-    private void createNewClusterStampFile(List<VoteMessageData> generalVoteMessageList) {
-        // Create cluster stamp hash
-
-        boolean prepareClusterStampLines = true;
-
+    private void addVotesAndUploadNewClusterStampFile(List<VoteMessageData> generalVoteMessageList) {
         // Update with voters snapshot
         GetNetworkVotersResponse getNetworkVotersResponse = getNetworkVoters();
         if (!getNetworkVotersCrypto.verifySignature(getNetworkVotersResponse)) {
@@ -134,7 +130,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         // For each vote
-        generalVoteMessageList.forEach(v -> updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, v));
+        generalVoteMessageList.forEach(v -> updateGeneralVoteMessageClusterStampSegment(true, v));
 
         writeClusterStamp(clusterStampCreateTime);
         String versionTimeMillisString = String.valueOf(clusterStampCreateTime.toEpochMilli());
@@ -269,7 +265,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         log.info("Nodes can continue with transaction processing " + voteHash.toString());
         propagateRetries(Collections.singletonList(continueClusterStampStateMessageData));
 
-        createNewClusterStampFile(voteService.getVoteResultVotersList(VoteMessageType.CLUSTER_STAMP_HASH_VOTE, voteHash));
+
+        addVotesAndUploadNewClusterStampFile(voteService.getVoteResultVotersList(VoteMessageType.CLUSTER_STAMP_HASH_VOTE, voteHash));
 
         ExecuteClusterStampStateMessageData executeClusterStampStateMessageData = new ExecuteClusterStampStateMessageData(voteHash, lastConfirmedIndexForClusterStamp, Instant.now());
         executeClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(executeClusterStampStateMessageData)));
