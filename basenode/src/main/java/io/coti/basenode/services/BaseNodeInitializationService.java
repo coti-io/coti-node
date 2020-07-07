@@ -111,7 +111,7 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private IStateMessageService stateMessageService;
     @Autowired
-    private IVoteService generalVoteService;
+    private IVoteService voteService;
     @Autowired
     private VotingTimeoutService votingTimeoutService;
 
@@ -141,7 +141,7 @@ public abstract class BaseNodeInitializationService {
         networkService.connectToNetwork();
         propagationSubscriber.initPropagationHandler();
         stateMessageService.init();
-        generalVoteService.init();
+        voteService.init();
         monitorService.init();
         votingTimeoutService.init();
     }

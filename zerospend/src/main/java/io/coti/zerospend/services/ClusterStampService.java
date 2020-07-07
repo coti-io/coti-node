@@ -45,7 +45,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    private IVoteService generalVoteService;
+    private IVoteService voteService;
     @Autowired
     private DspVoteService dspVoteService;
 
@@ -228,7 +228,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         LastIndexClusterStampStateMessageData lastIndexClusterStampStateMessageData = new LastIndexClusterStampStateMessageData(lastConfirmedIndexForClusterStamp, Instant.now());
         lastIndexClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(lastIndexClusterStampStateMessageData)));
         stateMessageCrypto.signMessage(lastIndexClusterStampStateMessageData);
-        generalVoteService.startCollectingVotes(lastIndexClusterStampStateMessageData, createLastIndexVoteMessage(Instant.now(), lastIndexClusterStampStateMessageData.getHash()));
+        voteService.startCollectingVotes(lastIndexClusterStampStateMessageData, createLastIndexVoteMessage(Instant.now(), lastIndexClusterStampStateMessageData.getHash()));
         log.info(String.format("Initiate voting for the last clusterstamp index %d %s", lastConfirmedIndexForClusterStamp, lastIndexClusterStampStateMessageData.getHash().toString()));
         propagateRetries(Collections.singletonList(lastIndexClusterStampStateMessageData));
     }
@@ -241,7 +241,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         HashClusterStampStateMessageData hashClusterStampStateMessageData = new HashClusterStampStateMessageData(clusterStampHash, Instant.now());
         hashClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(hashClusterStampStateMessageData)));
         stateMessageCrypto.signMessage(hashClusterStampStateMessageData);
-        generalVoteService.startCollectingVotes(hashClusterStampStateMessageData, createHashVoteMessage(Instant.now(), hashClusterStampStateMessageData.getHash(), clusterStampHash));
+        voteService.startCollectingVotes(hashClusterStampStateMessageData, createHashVoteMessage(Instant.now(), hashClusterStampStateMessageData.getHash(), clusterStampHash));
 //                //TODO 6/11/2020 tomer: Need to align exact messages
 //                clusterStampService.updateGeneralVoteMessageClusterStampSegment(true, hashClusterStampStateMessageData);
 
@@ -255,7 +255,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 //                log.info(String.format("Initiate voting for the currency clusterstamp hash %s %s", clusterStampCurrencyHash.toHexString(), stateCurrencyHashMessage.getHash().toString()));
 //                propagationPublisher.propagate(stateCurrencyHashMessage, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode, NodeType.NodeManager));
 
-        generalVoteService.clearClusterStampHashVoteDone();
+        voteService.clearClusterStampHashVoteDone();
         propagateRetries(Collections.singletonList(hashClusterStampStateMessageData));
 //        propagateRetries(Arrays.asList(hashClusterStampStateMessageData, stateCurrencyHashMessage));
     }
@@ -269,7 +269,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         log.info("Nodes can continue with transaction processing " + voteHash.toString());
         propagateRetries(Collections.singletonList(continueClusterStampStateMessageData));
 
-        createNewClusterStampFile(generalVoteService.getVoteResultVotersList(VoteMessageType.CLUSTER_STAMP_HASH_VOTE, voteHash));
+        createNewClusterStampFile(voteService.getVoteResultVotersList(VoteMessageType.CLUSTER_STAMP_HASH_VOTE, voteHash));
 
         ExecuteClusterStampStateMessageData executeClusterStampStateMessageData = new ExecuteClusterStampStateMessageData(voteHash, lastConfirmedIndexForClusterStamp, Instant.now());
         executeClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(executeClusterStampStateMessageData)));
