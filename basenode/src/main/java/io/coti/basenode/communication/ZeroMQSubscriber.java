@@ -135,7 +135,9 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         if (event != null && monitorInitialized) {
             String address = event.getAddress();
             ZeroMQEvent zeroMQEvent = ZeroMQEvent.getEvent(event.getEvent());
-            log.info("ZeroMQ subscriber {} for address {}", zeroMQEvent, address);
+            if (zeroMQEvent.isDisplayLog()) {
+                log.info("ZeroMQ subscriber {} for address {}", zeroMQEvent, address);
+            }
         }
         if (event == null) {
             int errorCode = monitorSocket.base().errno();
