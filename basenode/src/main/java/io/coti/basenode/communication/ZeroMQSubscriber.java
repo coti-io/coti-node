@@ -60,10 +60,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         propagationReceiver = zeroMQContext.socket(SocketType.SUB);
         propagationReceiver.setHWM(10000);
         int port = ZeroMQUtils.bindToRandomPort(propagationReceiver);
-        String monitorAddress = "inproc://*:" + port;
-        propagationReceiver.monitor(monitorAddress, ZMQ.EVENT_ALL);
-        monitorSocket = zeroMQContext.socket(SocketType.PAIR);
-        monitorSocket.connect(monitorAddress);
+        monitorSocket = ZeroMQUtils.createAndConnectMonitorSocket(zeroMQContext, propagationReceiver, String.valueOf(port));
     }
 
     @Override

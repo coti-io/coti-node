@@ -58,6 +58,7 @@ public class InitializationService {
             insertActiveNodesToMemory();
             nodeManagementService.init();
             communicationService.initPublisher(propagationPort, NodeType.NodeManager);
+            communicationService.initPublisherMonitor();
             healthCheckService.init();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
