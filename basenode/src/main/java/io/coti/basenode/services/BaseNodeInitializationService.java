@@ -110,6 +110,7 @@ public abstract class BaseNodeInitializationService {
     protected ApplicationContext applicationContext;
     @Autowired
     private BuildProperties buildProperties;
+    protected String version;
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
@@ -117,6 +118,7 @@ public abstract class BaseNodeInitializationService {
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
+        version = buildProperties.getVersion();
     }
 
     protected void initServices() {

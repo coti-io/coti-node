@@ -18,9 +18,10 @@ public class NetworkNodeCrypto extends SignatureCrypto<NetworkNodeData> {
         byte[] receivingPortInBytes = networkNodeData.getReceivingPort() != null ? networkNodeData.getReceivingPort().getBytes() : new byte[0];
         byte[] networkTypeInBytes = networkNodeData.getNetworkType().toString().getBytes();
         byte[] webServerUrlInBytes = networkNodeData.getWebServerUrl() != null ? networkNodeData.getWebServerUrl().getBytes() : new byte[0];
+        byte[] versionInBytes = networkNodeData.getVersion() != null ? networkNodeData.getVersion().getBytes() : new byte[0];
 
         int networkNodeBufferLength = nodeTypeInBytes.length + addressInBytes.length + httpPortInBytes.length + propagationPortInBytes.length +
-                receivingPortInBytes.length + networkTypeInBytes.length + webServerUrlInBytes.length;
+                receivingPortInBytes.length + networkTypeInBytes.length + webServerUrlInBytes.length + versionInBytes.length;
         ByteBuffer networkNodeBuffer = ByteBuffer.allocate(networkNodeBufferLength)
                 .put(nodeTypeInBytes).put(addressInBytes).put(httpPortInBytes)
                 .put(propagationPortInBytes).put(receivingPortInBytes)

@@ -542,7 +542,7 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
-        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl());
+        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl(), node.getVersion());
         if (NodeType.FullNode.equals(node.getNodeType())) {
             singleNodeDetailsForWallet.setFeeData(node.getFeeData());
             singleNodeDetailsForWallet.setTrustScore(node.getTrustScore());
