@@ -26,6 +26,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.function.Consumer;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.nodemanager.http.HttpStringConstants.*;
@@ -44,7 +45,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
     @Override
     public List<NodeHistoryData> getNodesHistory() {
         List<NodeHistoryData> nodeHistoryDataList = new LinkedList<>();
-        nodeHistory.forEach(nodeHistoryDataList::add);
+        nodeHistory.forEach(nodeHistoryData -> nodeHistoryDataList.add(nodeHistoryData));
         return nodeHistoryDataList;
     }
 
