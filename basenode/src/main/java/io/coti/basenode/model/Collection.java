@@ -2,6 +2,7 @@ package io.coti.basenode.model;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
+import io.coti.basenode.data.interfaces.ITriConsumer;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.DataBaseDeleteException;
 import io.coti.basenode.exceptions.DataBaseWriteException;
@@ -15,6 +16,7 @@ import org.springframework.util.SerializationUtils;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -46,8 +48,13 @@ public abstract class Collection<T extends IEntity> {
 
     public void putBatch(Map<Hash, ? extends IEntity> entities) {
         WriteBatch writeBatch = new WriteBatch();
-        entities.forEach((hash, entity) ->
-                databaseConnector.put(columnFamilyName, writeBatch, hash.getBytes(), SerializationUtils.serialize(entity))
+        entities.forEach((hash, entity) -> {
+                    if (entity == null) {
+                        throw new DataBaseWriteException("Null entity to write from database");
+                    }
+                    databaseConnector.put(columnFamilyName, writeBatch, hash.getBytes(), SerializationUtils.serialize(entity));
+
+                }
         );
         databaseConnector.putBatch(writeBatch);
     }
@@ -69,29 +76,68 @@ public abstract class Collection<T extends IEntity> {
             if (bytes == null || bytes.length == 0) {
                 return null;
             }
-            T deserialized = (T) SerializationUtils.deserialize(bytes);
-            if (deserialized != null) {
-                deserialized.setHash(hash);
-            }
-            return deserialized;
+            return getDeserializedValue(hash, bytes);
         } catch (Exception e) {
             log.error("Error at getting by hash from column family {}", columnFamilyName, e);
             return null;
         }
     }
 
+    private T getDeserializedValue(Hash hash, byte[] serializedValue) {
+        T deserialized = (T) SerializationUtils.deserialize(serializedValue);
+        if (deserialized != null) {
+            deserialized.setHash(hash);
+        }
+        return deserialized;
+    }
+
     public void forEach(Consumer<T> consumer) {
-        try (RocksIterator iterator = databaseConnector.getIterator(columnFamilyName)) {
+        try (RocksIterator iterator = getIterator()) {
             iterator.seekToFirst();
             while (iterator.isValid()) {
-                T deserialized = (T) SerializationUtils.deserialize(iterator.value());
-                if (deserialized != null) {
-                    deserialized.setHash(new Hash(iterator.key()));
-                }
+                T deserialized = getDeserializedValue(iterator);
                 consumer.accept(deserialized);
                 iterator.next();
             }
         }
+    }
+
+    public void forEach(BiConsumer<byte[], T> biConsumer) {
+        try (RocksIterator iterator = getIterator()) {
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                T deserialized = getDeserializedValue(iterator);
+                biConsumer.accept(iterator.key(), deserialized);
+                iterator.next();
+            }
+        }
+    }
+
+    public void forEach(ITriConsumer<byte[], byte[], T> triConsumer) {
+        try (RocksIterator iterator = getIterator()) {
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                T deserialized = getDeserializedValue(iterator);
+                triConsumer.accept(iterator.key(), iterator.value(), deserialized);
+                iterator.next();
+            }
+        }
+    }
+
+    public void forEachWithLastIteration(BiConsumer<T, Boolean> biConsumer) {
+        try (RocksIterator iterator = getIterator()) {
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                T deserialized = getDeserializedValue(iterator);
+                iterator.next();
+                boolean isLastIteration = !iterator.isValid();
+                biConsumer.accept(deserialized, isLastIteration);
+            }
+        }
+    }
+
+    private T getDeserializedValue(RocksIterator iterator) {
+        return getDeserializedValue(new Hash(iterator.key()), iterator.value());
     }
 
     public void lockAndGetByHash(Hash hash, Consumer<T> consumer) {
@@ -112,7 +158,7 @@ public abstract class Collection<T extends IEntity> {
         }
     }
 
-    public RocksIterator getIterator() {
+    private RocksIterator getIterator() {
         return databaseConnector.getIterator(columnFamilyName);
     }
 
