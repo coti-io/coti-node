@@ -53,7 +53,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     public void init() {
         zeroMQContext = ZMQ.context(1);
         propagator = zeroMQContext.socket(SocketType.PUB);
-        monitorSocket = ZeroMQUtils.createAndConnectMonitorSocket(zeroMQContext, propagator, propagationPort);
+        monitorSocket = ZeroMQUtils.createAndConnectMonitorSocket(zeroMQContext, propagator);
         propagator.setHWM(10000);
         if (!propagator.bind("tcp://*:" + propagationPort)) {
             throw new ZeroMQPublisherException("ZeroMQ publisher socket bind failed to propagation port " + propagationPort);
@@ -175,8 +175,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
                 log.info("ZeroMQ publisher event: {}", zeroMQEvent);
             }
 
-        }
-        if (event == null) {
+        } else {
             int errorCode = monitorSocket.base().errno();
             if (errorCode == ZMQ.Error.ETERM.getCode()) {
                 contextTerminated.set(true);

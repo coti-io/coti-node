@@ -15,8 +15,10 @@ public class ZeroMQUtils {
         int port = 10000;
         while (!success) {
             try {
-                socket.bind("tcp://*:" + port);
-                success = true;
+                success =  socket.bind("tcp://*:" + port);
+                if(!success) {
+                    port++;
+                }
             } catch (ZMQException exception) {
                 port++;
             }
@@ -24,8 +26,8 @@ public class ZeroMQUtils {
         return port;
     }
 
-    public static ZMQ.Socket createAndConnectMonitorSocket(ZMQ.Context zeroMQContext, ZMQ.Socket socket, String port) {
-        String monitorAddress = "inproc://*:" + port;
+    public static ZMQ.Socket createAndConnectMonitorSocket(ZMQ.Context zeroMQContext, ZMQ.Socket socket) {
+        String monitorAddress = "inproc://" + socket.getSocketType().name();
         socket.monitor(monitorAddress, ZMQ.EVENT_ALL);
         ZMQ.Socket monitorSocket = zeroMQContext.socket(SocketType.PAIR);
         monitorSocket.connect(monitorAddress);
