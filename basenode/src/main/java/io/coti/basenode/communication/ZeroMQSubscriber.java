@@ -59,11 +59,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         zeroMQContext = ZMQ.context(1);
         propagationReceiver = zeroMQContext.socket(SocketType.SUB);
         propagationReceiver.setHWM(10000);
-        int port = ZeroMQUtils.bindToRandomPort(propagationReceiver);
-        String monitorAddress = "inproc://*:" + port;
-        propagationReceiver.monitor(monitorAddress, ZMQ.EVENT_ALL);
-        monitorSocket = zeroMQContext.socket(SocketType.PAIR);
-        monitorSocket.connect(monitorAddress);
+        monitorSocket = ZeroMQUtils.createAndConnectMonitorSocket(zeroMQContext, propagationReceiver);
+        ZeroMQUtils.bindToRandomPort(propagationReceiver);
     }
 
     @Override
@@ -132,14 +129,13 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     private void getEvent(AtomicBoolean contextTerminated) {
         ZMQ.Event event = ZMQ.Event.recv(monitorSocket);
-        if (event != null && monitorInitialized) {
+        if (event != null) {
             String address = event.getAddress();
             ZeroMQEvent zeroMQEvent = ZeroMQEvent.getEvent(event.getEvent());
-            if (zeroMQEvent.isDisplayLog()) {
+            if (zeroMQEvent.isDisplayLog() && (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized)) {
                 log.info("ZeroMQ subscriber {} for address {}", zeroMQEvent, address);
             }
-        }
-        if (event == null) {
+        } else {
             int errorCode = monitorSocket.base().errno();
             if (errorCode == ZMQ.Error.ETERM.getCode()) {
                 contextTerminated.set(true);
