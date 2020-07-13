@@ -26,4 +26,8 @@ public interface IPropagationSubscriber {
     int getMessageQueueSize(ZeroMQSubscriberQueue zeroMQSubscriberQueue);
 
     void shutdown();
+
+    void setMessageQueuePause();
+
+    void endMessageQueuePause();
 }

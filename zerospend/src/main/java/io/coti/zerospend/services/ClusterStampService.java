@@ -48,10 +48,12 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     private IVoteService voteService;
     @Autowired
     private DspVoteService dspVoteService;
+    @Autowired
+    private TransactionCreationService transactionCreationService;
 
     private static final long CLUSTER_STAMP_INITIATED_DELAY = 20;
     private static final long CLUSTER_STAMP_WAIT_TCC = 50;
-    private static final int NUMBER_OF_RESENDS = 3;
+    private static final int NUMBER_OF_RESENDS = 1;
 
     @Override
     public void init() {
@@ -111,9 +113,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         String voterNodesDetails = Base64.getEncoder().encodeToString(SerializationUtils.serialize(getNetworkVotersResponse));
         updateClusterStampVoterNodesDetails(voterNodesDetails);
 
-        VoteMessageData generalVoteMessage = createHashVoteMessage(createTime, clusterStampDataMessageHash, clusterStampDataMessageHash);  // todo delete it ?
+        VoteMessageData generalVoteMessage = createHashVoteMessage(createTime, clusterStampDataMessageHash);  // todo delete it ?
 
-        updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
+        updateVoteMessageClusterStampSegment(prepareClusterStampLines, generalVoteMessage);
 
         writeClusterStamp(createTime);
         uploadClusterStamp = true;
@@ -130,7 +132,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
         validatorsVoteClusterStampSegmentLines = new ArrayList<>();
         // For each vote
-        generalVoteMessageList.forEach(v -> updateGeneralVoteMessageClusterStampSegment(true, v));
+        generalVoteMessageList.forEach(v -> updateVoteMessageClusterStampSegment(true, v));
 
         writeClusterStamp(clusterStampCreateTime);
         String versionTimeMillisString = String.valueOf(clusterStampCreateTime.toEpochMilli());
@@ -199,7 +201,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         });
         clusterStampCreationThread.start();
 
-        dspVoteService.setSumAndSaveVotesPause(); // todo check it is started again
+        dspVoteService.setSumAndSaveVotesPause();
         return ResponseEntity.ok().body(null);
     }
 
@@ -212,19 +214,22 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         lastConfirmedIndexForClusterStamp = 0;
         while (Instant.now().isBefore(waitForTCCTill)) {
             lastConfirmedIndexForClusterStamp = clusterService.getMaxIndexOfNotConfirmed();
-            if (lastConfirmedIndexForClusterStamp == 0) {
+            if (lastConfirmedIndexForClusterStamp == -1) {
                 break;
             }
-            Thread.sleep(1000);
+            Thread.sleep(6000);
         }
-        if (lastConfirmedIndexForClusterStamp <= 0) {
+        if (lastConfirmedIndexForClusterStamp < 0) {
             lastConfirmedIndexForClusterStamp = transactionIndexService.getLastTransactionIndexData().getIndex();
+        } else {
+            lastConfirmedIndexForClusterStamp--;
         }
 
         LastIndexClusterStampStateMessageData lastIndexClusterStampStateMessageData = new LastIndexClusterStampStateMessageData(lastConfirmedIndexForClusterStamp, Instant.now());
         lastIndexClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(lastIndexClusterStampStateMessageData)));
         stateMessageCrypto.signMessage(lastIndexClusterStampStateMessageData);
-        voteService.startCollectingVotes(lastIndexClusterStampStateMessageData, createLastIndexVoteMessage(Instant.now(), lastIndexClusterStampStateMessageData.getHash()));
+        voteService.startCollectingVotes(lastIndexClusterStampStateMessageData, lastIndexClusterStampStateMessageData.getHash(),
+                createLastIndexVoteMessage(Instant.now(), lastIndexClusterStampStateMessageData.getHash()));
         log.info(String.format("Initiate voting for the last clusterstamp index %d %s", lastConfirmedIndexForClusterStamp, lastIndexClusterStampStateMessageData.getHash().toString()));
         propagateRetries(Collections.singletonList(lastIndexClusterStampStateMessageData));
     }
@@ -237,7 +242,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         HashClusterStampStateMessageData hashClusterStampStateMessageData = new HashClusterStampStateMessageData(clusterStampHash, Instant.now());
         hashClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(hashClusterStampStateMessageData)));
         stateMessageCrypto.signMessage(hashClusterStampStateMessageData);
-        voteService.startCollectingVotes(hashClusterStampStateMessageData, createHashVoteMessage(Instant.now(), hashClusterStampStateMessageData.getHash(), clusterStampHash));
+        voteService.startCollectingVotes(hashClusterStampStateMessageData, clusterStampHash, createHashVoteMessage(Instant.now(), clusterStampHash));
 //                //TODO 6/11/2020 tomer: Need to align exact messages
 //                clusterStampService.updateGeneralVoteMessageClusterStampSegment(true, hashClusterStampStateMessageData);
 
@@ -258,14 +263,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override
     public void doClusterStampAfterVoting(Hash voteHash) {
-
-        ContinueClusterStampStateMessageData continueClusterStampStateMessageData = new ContinueClusterStampStateMessageData(Instant.now());
-        continueClusterStampStateMessageData.setHash(new Hash(stateMessageCrypto.getSignatureMessage(continueClusterStampStateMessageData)));
-        stateMessageCrypto.signMessage(continueClusterStampStateMessageData);
-        log.info("Nodes can continue with transaction processing " + voteHash.toString());
-        propagateRetries(Collections.singletonList(continueClusterStampStateMessageData));
-
-
         addVotesAndUploadNewClusterStampFile(voteService.getVoteResultVotersList(VoteMessageType.CLUSTER_STAMP_HASH_VOTE, voteHash));
 
         ExecuteClusterStampStateMessageData executeClusterStampStateMessageData = new ExecuteClusterStampStateMessageData(voteHash, lastConfirmedIndexForClusterStamp, Instant.now());
@@ -276,7 +273,6 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         propagateRetries(Collections.singletonList(executeClusterStampStateMessageData));
 
         //todo clean clusterStampService.clusterstampdata
-        //todo start DB cleaning
 
     }
 
@@ -307,4 +303,8 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         return false;
     }
 
+    @Override
+    protected void restartTransactionProcessing() {
+        dspVoteService.endSumAndSaveVotesPause();
+    }
 }

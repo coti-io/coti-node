@@ -27,14 +27,11 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 clusterStampService.clusterStampExecute((ExecuteClusterStampStateMessageData) stateMessage);
                 break;
             case CLUSTER_STAMP_PREPARE_INDEX:
-                voteService.startCollectingVotes(stateMessage, null);
+                voteService.startCollectingVotes(stateMessage, stateMessage.getHash(), null);
                 break;
             case CLUSTER_STAMP_PREPARE_HASH:
                 break;
             case CLUSTER_STAMP_INITIATED:
-                break;
-            case CLUSTER_STAMP_CONTINUE:
-                // todo
                 break;
             default:
                 log.error("Unexpected message type: {}", StateMessageType.getName(stateMessage.getClass()));

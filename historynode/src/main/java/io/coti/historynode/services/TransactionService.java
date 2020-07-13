@@ -236,7 +236,7 @@ public class TransactionService extends BaseNodeTransactionService {
         this.historyProcessingPaused = true;
     }
 
-    public void endHistoryProcessingPause(String ignored) {
+    public void endHistoryProcessingPause() {
         this.historyProcessingPaused = false;
     }
 

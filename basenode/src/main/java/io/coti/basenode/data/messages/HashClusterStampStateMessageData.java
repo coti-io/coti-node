@@ -23,7 +23,7 @@ public class HashClusterStampStateMessageData extends ClusterStampStateMessageDa
     public byte[] getMessageInBytes() {
         byte[] typeBytes = StateMessageType.CLUSTER_STAMP_PREPARE_HASH.name().getBytes();
         byte[] clusterStampHashBytes = clusterStampHash.getBytes();
-        return ByteBuffer.allocate(typeBytes.length + clusterStampHashBytes.length + Long.BYTES).put(typeBytes).put(clusterStampHashBytes).putLong(getCreateTime().toEpochMilli()).array();
+        return ByteBuffer.allocate(typeBytes.length + clusterStampHashBytes.length).put(typeBytes).put(clusterStampHashBytes).array();
     }
 
 }

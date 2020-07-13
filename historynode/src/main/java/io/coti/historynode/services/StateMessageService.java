@@ -30,7 +30,7 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 break;
             case CLUSTER_STAMP_PREPARE_INDEX:
                 clusterStampService.clusterStampContinueWithIndex((LastIndexClusterStampStateMessageData) stateMessage);
-                transactionService.setHistoryProcessingPause(); // todo check to restart it
+                transactionService.setHistoryProcessingPause();
                 boolean vote = clusterStampService.checkLastConfirmedIndex((LastIndexClusterStampStateMessageData) stateMessage);
                 if (vote) {
                     clusterStampService.calculateClusterStampDataAndHashes();  // todo separate it to a thread
@@ -38,11 +38,8 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 break;
             case CLUSTER_STAMP_PREPARE_HASH:
                 Hash candidateClusterStampHash = clusterStampService.getCandidateClusterStampHash();
-                voteService.castVoteForClusterStampHash(stateMessage.getHash(),
-                        clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash);
-                break;
-            case CLUSTER_STAMP_CONTINUE:
-                // todo
+                voteService.castVoteForClusterStampHash(clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage),
+                        candidateClusterStampHash);
                 break;
             case CLUSTER_STAMP_EXECUTE:
                 clusterStampService.clusterStampExecute((ExecuteClusterStampStateMessageData) stateMessage);

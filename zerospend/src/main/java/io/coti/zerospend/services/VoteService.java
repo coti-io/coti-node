@@ -28,7 +28,9 @@ public class VoteService extends BaseNodeVoteService {
                 }
                 break;
             case CLUSTER_STAMP_INDEX_VOTE:
-                clusterStampService.calculateClusterStampDataAndHashesAndSendMessage(); // todo separate it to a thread
+                if (consensusPositive) {
+                    clusterStampService.calculateClusterStampDataAndHashesAndSendMessage(); // todo separate it to a thread
+                }
                 break;
             case CLUSTER_STAMP_HASH_VOTE:
                 clusterStampHashVoteDone = true;

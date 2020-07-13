@@ -9,12 +9,12 @@ import java.nio.ByteBuffer;
 public class VoteMessageCrypto extends SignatureCrypto<VoteMessageData> {
 
     @Override
-    public byte[] getSignatureMessage(VoteMessageData generalVoteMessage) {
-        byte[] stateMessageInBytes = generalVoteMessage.getMessageInBytes();
-        byte[] voteHashInBytes = generalVoteMessage.getVoteHash().getBytes();
+    public byte[] getSignatureMessage(VoteMessageData voteMessage) {
+        byte[] stateMessageInBytes = voteMessage.getMessageInBytes();
+        byte[] voteHashInBytes = voteMessage.getVoteHash().getBytes();
 
         ByteBuffer broadcastDataBuffer = ByteBuffer.allocate(Long.BYTES + stateMessageInBytes.length + voteHashInBytes.length + 1)
-                .putLong(generalVoteMessage.getCreateTime().toEpochMilli()).put(stateMessageInBytes).put(voteHashInBytes).put(generalVoteMessage.isVote() ? (byte) 1 : (byte) 0);
+                .putLong(voteMessage.getCreateTime().toEpochMilli()).put(stateMessageInBytes).put(voteHashInBytes).put(voteMessage.isVote() ? (byte) 1 : (byte) 0);
         return CryptoHelper.cryptoHash(broadcastDataBuffer.array()).getBytes();
     }
 }

@@ -32,14 +32,10 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 clusterStampService.clusterStampExecute((ExecuteClusterStampStateMessageData) stateMessage);
                 break;
             case CLUSTER_STAMP_INITIATED:
-                transactionPropagationCheckService.setResendingPause();  // todo check to restart it
-                break;
-            case CLUSTER_STAMP_CONTINUE:
-                // todo
+                transactionPropagationCheckService.setResendingPause();
                 break;
             default:
                 break;
-//                log.error("Unexpected message type: {}", stateMessage.getMessagePayload().getGeneralMessageType());
         }
     }
 }

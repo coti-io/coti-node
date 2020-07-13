@@ -19,7 +19,7 @@ public class LastIndexClusterStampVoteMessageData extends ClusterStampVoteMessag
     @Override
     public byte[] getMessageInBytes() {
         byte[] typeBytes = VoteMessageType.CLUSTER_STAMP_INDEX_VOTE.name().getBytes();
-        return ByteBuffer.allocate(typeBytes.length + Long.BYTES).put(typeBytes).putLong(getCreateTime().toEpochMilli()).array();
+        return ByteBuffer.allocate(typeBytes.length).put(typeBytes).array();
     }
 
 }

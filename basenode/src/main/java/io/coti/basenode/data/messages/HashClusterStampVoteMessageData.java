@@ -14,16 +14,14 @@ public class HashClusterStampVoteMessageData extends ClusterStampVoteMessageData
     private HashClusterStampVoteMessageData() {
     }
 
-    public HashClusterStampVoteMessageData(Hash clusterStampHash, Hash voteHash, boolean vote, Instant createTime) {
-        super(voteHash, vote, createTime);
-        this.clusterStampHash = clusterStampHash;
+    public HashClusterStampVoteMessageData(Hash clusterStampHash, boolean vote, Instant createTime) {
+        super(clusterStampHash, vote, createTime);
     }
 
     @Override
     public byte[] getMessageInBytes() {
         byte[] typeBytes = VoteMessageType.CLUSTER_STAMP_HASH_VOTE.name().getBytes();
-        byte[] clusterStampHashBytes = clusterStampHash.getBytes();
-        return ByteBuffer.allocate(typeBytes.length + clusterStampHashBytes.length + Long.BYTES).put(typeBytes).put(clusterStampHashBytes).putLong(getCreateTime().toEpochMilli()).array();
+        return ByteBuffer.allocate(typeBytes.length).put(typeBytes).array();
     }
 
 }

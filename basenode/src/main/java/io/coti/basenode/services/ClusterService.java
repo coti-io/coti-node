@@ -206,7 +206,11 @@ public class ClusterService implements IClusterService {
         return trustChainConfirmationCluster.values().stream()
                 .filter(transactionData -> transactionData.getDspConsensusResult() != null)
                 .mapToLong(transactionData -> transactionData.getDspConsensusResult().getIndex())
-                .min().orElse(0) - 1;
+                .min().orElse(-1);
+    }
+
+    public Collection<TransactionData> getTransactionsInTheCluster() {
+        return trustChainConfirmationCluster.values();
     }
 
 

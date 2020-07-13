@@ -33,7 +33,6 @@ public class BaseNodeStateMessageService implements IStateMessageService {
                 Arrays.asList(StateMessageType.CLUSTER_STAMP_INITIATED,
                         StateMessageType.CLUSTER_STAMP_PREPARE_INDEX,
                         StateMessageType.CLUSTER_STAMP_PREPARE_HASH,
-                        StateMessageType.CLUSTER_STAMP_CONTINUE,
                         StateMessageType.CLUSTER_STAMP_EXECUTE));
         log.info("{} is up", this.getClass().getSimpleName());
     }

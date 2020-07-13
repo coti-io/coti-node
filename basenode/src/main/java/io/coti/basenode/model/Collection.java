@@ -179,5 +179,14 @@ public abstract class Collection<T extends IEntity> {
             }
         }
     }
+
+    public void copyDataTo(Hash hash, Collection collection) {
+        byte[] bytes = databaseConnector.getByKey(columnFamilyName, hash.getBytes());
+        databaseConnector.put(collection.columnFamilyName, hash.getBytes(), bytes);
+    }
+
+    public void copyAllDataTo(Collection collection) {
+        this.forEach((key, bytes)-> databaseConnector.put(collection.columnFamilyName, key, bytes));
+    }
 }
 

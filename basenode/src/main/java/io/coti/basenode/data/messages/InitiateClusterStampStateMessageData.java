@@ -23,7 +23,7 @@ public class InitiateClusterStampStateMessageData extends ClusterStampStateMessa
     @Override
     public byte[] getMessageInBytes() {
         byte[] typeBytes = StateMessageType.CLUSTER_STAMP_INITIATED.name().getBytes();
-        return ByteBuffer.allocate(typeBytes.length + Long.BYTES + Long.BYTES + Long.BYTES).put(typeBytes).putLong(delay).putLong(timeout).putLong(getCreateTime().toEpochMilli()).array();
+        return ByteBuffer.allocate(typeBytes.length + Long.BYTES + Long.BYTES).put(typeBytes).putLong(delay).putLong(timeout).array();
     }
 
 }

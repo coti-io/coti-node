@@ -29,6 +29,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private static final int HEARTBEAT_INTERVAL = 10000;
     private static final int INITIAL_DELAY = 5000;
     private static final int FIXED_DELAY = 5000;
+    private static final long QUEUE_PAUSE_MILLISECONDS = 1000;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket propagationReceiver;
     private Map<String, ConnectedNodeData> connectedNodes = new ConcurrentHashMap<>();
@@ -40,6 +41,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private NodeType subscriberNodeType;
     @Autowired
     private ISubscriberHandler subscriberHandler;
+    private boolean messageQueuePause;
 
 
     @Override
@@ -48,6 +50,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         BlockingQueue<ZeroMQMessageData> messageQueue = ZeroMQSubscriberQueue.HEARTBEAT.getQueue();
         queueNameToThreadMap.put(ZeroMQSubscriberQueue.HEARTBEAT.name(), new Thread(() -> this.handleMessagesQueueTask(messageQueue)));
         subscriberHandler.init();
+        messageQueuePause = false;
     }
 
     public void initSockets() {
@@ -142,7 +145,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     }
 
-    private void propagationProcess(ZeroMQMessageData zeroMQMessageData) throws ClassNotFoundException {
+    private void propagationProcess(ZeroMQMessageData zeroMQMessageData) throws ClassNotFoundException, InterruptedException {
         String channel = zeroMQMessageData.getChannel();
         byte[] message = zeroMQMessageData.getMessage();
         IPropagatable messageData = serializer.deserialize(message);
@@ -152,6 +155,9 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             String serverAddress = ((PublisherHeartBeatData) messageData).getServerAddress();
             updatePublisherLastConnectionTime(serverAddress);
         } else {
+            while (messageQueuePause) {
+                Thread.sleep(QUEUE_PAUSE_MILLISECONDS);
+            }
             String serverAddress = channelArray[1];
             NodeType publisherNodeType = NodeType.valueOf(channelArray[2]);
             updatePublisherLastConnectionTime(serverAddress);
@@ -270,4 +276,15 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             Thread.currentThread().interrupt();
         }
     }
+
+    @Override
+    public void setMessageQueuePause() {
+        this.messageQueuePause = true;
+    }
+
+    @Override
+    public void endMessageQueuePause() {
+        this.messageQueuePause = false;
+    }
+
 }

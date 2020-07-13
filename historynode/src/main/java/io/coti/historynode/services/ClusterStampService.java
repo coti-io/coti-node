@@ -5,11 +5,15 @@ import io.coti.basenode.data.messages.InitiateClusterStampStateMessageData;
 import io.coti.basenode.data.messages.StateMessageData;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 public class ClusterStampService extends BaseNodeClusterStampService {
+
+    @Autowired
+    private TransactionService transactionService;
 
     @Override
     public void clusterStampInitiate(StateMessageData stateMessage, InitiateClusterStampStateMessageData initiateClusterStampStateMessageData) {
@@ -24,4 +28,10 @@ public class ClusterStampService extends BaseNodeClusterStampService {
         }
         super.clusterStampExecute(executeClusterStampStateMessageData);
     }
+
+    @Override
+    protected void restartTransactionProcessing() {
+        transactionService.endHistoryProcessingPause();
+    }
+
 }

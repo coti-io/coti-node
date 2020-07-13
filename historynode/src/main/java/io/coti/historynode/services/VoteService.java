@@ -14,8 +14,8 @@ import java.time.Instant;
 public class VoteService extends BaseNodeVoteService {
 
     @Override
-    public VoteMessageData castVoteForClusterStampHash(Hash voteHash, boolean vote, Hash clusterStampHash) {
-        AgreedHashClusterStampVoteMessageData agreedHashClusterStampVoteMessageData = new AgreedHashClusterStampVoteMessageData(clusterStampHash, voteHash, vote, Instant.now());
+    public VoteMessageData castVoteForClusterStampHash(boolean vote, Hash clusterStampHash) {
+        AgreedHashClusterStampVoteMessageData agreedHashClusterStampVoteMessageData = new AgreedHashClusterStampVoteMessageData(clusterStampHash, vote, Instant.now());
         castVote(agreedHashClusterStampVoteMessageData, "clusterstamp hash");
         return agreedHashClusterStampVoteMessageData;
     }

@@ -29,7 +29,7 @@ public class StateMessageService extends BaseNodeStateMessageService {
             case CLUSTER_STAMP_PREPARE_INDEX:
                 clusterStampService.clusterStampContinueWithIndex((LastIndexClusterStampStateMessageData) stateMessage);
                 boolean vote = clusterStampService.checkLastConfirmedIndex((LastIndexClusterStampStateMessageData) stateMessage);
-                voteService.startCollectingVotes(stateMessage, voteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote));
+                voteService.startCollectingVotes(stateMessage, stateMessage.getHash(), voteService.castVoteForClusterStampIndex(stateMessage.getHash(), vote));
                 if (vote) {
                     clusterStampService.calculateClusterStampDataAndHashes();  // todo separate it to a thread
                 }
@@ -37,14 +37,14 @@ public class StateMessageService extends BaseNodeStateMessageService {
             case CLUSTER_STAMP_PREPARE_HASH:
                 clusterStampService.clusterStampContinueWithHash(stateMessage);
                 Hash candidateClusterStampHash = clusterStampService.getCandidateClusterStampHash();
-                voteService.startCollectingVotes(stateMessage, voteService.castVoteForClusterStampHash(stateMessage.getHash(),
-                        clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash));
+                voteService.startCollectingVotes(stateMessage, candidateClusterStampHash, voteService.castVoteForClusterStampHash(clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage),
+                        candidateClusterStampHash));
                 Thread waitForHistoryNodesAndCastVote = new Thread(() -> {
                     try {
                         Instant waitForHistoryNodesTill = Instant.now().plusSeconds(clusterStampService.CLUSTER_STAMP_TIMEOUT);
                         while (Instant.now().isBefore(waitForHistoryNodesTill)) {
                             if (clusterStampService.isAgreedHistoryNodesNumberEnough()) {
-                                voteService.castVoteForClusterStampHash(stateMessage.getHash(), clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash);
+                                voteService.castVoteForClusterStampHash(clusterStampService.checkClusterStampHash((HashClusterStampStateMessageData) stateMessage), candidateClusterStampHash);
                                 break;
                             }
                             Thread.sleep(1000);
@@ -56,9 +56,6 @@ public class StateMessageService extends BaseNodeStateMessageService {
                 });
                 waitForHistoryNodesAndCastVote.start();
 
-                break;
-            case CLUSTER_STAMP_CONTINUE:
-                clusterStampService.clusterStampContinue((ContinueClusterStampStateMessageData) stateMessage);
                 break;
             case CLUSTER_STAMP_EXECUTE:
                 clusterStampService.clusterStampExecute((ExecuteClusterStampStateMessageData) stateMessage);

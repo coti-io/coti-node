@@ -128,18 +128,18 @@ public class BaseNodeVoteService implements IVoteService {
     }
 
     @Override
-    public void startCollectingVotes(StateMessageData stateMessage, VoteMessageData myVote) {
-        Hash generalVoteResultsHash;
+    public void startCollectingVotes(StateMessageData stateMessage, Hash voteHash, VoteMessageData myVote) {
+        Hash voteResultsHash;
         if (myVote != null) {
-            generalVoteResultsHash = voteCombinedHash(Objects.requireNonNull(VoteMessageType.getName(myVote.getClass())), myVote.getVoteHash());
+            voteResultsHash = voteCombinedHash(Objects.requireNonNull(VoteMessageType.getName(myVote.getClass())), myVote.getVoteHash());
         } else {
-            generalVoteResultsHash = stateMessage.getHash();
+            voteResultsHash = voteHash;
         }
         try {
-            synchronized (voteResultLockData.addLockToLockMap(generalVoteResultsHash)) {
-                VoteResult voteResult = voteResults.getByHash(generalVoteResultsHash);
+            synchronized (voteResultLockData.addLockToLockMap(voteResultsHash)) {
+                VoteResult voteResult = voteResults.getByHash(voteResultsHash);
                 if (voteResult == null) {
-                    voteResult = new VoteResult(generalVoteResultsHash, stateMessage);
+                    voteResult = new VoteResult(voteResultsHash, stateMessage);
                 } else if (voteResult.getTheMatterOfVoting() == null) {
                     voteResult.setTheMatterOfVoting(stateMessage);
                 }
@@ -149,7 +149,7 @@ public class BaseNodeVoteService implements IVoteService {
                 voteResults.put(voteResult);
             }
         } finally {
-            voteResultLockData.removeLockFromLocksMap(generalVoteResultsHash);
+            voteResultLockData.removeLockFromLocksMap(voteResultsHash);
         }
     }
 
@@ -169,8 +169,8 @@ public class BaseNodeVoteService implements IVoteService {
     }
 
     @Override
-    public VoteMessageData castVoteForClusterStampHash(Hash voteHash, boolean vote, Hash clusterStampHash) {
-        HashClusterStampVoteMessageData hashClusterStampVoteMessageData = new HashClusterStampVoteMessageData(clusterStampHash, voteHash, vote, Instant.now());
+    public VoteMessageData castVoteForClusterStampHash(boolean vote, Hash clusterStampHash) {
+        HashClusterStampVoteMessageData hashClusterStampVoteMessageData = new HashClusterStampVoteMessageData(clusterStampHash, vote, Instant.now());
         castVote(hashClusterStampVoteMessageData, "clusterstamp hash");
         return hashClusterStampVoteMessageData;
     }
