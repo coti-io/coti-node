@@ -14,6 +14,7 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private static final long serialVersionUID = 1827712996893751649L;
     private Hash nodeHash;
     private NodeType nodeType;
+    private String version;
     private String address;
     private String httpPort;
     private String propagationPort;
@@ -28,8 +29,9 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     public NetworkNodeData() {
     }
 
-    public NetworkNodeData(NodeType nodeType, String address, String httpPort, Hash nodeHash, NetworkType networkType) {
+    public NetworkNodeData(NodeType nodeType, String version, String address, String httpPort, Hash nodeHash, NetworkType networkType) {
         this.nodeType = nodeType;
+        this.version = version;
         this.address = address;
         this.httpPort = httpPort;
         this.nodeHash = nodeHash;

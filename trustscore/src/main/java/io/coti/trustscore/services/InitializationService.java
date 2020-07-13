@@ -70,7 +70,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
         networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;
 
