@@ -21,7 +21,7 @@ public class LastIndexClusterStampStateMessageData extends ClusterStampStateMess
     @Override
     public byte[] getMessageInBytes() {
         byte[] typeBytes = StateMessageType.CLUSTER_STAMP_PREPARE_INDEX.name().getBytes();
-        return ByteBuffer.allocate(typeBytes.length + Long.BYTES + Long.BYTES).put(typeBytes).putLong(lastIndex).putLong(getCreateTime().toEpochMilli()).array();
+        return ByteBuffer.allocate(typeBytes.length + Long.BYTES).put(typeBytes).putLong(lastIndex).array();
     }
 
 }

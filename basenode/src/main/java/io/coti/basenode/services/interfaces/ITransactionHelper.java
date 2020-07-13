@@ -74,6 +74,8 @@ public interface ITransactionHelper {
 
     long incrementTotalTransactions();
 
+    void decreaseTotalTransactions(long decrease);
+
     void addNoneIndexedTransaction(TransactionData transactionData);
 
     void removeNoneIndexedTransaction(TransactionData transactionData);

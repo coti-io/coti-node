@@ -98,7 +98,7 @@ public class TransactionCreationService {
 
     }
 
-    public void createGenesisTransactions() {
+    public void createGenesisTransactions(boolean propagateIt) {
         log.info("Creating genesis transactions");
         for (int trustScore = 0; trustScore <= 100; trustScore = trustScore + 10) {
             TransactionData transactionData = createZeroSpendTransactionData(trustScore, GENESIS);
@@ -108,6 +108,9 @@ public class TransactionCreationService {
             dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
 
             transactionHelper.attachTransactionToCluster(transactionData);
+            if (propagateIt) {
+                sendTransactionToPublisher(transactionData);
+            }
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {

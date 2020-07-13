@@ -9,21 +9,17 @@ import java.time.Instant;
 @Data
 public class AgreedHashClusterStampVoteMessageData extends ClusterStampVoteMessageData {
 
-    private Hash clusterStampHash;
-
     private AgreedHashClusterStampVoteMessageData() {
     }
 
-    public AgreedHashClusterStampVoteMessageData(Hash clusterStampHash, Hash voteHash, boolean vote, Instant createTime) {
-        super(voteHash, vote, createTime);
-        this.clusterStampHash = clusterStampHash;
+    public AgreedHashClusterStampVoteMessageData(Hash clusterStampHash, boolean vote, Instant createTime) {
+        super(clusterStampHash, vote, createTime);
     }
 
     @Override
     public byte[] getMessageInBytes() {
         byte[] typeBytes = VoteMessageType.CLUSTER_STAMP_AGREED_HASH_HISTORY_NODE.name().getBytes();
-        byte[] clusterStampHashBytes = clusterStampHash.getBytes();
-        return ByteBuffer.allocate(typeBytes.length + clusterStampHashBytes.length + Long.BYTES).put(typeBytes).put(clusterStampHashBytes).putLong(getCreateTime().toEpochMilli()).array();
+        return ByteBuffer.allocate(typeBytes.length).put(typeBytes).array();
     }
 
 }

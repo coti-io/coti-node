@@ -13,11 +13,11 @@ public interface IVoteService {
 
     void handleVoteMessage(VoteMessageData generalVoteMessage);
 
-    void startCollectingVotes(StateMessageData voteHash, VoteMessageData myVote);
+    void startCollectingVotes(StateMessageData stateMessage, Hash voteHash, VoteMessageData myVote);
 
     VoteMessageData castVoteForClusterStampIndex(Hash voteHash, boolean vote);
 
-    VoteMessageData castVoteForClusterStampHash(Hash voteHash, boolean vote, Hash clusterStampHash);
+    VoteMessageData castVoteForClusterStampHash(boolean vote, Hash clusterStampHash);
 
     List<VoteMessageData> getVoteResultVotersList(VoteMessageType clusterStampHashVote, Hash voteHash);
 

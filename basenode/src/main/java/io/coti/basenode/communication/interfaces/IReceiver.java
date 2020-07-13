@@ -14,7 +14,7 @@ public interface IReceiver {
 
     boolean isMessageQueuePause();
 
-    void endMessageQueuePause(String ignored);
+    void endMessageQueuePause();
 
     void shutdown();
 }

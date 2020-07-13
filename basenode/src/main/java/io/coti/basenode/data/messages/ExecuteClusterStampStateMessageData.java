@@ -25,7 +25,7 @@ public class ExecuteClusterStampStateMessageData extends ClusterStampStateMessag
     public byte[] getMessageInBytes() {
         byte[] typeBytes = StateMessageType.CLUSTER_STAMP_EXECUTE.name().getBytes();
         byte[] voteHashBytes = voteHash.getBytes();
-        return ByteBuffer.allocate(typeBytes.length + voteHashBytes.length + Long.BYTES + Long.BYTES).put(typeBytes).put(voteHashBytes).putLong(lastIndex).putLong(getCreateTime().toEpochMilli()).array();
+        return ByteBuffer.allocate(typeBytes.length + voteHashBytes.length + Long.BYTES).put(typeBytes).put(voteHashBytes).putLong(lastIndex).array();
     }
 
 }

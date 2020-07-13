@@ -13,13 +13,10 @@ import io.coti.basenode.http.GetNetworkVotersResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Currencies;
-import io.coti.basenode.model.LastClusterStampVersions;
-import io.coti.basenode.model.Transactions;
+import io.coti.basenode.model.*;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -37,13 +34,14 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.CLUSTERSTAMP_NOT_FOUND;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 @Slf4j
 @Service
-public class BaseNodeClusterStampService implements IClusterStampService {
+public abstract class BaseNodeClusterStampService implements IClusterStampService {
 
     protected static final String NODE_MANAGER_VALIDATORS_ENDPOINT = "/management/validators";
     protected static final String NODE_MANAGER_NEW_CLUSTER_STAMP = "/newClusterStamp";
@@ -137,6 +135,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected TrustChainConfirmationService trustChainConfirmationService;
     @Autowired
     protected Transactions transactions;
+    @Autowired
+    private TemporaryTransactions temporaryTransactions;
+    @Autowired
+    private TransactionIndexes transactionIndexes;
     @Autowired
     protected ClusterStampCrypto clusterStampCrypto;
     @Autowired
@@ -390,10 +392,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 getNetworkVotersResponse = loadClusterStampVoterSegment(clusterStampFileName, missingSegmentsAllowed, line);
             }
 
-            ArrayList<VoteMessageData> generalVoteMessages = loadClusterStampVotesSegment(clusterStampFileName, bufferedReader,
+            ArrayList<VoteMessageData> voteMessages = loadClusterStampVotesSegment(clusterStampFileName, bufferedReader,
                     missingSegmentsAllowed, line);
 
-            processLoadedClusterStampFile(shouldUpdateClusterStampDBVersion, hashCalculation, currencyMap, clusterStampCurrencyMap, getNetworkVotersResponse, generalVoteMessages);
+            processLoadedClusterStampFile(shouldUpdateClusterStampDBVersion, hashCalculation, currencyMap, clusterStampCurrencyMap, getNetworkVotersResponse, voteMessages);
         } catch (
                 ClusterStampException e) {
             throw new ClusterStampException(String.format("Errors on clusterstamp file %s loading.%n", clusterStampFileName) + e.getMessage(), e);
@@ -440,8 +442,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private void processLoadedClusterStampFile(boolean shouldUpdateClusterStampDBVersion, boolean hashCalculation, Map<Hash, CurrencyData> currencyMap,
-                                               Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap, GetNetworkVotersResponse getNetworkVotersResponse, ArrayList<VoteMessageData> generalVoteMessages) {
-        validateMajority(generalVoteMessages, getNetworkVotersResponse, getCandidateClusterStampHash());
+                                               Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap, GetNetworkVotersResponse getNetworkVotersResponse, ArrayList<VoteMessageData> voteMessages) {
+        validateMajority(voteMessages, getNetworkVotersResponse, getCandidateClusterStampHash());
         if (!hashCalculation && shouldUpdateClusterStampDBVersion) {
             currencyService.updateCurrenciesFromClusterStamp(currencyMap);
             mintingService.updateMintingAvailableMapFromClusterStamp(clusterStampCurrencyMap);
@@ -454,10 +456,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             throw new ClusterStampValidationException(String.format(INVALID_HEADER_LINE_NOTIFICATION_AT_CLUSTERSTAMP_FILE, clusterStampFileName));
         }
         boolean segmentDone = false;
-        ArrayList<VoteMessageData> generalVoteMessages = new ArrayList<>();
+        ArrayList<VoteMessageData> voteMessages = new ArrayList<>();
         Hash clusterStampDataMessageHash = getCandidateClusterStampHash();
         if (filledMissingSegments) {
-            segmentDone = addOwnNodeGeneralVoteMessage(clusterStampFileName, missingSegmentsAllowed, generalVoteMessages, clusterStampDataMessageHash);
+            segmentDone = addOwnNodeVoteMessage(clusterStampFileName, missingSegmentsAllowed, voteMessages, clusterStampDataMessageHash);
         }
         while ((line = bufferedReader.readLine()) != null && !segmentDone) {
             line = line.trim();
@@ -465,20 +467,20 @@ public class BaseNodeClusterStampService implements IClusterStampService {
                 if (!missingSegmentsAllowed) {
                     throw new ClusterStampValidationException("Missing entry for cluster stamp Balances segment.");
                 } else {
-                    segmentDone = addOwnNodeGeneralVoteMessage(clusterStampFileName, missingSegmentsAllowed, generalVoteMessages, clusterStampDataMessageHash);
+                    segmentDone = addOwnNodeVoteMessage(clusterStampFileName, missingSegmentsAllowed, voteMessages, clusterStampDataMessageHash);
                 }
             } else {
-                processGeneralVoteMessageLine(line, missingSegmentsAllowed, clusterStampDataMessageHash, generalVoteMessages);
+                processVoteMessageLine(line, missingSegmentsAllowed, clusterStampDataMessageHash, voteMessages);
             }
         }
-        return generalVoteMessages;
+        return voteMessages;
     }
 
-    private boolean addOwnNodeGeneralVoteMessage(String clusterStampFileName, boolean prepareClusterStampLines, ArrayList<VoteMessageData> generalVoteMessages, Hash clusterStampDataMessageHash) {
-        HashClusterStampVoteMessageData hashClusterStampVoteMessageData = new HashClusterStampVoteMessageData(clusterStampDataMessageHash, clusterStampDataMessageHash, true, clusterStampCreateTime);
+    private boolean addOwnNodeVoteMessage(String clusterStampFileName, boolean prepareClusterStampLines, ArrayList<VoteMessageData> voteMessages, Hash clusterStampDataMessageHash) {
+        HashClusterStampVoteMessageData hashClusterStampVoteMessageData = new HashClusterStampVoteMessageData(clusterStampDataMessageHash, true, clusterStampCreateTime);
         voteMessageCrypto.signMessage(hashClusterStampVoteMessageData);
-        updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, hashClusterStampVoteMessageData);
-        generalVoteMessages.add(hashClusterStampVoteMessageData);
+        updateVoteMessageClusterStampSegment(prepareClusterStampLines, hashClusterStampVoteMessageData);
+        voteMessages.add(hashClusterStampVoteMessageData);
         filledMissingSegments = true;
         log.info("Updated missing votes segment for clusterstamp file {}", clusterStampFileName);
         return true;
@@ -610,16 +612,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return line;
     }
 
-    private void validateMajority(ArrayList<VoteMessageData> generalVoteMessages, GetNetworkVotersResponse getNetworkVotersResponse, Hash clusterStampDataMessageHash) {
+    private void validateMajority(ArrayList<VoteMessageData> voteMessages, GetNetworkVotersResponse getNetworkVotersResponse, Hash clusterStampDataMessageHash) {
         if (getNetworkVotersResponse == null) {
             throw new ClusterStampValidationException("Failed to calculate votes for cluster stamp votes segment.");
         }
         List<Hash> allCurrentValidators = getNetworkVotersResponse.getAllCurrentValidators();
-        long positiveVotesAmount = generalVoteMessages.stream().filter(generalVoteMessage ->
-                generalVoteMessage.isVote() &&
-                        allCurrentValidators.contains(generalVoteMessage.getSignerHash()) &&
-                        ((HashClusterStampVoteMessageData) generalVoteMessage).getClusterStampHash().equals(clusterStampDataMessageHash) &&
-                        getNetworkVotersResponse.getCreateTime().plusSeconds(NETWORK_VALIDATORS_SNAPSHOT_VALID_SECONDS).isAfter(generalVoteMessage.getCreateTime())
+        long positiveVotesAmount = voteMessages.stream().filter(voteMessage ->
+                voteMessage.isVote() &&
+                        allCurrentValidators.contains(voteMessage.getSignerHash()) &&
+                        voteMessage.getVoteHash().equals(clusterStampDataMessageHash) &&
+                        getNetworkVotersResponse.getCreateTime().plusSeconds(NETWORK_VALIDATORS_SNAPSHOT_VALID_SECONDS).isAfter(voteMessage.getCreateTime())
         ).count();
         if (positiveVotesAmount < getExpectedMajority(allCurrentValidators.size())) {
             throw new ClusterStampValidationException("Failed to reach majority for cluster stamp votes segment.");
@@ -634,51 +636,51 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         return restTemplate.getForEntity(nodeManagerHttpAddress + NODE_MANAGER_VALIDATORS_ENDPOINT, GetNetworkVotersResponse.class).getBody();
     }
 
-    private void processGeneralVoteMessageLine(String line, boolean prepareClusterStampLines, Hash clusterStampDataMessageHash, List<VoteMessageData> generalVoteMessages) {
+    private void processVoteMessageLine(String line, boolean prepareClusterStampLines, Hash clusterStampDataMessageHash, List<VoteMessageData> voteMessages) {
         String[] lineDetails = line.split(CLUSTERSTAMP_DELIMITER);
         int numOfDetailsInLine = lineDetails.length;
         if (numOfDetailsInLine != CLUSTERSTAMP_VOTES_SEGMENT_LINE_LENGTH) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
-        Instant generalVoteMessageCreateTime = Instant.ofEpochMilli(Long.parseLong(lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_CREATE_TIME_INDEX]));
+        Instant voteMessageCreateTime = Instant.ofEpochMilli(Long.parseLong(lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_CREATE_TIME_INDEX]));
         Hash signerHash = new Hash(lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_SIGNER_HASH_INDEX]);
         String voteSignatureR = lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_SIGNATURE_R_INDEX];
         String voteSignatureS = lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_SIGNATURE_S_INDEX];
         boolean vote = Boolean.parseBoolean(lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_VOTE_INDEX]);
         Hash clusterStampHash = new Hash(lineDetails[CLUSTERSTAMP_VOTES_SEGMENT_CLUSTER_STAMP_HASH_INDEX]);
 
-        HashClusterStampVoteMessageData hashClusterStampVoteMessageData = new HashClusterStampVoteMessageData(clusterStampHash, clusterStampHash, vote, generalVoteMessageCreateTime);
+        HashClusterStampVoteMessageData hashClusterStampVoteMessageData = new HashClusterStampVoteMessageData(clusterStampHash, vote, voteMessageCreateTime);
         hashClusterStampVoteMessageData.setSignature(new SignatureData(voteSignatureR, voteSignatureS));
         hashClusterStampVoteMessageData.setSignerHash(signerHash);
 
         if (!clusterStampHash.equals(clusterStampDataMessageHash)) {
             throw new ClusterStampValidationException("Cluster hash values don't match " + clusterStampHash + " " + clusterStampDataMessageHash);
         }
-        updateGeneralVoteMessageClusterStampSegment(prepareClusterStampLines, hashClusterStampVoteMessageData);
+        updateVoteMessageClusterStampSegment(prepareClusterStampLines, hashClusterStampVoteMessageData);
 
         if (!voteMessageCrypto.verifySignature(hashClusterStampVoteMessageData)) {
-            throw new ClusterStampValidationException(String.format("Cluster stamp general vote of %s message failed validation", signerHash));
+            throw new ClusterStampValidationException(String.format("Cluster stamp vote of %s message failed validation", signerHash));
         }
-        generalVoteMessages.add(hashClusterStampVoteMessageData);
+        voteMessages.add(hashClusterStampVoteMessageData);
     }
 
     protected boolean isMissingSegmentsAllowed() {
         return false;
     }
 
-    public void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, VoteMessageData generalVoteMessage) {
+    public void updateVoteMessageClusterStampSegment(boolean prepareClusterStampLines, VoteMessageData voteMessage) {
         if (!prepareClusterStampLines) {
             return;
         }
-        Instant generalVoteMessageCreateTime = generalVoteMessage.getCreateTime();
-        Hash signerHash = generalVoteMessage.getSignerHash();
-        String voteSignatureR = generalVoteMessage.getSignature().getR();
-        String voteSignatureS = generalVoteMessage.getSignature().getS();
-        boolean vote = generalVoteMessage.isVote();
-        Hash clusterStampHash = ((HashClusterStampVoteMessageData) generalVoteMessage).getClusterStampHash();
+        Instant voteMessageCreateTime = voteMessage.getCreateTime();
+        Hash signerHash = voteMessage.getSignerHash();
+        String voteSignatureR = voteMessage.getSignature().getR();
+        String voteSignatureS = voteMessage.getSignature().getS();
+        boolean vote = voteMessage.isVote();
+        Hash clusterStampHash = voteMessage.getVoteHash();
 
         StringBuilder sb = new StringBuilder();
-        String line = sb.append(generalVoteMessageCreateTime.toEpochMilli()).append(CLUSTERSTAMP_DELIMITER)
+        String line = sb.append(voteMessageCreateTime.toEpochMilli()).append(CLUSTERSTAMP_DELIMITER)
                 .append(signerHash.toHexString()).append(CLUSTERSTAMP_DELIMITER)
                 .append(voteSignatureR).append(CLUSTERSTAMP_DELIMITER).append(voteSignatureS).append(CLUSTERSTAMP_DELIMITER)
                 .append(vote).append(CLUSTERSTAMP_DELIMITER)
@@ -993,8 +995,8 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         setCandidateClusterStampHash(clusterStampDataMessageHash);
     }
 
-    protected VoteMessageData createHashVoteMessage(Instant createTime, Hash voteHash, Hash clusterStampDataMessageHash) {
-        HashClusterStampVoteMessageData hashClusterStampVoteMessageData = new HashClusterStampVoteMessageData(clusterStampDataMessageHash, voteHash, true, createTime);
+    protected VoteMessageData createHashVoteMessage(Instant createTime, Hash clusterStampDataMessageHash) {
+        HashClusterStampVoteMessageData hashClusterStampVoteMessageData = new HashClusterStampVoteMessageData(clusterStampDataMessageHash, true, createTime);
         voteMessageCrypto.signMessage(hashClusterStampVoteMessageData);
         return hashClusterStampVoteMessageData;
     }
@@ -1102,38 +1104,28 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     @Override
     public void clusterStampExecute(ExecuteClusterStampStateMessageData executeClusterStampStateMessageData) {
 
-        //todo pause transactions processing
-
-        String tempColumnFamilyName = Transactions.class.getName() + "_temp";
+        String tempColumnFamilyName = TemporaryTransactions.class.getName();
         databaseConnector.createColumnFamily(tempColumnFamilyName);
+        temporaryTransactions.init();
 
-        RocksIterator iterator = transactions.getIterator();
-        iterator.seekToFirst();
-        long movedTransactionsCounter = 0;
-        while (iterator.isValid()) {
-            byte[] rawTransactionData = iterator.value();
-            TransactionData transactionData = (TransactionData) SerializationUtils.deserialize(iterator.value());
-            if (!transactionHelper.isConfirmed(transactionData) || transactionData.getDspConsensusResult().getIndex() > executeClusterStampStateMessageData.getLastIndex()) {
-                databaseConnector.put(tempColumnFamilyName, transactionData.getHash().getBytes(), rawTransactionData);
+        AtomicLong movedTransactionsCounter = new AtomicLong();
+        transactionIndexes.forEach(transactionIndexData->{
+            if(transactionIndexData.getIndex() > executeClusterStampStateMessageData.getLastIndex()) {
+                transactions.copyDataTo(transactionIndexData.getTransactionHash(), temporaryTransactions);
             } else {
-                movedTransactionsCounter++;
+                movedTransactionsCounter.getAndIncrement();
             }
-            iterator.next();
-        }
+        });
 
+        clusterService.getTransactionsInTheCluster().forEach(transactionData -> transactions.copyDataTo(transactionData.getHash(), temporaryTransactions));
         databaseConnector.resetColumnFamilies(Collections.singletonList(Transactions.class.getName()));
-
-        RocksIterator iteratorBack = databaseConnector.getIterator(tempColumnFamilyName);
-        iteratorBack.seekToFirst();
-        while (iteratorBack.isValid()) {
-            databaseConnector.put(Transactions.class.getName(), iteratorBack.key(), iteratorBack.value());
-            iteratorBack.next();
-        }
+        temporaryTransactions.copyAllDataTo(transactions);
+        transactionHelper.decreaseTotalTransactions(movedTransactionsCounter.get());
+        createGenesisTransactions();
 
         databaseConnector.dropColumnFamilies(Collections.singletonList(tempColumnFamilyName));
         log.info("{} transactions are moved out from the actual database and kept by the history nodes", movedTransactionsCounter);
 
-        //todo restart transactions processing
     }
 
     @Override
@@ -1141,4 +1133,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         lastConfirmedIndexForClusterStamp = lastIndexClusterStampStateMessageData.getLastIndex();
     }
 
+    protected void createGenesisTransactions() {
+        // implemented for ZS server
+    }
+
+    protected void restartTransactionProcessing() {
+        // implemented subclasses
+    }
 }

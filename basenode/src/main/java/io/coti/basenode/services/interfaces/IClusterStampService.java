@@ -36,7 +36,7 @@ public interface IClusterStampService {
 
     Hash getCandidateClusterStampHash();
 
-    void updateGeneralVoteMessageClusterStampSegment(boolean prepareClusterStampLines, VoteMessageData generalVoteMessage);
+    void updateVoteMessageClusterStampSegment(boolean prepareClusterStampLines, VoteMessageData generalVoteMessage);
 
     default void calculateClusterStampDataAndHashesAndSendMessage() {
     }
@@ -55,6 +55,4 @@ public interface IClusterStampService {
     void setAgreedHistoryNodesNumberEnough();
 
     boolean isAgreedHistoryNodesNumberEnough();
-
-    default void clusterStampContinue(ContinueClusterStampStateMessageData continueClusterStampStateMessageData) {}
 }

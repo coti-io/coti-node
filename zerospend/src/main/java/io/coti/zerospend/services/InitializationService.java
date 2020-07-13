@@ -80,7 +80,7 @@ public class InitializationService extends BaseNodeInitializationService {
             messageReceiver.initReceiverHandler();
 
             if (transactions.isEmpty()) {
-                transactionCreationService.createGenesisTransactions();
+                transactionCreationService.createGenesisTransactions(false);
             }
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());

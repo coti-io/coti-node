@@ -47,7 +47,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     @Override
     public void clusterStampContinueWithIndex(LastIndexClusterStampStateMessageData lastIndexClusterStampStateMessageData) {
         super.clusterStampContinueWithIndex(lastIndexClusterStampStateMessageData);
-        votingTimeoutService.cancelEvent("CLUSTER_STUMP_INITIATE_TIMEOUT");
+        votingTimeoutService.cancelEvent("CLUSTER_STUMP_INITIATE_TIMEOUT");  // todo reset it instead of cancelling
         if (!receiver.isMessageQueuePause()) {
             receiver.setMessageQueuePause();
         }
@@ -79,7 +79,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     @Override
-    public void clusterStampContinue(ContinueClusterStampStateMessageData continueClusterStampStateMessageData) {
-        propagationPublisher.propagate(continueClusterStampStateMessageData, Collections.singletonList(NodeType.FullNode));
+    protected void restartTransactionProcessing() {
+        receiver.endMessageQueuePause();
+        transactionPropagationCheckService.endResendingPause();
+        votingTimeoutService.cancelEvent("CLUSTER_STUMP_INITIATE_TIMEOUT");
     }
 }

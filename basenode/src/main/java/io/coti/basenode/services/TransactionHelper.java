@@ -431,6 +431,11 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     @Override
+    public void decreaseTotalTransactions(long decrease) {
+        totalTransactions.getAndAdd(-decrease);
+    }
+
+    @Override
     public void addNoneIndexedTransaction(TransactionData transactionData) {
         noneIndexedTransactionHashes.add(transactionData.getHash());
     }

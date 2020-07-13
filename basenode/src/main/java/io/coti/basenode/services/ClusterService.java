@@ -209,5 +209,9 @@ public class ClusterService implements IClusterService {
                 .min().orElse(0) - 1;
     }
 
+    public Collection<TransactionData> getTransactionsInTheCluster() {
+        return trustChainConfirmationCluster.values();
+    }
+
 
 }

@@ -131,10 +131,9 @@ public class ZeroMQReceiver implements IReceiver {
     }
 
     @Override
-    public void endMessageQueuePause(String ignored) {
+    public void endMessageQueuePause() {
         this.messageQueuePause = false;
     }
-
 
     @Override
     public void shutdown() {
