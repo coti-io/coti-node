@@ -26,10 +26,15 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -191,6 +196,7 @@ public class BaseNodeNetworkService implements INetworkService {
         }
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && validateServerUrl) {
             validateAddressAndServerUrl(networkNodeData);
+            validateURLSSL(networkNodeData);
         }
 
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && !validateFeeData(networkNodeData.getFeeData())) {
@@ -229,6 +235,56 @@ public class BaseNodeNetworkService implements INetworkService {
         String expectedIp = inetAddress.getHostAddress();
         if (!expectedIp.equals(ip)) {
             throw new NetworkNodeValidationException(String.format(INVALID_NODE_IP_FOR_SERVER_URL, webServerUrl, host, ip, expectedIp));
+        }
+
+    }
+
+    private void validateURLSSL(NetworkNodeData networkNodeData) {
+        String webServerUrl = networkNodeData.getWebServerUrl();
+
+        URL url = null;
+        try {
+            url = new URL(webServerUrl);
+        } catch (MalformedURLException e) {
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_MALFORMED, webServerUrl));
+        }
+        HttpsURLConnection conn;
+        try {
+            conn = (HttpsURLConnection) url.openConnection();
+            conn.connect();
+        } catch (IOException e) {
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_CONNECTION_NOT_OPENED, webServerUrl));
+        }
+        try {
+            Certificate[] certs = conn.getServerCertificates();
+            Date maxExpiration = null;
+            Date now = new Date();
+            boolean expiredCertificateFound = false;
+            long daysBeforeExpiration = 0;
+            for (Certificate c : certs) {
+                if (c instanceof X509Certificate) {
+                    X509Certificate xc = (X509Certificate) c;
+                    Date expiresOn = xc.getNotAfter();
+                    maxExpiration = maxExpiration == null || expiresOn.after(maxExpiration) ? expiresOn : maxExpiration;
+                    if (maxExpiration.before(now)) {
+                        expiredCertificateFound = true;
+                    }
+                }
+            }
+            if (expiredCertificateFound) {
+                log.error(" found at least one expired certificate");
+            }
+
+            if (maxExpiration != null && maxExpiration.after(now)) {
+                daysBeforeExpiration = (maxExpiration.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+                log.info(" Certificate will expire on :" + maxExpiration + " only " + daysBeforeExpiration + " days to go");
+            } else {
+                throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION, webServerUrl));
+            }
+        } catch (SSLPeerUnverifiedException e) {
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE, webServerUrl));
+        } finally {
+            conn.disconnect();
         }
     }
 

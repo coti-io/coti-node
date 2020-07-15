@@ -55,6 +55,10 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_AMOUNT = "Invalid amount";
     public static final String INVALID_AMOUNT_VS_FULL_NODE_FEE = "Transaction amount should be greater than minimum full node fee %s";
     public static final String UNDEFINED_TOKEN_TYPE_FEE = "Fee rules for token type %s are not defined yet";
+    public static final String INVALID_NODE_SERVER_URL_SSL_MALFORMED = "Invalid node server URL %s: malformed";
+    public static final String INVALID_NODE_SERVER_URL_SSL_CONNECTION_NOT_OPENED = "Invalid node server URL %s: failed to be opened";
+    public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION = "Invalid node server URL %s: failed to verify certificate expiration";
+    public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE = "Invalid node server URL %s: failed to verify certificate";
 
     public static final String UNAUTHORIZED_IP_ACCESS = "Unauthorized ip access";
     public static final String METHOD_NOT_SUPPORTED = "Unsupported method";
