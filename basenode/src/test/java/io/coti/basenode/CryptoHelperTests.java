@@ -115,7 +115,7 @@ public class CryptoHelperTests {
 
         String hexPrivateKey = "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e";
         String publicKey = CryptoHelper.getPublicKeyFromPrivateKey(hexPrivateKey);
-        Assert.assertTrue("a053a4ddfd9c4e27b919a26ccb2d99a55f679c13fec197efc48fc887661a626db19a99660f8ae3babddebf924923afb22c7d4fe251f96f1880c4b8f89106d139".equals(publicKey));
+        Assert.assertEquals("a053a4ddfd9c4e27b919a26ccb2d99a55f679c13fec197efc48fc887661a626db19a99660f8ae3babddebf924923afb22c7d4fe251f96f1880c4b8f89106d139", publicKey);
     }
 
 

@@ -19,21 +19,17 @@ import java.util.Map;
 @Service
 public class BucketTransactionService implements IBucketEventService<TransactionEventData, BucketTransactionEventsData> {
 
-    private static RulesData rulesData;
+    private RulesData rulesData;
 
-    public static RulesData getRulesData() {
-        return rulesData;
-    }
-
-    public static void init(RulesData rulesData) {
-        BucketTransactionService.rulesData = rulesData;
+    public void init(RulesData rulesData) {
+        this.rulesData = rulesData;
         BucketTransactionsCalculator.init(rulesData);
     }
 
     @Override
     public BucketTransactionEventsData addEventToCalculations(TransactionEventData transactionEventData, BucketTransactionEventsData bucketTransactionEventsData) {
-        //  TransactionData transactionData = transactionEventData.getTransactionData();
-//        BaseTransactionData transferTransaction = transactionData.getBaseTransactions().get(transactionData.getBaseTransactions().size() - 1);
+        //  TransactionData transactionData = transactionEventData.getTransactionData()
+//        BaseTransactionData transferTransaction = transactionData.getBaseTransactions().get(transactionData.getBaseTransactions().size() - 1)
 
         // Decay on case that this is the first transaction today
         BucketTransactionsCalculator bucketCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);

@@ -224,9 +224,9 @@ public class DbConnectorService implements IDbConnectorService {
     }
 
     public HttpStatus getHttpStatus(MultiDbInsertionStatus multiDbInsertionStatus) {
-        if (multiDbInsertionStatus == MultiDbInsertionStatus.Success) {
+        if (multiDbInsertionStatus == MultiDbInsertionStatus.SUCCESS) {
             return HttpStatus.OK;
-        } else if (multiDbInsertionStatus == MultiDbInsertionStatus.Failed) {
+        } else if (multiDbInsertionStatus == MultiDbInsertionStatus.FAILED) {
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
         return HttpStatus.MULTI_STATUS;

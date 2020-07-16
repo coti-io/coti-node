@@ -45,7 +45,8 @@ public class NetworkHistoryService implements INetworkHistoryService {
     @Override
     public List<NodeHistoryData> getNodesHistory() {
         List<NodeHistoryData> nodeHistoryDataList = new LinkedList<>();
-        nodeHistory.forEach(nodeHistoryData -> nodeHistoryDataList.add(nodeHistoryData));
+        Consumer<NodeHistoryData> addNodeHistoryToList = nodeHistoryDataList::add;
+        nodeHistory.forEach(addNodeHistoryToList);
         return nodeHistoryDataList;
     }
 

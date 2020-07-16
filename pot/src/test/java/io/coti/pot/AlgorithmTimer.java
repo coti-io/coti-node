@@ -38,102 +38,102 @@ class AlgorithmTimer {
     }
 
     @Test
-    public void skein() {
+    void skein() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.SKEIN_512_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void bmw() {
+    void bmw() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.BMW_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void blake() {
+    void blake() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.BLAKE2B_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
     public void sha() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.SHA_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void keccak() {
+    void keccak() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.KECCAK_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void shabal() {
+    void shabal() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.SHABAL_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void shavite() {
+    void shavite() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.SHA_VITE_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void whirlpool() {
+    void whirlpool() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.WHIRLPOOL;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void cubehash() {
+    void cubehash() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.CUBE_HASH_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void jh() {
+    void jh() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.JH_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void luffa() {
+    void luffa() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.LUFFA_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void echo() {
+    void echo() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.ECHO_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void simd() {
+    void simd() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.SIMD_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void fugue() {
+    void fugue() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.FUGUE_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void groestl() {
+    void groestl() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.GROESTL_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
     @Test
-    public void hamsi() {
+    void hamsi() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.HAMSI_512;
-        assertDoesNotThrow(() -> results.put(type, dowork(type)));
+        assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }
 
-    private double dowork(IAlgorithm.AlgorithmType type) {
+    private double doWork(IAlgorithm.AlgorithmType type) {
         double durationRound;
         Algorithm algo = new Algorithm(type);
         long startTimeRound = BenchmarkBatching.getCpuTime();

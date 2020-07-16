@@ -9,18 +9,18 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class Instantiation {
+class Instantiation {
 
 
     @Test
-    public void theRightOrder() {
+    void theRightOrder() {
 
         ProofOfTrust pow = new ProofOfTrust(100);
         assertNotNull(pow);
     }
 
     @Test
-    public void correctOrder() {
+    void correctOrder() {
 
         ProofOfTrust pow = new ProofOfTrust(0);
         List<AlgorithmType> correct = new ArrayList<>();

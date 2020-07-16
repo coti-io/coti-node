@@ -52,7 +52,7 @@ public class BucketNotFulfilmentEventsServiceTest {
     @Test
     public void getBucketEventType() {
         EventType eventType = bucketNotFulfilmentEventsService.getBucketEventType();
-        Assert.assertTrue(eventType == EventType.NOT_FULFILMENT_EVENT);
+        Assert.assertEquals(eventType, EventType.NOT_FULFILMENT_EVENT);
     }
 
     private InsertEventRequest buildBehaviorEventsDataRequest(CompensableEventScoreType compensableEventScoreType) {

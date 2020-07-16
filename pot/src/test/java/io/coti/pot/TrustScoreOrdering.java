@@ -8,10 +8,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TrustScoreOrdering {
+class TrustScoreOrdering {
 
     @Test
-    public void trustScoreOrdering() {
+    void trustScoreOrdering() {
         List<IAlgorithm.AlgorithmType> masterList = Arrays.asList(IAlgorithm.AlgorithmType.values());
 
 
@@ -59,7 +59,7 @@ public class TrustScoreOrdering {
                 hope = 3;
             } else if (i <= 93) {
                 hope = 2;
-            } else if (i <= 100) {
+            } else {
                 hope = 1;
             }
 

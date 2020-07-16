@@ -47,7 +47,7 @@ public class BucketInitialTrustScoreEventsServiceTest {
     public void addEventToCalculationsSimpleTest() {
         addInitialTrustScoreEvents();
         double bucketSumScore = bucketInitialTrustScoreEventsService.getBucketSumScore(bucketInitialTrustScoreEventsData);
-        isTrustScoreValueValid(bucketSumScore);
+        Assert.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     @Test

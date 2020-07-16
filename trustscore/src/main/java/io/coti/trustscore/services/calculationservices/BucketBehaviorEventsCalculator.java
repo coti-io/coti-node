@@ -29,7 +29,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userTypeToBehaviorEventsScoreMap = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getBehaviorEventsScore()));
+                collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getBehaviorEventsScore()));
     }
 
     @Override

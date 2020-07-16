@@ -15,8 +15,8 @@ public class ZeroMQUtils {
         int port = 10000;
         while (!success) {
             try {
-                success =  socket.bind("tcp://*:" + port);
-                if(!success) {
+                success = socket.bind("tcp://*:" + port);
+                if (!success) {
                     port++;
                 }
             } catch (ZMQException exception) {

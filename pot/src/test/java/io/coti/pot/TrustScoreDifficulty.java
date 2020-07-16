@@ -3,8 +3,9 @@ package io.coti.pot;
 import io.coti.pot.interfaces.IAlgorithm;
 
 class TrustScoreDifficulty {
-    private int _trustScore;
-    private String _difficulty;
+
+    private final int _trustScore;
+    private final String _difficulty;
 
     public TrustScoreDifficulty(int trustScore, String difficulty) {
         _trustScore = trustScore;
