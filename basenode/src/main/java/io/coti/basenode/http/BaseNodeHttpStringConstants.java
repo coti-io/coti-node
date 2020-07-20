@@ -45,6 +45,11 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_SERVER_URL_EMPTY_HOST = "Invalid node server URL %s: empty host";
     public static final String INVALID_NODE_SERVER_URL_HOST_RESERVED = "Invalid node server URL %s: host %s reserved to another user";
     public static final String INVALID_NODE_SERVER_URL_SSL_REQUIRED = "Invalid node server URL %s: SSL required";
+    public static final String INVALID_NODE_SERVER_URL_SSL_CONNECTION_NOT_OPENED = "Invalid node server URL %s: SSL connection failed to be opened";
+    public static final String INVALID_NODE_SERVER_URL_SSL_CERTIFICATE_NOT_FOUND = "Invalid node server URL %s: SSL certificate not found";
+    public static final String INVALID_NODE_SERVER_URL_SSL_INVALID_SERVER_CERTIFICATE = "Invalid node server URL %s: invalid SSL server certificate";
+    public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION = "Invalid node server URL %s: failed to verify SSL certificate. Certificate is expired";
+    public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE = "Invalid node server URL %s: failed to verify certificate";
     public static final String INVALID_NODE_IP_FOR_SERVER_URL = "Invalid node server URL %s: host %s is not matching with ip %s. The expected ip is %s";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
@@ -52,9 +57,6 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";
     public static final String INVALID_AMOUNT = "Invalid amount";
     public static final String INVALID_AMOUNT_VS_FULL_NODE_FEE = "Transaction amount should be greater than minimum full node fee %s";
-    public static final String INVALID_NODE_SERVER_URL_SSL_CONNECTION_NOT_OPENED = "Invalid node server URL %s: failed to be opened";
-    public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION = "Invalid node server URL %s: failed to verify certificate expiration";
-    public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE = "Invalid node server URL %s: failed to verify certificate";
 
     public static final String UNAUTHORIZED_IP_ACCESS = "Unauthorized ip access";
     public static final String METHOD_NOT_SUPPORTED = "Unsupported method";

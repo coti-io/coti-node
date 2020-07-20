@@ -28,8 +28,6 @@ public interface INetworkService {
 
     void validateNetworkNodeData(NetworkNodeData networkNodeData);
 
-    String getProtocol(String webServerUrl);
-
     boolean validateFeeData(FeeData feeData);
 
     List<NetworkNodeData> getShuffledNetworkNodeDataListFromMapValues(NodeType nodeType);

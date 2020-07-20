@@ -133,8 +133,10 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     }
 
     private void publish(ZeroMQMessageData messageData) {
-        propagator.sendMore(messageData.getChannel().getBytes());
-        propagator.send(messageData.getMessage());
+        synchronized (this) {
+            propagator.sendMore(messageData.getChannel().getBytes());
+            propagator.send(messageData.getMessage());
+        }
     }
 
     private void publishRemainingMessages() {

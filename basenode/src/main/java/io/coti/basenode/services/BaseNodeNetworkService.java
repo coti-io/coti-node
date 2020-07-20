@@ -12,6 +12,7 @@ import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.services.interfaces.ISslService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -69,6 +73,8 @@ public class BaseNodeNetworkService implements INetworkService {
     private ApplicationContext applicationContext;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
+    @Autowired
+    private ISslService sslService;
     protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
     protected NetworkNodeData networkNodeData;
@@ -81,6 +87,8 @@ public class BaseNodeNetworkService implements INetworkService {
         singleNodeNetworkDataMap = new EnumMap<>(NodeType.class);
         NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, null));
 
+        sslService.init();
+        log.info("{} is up", this.getClass().getSimpleName());
     }
 
     @Scheduled(initialDelay = 1000, fixedDelay = 10000)
@@ -216,8 +224,7 @@ public class BaseNodeNetworkService implements INetworkService {
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRAR);
         }
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && validateServerUrl) {
-            validateAddressAndServerUrl(networkNodeData);
-            validateURLSSL(networkNodeData);
+            validateAddressAndWebServerUrl(networkNodeData);
         }
 
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && !validateFeeData(networkNodeData.getFeeData())) {
@@ -226,72 +233,80 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
-    private void validateAddressAndServerUrl(NetworkNodeData networkNodeData) {
+    private void validateAddressAndWebServerUrl(NetworkNodeData networkNodeData) {
         InetAddressValidator validator = InetAddressValidator.getInstance();
         String ip = networkNodeData.getAddress();
         if (!validator.isValidInet4Address(ip)) {
             log.error("Invalid IP, expected IPV4, received ip {}", ip);
             throw new NetworkNodeValidationException(INVALID_NODE_IP_VERSION);
         }
+
         String webServerUrl = networkNodeData.getWebServerUrl();
-        String protocol;
-        try {
-            protocol = getProtocol(webServerUrl);
-        } catch (Exception e) {
-            throw new NetworkNodeValidationException(INVALID_NODE_SERVER_URL, e);
-        }
+        URL url = getUrl(webServerUrl);
+
+        validateWebServerUrl(url, ip);
+        validateSSL(url, networkNodeData.getNodeHash());
+    }
+
+    private void validateWebServerUrl(URL nodeUrl, String ip) {
+
+        String protocol = nodeUrl.getProtocol();
         if (!protocol.equals("https")) {
-            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_REQUIRED, webServerUrl));
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_REQUIRED, nodeUrl));
         }
-        String host = getHost(webServerUrl);
+
+        String host = nodeUrl.getHost();
         if (host.isEmpty()) {
-            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_EMPTY_HOST, webServerUrl));
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_EMPTY_HOST, nodeUrl));
         }
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getByName(host);
         } catch (Exception e) {
-            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_UNKNOWN_HOST, webServerUrl), e);
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_UNKNOWN_HOST, nodeUrl), e);
         }
         String expectedIp = inetAddress.getHostAddress();
         if (!expectedIp.equals(ip)) {
-            throw new NetworkNodeValidationException(String.format(INVALID_NODE_IP_FOR_SERVER_URL, webServerUrl, host, ip, expectedIp));
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_IP_FOR_SERVER_URL, nodeUrl, host, ip, expectedIp));
         }
-
     }
 
-    private void validateURLSSL(NetworkNodeData networkNodeData) {
-        String webServerUrl = networkNodeData.getWebServerUrl();
-
-        URL url = getUrl(webServerUrl);
+    private void validateSSL(URL nodeUrl, Hash nodeHash) {
         HttpsURLConnection conn;
         try {
-            conn = (HttpsURLConnection) url.openConnection();
+            conn = (HttpsURLConnection) nodeUrl.openConnection();
             conn.connect();
         } catch (IOException e) {
-            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_CONNECTION_NOT_OPENED, webServerUrl));
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_CONNECTION_NOT_OPENED, nodeUrl));
         }
         try {
             Certificate[] certs = conn.getServerCertificates();
-            Date minExpiration = null;
-            Date now = new Date();
+            if (certs == null || certs.length == 0) {
+                throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_CERTIFICATE_NOT_FOUND, nodeUrl));
+            }
+            LocalDate now = LocalDate.now(ZoneId.of("UTC"));
             long daysBeforeExpiration = 0;
             for (Certificate c : certs) {
-                if (c instanceof X509Certificate) {
-                    X509Certificate xc = (X509Certificate) c;
-                    Date expiresOn = xc.getNotAfter();
-                    minExpiration = minExpiration == null || expiresOn.before(minExpiration) ? expiresOn : minExpiration;
+                if (!(c instanceof X509Certificate)) {
+                    throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_INVALID_SERVER_CERTIFICATE, nodeUrl));
                 }
             }
 
-            if (minExpiration != null && minExpiration.after(now)) {
-                daysBeforeExpiration = (minExpiration.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-                log.info(" Certificate will expire on :" + minExpiration + " only " + daysBeforeExpiration + " days to go");
-            } else {
-                throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION, webServerUrl));
+            X509Certificate[] serverCertificates = (X509Certificate[]) certs;
+            X509Certificate principalCertificate = serverCertificates[0];
+            Date expiresOn = principalCertificate.getNotAfter();
+            LocalDate expireDate = expiresOn.toInstant().atZone(ZoneId.of("UTC")).toLocalDate();
+            if (!expireDate.isAfter(now)) {
+                throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION, nodeUrl));
             }
+
+            sslService.checkServerTrusted((X509Certificate[]) certs);
+
+            daysBeforeExpiration = now.until(expireDate, ChronoUnit.DAYS);
+            log.info("Trusted SSL certificate will expire on : {},  {} days to go for node url {} and node hash {}", expireDate, daysBeforeExpiration, nodeUrl, nodeHash);
+
         } catch (SSLPeerUnverifiedException e) {
-            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE, webServerUrl));
+            throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE, nodeUrl));
         } finally {
             conn.disconnect();
         }
@@ -300,11 +315,6 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public String getHost(String webServerUrl) {
         return getUrl(webServerUrl).getHost();
-    }
-
-    @Override
-    public String getProtocol(String webServerUrl) {
-        return getUrl(webServerUrl).getProtocol();
     }
 
     private URL getUrl(String webServerUrl) {
