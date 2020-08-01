@@ -111,6 +111,13 @@ public class NodeManagementService implements INodeManagementService {
 
     }
 
+    public void deleteNodeRecord(NetworkNodeData networkNodeData) {
+        log.info("Deleting {} of address {} and port {}", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
+        addNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE, Instant.now());
+        activeNodes.delete(networkNodeData);
+    }
+
+
     private void validateReservedHostToNode(NetworkNodeData networkNodeData) {
         if (networkNodeData.getNodeType().equals(NodeType.FullNode)) {
             String webServerUrl = networkNodeData.getWebServerUrl();

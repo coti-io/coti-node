@@ -41,4 +41,9 @@ public class CurrencyData extends OriginatorCurrencyData implements IPropagatabl
     public void setHash() {
         hash = OriginatorCurrencyCrypto.calculateHash(this.symbol);
     }
+
+    public boolean isNativeCurrency() {
+        return getCurrencyTypeData() != null && getCurrencyTypeData().getCurrencyType() != null
+                && getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN);
+    }
 }

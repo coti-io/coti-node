@@ -100,7 +100,7 @@ public class HealthCheckService implements IHealthCheckService {
     private NetworkNodeData checkAndDeleteNodeIfNeeded(NetworkNodeData networkNodeData) {
         NetworkNodeData nodeToRemove = null;
         if (!isNodeConnected(networkNodeData)) {
-            deleteNodeRecord(networkNodeData);
+            nodeManagementService.deleteNodeRecord(networkNodeData);
             nodeToRemove = networkNodeData;
         }
         return nodeToRemove;
@@ -159,12 +159,6 @@ public class HealthCheckService implements IHealthCheckService {
                 log.error("Exception in monitorNode: ", e);
             }
         }
-    }
-
-    private void deleteNodeRecord(NetworkNodeData networkNodeData) {
-        log.info("Deleting {} of address {} and port {}", networkNodeData.getNodeType(), networkNodeData.getAddress(), networkNodeData.getHttpPort());
-        nodeManagementService.addNodeHistory(networkNodeData, NetworkNodeStatus.INACTIVE, Instant.now());
-        activeNodes.delete(networkNodeData);
     }
 
     public void shutdown() {
