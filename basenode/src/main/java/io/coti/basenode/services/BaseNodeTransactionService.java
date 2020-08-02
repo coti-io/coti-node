@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -42,6 +43,16 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
+    @Autowired
+    private IClusterStampService clusterStampService;
+    @Autowired
+    private IDatabaseConnector databaseConnector;
+    @Autowired
+    private INetworkService networkService;
+    @Autowired
+    private ICurrencyService currencyService;
+    @Autowired
+    private IMintingService mintingService;
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
 
@@ -150,12 +161,9 @@ public class BaseNodeTransactionService implements ITransactionService {
                 }
                 return;
             }
-            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-                log.error("Balance check failed: {}", transactionData.getHash());
+            if (!validateAndAttachTransaction(transactionData)) {
                 return;
             }
-            transactionHelper.attachTransactionToCluster(transactionData);
-            transactionHelper.setTransactionStateToSaved(transactionData);
 
             continueHandlePropagatedTransaction(transactionData);
             transactionHelper.setTransactionStateToFinished(transactionData);
@@ -183,6 +191,24 @@ public class BaseNodeTransactionService implements ITransactionService {
         } finally {
             transactionLockData.removeLockFromLocksMap(transactionData.getHash());
         }
+    }
+
+    protected boolean validateAndAttachTransaction(TransactionData transactionData) {
+        if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
+            log.error("Balance check failed: {}", transactionData.getHash());
+            return false;
+        }
+        if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
+            log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
+            return false;
+        }
+        if (transactionData.getType().equals(TransactionType.TokenMinting) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
+            log.error("Minting balance check failed: {}", transactionData.getHash());
+            return false;
+        }
+        transactionHelper.attachTransactionToCluster(transactionData);
+        transactionHelper.setTransactionStateToSaved(transactionData);
+        return true;
     }
 
     public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
@@ -225,19 +251,21 @@ public class BaseNodeTransactionService implements ITransactionService {
         if (!transactionExists) {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> {
                 addToExplorerIndexes(transactionData);
-                propagateMissingTransaction(transactionData);
+                continueHandleMissingTransaction(transactionData);
             });
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
             transactionHelper.incrementTotalTransactions();
         } else {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes));
         }
+        currencyService.handleMissingTransaction(transactionData);
+        mintingService.handleMissingTransaction(transactionData);
         missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes));
 
     }
 
-    protected void propagateMissingTransaction(TransactionData transactionData) {
-        log.debug("Propagate missing transaction {} by base node", transactionData.getHash());
+    protected void continueHandleMissingTransaction(TransactionData transactionData) {
+        log.debug("Continue handle missing transaction {} by base node", transactionData.getHash());
     }
 
     public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber) {
@@ -269,5 +297,17 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
+    }
+
+    @Override
+    public void resetOldClusterStampTransactions(boolean isClusterStampNewer) {
+        if (isClusterStampNewer) {
+            if (clusterStampService.isClusterStampDBVersionExist() && networkService.getRecoveryServerAddress() != null) {
+                log.info("Starting to reset old clusterstamp transactions");
+                databaseConnector.resetTransactionColumnFamilies();
+                log.info("Finished to reset old clusterstamp transactions");
+            }
+            clusterStampService.setClusterStampDBVersion();
+        }
     }
 }

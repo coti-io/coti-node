@@ -3,9 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +21,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Autowired
     private IBalanceService balanceService;
+    @Autowired
+    private ICurrencyService currencyService;
+    @Autowired
+    private IMintingService mintingService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -73,8 +75,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 dspConfirmed.incrementAndGet();
                 if (reducedExistingTransactionData.isTrustChainConsensus()) {
                     totalConfirmed.incrementAndGet();
-                    reducedExistingTransactionData.getAddressAmounts().forEach(addressAmount ->
-                            balanceService.updateBalance(addressAmount.getKey(), addressAmount.getValue())
+                    reducedExistingTransactionData.getAddressAmounts().forEach(reducedExistingBaseTransactionData ->
+                            balanceService.updateBalance(reducedExistingBaseTransactionData.getAddressHash(), reducedExistingBaseTransactionData.getCurrencyHash(), reducedExistingBaseTransactionData.getAmount())
                     );
                 }
                 transactionIndexData = nextTransactionIndexData;
@@ -153,15 +155,25 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         Instant dspConsensusTime = transactionData.getDspConsensusResult().getIndexingTime();
         Instant transactionConsensusUpdateTime = trustChainConsensusTime.isAfter(dspConsensusTime) ? trustChainConsensusTime : dspConsensusTime;
         transactionData.setTransactionConsensusUpdateTime(transactionConsensusUpdateTime);
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
         totalConfirmed.incrementAndGet();
 
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             Hash addressHash = baseTransactionData.getAddressHash();
-            balanceService.continueHandleBalanceChanges(addressHash);
+            Hash currencyHash = baseTransactionData.getCurrencyHash();
+            balanceService.continueHandleBalanceChanges(addressHash, currencyHash);
         });
 
+        if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
+            currencyService.addConfirmedCurrency(transactionData);
+        }
+
+        if (transactionData.getType().equals(TransactionType.TokenMinting)) {
+            mintingService.doTokenMinting(transactionData);
+        }
+
         continueHandleAddressHistoryChanges(transactionData);
+        continueHandleConfirmedTransaction(transactionData);
     }
 
     protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
@@ -172,11 +184,15 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         // implemented by the sub classes
     }
 
+    protected void continueHandleConfirmedTransaction(TransactionData transactionData) {
+        // implemented by the sub classes
+    }
+
     @Override
     public void insertSavedTransaction(TransactionData transactionData, Map<Long, ReducedExistingTransactionData> indexToTransactionMap) {
         boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount())
+                balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount())
         );
         if (!isDspConfirmed) {
             transactionHelper.addNoneIndexedTransaction(transactionData);
@@ -193,7 +209,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Override
     public void insertMissingTransaction(TransactionData transactionData) {
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
         if (transactionData.isTrustChainConsensus()) {
             trustChainConfirmed.incrementAndGet();
         }
@@ -243,8 +259,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         continueHandleDSPConfirmedTransaction(transactionData);
         dspConfirmed.incrementAndGet();
         if (transactionData.isTrustChainConsensus()) {
-            transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getAmount()));
+            transactionData.getBaseTransactions().forEach(baseTransactionData -> balanceService.updateBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount()));
             totalConfirmed.incrementAndGet();
+            continueHandleConfirmedTransaction(transactionData);
         }
     }
 

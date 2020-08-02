@@ -14,7 +14,7 @@ public class BalanceService extends BaseNodeBalanceService {
     private WebSocketSender webSocketSender;
 
     @Override
-    public void continueHandleBalanceChanges(Hash addressHash) {
-        webSocketSender.notifyBalanceChange(addressHash, balanceMap.get(addressHash), preBalanceMap.get(addressHash));
+    public void continueHandleBalanceChanges(Hash addressHash, Hash currencyHash) {
+        webSocketSender.notifyBalanceChange(addressHash, getNativeCurrencyHashIfNull(currencyHash), getBalance(addressHash, currencyHash), getPreBalance(addressHash, currencyHash));
     }
 }

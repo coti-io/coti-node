@@ -1,11 +1,21 @@
 package io.coti.basenode.services.interfaces;
 
 
-/**
- * An interface that defines basic Cluster Stamp functionality for all nodes that take part in cluster stamp flow.
- */
+import io.coti.basenode.http.interfaces.IResponse;
+import org.springframework.http.ResponseEntity;
+
 public interface IClusterStampService {
 
-    void loadClusterStamp();
+    void init();
+
+    boolean shouldUpdateClusterStampDBVersion();
+
+    boolean isClusterStampDBVersionExist();
+
+    void setClusterStampDBVersion();
+
+    ResponseEntity<IResponse> getRequiredClusterStampNames();
+
+    void getClusterStampFromRecoveryServer();
 
 }

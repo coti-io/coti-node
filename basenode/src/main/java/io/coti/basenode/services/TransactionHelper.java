@@ -8,10 +8,7 @@ import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,6 +44,11 @@ public class TransactionHelper implements ITransactionHelper {
     private TransactionIndexes transactionIndexes;
     @Autowired
     private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
+    @Autowired
+    private BaseNodeCurrencyService currencyService;
+    @Autowired
+    private IMintingService mintingService;
+
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private final AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
@@ -60,12 +62,12 @@ public class TransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean validateBaseTransactionAmounts(List<BaseTransactionData> baseTransactions) {
-        BigDecimal totalTransactionSum = BigDecimal.ZERO;
-        for (BaseTransactionData baseTransactionData :
-                baseTransactions) {
-            totalTransactionSum = totalTransactionSum.add(baseTransactionData.getAmount());
+        Map<Hash, BigDecimal> transactionTotals = new HashMap<>();
+        for (BaseTransactionData baseTransactionData : baseTransactions) {
+            transactionTotals.put(baseTransactionData.getCurrencyHash(),
+                    transactionTotals.getOrDefault(baseTransactionData.getCurrencyHash(), BigDecimal.ZERO).add(baseTransactionData.getAmount()));
         }
-        return totalTransactionSum.compareTo(BigDecimal.ZERO) == 0;
+        return transactionTotals.values().stream().allMatch(t -> t.compareTo(BigDecimal.ZERO) == 0);
     }
 
     @Override
@@ -129,6 +131,7 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean validateTransactionType(TransactionData transactionData) {
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         try {
             TransactionType transactionType = transactionData.getType();
             if (transactionType == null) {
@@ -136,7 +139,7 @@ public class TransactionHelper implements ITransactionHelper {
                 return false;
             }
 
-            return TransactionTypeValidation.getByType(transactionType).validateBaseTransactions(transactionData);
+            return TransactionTypeValidation.getByType(transactionType).validateBaseTransactions(transactionData, nativeCurrencyHash);
         } catch (Exception e) {
             log.error("Validate transaction type error", e);
             return false;
@@ -265,16 +268,25 @@ public class TransactionHelper implements ITransactionHelper {
                 case PRE_BALANCE_CHANGED:
                     revertPreBalance(transactionData);
                     break;
+                case PAYLOAD_CHECKED:
+                    revertPayloadAction(transactionData);
+                    break;
                 case SAVED_IN_DB:
                     revertSavedInDB(transactionData);
                     break;
                 case RECEIVED:
-                    transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
                     break;
                 default:
                     log.error("Transaction {} has a state {} which is illegal in rollback scenario", transactionData, transactionState);
                     throw new IllegalArgumentException("Invalid transaction state");
             }
+        }
+    }
+
+    private void revertPayloadAction(TransactionData transactionData) {
+        if (transactionData.getType() == TransactionType.TokenMinting) {
+            log.error("Reverting minting transaction: {}", transactionData.getHash());
+            mintingService.revertMintingAllocation(transactionData);
         }
     }
 
@@ -288,13 +300,28 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
-        if (!isTransactionExists(transactionData)) {
-            return false;
-        }
         if (!balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions())) {
             return false;
         }
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PRE_BALANCE_CHANGED);
+        return true;
+    }
+
+    @Override
+    public boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
+        if (!mintingService.checkMintingAmountAndUpdateMintableAmount(transactionData)) {
+            return false;
+        }
+        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
+        return true;
+    }
+
+    @Override
+    public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
+        if (!currencyService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
+            return false;
+        }
+        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
         return true;
     }
 
@@ -373,6 +400,24 @@ public class TransactionHelper implements ITransactionHelper {
             }
         }
         return null;
+    }
+
+    @Override
+    public TokenGenerationFeeBaseTransactionData getTokenGenerationFeeData(TransactionData tokenGenerationTransaction) {
+        return (TokenGenerationFeeBaseTransactionData) tokenGenerationTransaction
+                .getBaseTransactions()
+                .stream()
+                .filter(t -> t instanceof TokenGenerationFeeBaseTransactionData)
+                .findFirst().orElse(null);
+    }
+
+    @Override
+    public TokenMintingFeeBaseTransactionData getTokenMintingFeeData(TransactionData tokenMintingTransaction) {
+        return (TokenMintingFeeBaseTransactionData) tokenMintingTransaction
+                .getBaseTransactions()
+                .stream()
+                .filter(t -> t instanceof TokenMintingFeeBaseTransactionData)
+                .findFirst().orElse(null);
     }
 
     @Override
