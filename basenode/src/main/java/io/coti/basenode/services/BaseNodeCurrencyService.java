@@ -351,7 +351,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
         final String[] words = name.split(" ");
         for (String word : words) {
-            if (word == null || word.isEmpty() || !Pattern.compile("[A-Za-z0-9]+").matcher(word).matches()) {
+            if (word == null || word.isEmpty() || !Pattern.compile("[A-Za-z0-9.]+").matcher(word).matches()) {
                 throw new CurrencyValidationException(String.format("Attempted to set an invalid currency name with the word %s.", name));
             }
         }
@@ -360,7 +360,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public void validateSymbol(OriginatorCurrencyData originatorCurrencyData) {
         String symbol = originatorCurrencyData.getSymbol();
-        if (!Pattern.compile("[A-Z]{0,15}").matcher(symbol).matches()) {
+        if (!Pattern.compile("[A-Z.]{0,15}").matcher(symbol).matches()) {
             throw new CurrencyException(String.format("Attempted to set an invalid currency symbol of %s.", symbol));
         }
     }
@@ -375,11 +375,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     private boolean isCurrencyNameUnique(Hash currencyHash, String currencyName) {
-        return currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) != null;
+        return currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) == null;
     }
 
     private boolean isCurrencySymbolUnique(Hash currencyHash) {
-        return currencies.getByHash(currencyHash) != null;
+        return currencies.getByHash(currencyHash) == null;
     }
 
     @Override

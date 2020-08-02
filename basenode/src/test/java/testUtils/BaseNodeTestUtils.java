@@ -16,6 +16,7 @@ public class BaseNodeTestUtils {
 
     private static final String ANY_ADDRESS = "localhost";
     private static final String ANY_PORT = "7040";
+    private static final String VERSION = "1.0.0";
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
     private static final int SIZE_OF_HASH = 64;
     private static final int SIZE_OF_BASE_TRANSACTION_HASH = 136;
@@ -175,9 +176,10 @@ public class BaseNodeTestUtils {
 
         Hash hash = BaseNodeTestUtils.generateRandomHash();
         NetworkType networkType = NetworkType.TestNet;
+        String version = VERSION;
         String address = ANY_ADDRESS;
         String httpPort = ANY_PORT;
-        return new NetworkNodeData(nodeType, address, httpPort, hash, networkType);
+        return new NetworkNodeData(nodeType, version, address, httpPort, hash, networkType);
     }
 
 
