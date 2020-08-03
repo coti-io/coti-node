@@ -9,6 +9,7 @@ import io.coti.basenode.http.GetTokenSymbolDetailsRequest;
 import io.coti.basenode.http.GetUserTokensRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.FluxSink;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -17,7 +18,11 @@ public interface ICurrencyService {
 
     void init();
 
+    void updateCurrencies();
+
     CurrencyData getNativeCurrency();
+
+    void getUpdatedCurrencyBatch(FluxSink<CurrencyData> fluxSink);
 
     Hash getNativeCurrencyHash();
 

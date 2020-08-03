@@ -44,8 +44,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private TransactionIndexes transactionIndexes;
     @Autowired
-    private IClusterStampService clusterStampService;
-    @Autowired
     private IDatabaseConnector databaseConnector;
     @Autowired
     private INetworkService networkService;
@@ -297,17 +295,5 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
-    }
-
-    @Override
-    public void resetOldClusterStampTransactions(boolean isClusterStampNewer) {
-        if (isClusterStampNewer) {
-            if (clusterStampService.isClusterStampDBVersionExist() && networkService.getRecoveryServerAddress() != null) {
-                log.info("Starting to reset old clusterstamp transactions");
-                databaseConnector.resetTransactionColumnFamilies();
-                log.info("Finished to reset old clusterstamp transactions");
-            }
-            clusterStampService.setClusterStampDBVersion();
-        }
     }
 }

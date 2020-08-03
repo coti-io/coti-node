@@ -1,8 +1,6 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.ClusterStampCrypto;
-import io.coti.basenode.crypto.GetClusterStampFileNamesCrypto;
-import io.coti.basenode.model.LastClusterStampVersions;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IAwsService;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -41,15 +39,11 @@ public class BaseNodeClusterStampServiceTest {
     @MockBean
     private ClusterStampCrypto clusterStampCrypto;
     @MockBean
-    private GetClusterStampFileNamesCrypto getClusterStampFileNamesCrypto;
-    @MockBean
     private INetworkService networkService;
     @MockBean
     private IAwsService awsService;
     @MockBean
     private ApplicationContext applicationContext;
-    @MockBean
-    private LastClusterStampVersions lastClusterStampVersions;
     @MockBean
     private BaseNodeInitializationService baseNodeInitializationService;
     //

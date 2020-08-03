@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder;
@@ -77,19 +76,6 @@ public class BaseNodeAwsService implements IAwsService {
             if (monitorTransferProgress != null && monitorTransferProgress.isAlive()) {
                 monitorTransferProgress.interrupt();
             }
-        }
-    }
-
-    @Override
-    public void uploadFileToS3(String bucketName, String filePathToUpload) {
-        try {
-            File file = new File(filePathToUpload);
-            String[] delimitedFilePath = filePathToUpload.split("/");
-            String fileName = delimitedFilePath[delimitedFilePath.length - 1];
-            PutObjectRequest request = new PutObjectRequest(bucketName, fileName, file);
-            s3Client.putObject(request);
-        } catch (SdkClientException e) {
-            throw new AwsDataTransferException(String.format("Failed to upload file %s to s3. Exception: %s, Error: %s", filePathToUpload, e.getClass().getName(), e.getMessage()));
         }
     }
 

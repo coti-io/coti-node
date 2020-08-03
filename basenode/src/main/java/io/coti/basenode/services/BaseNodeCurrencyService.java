@@ -10,17 +10,17 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.CurrencyNameIndexes;
 import io.coti.basenode.model.UserCurrencyIndexes;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
+import reactor.core.publisher.FluxSink;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -35,7 +35,9 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class BaseNodeCurrencyService implements ICurrencyService {
 
+    private static final int MAXIMUM_BUFFER_SIZE = 50000;
     public static final String ERROR_AT_GETTING_USER_TOKENS = "Error at getting user tokens: ";
+    private static final String RECOVERY_NODE_GET_CURRENCIES_UPDATE_REACTIVE_ENDPOINT = "/currencies/update/batch";
     protected CurrencyData nativeCurrencyData;
     @Autowired
     protected Currencies currencies;
@@ -56,11 +58,15 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private GetTokenDetailsRequestCrypto getTokenDetailsRequestCrypto;
     @Autowired
+    private HttpJacksonSerializer jacksonSerializer;
+    @Autowired
     private GetTokenSymbolDetailsRequestCrypto getTokenSymbolDetailsRequestCrypto;
     @Autowired
     protected IBalanceService balanceService;
     @Autowired
     private UserCurrencyIndexes userCurrencyIndexes;
+    @Autowired
+    private IChunkService chunkService;
     @Autowired
     private ITransactionHelper transactionHelper;
     private final LockData currencyLockData = new LockData();
@@ -74,6 +80,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
         postponedTokenMintingTransactionsMap = new ConcurrentHashMap<>();
         mintingTransactionToConfirmationMap = new ConcurrentHashMap<>();
+        updateCurrencies();
         try {
             nativeCurrencyData = null;
             setNativeCurrencyFromExistingCurrencies();
@@ -82,6 +89,28 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             throw new CurrencyException("Error at currency service init.\n" + e.getMessage(), e);
         } catch (Exception e) {
             throw new CurrencyException("Error at currency service init.", e);
+        }
+    }
+
+    @Override
+    public void updateCurrencies() {
+        getUpdatedCurrencyDataFromRecoveryServer();
+    }
+
+    private void getUpdatedCurrencyDataFromRecoveryServer() {
+        CustomRequestCallBack requestCallBack = new CustomRequestCallBack(jacksonSerializer, new SerializableRequest());
+        ResponseExtractor responseExtractor = chunkService.getResponseExtractor(currencyData -> currencyDataFromRecoveryServiceHandler((CurrencyData) currencyData), MAXIMUM_BUFFER_SIZE);
+        restTemplate.execute(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_CURRENCIES_UPDATE_REACTIVE_ENDPOINT,
+                HttpMethod.POST, requestCallBack, responseExtractor);
+    }
+
+    private void currencyDataFromRecoveryServiceHandler(CurrencyData currencyData) {
+        if (currencies.getByHash(currencyData.getHash()) == null) {
+            if (!originatorCurrencyCrypto.verifySignature(currencyData)) {
+                log.error("Failed to verify currency data of " + currencyData.getHash());
+            } else {
+                currencies.put(currencyData);
+            }
         }
     }
 
@@ -118,6 +147,18 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public CurrencyData getNativeCurrency() {
         return this.nativeCurrencyData;
+    }
+
+    @Override
+    public void getUpdatedCurrencyBatch(FluxSink<CurrencyData> fluxSink) {
+        currencies.forEach(currency -> sendUpdatedCurrencyData(currency, fluxSink));
+        fluxSink.complete();
+    }
+
+    private void sendUpdatedCurrencyData(CurrencyData currencyData, FluxSink<CurrencyData> fluxSink) {
+        if (CurrencyType.NATIVE_COIN.equals((currencyData.getCurrencyTypeData().getCurrencyType()))) {
+            fluxSink.next(currencyData);
+        }
     }
 
     @Override

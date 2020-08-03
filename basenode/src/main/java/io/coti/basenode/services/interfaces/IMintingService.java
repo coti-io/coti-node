@@ -1,10 +1,6 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.ClusterStampCurrencyData;
-import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-
-import java.util.Map;
 
 public interface IMintingService {
 
@@ -17,8 +13,6 @@ public interface IMintingService {
     void handleExistingTransaction(TransactionData transactionData);
 
     void handleMissingTransaction(TransactionData transactionData);
-
-    void updateMintingAvailableMapFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap);
 
     void doTokenMinting(TransactionData transactionData);
 }

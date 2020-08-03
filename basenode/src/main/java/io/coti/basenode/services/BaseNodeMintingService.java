@@ -2,7 +2,6 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -147,15 +145,4 @@ public class BaseNodeMintingService implements IMintingService {
         }
     }
 
-    @Override
-    public void updateMintingAvailableMapFromClusterStamp(Map<Hash, ClusterStampCurrencyData> clusterStampCurrencyMap) {
-        clusterStampCurrencyMap.forEach((currencyHash, clusterStampCurrencyData) -> {
-            if (!clusterStampCurrencyData.isNativeCurrency()) {
-                if (clusterStampCurrencyData.getAmount().compareTo(BigDecimal.ZERO) < 0) {
-                    throw new CurrencyException(String.format("Minting amount exceeded availability for token hash: %s", currencyHash));
-                }
-                currencyService.putToMintableAmountMap(currencyHash, clusterStampCurrencyData.getAmount());
-            }
-        });
-    }
 }

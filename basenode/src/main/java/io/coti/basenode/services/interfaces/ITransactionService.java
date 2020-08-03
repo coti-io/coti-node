@@ -28,6 +28,4 @@ public interface ITransactionService {
     int totalPostponedTransactions();
 
     void addToExplorerIndexes(TransactionData transactionData);
-
-    void resetOldClusterStampTransactions(boolean isClusterStampNewer);
 }
