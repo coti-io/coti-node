@@ -151,6 +151,8 @@ public abstract class BaseNodeInitializationService {
 
     public void initTransactionSync() {
         try {
+            boolean isClusterStampNewer = clusterStampService.shouldUpdateClusterStampDBVersion();
+            transactionService.resetOldClusterStampTransactions(isClusterStampNewer);
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
             Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null);
