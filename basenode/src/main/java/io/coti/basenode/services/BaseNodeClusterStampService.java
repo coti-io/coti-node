@@ -26,8 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class BaseNodeClusterStampService implements IClusterStampService {
 
-    @Value("${logging.file.name}")
-    protected String clusterStampFilePrefix;
     protected static final String CLUSTERSTAMP_FILE_SUFFIX = "_clusterstamp.csv";
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
     private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 2;
@@ -36,6 +34,10 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
     private static final String SIGNATURE_LINE_TOKEN = "# Signature";
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
+    @Value("${logging.file.name}")
+    protected String clusterStampFilePrefix;
+    @Value("${config.path:./}")
+    protected String clusterStampFolder;
     @Autowired
     protected IBalanceService balanceService;
     @Autowired
@@ -49,11 +51,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     @Override
     public void loadClusterStamp() {
-        String clusterStampFileLocation = clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
-        File clusterstampFile = new File(clusterStampFileLocation);
+        String clusterStampFileLocation = clusterStampFolder + clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
+        File clusterStampFile = new File(clusterStampFileLocation);
         ClusterStampData clusterStampData = new ClusterStampData();
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterstampFile))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(clusterStampFile))) {
             String line;
             AtomicInteger relevantLineNumber = new AtomicInteger(0);
             AtomicInteger signatureRelevantLines = new AtomicInteger(0);

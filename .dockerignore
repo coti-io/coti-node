@@ -1,1 +1,7 @@
 /configs
+*.properties
+*.csv
+*rocksDB*/
+*ClusterStamps*/
+*.out
+*/target/

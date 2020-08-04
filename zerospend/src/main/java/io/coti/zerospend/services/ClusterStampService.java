@@ -23,7 +23,7 @@ public class ClusterStampService extends BaseNodeClusterStampService {
     }
 
     private void updateClusterStampFileWithSignature(SignatureData signature) {
-        String clusterstampFileLocation = clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
+        String clusterstampFileLocation = clusterStampFolder + clusterStampFilePrefix + CLUSTERSTAMP_FILE_SUFFIX;
         try (FileWriter clusterstampFileWriter = new FileWriter(clusterstampFileLocation, true);
              BufferedWriter clusterStampBufferedWriter = new BufferedWriter(clusterstampFileWriter)) {
             clusterStampBufferedWriter.newLine();
