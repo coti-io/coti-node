@@ -103,7 +103,7 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private NodeRegistrations nodeRegistrations;
     @Autowired
-    private IClusterStampService clusterStampService;
+    private BaseNodeClusterStampService clusterStampService;
     @Autowired
     private ITransactionSynchronizationService transactionSynchronizationService;
     @Autowired
@@ -113,6 +113,10 @@ public abstract class BaseNodeInitializationService {
     protected String version;
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
+    @Autowired
+    private ICurrencyService currencyService;
+    @Autowired
+    private IMintingService mintingService;
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
 
@@ -121,12 +125,14 @@ public abstract class BaseNodeInitializationService {
         version = buildProperties.getVersion();
     }
 
-    protected void initServices() {
+    public void initServices() {
         awsService.init();
         dbRecoveryService.init();
         addressService.init();
+        currencyService.init();
         balanceService.init();
-        clusterStampService.loadClusterStamp();
+        mintingService.init();
+        clusterStampService.init();
         confirmationService.init();
         transactionIndexService.init();
         dspVoteService.init();
@@ -143,7 +149,7 @@ public abstract class BaseNodeInitializationService {
         monitorService.init();
     }
 
-    private void initTransactionSync() {
+    public void initTransactionSync() {
         try {
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
@@ -201,7 +207,8 @@ public abstract class BaseNodeInitializationService {
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addExistingTransactionOnInit(transactionData));
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap));
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addToExplorerIndexes(transactionData));
-
+        currencyService.handleExistingTransaction(transactionData);
+        mintingService.handleExistingTransaction(transactionData);
         transactionHelper.incrementTotalTransactions();
     }
 
