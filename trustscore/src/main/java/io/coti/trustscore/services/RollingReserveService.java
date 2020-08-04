@@ -7,6 +7,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.RollingReserveException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.data.Enums.UserType;
@@ -61,11 +62,13 @@ public class RollingReserveService {
     private IValidationService validationService;
     @Autowired
     private TrustScoreService trustScoreService;
+    @Autowired
+    private ICurrencyService currencyService;
 
     public ResponseEntity<IResponse> createRollingReserveFee(RollingReserveRequest rollingReserveRequest) {
 
         try {
-
+            Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
             NetworkFeeData networkFeeData = rollingReserveRequest.getNetworkFeeData();
             if (!feeService.validateNetworkFee(networkFeeData)) {
                 return ResponseEntity
@@ -89,7 +92,7 @@ public class RollingReserveService {
             Hash rollingReserveAddress = getMerchantRollingReserveAddress(rollingReserveRequest.getMerchantHash());
             BigDecimal rollingReserveAmount = calculateRollingReserveAmount(reducedAmount, trustScoreService.calculateUserTrustScore(trustScoreData));
 
-            RollingReserveData rollingReserveData = new RollingReserveData(rollingReserveAddress, rollingReserveAmount, originalAmount, reducedAmount, Instant.now());
+            RollingReserveData rollingReserveData = new RollingReserveData(rollingReserveAddress, nativeCurrencyHash, rollingReserveAmount, nativeCurrencyHash, originalAmount, reducedAmount, Instant.now());
             setRollingReserveNodeFeeHash(rollingReserveData);
             signRollingReserveFee(rollingReserveData, true);
             RollingReserveResponseData rollingReserveResponseData = new RollingReserveResponseData(rollingReserveData);

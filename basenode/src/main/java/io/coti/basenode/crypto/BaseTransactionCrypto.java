@@ -8,9 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
@@ -106,6 +104,56 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
+    TOKEN_GENERATION_BASE_TRANSACTION_DATA(TokenGenerationFeeBaseTransactionData.class) {
+        @Override
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!(baseTransactionData instanceof TokenGenerationFeeBaseTransactionData)) {
+                throw new IllegalArgumentException("");
+            }
+
+            try {
+                byte[] outputMessageInBytes = getOutputMessageInBytes((TokenGenerationFeeBaseTransactionData) baseTransactionData);
+                byte[] serviceDataInBytes = ((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getMessageInBytes();
+
+                return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
+                        put(outputMessageInBytes).put(serviceDataInBytes).array();
+            } catch (Exception e) {
+                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
+                return new byte[0];
+            }
+        }
+
+        @Override
+        public String getPublicKey(BaseTransactionData baseTransactionData) {
+            return ((TokenGenerationFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
+        }
+
+    },
+    TOKEN_MINTING_BASE_TRANSACTION_DATA(TokenMintingFeeBaseTransactionData.class) {
+        @Override
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!(baseTransactionData instanceof TokenMintingFeeBaseTransactionData)) {
+                throw new IllegalArgumentException("");
+            }
+
+            try {
+                byte[] outputMessageInBytes = getOutputMessageInBytes((TokenMintingFeeBaseTransactionData) baseTransactionData);
+                byte[] serviceDataInBytes = ((TokenMintingFeeBaseTransactionData) baseTransactionData).getServiceData().getMessageInBytes();
+
+                return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
+                        put(outputMessageInBytes).put(serviceDataInBytes).array();
+            } catch (Exception e) {
+                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
+                return new byte[0];
+            }
+        }
+
+        @Override
+        public String getPublicKey(BaseTransactionData baseTransactionData) {
+            return ((TokenMintingFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
+        }
+
+    },
     ROLLING_RESERVE_DATA(RollingReserveData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
@@ -181,9 +229,14 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     protected static final String GET_MESSAGE_IN_BYTE_ERROR = "Error at getting message in byte";
     private final Class<? extends BaseTransactionData> baseTransactionClass;
 
+    private static class BaseTransactionCryptos {
+        private static final Map<Class<? extends BaseTransactionData>, BaseTransactionCrypto> baseTransactionClassToCryptoMap = new HashMap<>();
+    }
+
     @SuppressWarnings("unused")
     <T extends BaseTransactionData> BaseTransactionCrypto(Class<T> baseTransactionClass) {
         this.baseTransactionClass = baseTransactionClass;
+        BaseTransactionCryptos.baseTransactionClassToCryptoMap.put(baseTransactionClass, this);
     }
 
     @Override
@@ -192,12 +245,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     public static BaseTransactionCrypto getByBaseTransactionClass(Class<? extends BaseTransactionData> baseTransactionClass) {
-        for (BaseTransactionCrypto baseTransactionCrypto : values()) {
-            if (baseTransactionCrypto.baseTransactionClass.equals(baseTransactionClass)) {
-                return baseTransactionCrypto;
-            }
-        }
-        throw new IllegalArgumentException("Invalid base transaction class");
+        return Optional.ofNullable(BaseTransactionCryptos.baseTransactionClassToCryptoMap.get(baseTransactionClass))
+                .orElseThrow(() -> new IllegalArgumentException("Invalid base transaction class"));
     }
 
     @Override
@@ -304,7 +353,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         return new byte[0];
     }
 
-
     protected byte[] getBaseMessageInBytes(BaseTransactionData baseTransactionData) {
         byte[] addressBytes = baseTransactionData.getAddressHash().getBytes();
         String decimalStringRepresentation = baseTransactionData.getAmount().stripTrailingZeros().toPlainString();
@@ -313,8 +361,10 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         Instant createTime = baseTransactionData.getCreateTime();
         byte[] createTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(createTime.toEpochMilli()).array();
 
-        ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + createTimeInBytes.length).
-                put(addressBytes).put(bytesOfAmount).put(createTimeInBytes);
+        byte[] currencyHashInBytes = baseTransactionData.getCurrencyHash() != null ? baseTransactionData.getCurrencyHash().getBytes() : new byte[0];
+
+        ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(addressBytes.length + bytesOfAmount.length + createTimeInBytes.length + currencyHashInBytes.length).
+                put(addressBytes).put(bytesOfAmount).put(createTimeInBytes).put(currencyHashInBytes);
 
         return baseTransactionBuffer.array();
     }
