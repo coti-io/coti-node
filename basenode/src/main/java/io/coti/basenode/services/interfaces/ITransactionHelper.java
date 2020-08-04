@@ -34,6 +34,8 @@ public interface ITransactionHelper {
 
     boolean checkBalancesAndAddToPreBalance(TransactionData transactionData);
 
+    boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData);
+
     void attachTransactionToCluster(TransactionData transactionData);
 
     void setTransactionStateToSaved(TransactionData transactionData);
@@ -64,6 +66,10 @@ public interface ITransactionHelper {
 
     boolean isTransactionAlreadyPropagated(TransactionData transactionData);
 
+    TokenGenerationFeeBaseTransactionData getTokenGenerationFeeData(TransactionData tokenGenerationTransaction);
+
+    TokenMintingFeeBaseTransactionData getTokenMintingFeeData(TransactionData tokenMintingTransaction);
+
     long getTotalTransactions();
 
     long incrementTotalTransactions();
@@ -73,4 +79,6 @@ public interface ITransactionHelper {
     void removeNoneIndexedTransaction(TransactionData transactionData);
 
     Set<Hash> getNoneIndexedTransactionHashes();
+
+    boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData);
 }

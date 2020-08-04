@@ -22,6 +22,8 @@ public abstract class BaseTransactionData implements Serializable {
     protected Hash hash;
     @NotNull
     protected Hash addressHash;
+    protected Hash currencyHash;
+    @NotNull
     protected BigDecimal amount;
     @NotNull
     protected Instant createTime;
@@ -31,8 +33,9 @@ public abstract class BaseTransactionData implements Serializable {
 
     }
 
-    public BaseTransactionData(Hash addressHash, BigDecimal amount, Instant createTime) {
+    public BaseTransactionData(Hash addressHash, Hash currencyHash, BigDecimal amount, Instant createTime) {
         this.addressHash = addressHash;
+        this.currencyHash = currencyHash;
         this.createTime = createTime;
         this.setAmount(amount);
     }

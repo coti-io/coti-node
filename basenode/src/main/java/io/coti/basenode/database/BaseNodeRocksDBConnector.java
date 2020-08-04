@@ -62,7 +62,10 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                 AddressTransactionsHistories.class.getName(),
                 TransactionIndexes.class.getName(),
                 TransactionVotes.class.getName(),
-                NodeRegistrations.class.getName()
+                NodeRegistrations.class.getName(),
+                Currencies.class.getName(),
+                CurrencyNameIndexes.class.getName(),
+                UserCurrencyIndexes.class.getName()
         ));
         resetTransactionColumnFamilyNames = new ArrayList<>(Arrays.asList(
                 Transactions.class.getName(),
@@ -134,8 +137,14 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         ).collect(Collectors.toList());
     }
 
-    private void resetColumnFamilies() {
+    @Override
+    public void resetColumnFamilies() {
         resetColumnFamilies(null);
+    }
+
+    @Override
+    public void resetTransactionColumnFamilies() {
+        resetColumnFamilies(resetTransactionColumnFamilyNames);
     }
 
     private void resetColumnFamilies(List<String> resetColumnFamilyNames) {

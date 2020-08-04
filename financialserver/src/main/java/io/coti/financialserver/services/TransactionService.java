@@ -1,7 +1,6 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
@@ -31,6 +30,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private ITransactionHelper transactionHelper;
     @Autowired
     private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
+    @Autowired
+    private CurrencyService currencyService;
 
     public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
 
@@ -48,16 +49,26 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
+        continueHandleTransaction(transactionData);
+    }
 
-        if (transactionData.getType() == TransactionType.Payment) {
+    @Override
+    protected void continueHandleMissingTransaction(TransactionData transactionData) {
+        continueHandleTransaction(transactionData);
+    }
 
-            ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
-
-            if (rbtOwnerData == null) {
-                log.error("Owner(merchant) not found for RBT hash in received transaction {}.", transactionData.getHash());
-            } else {
-                rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
-            }
+    private void continueHandleTransaction(TransactionData transactionData) {
+        switch (transactionData.getType()) {
+            case Payment:
+                ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
+                if (rbtOwnerData == null) {
+                    log.error("Owner(merchant) not found for RBT hash in received transaction {}.", transactionData.getHash());
+                } else {
+                    rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
+                }
+                break;
+            default:
         }
     }
+
 }

@@ -29,5 +29,6 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String MERCHANT_ADRRESS_GET_ERROR = "Error at getting merchant address: %s";
 
     public static final String INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE = "Transaction amount should be greater than sum %s of fullnode fee and network fee";
+    public static final String UNDEFINED_TOKEN_TYPE_FEE = "Fee rules for token type %s are not defined yet";
 
 }
