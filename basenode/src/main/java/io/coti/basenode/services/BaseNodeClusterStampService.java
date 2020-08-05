@@ -85,14 +85,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             if (signatureRelevantLines.get() == 0) {
                 handleClusterStampWithoutSignature(clusterStampData);
             } else if (signatureRelevantLines.get() == 1) {
-                throw new ClusterStampValidationException(String.format("Signature lines can not be a single line at clusterstamp file"));
+                throw new ClusterStampValidationException("Signature lines can not be a single line at clusterstamp file");
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
         } catch (ClusterStampException e) {
-            throw new ClusterStampException(String.format("Errors on balance clusterstamp file loading.%n") + e.getMessage(), e);
+            throw new ClusterStampException("Errors on balance clusterstamp file loading.%n" + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampException(String.format("Errors on balance clusterstamp file loading."), e);
+            throw new ClusterStampException("Errors on balance clusterstamp file loading.", e);
         }
     }
 
@@ -137,7 +137,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         }
 
         balanceService.updateBalanceAndPreBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
-        log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp {} with amount {}", addressHash, currencyHash, currencyAmountInAddress);
+        log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyHash, currencyAmountInAddress);
 
         byte[] addressHashInBytes = addressHash.getBytes();
         byte[] addressCurrencyAmountInBytes = currencyAmountInAddress.stripTrailingZeros().toPlainString().getBytes();
