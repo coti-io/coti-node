@@ -205,7 +205,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             getNativeCurrencyResponse.setNativeCurrency(nativeCurrency);
             return ResponseEntity.ok(getNativeCurrencyResponse);
         }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response("Native currency not found"));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response("Native currency not found", STATUS_ERROR));
     }
 
     @Override
