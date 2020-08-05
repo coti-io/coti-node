@@ -1,11 +1,13 @@
 package io.coti.basenode.data;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class TokenGenerationFeeBaseTransactionData extends TokenFeeBaseTransactionData {
 
     private static final long serialVersionUID = -7466306830924153999L;

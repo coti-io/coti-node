@@ -2,11 +2,13 @@ package io.coti.basenode.data;
 
 import io.coti.basenode.data.interfaces.ITokenServiceData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public abstract class TokenFeeBaseTransactionData extends OutputBaseTransactionData {
 
     private Hash signerHash;
