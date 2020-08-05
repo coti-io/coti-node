@@ -75,7 +75,6 @@ public class InitializationService extends BaseNodeInitializationService {
 
             super.initServices();
             messageReceiver.initReceiverHandler();
-            communicationService.initPublisherMonitor();
 
             if (transactions.isEmpty()) {
                 transactionCreationService.createGenesisTransactions();

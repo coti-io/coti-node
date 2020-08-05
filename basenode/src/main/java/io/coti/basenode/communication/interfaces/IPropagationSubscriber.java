@@ -17,6 +17,8 @@ public interface IPropagationSubscriber {
 
     void setPublisherNodeTypeToMessageTypesMap(EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap);
 
+    void initMonitor();
+
     void connectAndSubscribeToServer(String publisherAddressAndPort, NodeType publisherNodeType);
 
     void initPropagationHandler();

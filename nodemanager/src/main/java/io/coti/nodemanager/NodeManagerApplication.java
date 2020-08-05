@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class NodeManagerApplication {
 
     public static void main(String[] args) {
-
+        Thread.currentThread().setName("Node Manager Main");
         SpringApplication.run(NodeManagerApplication.class, args);
         log.info("############################################################");
         log.info("#############     NODE Manager IS UP        ################");

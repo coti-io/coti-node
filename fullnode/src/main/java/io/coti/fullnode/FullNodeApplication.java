@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class FullNodeApplication {
 
     public static void main(String[] args) {
-
+        Thread.currentThread().setName("FullNode Main");
         SpringApplication.run(FullNodeApplication.class, args);
         log.info("############################################################");
         log.info("#############    COTI FULL NODE IS UP       ################");

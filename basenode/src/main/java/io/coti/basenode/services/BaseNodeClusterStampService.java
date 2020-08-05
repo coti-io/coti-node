@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -59,36 +60,16 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             String line;
             AtomicInteger relevantLineNumber = new AtomicInteger(0);
             AtomicInteger signatureRelevantLines = new AtomicInteger(0);
-            boolean reachedSignatureSection = false;
-            boolean finishedBalances = false;
+            AtomicBoolean reachedSignatureSection = new AtomicBoolean(false);
+            AtomicBoolean finishedBalances = new AtomicBoolean(false);
 
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
                 relevantLineNumber.incrementAndGet();
                 if (line.isEmpty()) {
-                    if (relevantLineNumber.get() < NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES) {
-                        throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
-                    } else {
-                        if (!finishedBalances)
-                            finishedBalances = true;
-                        else
-                            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
-                    }
+                    handleEmptyLine(relevantLineNumber, finishedBalances);
                 } else {
-                    if (!finishedBalances) {
-                        fillBalanceFromLine(clusterStampData, line);
-                    } else {
-                        if (!reachedSignatureSection) {
-                            if (!line.contentEquals(SIGNATURE_LINE_TOKEN))
-                                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
-                            else
-                                reachedSignatureSection = true;
-                        } else {
-                            signatureRelevantLines.incrementAndGet();
-                            fillSignatureDataFromLine(clusterStampData, line, signatureRelevantLines);
-                        }
-
-                    }
+                    fillDataFromLine(clusterStampData, line, signatureRelevantLines, reachedSignatureSection, finishedBalances);
                 }
             }
             if (signatureRelevantLines.get() == 0) {
@@ -100,9 +81,37 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             }
             balanceService.updatePreBalanceFromClusterStamp();
             log.info("Clusterstamp is loaded");
+        } catch (ClusterStampValidationException e) {
+            throw new ClusterStampValidationException("Errors on clusterstamp loading.\n" + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Errors on clusterstamp loading");
-            throw new ClusterStampValidationException(e.getMessage());
+            throw new ClusterStampValidationException("Errors on clusterstamp loading", e);
+        }
+    }
+
+    private void handleEmptyLine(AtomicInteger relevantLineNumber, AtomicBoolean finishedBalances) {
+        if (relevantLineNumber.get() < NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES) {
+            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+        } else {
+            if (!finishedBalances.get())
+                finishedBalances.set(true);
+            else
+                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+        }
+    }
+
+    private void fillDataFromLine(ClusterStampData clusterStampData, String line, AtomicInteger signatureRelevantLines, AtomicBoolean reachedSignatureSection, AtomicBoolean finishedBalances) {
+        if (!finishedBalances.get()) {
+            fillBalanceFromLine(clusterStampData, line);
+        } else {
+            if (!reachedSignatureSection.get()) {
+                if (!line.contentEquals(SIGNATURE_LINE_TOKEN))
+                    throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+                else
+                    reachedSignatureSection.set(true);
+            } else {
+                signatureRelevantLines.incrementAndGet();
+                fillSignatureDataFromLine(clusterStampData, line, signatureRelevantLines);
+            }
         }
     }
 
@@ -154,8 +163,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private void handleClusterStampWithSignature(ClusterStampData clusterStampData) {
         setClusterStampSignerHash(clusterStampData);
         if (!clusterStampCrypto.verifySignature(clusterStampData)) {
-            log.error("Clusterstamp invalid signature");
-            throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            throw new ClusterStampValidationException("Clusterstamp invalid signature");
         }
     }
 

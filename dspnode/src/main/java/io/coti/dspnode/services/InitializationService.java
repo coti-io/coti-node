@@ -78,7 +78,6 @@ public class InitializationService extends BaseNodeInitializationService {
 
             super.initServices();
             messageReceiver.initReceiverHandler();
-            communicationService.initPublisherMonitor();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

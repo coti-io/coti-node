@@ -56,7 +56,7 @@ class AlgorithmTimer {
     }
 
     @Test
-    public void sha() {
+    void sha() {
         IAlgorithm.AlgorithmType type = IAlgorithm.AlgorithmType.SHA_512;
         assertDoesNotThrow(() -> results.put(type, doWork(type)));
     }

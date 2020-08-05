@@ -10,7 +10,6 @@ import java.util.Objects;
 public class SuspiciousEventScore extends EventScore {
 
     private int term;
-
     private String contribution;
 
     @Override

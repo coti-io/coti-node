@@ -159,8 +159,12 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     @Override
     public void initPropagationHandler() {
-        monitorInitialized = true;
         queueNameToThreadMap.values().forEach(Thread::start);
+    }
+
+    @Override
+    public void initMonitor() {
+        monitorInitialized = true;
     }
 
     private void handleMessagesQueueTask(BlockingQueue<ZeroMQMessageData> messageQueue) {

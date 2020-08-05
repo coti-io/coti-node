@@ -12,10 +12,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class ZeroSpendServerApplication {
 
     public static void main(String[] args) {
-
+        Thread.currentThread().setName("ZeroSpend Main");
         SpringApplication.run(ZeroSpendServerApplication.class, args);
         log.info("##################################################################");
-        log.info("################    ZERO SPEND NODE IS UP       ##################");
+        log.info("################    ZERO SPEND SERVER IS UP       ##################");
         log.info("##################################################################");
     }
 }

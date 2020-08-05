@@ -69,9 +69,4 @@ public class CommunicationService implements ICommunicationService {
     public void initPublisher(String propagationPort, NodeType propagatorType) {
         propagationPublisher.init(propagationPort, propagatorType);
     }
-
-    @Override
-    public void initPublisherMonitor() {
-        propagationPublisher.initMonitor();
-    }
 }

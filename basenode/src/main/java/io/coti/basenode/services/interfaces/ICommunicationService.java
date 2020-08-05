@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public interface ICommunicationService {
+
     void initSubscriber(NodeType nodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap);
 
     void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping);
@@ -22,6 +23,4 @@ public interface ICommunicationService {
     void removeSubscription(String propagationServerAddress, NodeType publisherNodeType);
 
     void initPublisher(String propagationPort, NodeType propagatorType);
-
-    void initPublisherMonitor();
 }
