@@ -3,12 +3,14 @@ package io.coti.basenode.data;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 
 @Slf4j
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class CurrencyData extends OriginatorCurrencyData implements IPropagatable {
 
     private static final long serialVersionUID = -6040661248851422391L;
