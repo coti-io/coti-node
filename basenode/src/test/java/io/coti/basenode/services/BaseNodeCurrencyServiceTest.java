@@ -10,7 +10,6 @@ import io.coti.basenode.model.Currencies;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -71,7 +70,7 @@ public class BaseNodeCurrencyServiceTest {
 
         final CurrencyData nativeCurrencyData = baseNodeCurrencyService.getNativeCurrency();
         if (nativeCurrencyData != null) {
-            Assert.assertEquals(nativeCurrencyData.getCurrencyTypeData().getCurrencyType(), CurrencyType.NATIVE_COIN);
+            Assert.assertEquals(CurrencyType.NATIVE_COIN, nativeCurrencyData.getCurrencyTypeData().getCurrencyType());
         } else {
 //            HashSet nativeCurrencyHashes = baseNodeCurrencyService.getCurrencyHashesByCurrencyType(CurrencyType.NATIVE_COIN);
 //            Assert.assertTrue(nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty());
@@ -84,38 +83,38 @@ public class BaseNodeCurrencyServiceTest {
         }
     }
 
-    @Test
-    public void getMissingCurrencies_noPreexistingCurrencies_noReturnedCurrencies() {
-//        GetCurrencyRequest getCurrencyRequest = new GetCurrencyRequest();
-//        Set<Hash> missingCurrencyHashes = new HashSet<>();
-//        getCurrencyRequest.setCurrenciesHashes(missingCurrencyHashes);
+//    @Test
+//    public void getMissingCurrencies_noPreexistingCurrencies_noReturnedCurrencies() {
+////        GetCurrencyRequest getCurrencyRequest = new GetCurrencyRequest();
+////        Set<Hash> missingCurrencyHashes = new HashSet<>();
+////        getCurrencyRequest.setCurrenciesHashes(missingCurrencyHashes);
+////
+////        Hash signerHash = new Hash("PublicKey");
+////        getCurrencyRequest.setSignerHash(signerHash);
+////        getCurrencyRequestCrypto.signMessage(getCurrencyRequest);
 //
-//        Hash signerHash = new Hash("PublicKey");
-//        getCurrencyRequest.setSignerHash(signerHash);
-//        getCurrencyRequestCrypto.signMessage(getCurrencyRequest);
+////        ResponseEntity<BaseResponse> missingCurrencies = baseNodeCurrencyService.getMissingCurrencies(getCurrencyRequest);
+////
+////        Assert.assertEquals(missingCurrencies.getStatusCode(), (HttpStatus.OK));
+////        Assert.assertTrue(((GetCurrencyResponse) missingCurrencies.getBody()).getCurrencyDataSet().isEmpty());
+//    }
 
-//        ResponseEntity<BaseResponse> missingCurrencies = baseNodeCurrencyService.getMissingCurrencies(getCurrencyRequest);
+//    @Test
+//    public void getMissingCurrencies_badSignature_unauthorized() {
+////        GetCurrencyRequest getCurrencyRequest = new GetCurrencyRequest();
+////        Set<Hash> missingCurrencyHashes = new HashSet<>();
+////        getCurrencyRequest.setCurrenciesHashes(missingCurrencyHashes);
+////
+////        Hash signerHash = new Hash("PublicKey");
+////        getCurrencyRequest.setSignerHash(signerHash);
+////        getCurrencyRequestCrypto.signMessage(getCurrencyRequest);
+////        missingCurrencyHashes.add(BaseNodeTestUtils.generateRandomHash());
 //
-//        Assert.assertEquals(missingCurrencies.getStatusCode(), (HttpStatus.OK));
-//        Assert.assertTrue(((GetCurrencyResponse) missingCurrencies.getBody()).getCurrencyDataSet().isEmpty());
-    }
-
-    @Test
-    public void getMissingCurrencies_badSignature_unauthorized() {
-//        GetCurrencyRequest getCurrencyRequest = new GetCurrencyRequest();
-//        Set<Hash> missingCurrencyHashes = new HashSet<>();
-//        getCurrencyRequest.setCurrenciesHashes(missingCurrencyHashes);
-//
-//        Hash signerHash = new Hash("PublicKey");
-//        getCurrencyRequest.setSignerHash(signerHash);
-//        getCurrencyRequestCrypto.signMessage(getCurrencyRequest);
-//        missingCurrencyHashes.add(BaseNodeTestUtils.generateRandomHash());
-
-//        ResponseEntity<BaseResponse> missingCurrencies = baseNodeCurrencyService.getMissingCurrencies(getCurrencyRequest);
-//
-//        Assert.assertEquals(missingCurrencies.getStatusCode(), (HttpStatus.UNAUTHORIZED));
-//        Assert.assertEquals(missingCurrencies.getBody().getStatus(),STATUS_ERROR);
-    }
+////        ResponseEntity<BaseResponse> missingCurrencies = baseNodeCurrencyService.getMissingCurrencies(getCurrencyRequest);
+////
+////        Assert.assertEquals(missingCurrencies.getStatusCode(), (HttpStatus.UNAUTHORIZED));
+////        Assert.assertEquals(missingCurrencies.getBody().getStatus(),STATUS_ERROR);
+//    }
 
     protected void setAndSignCurrencyDataByType(CurrencyData currencyData, CurrencyType currencyType) {
         CurrencyTypeData currencyTypeData = new CurrencyTypeData(currencyType, Instant.now());

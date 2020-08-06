@@ -64,10 +64,10 @@ public class BaseNodeBalanceServiceTest {
         balanceService.preBalanceMap.put(addressHash1, currencyHashToAmountMap1);
         ResponseEntity<GetTokenBalancesResponse> currencyBalances = balanceService.getTokenBalances(getCurrencyBalanceRequest);
 
-        Assert.assertTrue(currencyBalances.getStatusCode().equals(HttpStatus.OK));
+        Assert.assertEquals(HttpStatus.OK, currencyBalances.getStatusCode());
         Assert.assertTrue(currencyBalances.getBody().getTokenBalances().containsKey(tokenHash1));
         Assert.assertTrue(currencyBalances.getBody().getTokenBalances().containsKey(tokenHash2));
-        Assert.assertTrue(currencyBalances.getBody().getTokenBalances().get(tokenHash1).get(addressHash1).getAddressBalance().equals(BigDecimal.TEN));
+        Assert.assertEquals(BigDecimal.TEN, currencyBalances.getBody().getTokenBalances().get(tokenHash1).get(addressHash1).getAddressBalance());
     }
 
 }

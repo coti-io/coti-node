@@ -101,9 +101,7 @@ public class BaseNodeBalanceService implements IBalanceService {
         getTokenBalancesRequest.getAddresses().forEach(address -> {
             Map<Hash, BigDecimal> addressToPreBalanceMap = preBalanceMap.get(address);
             if (addressToPreBalanceMap != null) {
-                addressToPreBalanceMap.entrySet().forEach(entry -> {
-                    Hash currencyHash = entry.getKey();
-                    BigDecimal preBalance = entry.getValue();
+                addressToPreBalanceMap.forEach((currencyHash, preBalance) -> {
                     tokenToAddressesBalance.putIfAbsent(currencyHash, new HashMap<>());
                     tokenToAddressesBalance.get(currencyHash).putIfAbsent(address, new AddressBalance(getBalance(address, currencyHash), preBalance));
                 });

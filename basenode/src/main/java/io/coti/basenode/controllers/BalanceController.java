@@ -23,7 +23,6 @@ public class BalanceController {
 
     @PostMapping()
     public ResponseEntity<GetBalancesResponse> getBalances(@Valid @RequestBody GetBalancesRequest getBalancesRequest) {
-
         return balanceService.getBalances(getBalancesRequest);
     }
 
