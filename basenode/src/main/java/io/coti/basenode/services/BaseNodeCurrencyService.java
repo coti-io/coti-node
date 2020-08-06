@@ -94,9 +94,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         if (networkService.getRecoveryServerAddress() != null) {
             try {
                 GetNativeCurrencyResponse getNativeCurrencyResponse = restTemplate.getForObject(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_NATIVE_CURRENCY_ENDPOINT, GetNativeCurrencyResponse.class);
-                CurrencyData recoveredNativeCurrency = getNativeCurrencyResponse.getNativeCurrency();
-                if (recoveredNativeCurrency != null && recoveredNativeCurrency.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-                    currencies.put(recoveredNativeCurrency);
+                if (getNativeCurrencyResponse != null) {
+                    CurrencyData recoveredNativeCurrency = getNativeCurrencyResponse.getNativeCurrency();
+                    if (recoveredNativeCurrency != null && recoveredNativeCurrency.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+                        currencies.put(recoveredNativeCurrency);
+                    }
                 }
             } catch (HttpClientErrorException | HttpServerErrorException e) {
                 throw new CurrencyException(String.format("Get native currency from restore node error. Recovery node response: %s", new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()), e);
@@ -157,17 +159,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public void generateNativeCurrency() {
         throw new CurrencyException("Attempted to generate Native currency.");
-    }
-
-    @Override
-    public void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap) {
-        clusterStampCurrenciesMap.forEach((currencyHash, clusterStampCurrencyData) -> {
-                    currencies.put(clusterStampCurrencyData);
-                    if (clusterStampCurrencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-                        verifyNativeCurrency(clusterStampCurrencyData);
-                    }
-                }
-        );
     }
 
     private void verifyNativeCurrency(CurrencyData nativeCurrency) {

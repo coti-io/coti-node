@@ -52,8 +52,5 @@ public class TokenGenerationResponseData implements IResponseData {
         this.currencyRateSourceType = token.getCurrencyTypeData().getCurrencyRateSourceType();
         this.rateSource = token.getCurrencyTypeData().getRateSource();
         this.protectionModel = token.getCurrencyTypeData().getProtectionModel();
-
-        this.mintedAmount = BigDecimal.ZERO;
-        this.mintableAmount = BigDecimal.ZERO;
     }
 }

@@ -11,7 +11,6 @@ import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 public interface ICurrencyService {
 
@@ -30,8 +29,6 @@ public interface ICurrencyService {
     void putCurrencyData(CurrencyData currencyData);
 
     void generateNativeCurrency();
-
-    void updateCurrenciesFromClusterStamp(Map<Hash, CurrencyData> clusterStampCurrenciesMap);
 
     void handleMissingTransaction(TransactionData transactionData);
 

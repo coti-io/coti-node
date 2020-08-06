@@ -3,7 +3,10 @@ package io.coti.basenode.communication;
 import io.coti.basenode.communication.interfaces.ISubscriberMessageType;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IAddressService;
+import io.coti.basenode.services.interfaces.IDspVoteService;
+import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;
@@ -39,7 +42,6 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
     protected IAddressService addressService;
     protected IDspVoteService dspVoteService;
     protected INetworkService networkService;
-    protected ICurrencyService currencyService;
     private final Class<? extends IPropagatable> messageTypeClass;
 
     SubscriberMessageType(Class<? extends IPropagatable> messageTypeClass) {

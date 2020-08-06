@@ -37,6 +37,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         updateCurrencies();
     }
 
+    @Override
     public void updateCurrencies() {
         CurrencyData nativeCurrencyData = getNativeCurrency();
         if (nativeCurrencyData == null) {
