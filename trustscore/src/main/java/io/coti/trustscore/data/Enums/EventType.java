@@ -8,7 +8,7 @@ public enum EventType {
     INITIAL_EVENT(3),
     NOT_FULFILMENT_EVENT(4);
 
-    private int value;
+    private final int value;
 
     EventType(int value) {
         this.value = value;

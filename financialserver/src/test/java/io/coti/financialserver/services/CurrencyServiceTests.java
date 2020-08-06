@@ -22,7 +22,6 @@ import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;
 import io.coti.financialserver.model.UserTokenGenerations;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -96,13 +95,10 @@ public class CurrencyServiceTests {
 
     //
     private static Hash userHash;
-    private static Hash currencyHash;
-    private static Hash currencyHash2;
     private static Hash transactionHash;
     private static CurrencyData currencyData;
     private static CurrencyData currencyData2;
     private static CurrencyData nativeCurrencyData;
-    private static Hash nativeCurrencyHash;
     public static final String RECOVER_NATIVE_CURRENCY_PATH = "null/currencies/native";
 
 
@@ -110,8 +106,8 @@ public class CurrencyServiceTests {
     public static void setUpOnce() {
         userHash = new Hash("00");
         transactionHash = new Hash("11");
-        currencyHash = new Hash("22");
-        currencyHash2 = new Hash("33");
+        Hash currencyHash = new Hash("22");
+        Hash currencyHash2 = new Hash("33");
 
         currencyData = new CurrencyData();
         currencyData.setHash(currencyHash);
@@ -137,7 +133,7 @@ public class CurrencyServiceTests {
         currencyData2.setScale(8);
         currencyData2.setCreateTime(Instant.now());
 
-        nativeCurrencyHash = new Hash(7777);
+        Hash nativeCurrencyHash = new Hash(7777);
         nativeCurrencyData = new CurrencyData();
         nativeCurrencyData.setHash(nativeCurrencyHash);
         nativeCurrencyData.setName("Coti");
@@ -151,20 +147,13 @@ public class CurrencyServiceTests {
         nativeCurrencyData.setCreateTime(Instant.now());
     }
 
-    @Before
-    public void setUpBeforeEachTest() {
-
-    }
-
-    //TODO 9/20/2019 astolia: clean up, remove duplicates...
-
     @Test
     public void getUserTokenGenerationData_UnsignedRequest_shouldReturnBadRequest() {
         GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
         getUserTokensRequest.setUserHash(userHash);
-        ResponseEntity expected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+        ResponseEntity<IResponse> expected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
 
-        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
+        ResponseEntity<IResponse> actual = currencyService.getUserTokens(getUserTokensRequest);
         Assert.assertEquals(expected, actual);
 
         getUserTokensRequest.setUserHash(new Hash("1111"));
@@ -173,18 +162,17 @@ public class CurrencyServiceTests {
     }
 
     @Test
-    public void getUserTokenGenerationData_noUserTokenGenerations_shouldReturnEmptyResponse() {
+    public void getUserTokenGenerationDataNoUserTokenGenerationsShouldReturnEmptyResponse() {
         GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
         getUserTokensRequest.setUserHash(userHash);
-        //TODO 9/24/2019 astolia: mock signed request
-        //getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
-        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
-        ResponseEntity expected = ResponseEntity.ok(new GetUserTokensResponse());
+        //getUserTokensRequestCrypto.signMessage(getUserTokensRequest)
+        ResponseEntity<IResponse> actual = currencyService.getUserTokens(getUserTokensRequest);
+        ResponseEntity<IResponse> expected = ResponseEntity.ok(new GetUserTokensResponse());
         Assert.assertEquals(expected, actual);
     }
 
     @Test
-    public void getUserTokenGenerationData_onlyPendingToken_shouldReturnResponseWithAvailableTransaction() {
+    public void getUserTokenGenerationDataOnlyPendingTokenShouldReturnResponseWithAvailableTransaction() {
         Map<Hash, Hash> transactionHashToCurrencyHash = new HashMap<>();
         transactionHashToCurrencyHash.put(transactionHash, null);
         UserTokenGenerationData userTokenGenerationData = new UserTokenGenerationData(userHash, transactionHashToCurrencyHash);
@@ -192,19 +180,17 @@ public class CurrencyServiceTests {
 
         GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
         getUserTokensRequest.setUserHash(userHash);
-        //TODO 9/24/2019 astolia: mock signed request
-//        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
-        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
+//        getUserTokensRequestCrypto.signMessage(getUserTokensRequest)
+        ResponseEntity<IResponse> actual = currencyService.getUserTokens(getUserTokensRequest);
 
         GetUserTokensResponse getUserTokensResponse = new GetUserTokensResponse();
-        //TODO 9/24/2019 astolia: change according to implementation change
-//        getTokenGenerationDataResponse.addUnusedConfirmedTransaction(transactionHash);
-        ResponseEntity expected = ResponseEntity.ok(getUserTokensResponse);
+//        getTokenGenerationDataResponse.addUnusedConfirmedTransaction(transactionHash)
+        ResponseEntity<IResponse> expected = ResponseEntity.ok(getUserTokensResponse);
         Assert.assertEquals(expected, actual);
     }
 
     @Test
-    public void getUserTokenGenerationData_onlyCompletedToken_shouldReturnResponseWithAvailableTransactionAndCurrency() {
+    public void getUserTokenGenerationDataOnlyCompletedTokenShouldReturnResponseWithAvailableTransactionAndCurrency() {
         when(currencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
 
         Map<Hash, Hash> transactionHashToCurrencyHash = new HashMap<>();
@@ -215,21 +201,19 @@ public class CurrencyServiceTests {
 
         GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
         getUserTokensRequest.setUserHash(userHash);
-        //TODO 9/24/2019 astolia: mock signed request
-//        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
-        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
+//        getUserTokensRequestCrypto.signMessage(getUserTokensRequest)
+        ResponseEntity<IResponse> actual = currencyService.getUserTokens(getUserTokensRequest);
 
         GetUserTokensResponse getUserTokensResponse = new GetUserTokensResponse();
-        //TODO 9/24/2019 astolia: change according to implementation change
-//        getTokenGenerationDataResponse.addCompletedTransactionHashToGeneratedCurrency(transactionHash, currencyData);
-        ResponseEntity expected = ResponseEntity.ok(getUserTokensResponse);
+//        getTokenGenerationDataResponse.addCompletedTransactionHashToGeneratedCurrency(transactionHash, currencyData)
+        ResponseEntity<IResponse> expected = ResponseEntity.ok(getUserTokensResponse);
         Assert.assertEquals(expected, actual);
     }
 
     @Test
-    public void getUserTokenGenerationData_onlyPendingToken_shouldReturnResponseWithPendingTransactionAndCurrency() {
+    public void getUserTokenGenerationDataOnlyPendingTokenShouldReturnResponseWithPendingTransactionAndCurrency() {
 
-//        when(pendingCurrencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
+//        when(pendingCurrencies.getByHash(currencyData.getHash())).thenReturn(currencyData)
 
         Map<Hash, Hash> transactionHashToCurrencyHash = new HashMap<>();
         transactionHashToCurrencyHash.put(transactionHash, currencyData.getHash());
@@ -239,18 +223,14 @@ public class CurrencyServiceTests {
 
         GetUserTokensRequest getUserTokensRequest = new GetUserTokensRequest();
         getUserTokensRequest.setUserHash(userHash);
-        //TODO 9/24/2019 astolia: mock signed request
-//        getUserTokensRequestCrypto.signMessage(getUserTokensRequest);
-        ResponseEntity actual = currencyService.getUserTokens(getUserTokensRequest);
+//        getUserTokensRequestCrypto.signMessage(getUserTokensRequest)
+        ResponseEntity<IResponse> actual = currencyService.getUserTokens(getUserTokensRequest);
 
         GetUserTokensResponse getUserTokensResponse = new GetUserTokensResponse();
-        //TODO 9/24/2019 astolia: change according to implementation change
-//        getTokenGenerationDataResponse.addPendingTransactionHashToGeneratedCurrency(transactionHash, currencyData);
-        ResponseEntity expected = ResponseEntity.ok(getUserTokensResponse);
+//        getTokenGenerationDataResponse.addPendingTransactionHashToGeneratedCurrency(transactionHash, currencyData)
+        ResponseEntity<IResponse> expected = ResponseEntity.ok(getUserTokensResponse);
         Assert.assertEquals(expected, actual);
     }
-
-    //TODO 9/22/2019 astolia: run TransactionService continueHandlePropagatedTransaction with TokenGenerationTransaction before some tests to mock insertion of data to db.
 
     protected void currencyServiceInit() {
         when(currencies.isEmpty()).thenReturn(Boolean.TRUE);
@@ -271,8 +251,8 @@ public class CurrencyServiceTests {
         when(currencies.getByHash(currencyData.getHash())).thenReturn(currencyData);
 
         ResponseEntity<IResponse> tokens = currencyService.getCurrenciesForWallet(getCurrenciesRequest);
-        Assert.assertTrue(tokens.getStatusCode().equals(HttpStatus.OK));
-        Assert.assertTrue(((GetCurrenciesResponse) tokens.getBody()).getTokens().get(0).getName().equals(currencyData.getName()));
-        Assert.assertTrue(((GetCurrenciesResponse) tokens.getBody()).getTokens().get(1).getName().equals(currencyData2.getName()));
+        Assert.assertEquals(HttpStatus.OK, tokens.getStatusCode());
+        Assert.assertEquals(currencyData.getName(), ((GetCurrenciesResponse) tokens.getBody()).getTokens().get(0).getName());
+        Assert.assertEquals(currencyData2.getName(), ((GetCurrenciesResponse) tokens.getBody()).getTokens().get(1).getName());
     }
 }

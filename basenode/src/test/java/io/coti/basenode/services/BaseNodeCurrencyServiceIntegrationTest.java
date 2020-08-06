@@ -148,7 +148,7 @@ public class BaseNodeCurrencyServiceIntegrationTest {
     public void getNativeCurrencyData_addNativeCurrencyIfNeeded_verifyCurrencyExists() {
         final CurrencyData nativeCurrencyData = baseNodeCurrencyService.getNativeCurrency();
         if (nativeCurrencyData != null) {
-            Assert.assertEquals(nativeCurrencyData.getCurrencyTypeData().getCurrencyType(), CurrencyType.NATIVE_COIN);
+            Assert.assertEquals(CurrencyType.NATIVE_COIN, nativeCurrencyData.getCurrencyTypeData().getCurrencyType());
         } else {
 //            HashSet nativeCurrencyHashes = baseNodeCurrencyService.getCurrencyHashesByCurrencyType(CurrencyType.NATIVE_COIN);
 //            Assert.assertTrue(nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty());

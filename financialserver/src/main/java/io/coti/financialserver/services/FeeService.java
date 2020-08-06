@@ -29,7 +29,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class FeeService {
 
-    private final static BigDecimal totalSupplyFeeFactor = BigDecimal.ZERO;
+    private static final BigDecimal totalSupplyFeeFactor = BigDecimal.ZERO;
     @Value("${token.generation.fee}")
     private BigDecimal tokenGenerationFee;
     @Value("${financialserver.seed}")

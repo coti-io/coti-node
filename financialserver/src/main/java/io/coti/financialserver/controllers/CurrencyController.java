@@ -21,7 +21,7 @@ public class CurrencyController {
     @Autowired
     private MintingService mintingService;
 
-//    @PutMapping(path = "/token/typechange") // todo add it
+//    @PutMapping(path = "/token/typechange")
 
     @PostMapping(path = "/token/generate")
     public ResponseEntity<IResponse> getTokenGenerationFee(@Valid @RequestBody GenerateTokenFeeRequest generateTokenFeeRequest) {
@@ -38,7 +38,7 @@ public class CurrencyController {
         return mintingService.getTokenMintingFee(tokenMintingFeeRequest);
     }
 
-//    @GetMapping(path = "/token/history")   //todo add it
+//    @GetMapping(path = "/token/history")
 
     @GetMapping(path = "/token/mint/history")
     public ResponseEntity<IResponse> getTokenMintingHistory(@Valid @RequestBody GetMintingHistoryRequest getMintingHistoryRequest) {

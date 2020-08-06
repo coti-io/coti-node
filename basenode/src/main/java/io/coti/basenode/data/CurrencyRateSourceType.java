@@ -9,7 +9,7 @@ public enum CurrencyRateSourceType {
     FINANCIAL_SERVER("Financial Server"),
     RATES_SERVER("Rates Server");
 
-    private String text;
+    private final String text;
 
     private static class CurrencyRateSourceTypes {
         private static final Map<String, CurrencyRateSourceType> textToCurrencyRateSourceTypeMap = new HashMap<>();
