@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ScoreCalculator<T extends EventScore> implements IScoreCalculator {
-    private Map<T, String> eventScoresToScoreCalculationFormulaMap;
 
+    private Map<T, String> eventScoresToScoreCalculationFormulaMap;
 
     public ScoreCalculator() {
     }

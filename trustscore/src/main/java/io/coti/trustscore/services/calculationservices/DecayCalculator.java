@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DecayCalculator<T extends EventScore> implements IDecayCalculator {
+
     private Map<T, Double> eventScoresToOldValueMap;
 
     public DecayCalculator() {

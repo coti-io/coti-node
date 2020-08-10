@@ -6,6 +6,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.trustscore.data.Buckets.*;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Enums.UserType;
+import io.coti.trustscore.data.Events.EventData;
 import io.coti.trustscore.exceptions.BucketBuilderException;
 import io.coti.trustscore.http.InsertEventRequest;
 
@@ -15,7 +16,7 @@ import java.util.Map;
 
 public class BucketBuilder {
 
-    private static Map<EventType, Class<? extends BucketEventData>> bucketMapper = new EnumMap<>(EventType.class);
+    private static final Map<EventType, Class<? extends BucketEventData<? extends EventData>>> bucketMapper = new EnumMap<>(EventType.class);
 
     static {
         bucketMapper.put(EventType.TRANSACTION, BucketTransactionEventsData.class);
@@ -31,7 +32,7 @@ public class BucketBuilder {
 
     public static BucketEventData createBucket(EventType bucketType, UserType userType, Hash userHash) {
         try {
-            BucketEventData bucket = bucketMapper.get(bucketType).getConstructor().newInstance();
+            BucketEventData<? extends EventData> bucket = bucketMapper.get(bucketType).getConstructor().newInstance();
             bucket.setUserType(userType);
             bucket.setBucketHash(new Hash(ByteBuffer.allocate(userHash.getBytes().length + Integer.BYTES).
                     put(userHash.getBytes()).putInt(bucketType.getValue()).array()));

@@ -46,7 +46,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
             }
         }
 
-        ScoreCalculator scoreCalculator = new ScoreCalculator(baseEventScoreToCalculationFormulaMap);
+        ScoreCalculator<SuspiciousEventScore> scoreCalculator = new ScoreCalculator<>(baseEventScoreToCalculationFormulaMap);
         Map<SuspiciousEventScore, Double> baseEventScoreToCalculatedScoreMap = scoreCalculator.calculate();
         updateBucketScoresAfterCalculation(baseEventScoreToCalculatedScoreMap);
 
@@ -101,14 +101,13 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
                 : bucketBehaviorEventsData.getBehaviorEventTypeToCurrentEventCountAndContributionDataMap().entrySet()) {
 
 
-            BehaviorEventsScoreType BehaviorEventType = entry.getKey();
+            BehaviorEventsScoreType behaviorEventType = entry.getKey();
             double score = entry.getValue().getContribution();
 
             Map<BehaviorEventsScoreType, Map<Date, Double>> behaviorEventTypeToOldEventsContributionMap = bucketBehaviorEventsData.getBehaviorEventTypeToOldEventsContributionMap();
-            if (behaviorEventTypeToOldEventsContributionMap.get(BehaviorEventType) == null) {
-                behaviorEventTypeToOldEventsContributionMap.put(BehaviorEventType, new ConcurrentHashMap<>());
-            }
-            behaviorEventTypeToOldEventsContributionMap.get(BehaviorEventType).put(today, score);
+
+            behaviorEventTypeToOldEventsContributionMap.putIfAbsent(behaviorEventType, new ConcurrentHashMap<>());
+            behaviorEventTypeToOldEventsContributionMap.get(behaviorEventType).put(today, score);
         }
     }
 
@@ -136,7 +135,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
                                     .stream()
                                     .filter(p -> DatesCalculation.calculateDaysDiffBetweenDates(DatesCalculation.setDateOnBeginningOfDay(p.getKey()),
                                             DatesCalculation.setDateOnBeginningOfDay(new Date())) <= event.getTerm())
-                                    .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                     behaviorEventTypeToOldEventsContributionMap.put(eventsScoreType, oldEventDateToContributionMap);
                 }
             }
@@ -161,7 +160,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
                 // loop on every date
                 for (Map.Entry<Date, Double> dateToOldEventsContributionEntry : behaviorEventTypeToOldEventsContributionEntry.getValue().entrySet()) {
                     EventDecay behaviorEventDecay = new EventDecay(suspiciousEventScore, dateToOldEventsContributionEntry.getValue());
-                    Pair<SuspiciousEventScore, Double> decayedScores = new DecayCalculator().calculateEntry(behaviorEventDecay, daysDiff);
+                    Pair<SuspiciousEventScore, Double> decayedScores = new DecayCalculator<SuspiciousEventScore>().calculateEntry(behaviorEventDecay, daysDiff);
                     dayToScoreMap.put(dateToOldEventsContributionEntry.getKey(), decayedScores.getValue());
                 }
                 behaviorEventTypeToOldEventsContributionMapAfterDecayed.put(BehaviorEventsScoreType.enumFromString(suspiciousEventScore.getName()), dayToScoreMap);
