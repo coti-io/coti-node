@@ -19,6 +19,7 @@ import io.coti.nodemanager.model.ReservedHosts;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
+import io.coti.nodemanager.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.collections4.map.LinkedMap;
@@ -71,6 +72,8 @@ public class NodeManagementService implements INodeManagementService {
     private INetworkHistoryService networkHistoryService;
     @Autowired
     private IHealthCheckService healthCheckService;
+    @Autowired
+    private WebSocketSender webSocketSender;
     @Value("${server.ip}")
     private String nodeManagerIp;
     @Value("${propagation.port}")
@@ -162,6 +165,7 @@ public class NodeManagementService implements INodeManagementService {
                 nodeHistory.put(nodeHistoryData);
                 nodeDailyActivityData.getNodeDaySet().add(currentEventDate);
                 nodeDailyActivities.put(nodeDailyActivityData);
+                webSocketSender.notifyNodeDetails(networkNodeData, nodeStatus);
             }
         } finally {
             nodeHashLockData.removeLockFromLocksMap(nodeHash);
