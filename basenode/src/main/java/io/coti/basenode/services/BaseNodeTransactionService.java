@@ -240,7 +240,8 @@ public class BaseNodeTransactionService implements ITransactionService {
         log.debug("Propagate missing transaction {} by base node", transactionData.getHash());
     }
 
-    public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber) {
+    @Override
+    public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber, String monitorThreadName) {
         return new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
@@ -255,7 +256,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                     log.info("Inserted {} transactions: {}", type, transactionNumber);
                 }
             }
-        });
+        }, monitorThreadName);
     }
 
     public void addToExplorerIndexes(TransactionData transactionData) {

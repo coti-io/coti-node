@@ -1,10 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.ClusterStampCrypto;
-import io.coti.basenode.data.ClusterStampData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.SignatureData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -20,6 +17,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -157,7 +155,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) {
-        throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+        throw new ClusterStampValidationException("ClusterStamp doesn't contain signature");
     }
 
     private void handleClusterStampWithSignature(ClusterStampData clusterStampData) {
@@ -168,7 +166,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     protected void setClusterStampSignerHash(ClusterStampData clusterStampData) {
-        clusterStampData.setSignerHash(networkService.getSingleNodeData(NodeType.ZeroSpendServer).getNodeHash());
+        Optional<NetworkNodeData> optionalZeroSpendServer = Optional.ofNullable(networkService.getSingleNodeData(NodeType.ZeroSpendServer));
+        if (!optionalZeroSpendServer.isPresent()) {
+            throw new ClusterStampValidationException("ZeroSpend server doesn't run");
+        }
+        clusterStampData.setSignerHash(optionalZeroSpendServer.get().getNodeHash());
     }
 
 }

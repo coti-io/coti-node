@@ -147,7 +147,7 @@ public abstract class BaseNodeInitializationService {
         try {
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
-            Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null);
+            Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null, "Db Txs Monitor");
             final AtomicBoolean executorServicesInitiated = new AtomicBoolean(false);
             transactions.forEach(transactionData -> {
                 if (!executorServicesInitiated.get()) {
