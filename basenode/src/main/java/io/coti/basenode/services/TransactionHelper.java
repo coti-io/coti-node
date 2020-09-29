@@ -92,11 +92,9 @@ public class TransactionHelper implements ITransactionHelper {
     @Override
     public void updateAddressTransactionHistory(TransactionData transactionData) {
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            AddressTransactionsHistory addressHistory = addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash());
+            AddressTransactionsHistory addressHistory = Optional.ofNullable(addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash()))
+                    .orElse(new AddressTransactionsHistory(baseTransactionData.getAddressHash()));
 
-            if (addressHistory == null) {
-                addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
-            }
             if (!addressHistory.addTransactionHashToHistory(transactionData.getHash())) {
                 log.debug("Transaction {} is already in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
             }

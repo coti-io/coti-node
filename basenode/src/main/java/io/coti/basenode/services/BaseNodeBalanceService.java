@@ -86,14 +86,14 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public void validateBalances() {
-        preBalanceMap.forEach((hash, bigDecimal) -> {
-            if (bigDecimal.signum() == -1) {
+        preBalanceMap.forEach((hash, preBalance) -> {
+            if (preBalance.signum() == -1) {
                 log.error("PreBalance Validation failed!");
                 throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
         });
-        balanceMap.forEach((hash, bigDecimal) -> {
-            if (bigDecimal.signum() == -1) {
+        balanceMap.forEach((hash, balance) -> {
+            if (balance.signum() == -1) {
                 log.error("Balance Validation failed!");
                 throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }

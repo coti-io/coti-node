@@ -405,32 +405,40 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType, NodeType connectingNodeType) {
         NetworkNodeData newSingleNodeData = newNetworkData.getSingleNodeNetworkDataMap().get(singleNodeType);
-        NetworkNodeData singleNodeData = getSingleNodeData(singleNodeType);
+        NetworkNodeData currentSingleNodeData = getSingleNodeData(singleNodeType);
         if (newSingleNodeData != null) {
             if (newSingleNodeData.getPropagationPort() != null) {
-                if (singleNodeData != null && singleNodeData.getPropagationPort() != null &&
-                        !(newSingleNodeData.getPropagationPort().equals(singleNodeData.getPropagationPort()) && newSingleNodeData.getAddress().equals(singleNodeData.getAddress()))) {
-                    communicationService.removeSubscription(singleNodeData.getPropagationFullAddress(), singleNodeType);
-                    communicationService.addSubscription(newSingleNodeData.getPropagationFullAddress(), singleNodeType);
-                }
-                if (singleNodeData == null) {
-                    communicationService.addSubscription(newSingleNodeData.getPropagationFullAddress(), singleNodeType);
-                }
+                handleSingleNodeWithDifferentPropagationPort(singleNodeType, newSingleNodeData, currentSingleNodeData);
             }
-            if (singleNodeType.equals(NodeType.ZeroSpendServer) && connectingNodeType.equals(NodeType.DspNode) && newSingleNodeData.getReceivingPort() != null) {
-                if (singleNodeData != null && singleNodeData.getReceivingPort() != null &&
-                        !(newSingleNodeData.getReceivingPort().equals(singleNodeData.getReceivingPort()) && newSingleNodeData.getAddress().equals(singleNodeData.getAddress()))) {
-                    communicationService.removeSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
-                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
-                }
-                if (singleNodeData == null) {
-                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
-                }
-            }
-            if (recoveryServerAddress != null && (singleNodeData == null || recoveryServerAddress.equals(singleNodeData.getHttpFullAddress()))) {
+            handleConnectedZeroSpendServer(singleNodeType, connectingNodeType, newSingleNodeData, currentSingleNodeData);
+            if (recoveryServerAddress != null && (currentSingleNodeData == null || recoveryServerAddress.equals(currentSingleNodeData.getHttpFullAddress()))) {
                 recoveryServerAddress = newSingleNodeData.getHttpFullAddress();
             }
             setSingleNodeData(singleNodeType, newSingleNodeData);
+        }
+    }
+
+    private void handleSingleNodeWithDifferentPropagationPort(NodeType singleNodeType, NetworkNodeData newSingleNodeData, NetworkNodeData currentSingleNodeData) {
+        if (currentSingleNodeData != null && currentSingleNodeData.getPropagationPort() != null &&
+                !(newSingleNodeData.getPropagationPort().equals(currentSingleNodeData.getPropagationPort()) && newSingleNodeData.getAddress().equals(currentSingleNodeData.getAddress()))) {
+            communicationService.removeSubscription(currentSingleNodeData.getPropagationFullAddress(), singleNodeType);
+            communicationService.addSubscription(newSingleNodeData.getPropagationFullAddress(), singleNodeType);
+        }
+        if (currentSingleNodeData == null) {
+            communicationService.addSubscription(newSingleNodeData.getPropagationFullAddress(), singleNodeType);
+        }
+    }
+
+    private void handleConnectedZeroSpendServer(NodeType singleNodeType, NodeType connectingNodeType, NetworkNodeData newSingleNodeData, NetworkNodeData currentSingleNodeData) {
+        if (singleNodeType.equals(NodeType.ZeroSpendServer) && connectingNodeType.equals(NodeType.DspNode) && newSingleNodeData.getReceivingPort() != null) {
+            if (currentSingleNodeData != null && currentSingleNodeData.getReceivingPort() != null &&
+                    !(newSingleNodeData.getReceivingPort().equals(currentSingleNodeData.getReceivingPort()) && newSingleNodeData.getAddress().equals(currentSingleNodeData.getAddress()))) {
+                communicationService.removeSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
+                communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
+            }
+            if (currentSingleNodeData == null) {
+                communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
+            }
         }
     }
 
