@@ -3,10 +3,7 @@ package io.coti.fullnode.services;
 import com.dictiography.collections.IndexedNavigableSet;
 import com.dictiography.collections.IndexedTreeSet;
 import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.data.AddressTransactionsHistory;
-import io.coti.basenode.data.ExplorerTransactionData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.PotException;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.exceptions.TransactionValidationException;
@@ -77,6 +74,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
+    private final LockData transactionLockData = new LockData();
 
     @Override
     public void init() {
@@ -100,58 +98,58 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
-
-            if (transactionHelper.isTransactionExists(transactionData)) {
-                log.debug("Received existing transaction: {}", transactionData.getHash());
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(new Response(
-                                TRANSACTION_ALREADY_EXIST_MESSAGE, STATUS_ERROR));
-            }
-            transactionHelper.startHandleTransaction(transactionData);
-
-            validateTransaction(transactionData);
-
-            selectSources(transactionData);
-            if (!transactionData.hasSources()) {
-                int selectSourceRetryCount = 0;
-                while (!transactionData.hasSources() && selectSourceRetryCount <= 20) {
-                    log.debug("Could not find sources for transaction: {}. Retrying in 5 seconds.", transactionData.getHash());
-                    TimeUnit.SECONDS.sleep(5);
-                    selectSources(transactionData);
-                    selectSourceRetryCount++;
-                }
-                if (!transactionData.hasSources()) {
-                    log.info("No source found for transaction {} with trust score {}", transactionData.getHash(), transactionData.getSenderTrustScore());
+            synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
+                if (transactionHelper.isTransactionExists(transactionData)) {
+                    log.debug("Received existing transaction: {}", transactionData.getHash());
                     return ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .status(HttpStatus.UNAUTHORIZED)
                             .body(new Response(
-                                    TRANSACTION_SOURCE_NOT_FOUND, STATUS_ERROR));
+                                    TRANSACTION_ALREADY_EXIST_MESSAGE, STATUS_ERROR));
                 }
+                transactionHelper.startHandleTransaction(transactionData);
+
+                validateTransaction(transactionData);
+
+                selectSources(transactionData);
+                if (!transactionData.hasSources()) {
+                    int selectSourceRetryCount = 0;
+                    while (!transactionData.hasSources() && selectSourceRetryCount <= 20) {
+                        log.debug("Could not find sources for transaction: {}. Retrying in 5 seconds.", transactionData.getHash());
+                        TimeUnit.SECONDS.sleep(5);
+                        selectSources(transactionData);
+                        selectSourceRetryCount++;
+                    }
+                    if (!transactionData.hasSources()) {
+                        log.info("No source found for transaction {} with trust score {}", transactionData.getHash(), transactionData.getSenderTrustScore());
+                        return ResponseEntity
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(new Response(
+                                        TRANSACTION_SOURCE_NOT_FOUND, STATUS_ERROR));
+                    }
+                }
+                if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
+                        !validationService.validateSource(transactionData.getRightParentHash())) {
+                    log.debug("Could not validate transaction source");
+                }
+
+                // ############   POT   ###########
+                potAction(transactionData);
+                // ################################
+
+                transactionData.setAttachmentTime(Instant.now());
+                transactionCrypto.signMessage(transactionData);
+                transactionHelper.attachTransactionToCluster(transactionData);
+                transactionHelper.setTransactionStateToSaved(transactionData);
+                webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+                addToExplorerIndexes(transactionData);
+                ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);
+                transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
+                transactionHelper.setTransactionStateToFinished(transactionData);
+                return ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(new AddTransactionResponse(
+                                TRANSACTION_CREATED_MESSAGE, transactionData.getAttachmentTime()));
             }
-            if (!validationService.validateSource(transactionData.getLeftParentHash()) ||
-                    !validationService.validateSource(transactionData.getRightParentHash())) {
-                log.debug("Could not validate transaction source");
-            }
-
-            // ############   POT   ###########
-            potAction(transactionData);
-            // ################################
-
-            transactionData.setAttachmentTime(Instant.now());
-            transactionCrypto.signMessage(transactionData);
-            transactionHelper.attachTransactionToCluster(transactionData);
-            transactionHelper.setTransactionStateToSaved(transactionData);
-            webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-            addToExplorerIndexes(transactionData);
-            ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);
-            transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
-            transactionHelper.setTransactionStateToFinished(transactionData);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new AddTransactionResponse(
-                            TRANSACTION_CREATED_MESSAGE, transactionData.getAttachmentTime()));
-
         } catch (TransactionValidationException e) {
             log.error("Transaction validation failed: {}", e.getMessage());
             return ResponseEntity
@@ -167,6 +165,7 @@ public class TransactionService extends BaseNodeTransactionService {
             throw new TransactionException(e);
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
+            transactionLockData.removeLockFromLocksMap(transactionData.getHash());
         }
     }
 
