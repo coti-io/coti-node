@@ -14,7 +14,7 @@ public class NodeManagerApplication {
         Thread.currentThread().setName("Node Manager Main");
         SpringApplication.run(NodeManagerApplication.class, args);
         log.info("############################################################");
-        log.info("#############     NODE Manager IS UP        ################");
+        log.info("#############     NODE MANAGER IS UP        ################");
         log.info("############################################################");
     }
 }

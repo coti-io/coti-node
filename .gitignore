@@ -65,3 +65,5 @@ fullnode/FullNoderocksDB
 /.vscode
 /configs
 nohup.out
+
+basenode/BaseNoderocksDB*/
