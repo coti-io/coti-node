@@ -6,6 +6,8 @@ package io.coti.basenode.services.interfaces;
  */
 public interface IClusterStampService {
 
+    void init();
+
     void loadClusterStamp();
 
 }

@@ -28,6 +28,8 @@ public interface IValidationService {
 
     boolean validateBalancesAndAddToPreBalance(TransactionData transactionData);
 
+    boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData);
+
     <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData);
 
     boolean fullValidation(TransactionData transactionData);
@@ -39,4 +41,6 @@ public interface IValidationService {
     boolean validateAmountField(BigDecimal amount);
 
     boolean validateGetAddressesResponse(GetHistoryAddressesResponse getHistoryAddressesResponse);
+
+    boolean validateTokenMintingAndAddToAllocatedAmount(TransactionData transactionData);
 }
