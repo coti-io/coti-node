@@ -154,56 +154,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         }
 
     },
-    TOKEN_GENERATION_BASE_TRANSACTION_DATA(TokenGenerationFeeBaseTransactionData.class) {
-        @Override
-        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!(baseTransactionData instanceof TokenGenerationFeeBaseTransactionData)) {
-                throw new IllegalArgumentException("");
-            }
-
-            try {
-                byte[] outputMessageInBytes = getOutputMessageInBytes((TokenGenerationFeeBaseTransactionData) baseTransactionData);
-                byte[] serviceDataInBytes = ((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getMessageInBytes();
-
-                return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
-                        put(outputMessageInBytes).put(serviceDataInBytes).array();
-            } catch (Exception e) {
-                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
-                return new byte[0];
-            }
-        }
-
-        @Override
-        public String getPublicKey(BaseTransactionData baseTransactionData) {
-            return ((TokenGenerationFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
-        }
-
-    },
-    TOKEN_MINTING_BASE_TRANSACTION_DATA(TokenMintingFeeBaseTransactionData.class) {
-        @Override
-        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
-            if (!(baseTransactionData instanceof TokenMintingFeeBaseTransactionData)) {
-                throw new IllegalArgumentException("");
-            }
-
-            try {
-                byte[] outputMessageInBytes = getOutputMessageInBytes((TokenMintingFeeBaseTransactionData) baseTransactionData);
-                byte[] serviceDataInBytes = ((TokenMintingFeeBaseTransactionData) baseTransactionData).getServiceData().getMessageInBytes();
-
-                return ByteBuffer.allocate(outputMessageInBytes.length + serviceDataInBytes.length).
-                        put(outputMessageInBytes).put(serviceDataInBytes).array();
-            } catch (Exception e) {
-                log.error(GET_MESSAGE_IN_BYTE_ERROR, e);
-                return new byte[0];
-            }
-        }
-
-        @Override
-        public String getPublicKey(BaseTransactionData baseTransactionData) {
-            return ((TokenMintingFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
-        }
-
-    },
     ROLLING_RESERVE_DATA(RollingReserveData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
