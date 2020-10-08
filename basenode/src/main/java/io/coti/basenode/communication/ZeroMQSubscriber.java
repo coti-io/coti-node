@@ -126,9 +126,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 } catch (Exception e) {
                     log.error("Exception at subscriber thread", e);
                 }
-                if (contextTerminated.get()) {
-                    log.info("ZeroMQ subscriber context terminated");
-                }
             }
             monitorSocket.close();
         }, "MONITOR SUB");

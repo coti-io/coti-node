@@ -26,11 +26,11 @@ public class NodeCryptoHelper {
         return CryptoHelper.signBytes(message, CryptoHelper.generatePrivateKey(seed, index).toHexString());
     }
 
-    public Hash generateAddress(String seed, Integer index) {
+    public static Hash generateAddress(String seed, Integer index) {
         if (NodeCryptoHelper.seed == null) {
             NodeCryptoHelper.seed = seed;
         }
-        return CryptoHelper.generateAddress(seed, index);
+        return CryptoHelper.generateAddress(NodeCryptoHelper.seed, index);
     }
 
     public static Hash getNodeHash() {

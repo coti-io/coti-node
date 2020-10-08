@@ -56,8 +56,6 @@ public class FundDistributionService {
     @Autowired
     private TransactionCreationService transactionCreationService;
     @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
-    @Autowired
     private BaseNodeBalanceService baseNodeBalanceService;
     @Autowired
     protected INetworkService networkService;
@@ -115,7 +113,7 @@ public class FundDistributionService {
     private Hash getFundAddressHash(Fund fund) {
         Hash fundAddress = fund.getFundHash();
         if (fundAddress == null) {
-            fundAddress = nodeCryptoHelper.generateAddress(seed, Math.toIntExact(fund.getReservedAddress().getIndex()));
+            fundAddress = NodeCryptoHelper.generateAddress(seed, Math.toIntExact(fund.getReservedAddress().getIndex()));
             fund.setFundHash(fundAddress);
         }
         return fundAddress;
@@ -586,7 +584,7 @@ public class FundDistributionService {
 
     private Hash getEntryResultSourceFundAddress(FundDistributionFileEntryResultData entryResult) {
         int sourceAddressIndex = Math.toIntExact(Fund.getFundByText(entryResult.getDistributionPool()).getReservedAddress().getIndex());
-        return nodeCryptoHelper.generateAddress(seed, sourceAddressIndex);
+        return NodeCryptoHelper.generateAddress(seed, sourceAddressIndex);
     }
 
     private Hash createInitialTransactionToDistributionEntry(FundDistributionData fundDistributionData) {

@@ -13,7 +13,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-class AlgorithmTimer {
+class AlgorithmTimerTest {
 
     private static final int SAMPLE_SIZE = 1000000;
     private static final byte[][] inputData = new byte[SAMPLE_SIZE][512];

@@ -38,8 +38,6 @@ public class TransactionCreationService {
     private TransactionCryptoCreator transactionCryptoCreator;
     @Autowired
     private DspVoteService dspVoteService;
-    @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
     @Value("${zerospend.seed}")
     private String seed;
 
@@ -116,7 +114,7 @@ public class TransactionCreationService {
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
         Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
-        Hash addressHash = nodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
+        Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, BigDecimal.ZERO, Instant.now());
         addressHashToAddressIndexMap.put(addressHash, ZERO_SPEND_ADDRESS_INDEX);
         baseTransactions.add(baseTransactionData);

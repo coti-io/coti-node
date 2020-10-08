@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TrustScoreOrdering {
+class TrustScoreOrderingTest {
 
     @Test
     void trustScoreOrdering() {

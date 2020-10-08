@@ -28,14 +28,12 @@ public class DistributionService {
     private InitialFunds initialFunds;
     @Autowired
     private TransactionCreationService transactionCreationService;
-    @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
 
     public void distributeToInitialFunds() {
-        Hash cotiGenesisAddress = nodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
+        Hash cotiGenesisAddress = NodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
         Set<ReservedAddress> initialFundDistributionAddresses = ReservedAddress.getInitialFundDistributionAddresses();
         initialFundDistributionAddresses.forEach(initialFundDistributionAddress -> {
-            Hash fundAddress = nodeCryptoHelper.generateAddress(seed, Math.toIntExact(initialFundDistributionAddress.getIndex()));
+            Hash fundAddress = NodeCryptoHelper.generateAddress(seed, Math.toIntExact(initialFundDistributionAddress.getIndex()));
 
             if (!isInitialTransactionExistsByAddress(fundAddress)) {
                 BigDecimal amount = getInitialAmountByReservedAddress(initialFundDistributionAddress);

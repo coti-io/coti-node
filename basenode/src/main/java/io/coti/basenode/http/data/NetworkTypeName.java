@@ -10,8 +10,8 @@ public enum NetworkTypeName {
     TEST_NET(NetworkType.TestNet, "testnet"),
     MAIN_NET(NetworkType.MainNet, "mainnet");
 
-    private NetworkType networkType;
-    private String network;
+    private final NetworkType networkType;
+    private final String network;
 
     private static class NetworkTypeNames {
         private static final Map<NetworkType, NetworkTypeName> networkTypeNameMap = new EnumMap<>(NetworkType.class);

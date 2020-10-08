@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-class TrustScoreTiming {
+class TrustScoreTimingTest {
 
     @Test
     void trustScoreTimingComparisons() {

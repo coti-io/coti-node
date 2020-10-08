@@ -45,8 +45,6 @@ public class FeeService {
     @Value("${fullnode.seed}")
     private String seed;
     @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
-    @Autowired
     private FullNodeFeeRequestCrypto fullNodeFeeRequestCrypto;
     @Autowired
     private IValidationService validationService;
@@ -99,7 +97,7 @@ public class FeeService {
     }
 
     public Hash getAddress() {
-        return nodeCryptoHelper.generateAddress(seed, FULL_NODE_FEE_ADDRESS_INDEX);
+        return NodeCryptoHelper.generateAddress(seed, FULL_NODE_FEE_ADDRESS_INDEX);
     }
 
     public void setFullNodeFeeHash(FullNodeFeeData fullNodeFeeData) {

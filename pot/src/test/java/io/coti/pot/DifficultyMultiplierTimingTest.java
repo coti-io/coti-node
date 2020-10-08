@@ -11,7 +11,7 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-class DifficultyMultiplierTiming {
+class DifficultyMultiplierTimingTest {
 
     private static final int sampleSize = 200;
     private static final int difficultyMultiplier = 2;
