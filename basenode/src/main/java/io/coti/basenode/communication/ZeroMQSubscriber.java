@@ -59,6 +59,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         zeroMQContext = ZMQ.context(1);
         propagationReceiver = zeroMQContext.socket(SocketType.SUB);
         propagationReceiver.setHWM(10000);
+        propagationReceiver.setLinger(100);
         monitorSocket = ZeroMQUtils.createAndConnectMonitorSocket(zeroMQContext, propagationReceiver);
         ZeroMQUtils.bindToRandomPort(propagationReceiver);
     }
@@ -94,8 +95,12 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
                         log.info("ZeroMQ subscriber context terminated");
                         contextTerminated = true;
+                    } else if (e.getErrorCode() == ZMQ.Error.EINTR.getCode()) {
+                        log.info("ZeroMQ subscriber thread is interrupted");
+                        Thread.currentThread().interrupt();
                     } else {
-                        log.error("ZeroMQ exception at subscriber thread", e);
+                        ZMQ.Error zmqError = ZMQ.Error.findByCode(e.getErrorCode());
+                        log.error("ZeroMQ exception at subscriber thread: {} , {}", zmqError, zmqError.getMessage());
                     }
                 } catch (Exception e) {
                     log.error("Error at subscriber thread", e);
@@ -120,6 +125,9 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     }
                 } catch (Exception e) {
                     log.error("Exception at subscriber thread", e);
+                }
+                if (contextTerminated.get()) {
+                    log.info("ZeroMQ subscriber context terminated");
                 }
             }
             monitorSocket.close();

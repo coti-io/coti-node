@@ -38,11 +38,11 @@ public class ZeroMQSender implements ISender {
     @Override
     public <T extends IPropagatable> void send(T toSend, String address) {
         byte[] message = serializer.serialize(toSend);
-        synchronized (zeroMQContext) {
+        synchronized (this) {
             try {
                 receivingAddressToSenderSocketMapping.get(address).sendMore(toSend.getClass().getName());
                 receivingAddressToSenderSocketMapping.get(address).send(message);
-                log.debug("Message {} was sent to {}", toSend, toSend.getClass().getName());
+                log.debug("Message {} was sent to {}", toSend, address);
             } catch (ZMQException exception) {
                 log.error("Exception in sending", exception);
             }
@@ -53,13 +53,13 @@ public class ZeroMQSender implements ISender {
     public void disconnectFromNode(String receivingFullAddress, NodeType nodeType) {
         ZMQ.Socket sender = receivingAddressToSenderSocketMapping.get(receivingFullAddress);
         if (sender != null) {
-            log.debug("{} with address  {} is about to be removed from sending to zmq", nodeType, receivingFullAddress);
+            log.info("{} with address {} is about to be removed from sending to zmq", nodeType, receivingFullAddress);
             if (!sender.disconnect(receivingFullAddress)) {
-                log.error("{} with address  {} sender failed to be removed from zmq", nodeType, receivingFullAddress);
+                log.error("{} with address {} sender failed to be removed from zmq", nodeType, receivingFullAddress);
             }
             receivingAddressToSenderSocketMapping.remove(receivingFullAddress);
         } else {
-            log.error("{} with address  {} was about to be removed but doesn't exit in receivingAddressToSenderSocketMapping ",
+            log.error("{} with address  {} was about to be removed but doesn't exit in receivingAddressToSenderSocketMapping",
                     nodeType, receivingFullAddress);
         }
 
@@ -70,6 +70,6 @@ public class ZeroMQSender implements ISender {
         ZeroMQUtils.bindToRandomPort(sender);
         sender.connect(addressAndPort);
         receivingAddressToSenderSocketMapping.putIfAbsent(addressAndPort, sender);
-        log.debug("Receiver  {} is about to be removed from sending to zmq", addressAndPort);
+        log.debug("Receiver {} is about to be removed from sending to zmq", addressAndPort);
     }
 }
