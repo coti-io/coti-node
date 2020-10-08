@@ -10,7 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 @Slf4j
-public abstract class SignatureCrypto<T extends ISignable & ISignValidatable> extends SignatureCreationCrypto<T> {
+public abstract class SignatureCrypto<T extends ISignable & ISignValidatable> implements SignatureCreationCrypto<T> {
 
     public boolean verifySignature(T signValidatable) {
         try {

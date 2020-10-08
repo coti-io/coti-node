@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.nio.ByteBuffer;
 
 @Component
-public class GetNodeRegistrationRequestCrypto extends SignatureCreationCrypto<GetNodeRegistrationRequest> {
+public class GetNodeRegistrationRequestCrypto implements SignatureCreationCrypto<GetNodeRegistrationRequest> {
 
     @Override
     public byte[] getSignatureMessage(GetNodeRegistrationRequest getNodeRegistrationRequest) {

@@ -82,7 +82,7 @@ public class TrustScoreService implements ITrustScoreService {
         NetworkNodeData firstTrustScoreNode = trustScoreNodesToHandle.get(0);
         NodeTrustScoreResponse nodeTrustScoreResponse = sendTrustScoreRequestToFirstTrustScoreNode(firstTrustScoreNode, nodeTrustScoreRequest);
         List<NetworkNodeData> trustScoreNodesForValidations = trustScoreNodeList.stream().skip(1).collect(Collectors.toList());
-        if (nodeTrustScoreResponse.getNodeTrustScoreDataList() != null) {
+        if (nodeTrustScoreResponse != null && nodeTrustScoreResponse.getNodeTrustScoreDataList() != null) {
             Map<Hash, NetworkNodeData> nodesToSet = createNodeMapFromList(nodesList);
             sendTrustScoreRequestForValidation(trustScoreNodesForValidations, nodeTrustScoreResponse);
             for (NodeTrustScoreData nodeTrustScoreData : nodeTrustScoreResponse.getNodeTrustScoreDataList()) {
