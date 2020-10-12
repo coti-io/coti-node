@@ -1,6 +1,7 @@
 package io.coti.basenode.communication;
 
 import io.coti.basenode.communication.data.ConnectedNodeData;
+import io.coti.basenode.communication.data.ReconnectMonitorData;
 import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.ISerializer;
@@ -38,6 +39,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private final Map<String, ConnectedNodeData> connectedNodes = new ConcurrentHashMap<>();
     private Thread propagationReceiverThread;
     private Thread monitorThread;
+    private Thread monitorReconnectThread;
+    private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();
     @Autowired
     private ISerializer serializer;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap;
@@ -140,12 +143,60 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             if (zeroMQEvent.isDisplayLog() && (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized)) {
                 log.info("ZeroMQ subscriber {} for address {}", zeroMQEvent, address);
             }
+            if (zeroMQEvent.equals(ZeroMQEvent.DISCONNECTED)) {
+                addToReconnectMonitor(address);
+            } else if (zeroMQEvent.equals(ZeroMQEvent.CONNECTED)) {
+                removeFromReconnectMonitor(address);
+            } else if (zeroMQEvent.equals(ZeroMQEvent.CONNECT_RETRIED)) {
+                incrementRetriesInReconnectMonitor(address);
+            }
         } else {
             int errorCode = monitorSocket.base().errno();
             if (errorCode == ZMQ.Error.ETERM.getCode()) {
                 contextTerminated.set(true);
             }
         }
+    }
+
+    private void addToReconnectMonitor(String address) {
+        NodeType nodeType = Optional.ofNullable(connectedNodes.get(address)).map(ConnectedNodeData::getNodeType).orElse(null);
+        Optional<ReconnectMonitorData> optionalPutReconnectMonitorData = Optional.ofNullable(addressToReconnectMonitorMap.putIfAbsent(address, new ReconnectMonitorData(nodeType)));
+        if (!optionalPutReconnectMonitorData.isPresent()) {
+            log.info("Reconnect monitor is started for address {}", address);
+        }
+        if (monitorReconnectThread == null) {
+            startMonitorReconnectThread();
+        }
+    }
+
+    private void incrementRetriesInReconnectMonitor(String address) {
+        Optional.ofNullable(addressToReconnectMonitorMap.get(address)).ifPresent(reconnectMonitorData ->
+                reconnectMonitorData.getRetriesNumber().incrementAndGet()
+        );
+    }
+
+    private void removeFromReconnectMonitor(String address) {
+        Optional.ofNullable(addressToReconnectMonitorMap.remove(address)).ifPresent(reconnectMonitorData ->
+                log.info("Reconnect monitor is finished for address {}", address)
+        );
+    }
+
+    private void startMonitorReconnectThread() {
+        monitorReconnectThread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    addressToReconnectMonitorMap.forEach((address, reconnectMonitorData) ->
+                            log.info("Trying to reconnect to node {} with type {}. Retries: {}, DisconnectTime: {}", address,
+                                    Optional.ofNullable(reconnectMonitorData.getNodeType()).map(NodeType::toString).orElse("unknown"),
+                                    reconnectMonitorData.getRetriesNumber(), reconnectMonitorData.getDisconnectTime())
+                    );
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }, "MONITOR RECONNECT SUB");
+        monitorReconnectThread.start();
     }
 
     private void addToMessageQueue() throws ClassNotFoundException {
@@ -276,6 +327,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         if (propagationReceiver.disconnect(publisherAddressAndPort)) {
             log.info("Subscriber disconnected from server {} of node type {}", publisherAddressAndPort, publisherNodeType);
             connectedNodes.remove(publisherAddressAndPort);
+            removeFromReconnectMonitor(publisherAddressAndPort);
         } else {
             log.info("Subscriber failed disconnection from server {} of node type {}", publisherAddressAndPort, publisherNodeType);
         }
@@ -321,6 +373,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                 propagationReceiverThread.join();
                 monitorThread.interrupt();
                 monitorThread.join();
+                if (monitorReconnectThread != null) {
+                    monitorReconnectThread.interrupt();
+                    monitorReconnectThread.join();
+                }
                 queueNameToThreadMap.values().forEach(thread -> {
                     try {
                         thread.interrupt();

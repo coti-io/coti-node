@@ -2,7 +2,9 @@ package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class NodeCryptoHelper {
 
     private static String nodePrivateKey;
@@ -17,6 +19,7 @@ public class NodeCryptoHelper {
         if (nodePrivateKey == null) {
             nodePrivateKey = privateKey;
             nodePublicKey = CryptoHelper.getPublicKeyFromPrivateKey(nodePrivateKey);
+            log.info("Node public key is set to {}", nodePublicKey);
         }
     }
 

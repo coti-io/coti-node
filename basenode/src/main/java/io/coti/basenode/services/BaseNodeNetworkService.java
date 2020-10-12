@@ -211,20 +211,29 @@ public class BaseNodeNetworkService implements INetworkService {
             log.error("Invalid network type {} by node {}", networkNodeData.getNetworkType(), networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(String.format(INVALID_NETWORK_TYPE, networkType, networkNodeData.getNetworkType()));
         }
+
         if (!networkNodeCrypto.verifySignature(networkNodeData)) {
             log.error("Invalid signature by node {}", networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(INVALID_SIGNATURE);
         }
+
         if (!nodeRegistrationCrypto.verifySignature(networkNodeData.getNodeRegistrationData())) {
             log.error("Invalid node registration signature by node {}", networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRATION_SIGNATURE);
         }
+
         if (!networkNodeData.getNodeRegistrationData().getRegistrarHash().toString().equals(kycServerPublicKey)) {
             log.error("Invalid registrar node hash for node {}", networkNodeData.getNodeHash());
             throw new NetworkNodeValidationException(INVALID_NODE_REGISTRAR);
         }
+
+        if (!validateAddress(networkNodeData)) {
+            log.error("Invalid IP, expected IPV4, received ip: {}", networkNodeData.getAddress());
+            throw new NetworkNodeValidationException(INVALID_NODE_IP_VERSION);
+        }
+
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && validateServerUrl) {
-            validateAddressAndWebServerUrl(networkNodeData);
+            validateWebServerUrl(networkNodeData);
         }
 
         if (networkNodeData.getNodeType().equals(NodeType.FullNode) && !validateFeeData(networkNodeData.getFeeData())) {
@@ -233,13 +242,14 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
-    private void validateAddressAndWebServerUrl(NetworkNodeData networkNodeData) {
+    private boolean validateAddress(NetworkNodeData networkNodeData) {
         InetAddressValidator validator = InetAddressValidator.getInstance();
         String ip = networkNodeData.getAddress();
-        if (!validator.isValidInet4Address(ip)) {
-            log.error("Invalid IP, expected IPV4, received ip {}", ip);
-            throw new NetworkNodeValidationException(INVALID_NODE_IP_VERSION);
-        }
+        return validator.isValidInet4Address(ip);
+    }
+
+    private void validateWebServerUrl(NetworkNodeData networkNodeData) {
+        String ip = networkNodeData.getAddress();
 
         String webServerUrl = networkNodeData.getWebServerUrl();
         URL url = getUrl(webServerUrl);
