@@ -539,6 +539,21 @@ public class NetworkHistoryService implements INetworkHistoryService {
                 put(nodeHash.getBytes()).putLong(localDateToInstant(localDate).toEpochMilli()).array());
     }
 
+    @Override
+    public NodeNetworkDataRecord getReferenceNodeNetworkDataRecordByStatus(NodeNetworkDataRecord nodeNetworkDataRecord, LinkedMap<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordMap, NetworkNodeStatus networkNodeStatus) {
+        int referenceLookupNumber = nodeNetworkDataRecord.getNodeStatus().equals(networkNodeStatus) ? 2 : 1;
+        LinkedMap<Hash, NodeNetworkDataRecord> referenceNodeNetworkDataRecordMap = nodeNetworkDataRecordMap;
+        NodeNetworkDataRecord referenceNodeNetworkDataRecord = nodeNetworkDataRecord;
+        for (int i = 0; i < referenceLookupNumber; i++) {
+            referenceNodeNetworkDataRecordMap = getNodeNetworkDataRecordMap(referenceNodeNetworkDataRecord, referenceNodeNetworkDataRecordMap);
+            referenceNodeNetworkDataRecord = getNodeNetworkDataRecordByChainRef(referenceNodeNetworkDataRecord, referenceNodeNetworkDataRecordMap);
+            if (referenceNodeNetworkDataRecord == null) {
+                return null;
+            }
+        }
+        return referenceNodeNetworkDataRecord;
+    }
+
     private Instant localDateToInstant(LocalDate localDate) {
         return localDate.atStartOfDay().toInstant(ZoneOffset.UTC);
     }

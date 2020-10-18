@@ -2,13 +2,11 @@ package io.coti.nodemanager.services.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.nodemanager.data.NodeActivityData;
-import io.coti.nodemanager.data.NodeDailyActivityData;
-import io.coti.nodemanager.data.NodeHistoryData;
-import io.coti.nodemanager.data.NodeNetworkDataRecord;
+import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.http.GetNodeDetailsRequest;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.GetNodesActivityPercentageRequest;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
 
@@ -41,6 +39,8 @@ public interface INetworkHistoryService {
     NodeNetworkDataRecord getNodeNetworkDataRecordByChainRef(NodeNetworkDataRecord nodeNetworkDataRecord);
 
     Hash calculateNodeHistoryDataHash(Hash nodeHash, LocalDate localDate);
+
+    NodeNetworkDataRecord getReferenceNodeNetworkDataRecordByStatus(NodeNetworkDataRecord nodeNetworkDataRecord, LinkedMap<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordMap, NetworkNodeStatus networkNodeStatus);
 
     Pair<LocalDate, Hash> getReferenceToRecord(NodeNetworkDataRecord nodeNetworkDataRecord);
 

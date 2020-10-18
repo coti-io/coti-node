@@ -35,10 +35,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -54,6 +52,8 @@ public class NodeManagementService implements INodeManagementService {
     private static final String FULL_NODES_FOR_WALLET_KEY = "FullNodes";
     private static final String TRUST_SCORE_NODES_FOR_WALLET_KEY = "TrustScoreNodes";
     private static final String FINANCIAL_SERVER_FOR_WALLET_KEY = "FinancialServer";
+    private static final int BLACKLIST_INACTIVITY_NUMBER = 5;
+    private static final int BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES = 10;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -78,6 +78,7 @@ public class NodeManagementService implements INodeManagementService {
     private String nodeManagerIp;
     @Value("${propagation.port}")
     private String propagationPort;
+    private Set<Hash> blacklistedNodes = new HashSet<>();
     private final LockData nodeHashLockData = new LockData();
 
     @Override
@@ -96,6 +97,7 @@ public class NodeManagementService implements INodeManagementService {
         try {
             networkService.validateNetworkNodeData(networkNodeData);
             validateReservedHostToNode(networkNodeData);
+            verifyNotBlacklisted(networkNodeData);
             networkService.addNode(networkNodeData);
             ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
             activeNodes.put(activeNodeData);
@@ -137,6 +139,14 @@ public class NodeManagementService implements INodeManagementService {
         return new Hash(host.getBytes(StandardCharsets.UTF_8));
     }
 
+    private void verifyNotBlacklisted(NetworkNodeData networkNodeData) {
+        Hash nodeHash = networkNodeData.getNodeHash();
+        if (networkNodeData.getNodeType().equals(NodeType.FullNode) && blacklistedNodes.contains(nodeHash)) {
+            log.error("Blacklisted fullnode {} tried to connect to network", nodeHash);
+            throw new NetworkNodeValidationException(String.format(BLACKLISTED_NODE, nodeHash));
+        }
+    }
+
     @Override
     public void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, Instant currentEventDateTime) {
         if (networkNodeData == null) {
@@ -161,16 +171,41 @@ public class NodeManagementService implements INodeManagementService {
                 if (nodeHistoryData == null) {
                     nodeHistoryData = new NodeHistoryData(nodeHistoryDataHash);
                 }
-                nodeHistoryData.getNodeNetworkDataRecordMap().put(newNodeNetworkDataRecord.getHash(), newNodeNetworkDataRecord);
+                LinkedMap<Hash, NodeNetworkDataRecord> nodeNodeNetworkDataRecordMap = nodeHistoryData.getNodeNetworkDataRecordMap();
+                nodeNodeNetworkDataRecordMap.put(newNodeNetworkDataRecord.getHash(), newNodeNetworkDataRecord);
                 nodeHistory.put(nodeHistoryData);
                 nodeDailyActivityData.getNodeDaySet().add(currentEventDate);
                 nodeDailyActivities.put(nodeDailyActivityData);
                 webSocketSender.notifyNodeDetails(networkNodeData, nodeStatus);
+                addToBlacklistedNodesIfNeeded(newNodeNetworkDataRecord, nodeNodeNetworkDataRecordMap);
             }
         } finally {
             nodeHashLockData.removeLockFromLocksMap(nodeHash);
         }
 
+    }
+
+    private void addToBlacklistedNodesIfNeeded(NodeNetworkDataRecord newNodeNetworkDataRecord, LinkedMap<Hash, NodeNetworkDataRecord> nodeNodeNetworkDataRecordMap) {
+        NetworkNodeData networkNodeData = newNodeNetworkDataRecord.getNetworkNodeData();
+        Hash nodeHash = networkNodeData.getNodeHash();
+        NodeType nodeType = networkNodeData.getNodeType();
+        if (!nodeType.equals(NodeType.FullNode) ||
+                newNodeNetworkDataRecord.getNodeStatus().equals(NetworkNodeStatus.ACTIVE) ||
+                blacklistedNodes.contains(nodeHash)
+        ) {
+            return;
+        }
+        Instant blacklistInactivityNumberCheckTime = newNodeNetworkDataRecord.getRecordTime().minus(BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES, ChronoUnit.MINUTES);
+        NodeNetworkDataRecord previousInactivityRecord = newNodeNetworkDataRecord;
+        for (int i = 0; i < BLACKLIST_INACTIVITY_NUMBER; i++) {
+            previousInactivityRecord = networkHistoryService.getReferenceNodeNetworkDataRecordByStatus(previousInactivityRecord, nodeNodeNetworkDataRecordMap, NetworkNodeStatus.INACTIVE);
+            if (previousInactivityRecord == null || previousInactivityRecord.getRecordTime().isBefore(blacklistInactivityNumberCheckTime)) {
+                log.info("Node {} was inactive {} times in last {} minutes", nodeHash, i + 1, BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES);
+                return;
+            }
+        }
+        log.info("Blacklist of node {} due to inactivity {} times in last {} minutes", nodeHash, BLACKLIST_INACTIVITY_NUMBER + 1, BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES);
+        blacklistedNodes.add(nodeHash);
     }
 
     private void addReferenceToNodeNetworkDataRecord(NodeDailyActivityData nodeDailyActivityData, Hash nodeHash, NodeNetworkDataRecord nodeNetworkDataRecord) {

@@ -30,4 +30,5 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String INVALID_DATE_RANGE = "Invalid dates range Start: %s End: %s";
 
 
+    public static final String BLACKLISTED_NODE = "Blacklisted node %s declined to connect. To remove the blacklist, please contact with support@coti.io";
 }
