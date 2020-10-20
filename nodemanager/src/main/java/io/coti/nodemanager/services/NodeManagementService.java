@@ -78,7 +78,7 @@ public class NodeManagementService implements INodeManagementService {
     private String nodeManagerIp;
     @Value("${propagation.port}")
     private String propagationPort;
-    private Set<Hash> blacklistedNodes = new HashSet<>();
+    private final Set<Hash> blacklistedNodes = new HashSet<>();
     private final LockData nodeHashLockData = new LockData();
 
     @Override

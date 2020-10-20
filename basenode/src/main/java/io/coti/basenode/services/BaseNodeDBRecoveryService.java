@@ -206,13 +206,16 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         NetworkNodeData networkNodeData = networkService.getNetworkNodeData();
         Map<Hash, NetworkNodeData> networkNodeDataMap = networkService.getMapFromFactory(networkNodeData.getNodeType());
         if (networkNodeDataMap.isEmpty() || networkNodeDataMap.get(restoreNodeHash) == null) {
-            throw new DataBaseRestoreException("Restore node is either not existing or not active in Coti Network");
+            throw new DataBaseRestoreException("Restore node is either not existing or not active in Coti Network.");
         }
         NetworkNodeData restoreNodeData = networkNodeDataMap.get(restoreNodeHash);
         String restoreNodeHttpAddress = restoreNodeData.getHttpFullAddress();
 
         try {
             GetBackupBucketResponse getBackupBucketResponse = restTemplate.getForObject(restoreNodeHttpAddress + "/backup/bucket", GetBackupBucketResponse.class);
+            if (getBackupBucketResponse == null || getBackupBucketResponse.getBackupBucket() == null) {
+                throw new DataBaseRestoreException("Null backup bucket received from restore node.");
+            }
             return getBackupBucketResponse.getBackupBucket();
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {

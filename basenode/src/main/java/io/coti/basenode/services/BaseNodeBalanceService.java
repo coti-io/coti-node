@@ -7,7 +7,6 @@ import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -69,12 +68,12 @@ public class BaseNodeBalanceService implements IBalanceService {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
         BigDecimal balance;
         BigDecimal preBalance;
-        for (Hash hash : getBalancesRequest.getAddresses()) {
-            balance = balanceMap.containsKey(hash) ? balanceMap.get(hash) : new BigDecimal(0);
-            preBalance = preBalanceMap.containsKey(hash) ? preBalanceMap.get(hash) : new BigDecimal(0);
-            getBalancesResponse.addAddressBalanceToResponse(hash, balance, preBalance);
+        for (Hash address : getBalancesRequest.getAddresses()) {
+            balance = getBalanceByAddress(address);
+            preBalance = getPreBalanceByAddress(address);
+            getBalancesResponse.addAddressBalanceToResponse(address, balance, preBalance);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
+        return ResponseEntity.ok(getBalancesResponse);
     }
 
     @Override

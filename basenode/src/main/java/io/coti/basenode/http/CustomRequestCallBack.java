@@ -8,8 +8,8 @@ import java.io.IOException;
 
 public class CustomRequestCallBack implements RequestCallback {
 
-    private HttpJacksonSerializer jacksonSerializer;
-    private SerializableRequest request;
+    private final HttpJacksonSerializer jacksonSerializer;
+    private final SerializableRequest request;
 
     public CustomRequestCallBack(HttpJacksonSerializer jacksonSerializer, SerializableRequest request) {
         this.jacksonSerializer = jacksonSerializer;
