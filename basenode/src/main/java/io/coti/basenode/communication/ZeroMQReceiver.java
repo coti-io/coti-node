@@ -3,6 +3,7 @@ package io.coti.basenode.communication;
 import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.communication.interfaces.ISerializer;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ import java.util.function.Consumer;
 @Service
 public class ZeroMQReceiver implements IReceiver {
 
-    private HashMap<String, Consumer<Object>> classNameToHandlerMapping;
+    private HashMap<String, Consumer<IPropagatable>> classNameToHandlerMapping;
     private ZMQ.Context zeroMQContext;
     private ZMQ.Socket receiver;
     private BlockingQueue<ZeroMQMessageData> messageQueue;
@@ -30,7 +31,7 @@ public class ZeroMQReceiver implements IReceiver {
     private ISerializer serializer;
 
     @Override
-    public void init(String receivingPort, HashMap<String, Consumer<Object>> classNameToHandlerMapping) {
+    public void init(String receivingPort, HashMap<String, Consumer<IPropagatable>> classNameToHandlerMapping) {
         this.classNameToHandlerMapping = classNameToHandlerMapping;
         zeroMQContext = ZMQ.context(1);
         receiver = zeroMQContext.socket(SocketType.ROUTER);
@@ -84,7 +85,7 @@ public class ZeroMQReceiver implements IReceiver {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZeroMQMessageData zeroMQMessageData = messageQueue.take();
-                Consumer<Object> consumer = classNameToHandlerMapping.get(zeroMQMessageData.getChannel());
+                Consumer<IPropagatable> consumer = classNameToHandlerMapping.get(zeroMQMessageData.getChannel());
                 if (consumer != null) {
                     consumer.accept(serializer.deserialize(zeroMQMessageData.getMessage()));
                 }
@@ -101,7 +102,7 @@ public class ZeroMQReceiver implements IReceiver {
             log.info("Please wait to process {} remaining messages", remainingMessages.size());
             remainingMessages.forEach(zeroMQMessageData -> {
                 try {
-                    Consumer<Object> consumer = classNameToHandlerMapping.get(zeroMQMessageData.getChannel());
+                    Consumer<IPropagatable> consumer = classNameToHandlerMapping.get(zeroMQMessageData.getChannel());
                     if (consumer != null) {
                         consumer.accept(serializer.deserialize(zeroMQMessageData.getMessage()));
                     }

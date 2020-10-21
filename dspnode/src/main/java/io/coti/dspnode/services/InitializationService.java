@@ -59,7 +59,7 @@ public class InitializationService extends BaseNodeInitializationService {
             networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
             communicationService.initPublisher(propagationPort, NodeType.DspNode);
 
-            HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
+            HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping = new HashMap<>();
             classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
                     transactionService.handleNewTransactionFromFullNode((TransactionData) data));
             classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->

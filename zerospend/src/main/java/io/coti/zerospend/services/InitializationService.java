@@ -58,7 +58,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             communicationService.initSubscriber(NodeType.ZeroSpendServer, publisherNodeTypeToMessageTypesMap);
 
-            HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
+            HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping = new HashMap<>();
             classNameToReceiverHandlerMapping.put(
                     TransactionDspVote.class.getName(), data ->
                             dspVoteService.receiveDspVote((TransactionDspVote) data));

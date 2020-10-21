@@ -80,7 +80,7 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
             int n;
             while ((n = response.getBody().read(buf, offset, buf.length - offset)) > 0) {
                 try {
-                    TransactionData missingTransaction = jacksonSerializer.deserialize(buf);
+                    TransactionData missingTransaction = (TransactionData) jacksonSerializer.deserialize(buf);
                     if (missingTransaction != null) {
                         missingTransactions.add(missingTransaction);
                         receivedMissingTransactionNumber.incrementAndGet();

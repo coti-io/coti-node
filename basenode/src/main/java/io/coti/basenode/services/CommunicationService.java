@@ -40,7 +40,7 @@ public class CommunicationService implements ICommunicationService {
     }
 
     @Override
-    public void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping) {
+    public void initReceiver(String receivingPort, HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping) {
         receiver.init(receivingPort, classNameToReceiverHandlerMapping);
         receiver.startListening();
     }

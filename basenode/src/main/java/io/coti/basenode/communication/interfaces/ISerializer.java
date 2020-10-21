@@ -8,7 +8,7 @@ public interface ISerializer {
 
     String serializeAsString(IPropagatable entity);
 
-    <T extends IPropagatable> T deserialize(byte[] bytes);
+    IPropagatable deserialize(byte[] bytes);
 
     <T extends IPropagatable> T deserialize(String string);
 
