@@ -11,6 +11,8 @@ import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkNodeRecordValidationException;
 import io.coti.nodemanager.http.AddNodePairEventRequest;
 import io.coti.nodemanager.http.AddNodeSingleEventRequest;
+import io.coti.nodemanager.http.DeleteBlacklistNodeRequest;
+import io.coti.nodemanager.http.GetBlacklistNodesResponse;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.model.NodeDailyActivities;
@@ -52,7 +54,7 @@ public class NodeManagementService implements INodeManagementService {
     private static final String FULL_NODES_FOR_WALLET_KEY = "FullNodes";
     private static final String TRUST_SCORE_NODES_FOR_WALLET_KEY = "TrustScoreNodes";
     private static final String FINANCIAL_SERVER_FOR_WALLET_KEY = "FinancialServer";
-    private static final int BLACKLIST_INACTIVITY_NUMBER = 5;
+    private static final int BLACKLIST_INACTIVITY_NUMBER = 4;
     private static final int BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES = 10;
     @Autowired
     private IPropagationPublisher propagationPublisher;
@@ -78,7 +80,7 @@ public class NodeManagementService implements INodeManagementService {
     private String nodeManagerIp;
     @Value("${propagation.port}")
     private String propagationPort;
-    private final Set<Hash> blacklistedNodes = new HashSet<>();
+    private final Set<Hash> blacklistedNodes = new LinkedHashSet<>();
     private final LockData nodeHashLockData = new LockData();
 
     @Override
@@ -587,5 +589,23 @@ public class NodeManagementService implements INodeManagementService {
             singleNodeDetailsForWallet.setTrustScore(node.getTrustScore());
         }
         return singleNodeDetailsForWallet;
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getBlacklistedNodes() {
+        return ResponseEntity.ok(new GetBlacklistNodesResponse(this.blacklistedNodes));
+    }
+
+    public ResponseEntity<IResponse> deleteBlacklistNode(DeleteBlacklistNodeRequest request) {
+        Hash nodeHash = request.getNodeHash();
+        try {
+            boolean remove = blacklistedNodes.remove(nodeHash);
+            if (!remove) {
+                return ResponseEntity.badRequest().body(new Response(String.format(NODE_NOT_BLACKLISTED, nodeHash)));
+            }
+            return ResponseEntity.ok(new Response(String.format(BLACKLISTED_NODE_REMOVED, nodeHash)));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(BLACKLISTED_NODE_REMOVE_ERROR, nodeHash, e.getMessage())));
+        }
     }
 }

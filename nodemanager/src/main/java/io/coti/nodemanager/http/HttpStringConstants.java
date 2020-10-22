@@ -31,4 +31,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
 
     public static final String BLACKLISTED_NODE = "Blacklisted node %s declined to connect. To remove the blacklist, please contact with support@coti.io";
+    public static final String NODE_NOT_BLACKLISTED = "Node %s is not blacklisted";
+    public static final String BLACKLISTED_NODE_REMOVED = "Node %s removed from blacklisted nodes";
+    public static final String BLACKLISTED_NODE_REMOVE_ERROR = "Node %s blacklist remove error: %s";
 }

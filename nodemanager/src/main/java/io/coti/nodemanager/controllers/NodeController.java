@@ -39,6 +39,11 @@ public class NodeController {
         return ResponseEntity.ok(networkService.getSignedNetworkData());
     }
 
+    @GetMapping(path = "/blacklist")
+    public ResponseEntity<IResponse> getBlacklistedNodes() {
+        return nodeManagementService.getBlacklistedNodes();
+    }
+
     @PutMapping(path = "/stake")
     public ResponseEntity<IResponse> setNodeStake(@Valid @RequestBody SetNodeStakeRequest request) {
         return stakingService.setNodeStake(request);  // not checked
