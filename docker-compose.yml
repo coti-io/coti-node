@@ -9,7 +9,7 @@ services:
     ports:
       - "7070:7070"
     volumes:
-      - "./configs:/app/configs"
+      - "./data:/app/data"
     restart: on-failure
-    command: ["java", "-jar", "fullnode/target/fullnode-${VERSION}.jar", "--spring.config.additional-location=./configs/fullnode1.properties"]
+    command: ["java", "-jar", "fullnode/target/fullnode-${VERSION}.jar", "--spring.config.additional-location=./data/fullnode1.properties"]
 

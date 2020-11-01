@@ -26,6 +26,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private static final boolean CREATE_IF_MISSING = true;
     private static final boolean CREATE_MISSING_COLUMN_FAMILIES = true;
     private static final int MAX_TOTAL_WAL_SIZE_IN_BYTES = 536870912;
+    @Value("${data.path:./}")
+    protected String databaseFolder;
     @Value("${database.folder.name}")
     private String databaseFolderName;
     @Value("${application.name}")
@@ -43,9 +45,10 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private List<String> resetTransactionColumnFamilyNames;
     private final Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
 
+    @Override
     public void init() {
         setColumnFamily();
-        init(applicationName + databaseFolderName);
+        init(databaseFolder + applicationName + databaseFolderName);
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -233,7 +236,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
              RestoreOptions restoreOpt = new RestoreOptions(false)) {
 
             closeDB();
-            rocksBackupEngine.restoreDbFromLatestBackup(applicationName + databaseFolderName, applicationName + databaseFolderName, restoreOpt);
+            rocksBackupEngine.restoreDbFromLatestBackup(dbPath, dbPath, restoreOpt);
             checkIfBackupHasNotListedColumnFamilies();
             openDB();
             log.info("Finished database restore from {}", backupPath);

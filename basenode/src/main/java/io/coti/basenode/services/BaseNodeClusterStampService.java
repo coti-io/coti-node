@@ -35,7 +35,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
     @Value("${logging.file.name}")
     protected String clusterStampFilePrefix;
-    @Value("${config.path:./}")
+    @Value("${data.path:./}")
     protected String clusterStampFolder;
     @Autowired
     protected IBalanceService balanceService;
