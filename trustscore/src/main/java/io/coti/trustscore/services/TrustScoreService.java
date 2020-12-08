@@ -209,7 +209,7 @@ public class TrustScoreService {
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
 
-        List<BucketEventData> bucketEventDataList = new ArrayList<>();
+        List<BucketEventData<? extends EventData>> bucketEventDataList = new ArrayList<>();
         for (IBucketEventService bucketEventService : bucketEventServiceList) {
             BucketEventData bucketEventData =
                     (BucketEventData) bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
