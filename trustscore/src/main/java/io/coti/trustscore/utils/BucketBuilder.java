@@ -30,7 +30,7 @@ public class BucketBuilder {
 
     }
 
-    public static BucketEventData createBucket(EventType bucketType, UserType userType, Hash userHash) {
+    public static BucketEventData<? extends EventData> createBucket(EventType bucketType, UserType userType, Hash userHash) {
         try {
             BucketEventData<? extends EventData> bucket = bucketMapper.get(bucketType).getConstructor().newInstance();
             bucket.setUserType(userType);

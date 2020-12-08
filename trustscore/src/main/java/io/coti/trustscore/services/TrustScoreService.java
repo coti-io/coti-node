@@ -76,10 +76,10 @@ public class TrustScoreService {
     @Autowired
     private BucketNotFulfilmentEventsService bucketNotFulfilmentEventsService;
     @Autowired
-    private BucketEvents bucketEvents;
+    private BucketEvents<? extends BucketEventData<? extends EventData>> bucketEvents;
     @Autowired
     private GetTransactionTrustScoreRequestCrypto getTransactionTrustScoreRequestCrypto;
-    private List<IBucketEventService> bucketEventServiceList;
+    private List<IBucketEventService<? extends EventData, ? extends BucketEventData<? extends EventData>>> bucketEventServiceList;
     private RulesData rulesData;
 
     @PostConstruct
@@ -100,7 +100,7 @@ public class TrustScoreService {
                         .body(new Response(INVALID_SIGNER, STATUS_ERROR));
             }
 
-            BucketEventData bucketEventData = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(request));
+            BucketEventData<? extends EventData> bucketEventData = bucketEvents.getByHash(getBucketHashByUserHashAndEventType(request));
             if (bucketEventData.getEventDataHashToEventDataMap().get(request.getUniqueIdentifier()) != null) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
@@ -209,10 +209,10 @@ public class TrustScoreService {
                     .body(new Response(NON_EXISTING_USER_MESSAGE, STATUS_ERROR));
         }
 
-        List<BucketEventData> bucketEventDataList = new ArrayList<>();
-        for (IBucketEventService bucketEventService : bucketEventServiceList) {
-            BucketEventData bucketEventData =
-                    (BucketEventData) bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
+        List<BucketEventData<? extends EventData>> bucketEventDataList = new ArrayList<>();
+        for (IBucketEventService<? extends EventData, ? extends BucketEventData<? extends EventData>> bucketEventService : bucketEventServiceList) {
+            BucketEventData<? extends EventData> bucketEventData =
+                    bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
             bucketEventDataList.add(bucketEventData);
         }
 
@@ -338,8 +338,8 @@ public class TrustScoreService {
             return;
         }
 
-        BucketEventData bucketEventData
-                = (BucketEventData) bucketEvents.getByHash(getBucketHashByUserHashAndEventType(userHash, EventType.TRANSACTION));
+        BucketEventData<? extends EventData> bucketEventData
+                = bucketEvents.getByHash(getBucketHashByUserHashAndEventType(userHash, EventType.TRANSACTION));
         if (bucketEventData == null) {
             log.error("Transaction can not be added to TS calculation: bucket event data doesn't exist for user {}", userHash);
             return;
@@ -358,7 +358,7 @@ public class TrustScoreService {
         try {
             for (EventType event : EventType.values()) {
 
-                BucketEventData bucketEventData = BucketBuilder.createBucket(event, trustScoreData.getUserType(), trustScoreData.getUserHash());
+                BucketEventData<? extends EventData> bucketEventData = BucketBuilder.createBucket(event, trustScoreData.getUserType(), trustScoreData.getUserHash());
                 bucketEvents.put(bucketEventData);
                 trustScoreData.getEventTypeToBucketHashMap().put(event, bucketEventData.getHash());
             }
@@ -414,9 +414,9 @@ public class TrustScoreService {
 
         double eventsTrustScore = 10;
 
-        for (IBucketEventService bucketEventService : bucketEventServiceList) {
-            BucketEventData bucketEventData =
-                    (BucketEventData) bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
+        for (IBucketEventService<? extends EventData, ? extends BucketEventData<? extends EventData>> bucketEventService : bucketEventServiceList) {
+            BucketEventData<? extends EventData> bucketEventData =
+                    bucketEvents.getByHash(trustScoreData.getEventTypeToBucketHashMap().get(bucketEventService.getBucketEventType()));
             if (bucketEventData != null) {
                 eventsTrustScore += bucketEventService.getBucketSumScore(bucketEventData);
                 bucketEventData.setLastUpdate(DatesCalculation.setDateOnBeginningOfDay(new Date()));
@@ -429,7 +429,7 @@ public class TrustScoreService {
         for (Map.Entry<EventType, Hash> eventTypeToBucketHashEntry
                 : trustScoreData.getEventTypeToBucketHashMap().entrySet()) {
             Hash bucketHash = eventTypeToBucketHashEntry.getValue();
-            BucketEventData bucket = (BucketEventData) bucketEvents.getByHash(bucketHash);
+            BucketEventData<? extends EventData> bucket = bucketEvents.getByHash(bucketHash);
             if (bucket != null) {
                 bucket.setUserType(trustScoreData.getUserType());
                 bucketEvents.put(bucket);

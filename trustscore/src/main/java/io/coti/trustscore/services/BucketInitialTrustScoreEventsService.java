@@ -1,8 +1,10 @@
 package io.coti.trustscore.services;
 
 import io.coti.trustscore.config.rules.RulesData;
+import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.data.Buckets.BucketInitialTrustScoreEventsData;
 import io.coti.trustscore.data.Enums.EventType;
+import io.coti.trustscore.data.Events.EventData;
 import io.coti.trustscore.data.Events.InitialTrustScoreData;
 import io.coti.trustscore.data.Events.InitialTrustScoreEventsData;
 import io.coti.trustscore.services.calculationservices.BucketInitialTrustScoreEventsCalculator;
@@ -28,7 +30,7 @@ public class BucketInitialTrustScoreEventsService implements IBucketEventService
     }
 
     @Override
-    public double getBucketSumScore(BucketInitialTrustScoreEventsData bucketInitialTrustScoreEventsData) {
+    public double getBucketSumScore(BucketEventData<? extends EventData> bucketInitialTrustScoreEventsData) {
         BucketInitialTrustScoreEventsCalculator bucketCalculator = new BucketInitialTrustScoreEventsCalculator(bucketInitialTrustScoreEventsData);
         // Decay on case that this is the first event, or first access to data today
         bucketCalculator.decayScores(bucketInitialTrustScoreEventsData);

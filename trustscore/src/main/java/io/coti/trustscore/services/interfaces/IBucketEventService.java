@@ -8,7 +8,7 @@ public interface IBucketEventService<T extends EventData, S extends BucketEventD
 
     S addEventToCalculations(T eventData, S bucketEventsData);
 
-    double getBucketSumScore(S bucketEventsData);
+    double getBucketSumScore(BucketEventData<? extends EventData> bucketEventsData);
 
     EventType getBucketEventType();
 }

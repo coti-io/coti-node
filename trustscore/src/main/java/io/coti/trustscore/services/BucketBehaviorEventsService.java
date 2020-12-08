@@ -2,9 +2,11 @@ package io.coti.trustscore.services;
 
 import io.coti.trustscore.config.rules.RulesData;
 import io.coti.trustscore.data.Buckets.BucketBehaviorEventsData;
+import io.coti.trustscore.data.Buckets.BucketEventData;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Events.BehaviorEventsData;
 import io.coti.trustscore.data.Events.EventCountAndContributionData;
+import io.coti.trustscore.data.Events.EventData;
 import io.coti.trustscore.services.calculationservices.BucketBehaviorEventsCalculator;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
 import org.springframework.stereotype.Service;
@@ -48,7 +50,7 @@ public class BucketBehaviorEventsService implements IBucketEventService<Behavior
     }
 
     @Override
-    public double getBucketSumScore(BucketBehaviorEventsData bucketBehaviorEventsData) {
+    public double getBucketSumScore(BucketEventData<? extends EventData> bucketBehaviorEventsData) {
         BucketBehaviorEventsCalculator bucketCalculator = new BucketBehaviorEventsCalculator(bucketBehaviorEventsData);
         // Decay on case that this is the first event, or first access to data today
         if (bucketCalculator.decayScores(bucketBehaviorEventsData)) {
