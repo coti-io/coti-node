@@ -20,6 +20,6 @@ public class NotFulfilmentEventsData extends EventData {
         this.compensableEventScoreType = request.getCompensableEventScoreType();
         this.clientUserHash = request.getOtherUserHash();
         this.debtAmount = request.getDebtAmount();
-        super.setSignatureData(request.getSignature());
+        this.setEventSignature(request.getSignature());
     }
 }

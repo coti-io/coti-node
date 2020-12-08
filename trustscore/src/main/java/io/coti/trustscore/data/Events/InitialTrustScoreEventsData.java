@@ -21,6 +21,6 @@ public class InitialTrustScoreEventsData extends EventData {
         } else {
             this.score = request.getScore();
         }
-        super.setSignatureData(request.getSignature());
+        this.setEventSignature(request.getSignature());
     }
 }

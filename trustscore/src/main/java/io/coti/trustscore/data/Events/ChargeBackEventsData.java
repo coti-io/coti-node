@@ -15,6 +15,6 @@ public class ChargeBackEventsData extends EventData {
     public ChargeBackEventsData(InsertEventRequest request) {
         super(request);
         this.transactionData = request.getTransactionData();
-        super.setSignatureData(request.getSignature());
+        this.setEventSignature(request.getSignature());
     }
 }

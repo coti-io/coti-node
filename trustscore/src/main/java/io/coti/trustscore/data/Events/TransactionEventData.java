@@ -19,12 +19,12 @@ public class TransactionEventData extends EventData {
 
     public TransactionEventData(InsertEventRequest request) {
         TransactionData transactionData = request.getTransactionData();
-        this.setTransactionHash(transactionData.getHash());
-        this.setAmount(transactionData.getAmount());
+        this.transactionHash = transactionData.getHash();
+        this.amount = transactionData.getAmount();
         this.setUniqueIdentifier(transactionData.getHash());
         this.setEventDate(transactionData.getDspConsensusResult().getIndexingTime());
-        super.setSignatureData(request.getSignature());
-        super.setEventType(EventType.TRANSACTION);
+        this.setEventSignature(request.getSignature());
+        this.setEventType(EventType.TRANSACTION);
     }
 
 

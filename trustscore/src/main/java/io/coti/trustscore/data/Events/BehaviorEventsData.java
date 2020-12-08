@@ -19,7 +19,7 @@ public class BehaviorEventsData extends EventData {
         super(request);
         this.behaviorEventsScoreType = request.getBehaviorEventsScoreType();
         this.transactionData = request.getTransactionData();
-        super.setSignatureData(request.getSignature());
+        this.setEventSignature(request.getSignature());
     }
 
 }

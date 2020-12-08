@@ -48,7 +48,6 @@ public class TrustScoreData implements IEntity, ISignValidatable {
         this.userHash = hash;
     }
 
-
     @Override
     public SignatureData getSignature() {
         return signature;
