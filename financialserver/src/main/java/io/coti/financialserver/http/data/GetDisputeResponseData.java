@@ -31,7 +31,7 @@ public abstract class GetDisputeResponseData implements IDisputeEventResponseDat
 
     }
 
-    public GetDisputeResponseData(DisputeData disputeData) {
+    protected GetDisputeResponseData(DisputeData disputeData) {
 
         this.hash = disputeData.getHash().toString();
         this.transactionHash = disputeData.getTransactionHash().toString();

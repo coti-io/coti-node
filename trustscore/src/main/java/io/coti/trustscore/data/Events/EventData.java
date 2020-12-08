@@ -23,11 +23,10 @@ public abstract class EventData implements IEntity, Serializable, ISignValidatab
     private Hash eventSignerHash;
     private SignatureData eventSignature;
 
-    public EventData() {
+    protected EventData() {
     }
 
-
-    public EventData(InsertEventRequest request) {
+    protected EventData(InsertEventRequest request) {
         if (request.getEventType() != EventType.TRANSACTION) {
             this.uniqueIdentifier = request.getUniqueIdentifier();
             this.eventDate = Instant.now();
