@@ -13,13 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import static io.coti.trustscore.utils.DatesCalculation.calculateDaysDiffBetweenDates;
 
 public class VectorDecaysCalculator<T extends EventScore> {
-    private DecayCalculator decayCalculator;
-    private Map<T, Map<Date, BalanceCountAndContribution>> eventScoresToDatesScoreMap;
+    private final DecayCalculator decayCalculator;
+    private final Map<T, Map<Date, BalanceCountAndContribution>> eventScoresToDatesScoreMap;
 
 
     public VectorDecaysCalculator(Map<T, Map<Date, BalanceCountAndContribution>> eventScoresToDatesScoreMap) {
         this.eventScoresToDatesScoreMap = eventScoresToDatesScoreMap;
-        this.decayCalculator = new DecayCalculator();
+        this.decayCalculator = new DecayCalculator<>();
     }
 
     public Map<T, Double> calculateDatesVectorDecays(Date lastUpdate) {

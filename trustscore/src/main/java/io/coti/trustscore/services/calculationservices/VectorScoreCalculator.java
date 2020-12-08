@@ -8,12 +8,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class VectorScoreCalculator<T extends EventScore> {
-    private ScoreCalculator scoreCalculator;
-    private Map<T, Map<Date, String>> eventScoresToFormulaScoreMap;
+
+    private final ScoreCalculator<T> scoreCalculator;
+    private final Map<T, Map<Date, String>> eventScoresToFormulaScoreMap;
 
     public VectorScoreCalculator(Map<T, Map<Date, String>> eventScoresToDatesAndScoreFormulaMap) {
         this.eventScoresToFormulaScoreMap = eventScoresToDatesAndScoreFormulaMap;
-        this.scoreCalculator = new ScoreCalculator();
+        this.scoreCalculator = new ScoreCalculator<>();
     }
 
     public Map<T, Map<Date, Double>> calculateVectorScore() {
