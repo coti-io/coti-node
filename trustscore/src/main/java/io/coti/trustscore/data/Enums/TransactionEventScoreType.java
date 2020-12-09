@@ -6,7 +6,7 @@ public enum TransactionEventScoreType {
     TURNOVER("Turnover"),
     AVERAGE_BALANCE("AverageBalance");
 
-    private String text;
+    private final String text;
 
     TransactionEventScoreType(String text) {
         this.text = text;

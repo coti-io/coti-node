@@ -5,7 +5,7 @@ public enum InitialTrustScoreType {
     GENERAL_QUESTIONNAIRE("GeneralQuestionnaire"),
     MERCHANT_QUESTIONNAIRE("MerchantQuestionnaire");
 
-    private String text;
+    private final String text;
 
     InitialTrustScoreType(String text) {
         this.text = text;

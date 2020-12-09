@@ -44,7 +44,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
     }
 
     private void decayedFine(NotFulfilmentToClientContributionData clientNotFulfilmentToClientContributionData, int daysDiff) {
-        ScoreCalculator scoreCalculator = new ScoreCalculator();
+        ScoreCalculator scoreCalculator = new ScoreCalculator<>();
         for (int i = 0; i < daysDiff; i++) {
             String fineDailyChangeFormula = createFineFormula(clientNotFulfilmentToClientContributionData, compensableEventScore.getFineDailyChange());
             clientNotFulfilmentToClientContributionData
@@ -55,7 +55,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
 
     private double calculateFine(NotFulfilmentToClientContributionData notFulfilmentToClientContributionData) {
         String fineFormula = createFineFormula(notFulfilmentToClientContributionData, compensableEventScore.getFine());
-        return (double) (new ScoreCalculator().calculateEntry(new Pair<>(compensableEventScore, fineFormula)).getValue());
+        return new ScoreCalculator<>().calculateEntry(new Pair<>(compensableEventScore, fineFormula)).getValue();
     }
 
     public void setCurrentScoresForSpecificClient(boolean isDebtDecreasing, Hash clientHash) {
@@ -92,7 +92,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
 
     @Override
     public void setCurrentScores() {
-
+        // implemented by other sub classes
     }
 }
 
