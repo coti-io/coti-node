@@ -22,6 +22,7 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_RESENT_PROCESSING_MESSAGE = "Transaction requested to resend is still processed";
     public static final String TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE = "Transaction requested to resend is not available in the database";
     public static final String TRANSACTION_RESENT_NOT_ALLOWED_MESSAGE = "Transaction is requested to resend not by the transaction sender";
+    public static final String TRANSACTION_NONE_INDEXED_SERVER_ERROR = "Server error while getting none indexed transactions";
 
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";

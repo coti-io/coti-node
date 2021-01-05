@@ -2,23 +2,29 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetTransactionsResponse;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_NONE_INDEXED_SERVER_ERROR;
 
 @Slf4j
 @Service
@@ -127,6 +133,31 @@ public class BaseNodeTransactionService implements ITransactionService {
                 log.info("Transaction batch: thread id = {}, transactionNumber= {}", threadId, transactionNumber);
             }
         });
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getNoneIndexedTransactions() {
+        try {
+            Set<Hash> noneIndexedTransactionHashes = transactionHelper.getNoneIndexedTransactionHashes();
+            List<TransactionData> noneIndexedTransactions = new ArrayList<>();
+            noneIndexedTransactionHashes.forEach(transactionHash -> {
+                        TransactionData transactionData = transactions.getByHash(transactionHash);
+                        if (transactionData != null) {
+                            noneIndexedTransactions.add(transactionData);
+                        }
+                    }
+
+            );
+
+            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionsResponse(noneIndexedTransactions));
+        } catch (Exception e) {
+            log.info("Exception while getting none indexed transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            TRANSACTION_NONE_INDEXED_SERVER_ERROR,
+                            STATUS_ERROR));
+        }
     }
 
     @Override
@@ -271,4 +302,5 @@ public class BaseNodeTransactionService implements ITransactionService {
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
     }
+
 }

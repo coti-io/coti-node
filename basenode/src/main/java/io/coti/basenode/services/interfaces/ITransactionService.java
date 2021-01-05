@@ -4,6 +4,8 @@ import io.coti.basenode.data.ExecutorData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.InitializationTransactionHandlerType;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.interfaces.IResponse;
+import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.FluxSink;
 
 import javax.servlet.http.HttpServletResponse;
@@ -18,6 +20,8 @@ public interface ITransactionService {
     void getTransactionBatch(long startingIndex, HttpServletResponse response);
 
     void getTransactionBatch(long startingIndex, FluxSink<byte[]> sink);
+
+    ResponseEntity<IResponse> getNoneIndexedTransactions();
 
     void handlePropagatedTransaction(TransactionData transactionData);
 
