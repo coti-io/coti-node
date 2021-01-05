@@ -135,7 +135,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         unconfirmedTransactionDspVotes.deleteByHash(transactionHash);
     }
 
-    @Scheduled(initialDelay = 60000, fixedDelay = 60000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 30000)
     private void propagateUnconfirmedReceivedTransactions() {
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
@@ -174,11 +174,13 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     private void sendUnconfirmedReceivedTransactionsDSP(TransactionData transactionData, boolean dspVoteOnly) {
         TransactionDspVote transactionDspVote = unconfirmedTransactionDspVotes.getByHash(transactionData.getHash());
         if (transactionDspVote != null) {
+            log.info("Sending dsp vote for transaction {} to ZeroSpendServer", transactionData.getHash());
             String zeroSpendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
             sender.send(transactionDspVote, zeroSpendReceivingAddress);
         }
 
         if (!dspVoteOnly) {
+            log.info("Sending unconfirmed transaction {} to ZeroSpendServer", transactionData.getHash());
             propagationPublisher.propagate(transactionData, Arrays.asList(
                     NodeType.FullNode,
                     NodeType.TrustScoreNode,

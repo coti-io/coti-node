@@ -185,7 +185,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    public ResponseEntity<IResponse> repropagateTransaction(RepropagateTransactionRequest request) {
+    public ResponseEntity<IResponse> repropagateTransactionByWallet(RepropagateTransactionRequest request) {
 
         if (!resendTransactionRequestCrypto.verifySignature(request)) {
             log.error("Signature validation failed for the request to resend transaction {}", request.getTransactionHash());
@@ -203,13 +203,30 @@ public class TransactionService extends BaseNodeTransactionService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new Response(TRANSACTION_RESENT_NOT_ALLOWED_MESSAGE, STATUS_ERROR));
         }
-        if (transactionHelper.isTransactionHashProcessing(request.getTransactionHash())) {
-            log.error("Transaction {} requested to resend is still being processed", request.getTransactionHash());
+        return repropagateTransaction(transactionData);
+    }
+
+    public ResponseEntity<IResponse> repropagateTransactionByAdmin(RepropagateTransactionByAdminRequest request) {
+        TransactionData transactionData = transactions.getByHash(request.getTransactionHash());
+        if (transactionData == null) {
+            log.error("Transaction {} requested to resend is not available in the database", request.getTransactionHash());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE, STATUS_ERROR));
+        }
+
+        return repropagateTransaction(transactionData);
+
+    }
+
+    private ResponseEntity<IResponse> repropagateTransaction(TransactionData transactionData) {
+        if (transactionHelper.isTransactionHashProcessing(transactionData.getHash())) {
+            log.error("Transaction {} requested to resend is still being processed", transactionData.getHash());
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new Response(TRANSACTION_RESENT_PROCESSING_MESSAGE, STATUS_ERROR));
         }
 
         ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);
+        log.info("Transaction {} is repropagated", transactionData.getHash());
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Response(TRANSACTION_RESENT_MESSAGE));
