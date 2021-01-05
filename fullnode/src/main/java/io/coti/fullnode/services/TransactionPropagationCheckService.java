@@ -75,8 +75,11 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
-    @Scheduled(initialDelay = 60000, fixedDelay = 60000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 30000)
     private void sendUnconfirmedReceivedTransactionsFullNode() {
+        if (networkService.isNotConnectedToDspNodes()) {
+            log.error("FullNode is not connected to any DspNode. Failed to send unconfirmed transactions.");
+        }
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
@@ -102,6 +105,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                 if (transactionData == null) {
                     unconfirmedReceivedTransactionHashFullnodeData.setRetries(0);
                 } else {
+                    log.info("Sending unconfirmed transaction {}", transactionData.getHash());
                     sendUnconfirmedReceivedTransactionsFullNode(transactionData);
                     unconfirmedReceivedTransactionHashFullnodeData.setRetries(unconfirmedReceivedTransactionHashFullnodeData.getRetries() - 1);
                 }

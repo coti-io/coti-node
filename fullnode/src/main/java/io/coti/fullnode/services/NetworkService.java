@@ -66,6 +66,10 @@ public class NetworkService extends BaseNodeNetworkService {
         connectedDspNodes.forEach(networkNodeData -> sender.send(propagatable, networkNodeData.getReceivingFullAddress()));
     }
 
+    public boolean isNotConnectedToDspNodes() {
+        return connectedDspNodes.isEmpty();
+    }
+
     @Override
     public boolean isNodeConnectedToNetwork(NetworkData newNetworkData) {
         return newNetworkData.getMultipleNodeMaps().get(NodeType.FullNode).get(networkNodeData.getNodeHash()) != null;

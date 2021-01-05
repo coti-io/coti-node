@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
+import static io.coti.fullnode.http.HttpStringConstants.TRANSACTION_NO_DSP_IN_THE_NETWORK;
 
 @Slf4j
 @Service
@@ -99,10 +100,17 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
+                if (((NetworkService) networkService).isNotConnectedToDspNodes()) {
+                    log.error("FullNode is not connected to any DspNode. Rejecting transaction {}", transactionData.getHash());
+                    return ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(new Response(
+                                    TRANSACTION_NO_DSP_IN_THE_NETWORK, STATUS_ERROR));
+                }
                 if (transactionHelper.isTransactionExists(transactionData)) {
                     log.debug("Received existing transaction: {}", transactionData.getHash());
                     return ResponseEntity
-                            .status(HttpStatus.UNAUTHORIZED)
+                            .status(HttpStatus.BAD_REQUEST)
                             .body(new Response(
                                     TRANSACTION_ALREADY_EXIST_MESSAGE, STATUS_ERROR));
                 }
