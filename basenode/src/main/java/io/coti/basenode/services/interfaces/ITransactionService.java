@@ -23,6 +23,8 @@ public interface ITransactionService {
 
     ResponseEntity<IResponse> getNoneIndexedTransactions();
 
+    ResponseEntity<IResponse> getPostponedTransactions();
+
     void handlePropagatedTransaction(TransactionData transactionData);
 
     void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap);

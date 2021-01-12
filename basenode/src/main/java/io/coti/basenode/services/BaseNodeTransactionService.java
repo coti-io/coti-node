@@ -23,8 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_NONE_INDEXED_SERVER_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -149,13 +148,28 @@ public class BaseNodeTransactionService implements ITransactionService {
 
             );
 
-            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionsResponse(noneIndexedTransactions));
+            return ResponseEntity.ok(new GetTransactionsResponse(noneIndexedTransactions));
         } catch (Exception e) {
             log.info("Exception while getting none indexed transactions", e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(
                             TRANSACTION_NONE_INDEXED_SERVER_ERROR,
+                            STATUS_ERROR));
+        }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getPostponedTransactions() {
+        try {
+            List<TransactionData> postponedTransactionList = new ArrayList<>(postponedTransactions.keySet());
+            return ResponseEntity.ok(new GetTransactionsResponse(postponedTransactionList));
+        } catch (Exception e) {
+            log.info("Exception while getting postponed transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            TRANSACTION_POSTPONED_SERVER_ERROR,
                             STATUS_ERROR));
         }
     }

@@ -21,4 +21,9 @@ public class BaseNodeTransactionController {
     public ResponseEntity<IResponse> getNoneIndexedTransactions() {
         return transactionService.getNoneIndexedTransactions();
     }
+
+    @GetMapping(path = "/postponed")
+    public ResponseEntity<IResponse> getPostponedTransactions() {
+        return transactionService.getPostponedTransactions();
+    }
 }
