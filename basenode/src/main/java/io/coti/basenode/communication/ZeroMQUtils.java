@@ -1,13 +1,16 @@
 package io.coti.basenode.communication;
 
+import lombok.extern.slf4j.Slf4j;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+@Slf4j
 public class ZeroMQUtils {
 
     private ZeroMQUtils() {
-
     }
 
     public static int bindToRandomPort(ZMQ.Socket socket) {
@@ -32,5 +35,21 @@ public class ZeroMQUtils {
         ZMQ.Socket monitorSocket = zeroMQContext.socket(SocketType.PAIR);
         monitorSocket.connect(monitorAddress);
         return monitorSocket;
+    }
+
+    public static void getServerSocketEvent(ZMQ.Socket monitorSocket, SocketType socketType, AtomicBoolean monitorInitialized, AtomicBoolean contextTerminated) {
+        ZMQ.Event event = ZMQ.Event.recv(monitorSocket);
+        if (event != null) {
+            ZeroMQEvent zeroMQEvent = ZeroMQEvent.getEvent(event.getEvent());
+            if (zeroMQEvent.isDisplayLog() && (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized.get())) {
+                log.info("ZeroMQ {} event: {}", socketType, zeroMQEvent);
+            }
+
+        } else {
+            int errorCode = monitorSocket.base().errno();
+            if (errorCode == ZMQ.Error.ETERM.getCode()) {
+                contextTerminated.set(true);
+            }
+        }
     }
 }

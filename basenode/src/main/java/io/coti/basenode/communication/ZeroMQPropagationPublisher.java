@@ -40,7 +40,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private BlockingQueue<ZeroMQMessageData> publishMessageQueue;
     @Autowired
     private ISerializer serializer;
-    private boolean monitorInitialized;
+    private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
 
     public void init(String propagationPort, NodeType publisherNodeType) {
         publishMessageQueue = new LinkedBlockingQueue<>();
@@ -65,13 +65,11 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
     @Override
     public void initMonitor() {
-        monitorInitialized = true;
+        monitorInitialized.set(true);
     }
 
     public <T extends IPropagatable> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes) {
-
         subscriberNodeTypes.forEach(subscriberNodeType -> propagateToNode(toPropagate, subscriberNodeType));
-
     }
 
     private <T extends IPropagatable> void propagateToNode(T toPropagate, NodeType subscriberNodeType) {
@@ -153,36 +151,20 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
             AtomicBoolean contextTerminated = new AtomicBoolean(false);
             while (!contextTerminated.get() && !Thread.currentThread().isInterrupted()) {
                 try {
-                    getEvent(contextTerminated);
+                    ZeroMQUtils.getServerSocketEvent(monitorSocket, SocketType.PUB, monitorInitialized, contextTerminated);
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
                         contextTerminated.set(true);
                     } else {
-                        log.error(ZMQ_PUBLISHER_HANDLER_ERROR, e);
+                        log.error("ZeroMQ exception at monitor publisher thread", e);
                     }
                 } catch (Exception e) {
-                    log.error("Exception at publisher thread", e);
+                    log.error("Exception at monitor publisher thread", e);
                 }
             }
             monitorSocket.close();
         }, "MONITOR PUB");
         monitorThread.start();
-    }
-
-    private void getEvent(AtomicBoolean contextTerminated) {
-        ZMQ.Event event = ZMQ.Event.recv(monitorSocket);
-        if (event != null) {
-            ZeroMQEvent zeroMQEvent = ZeroMQEvent.getEvent(event.getEvent());
-            if (zeroMQEvent.isDisplayLog() && (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized)) {
-                log.info("ZeroMQ publisher event: {}", zeroMQEvent);
-            }
-
-        } else {
-            int errorCode = monitorSocket.base().errno();
-            if (errorCode == ZMQ.Error.ETERM.getCode()) {
-                contextTerminated.set(true);
-            }
-        }
     }
 
     public void shutdown() {

@@ -9,6 +9,8 @@ public interface IReceiver {
 
     void init(String receivingPort, HashMap<String, Consumer<IPropagatable>> classNameToHandlerMapping);
 
+    void initMonitor();
+
     void startListening();
 
     void initReceiverHandler();
