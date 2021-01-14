@@ -7,6 +7,8 @@ public interface ISender {
 
     void connectToNode(String receivingServerAddress);
 
+    void initMonitor();
+
     <T extends IPropagatable> void send(T toSend, String address);
 
     void disconnectFromNode(String receivingFullAddress, NodeType nodeType);
