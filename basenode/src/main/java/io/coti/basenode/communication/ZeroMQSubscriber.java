@@ -64,6 +64,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         propagationSubscriber.setHWM(10000);
         propagationSubscriber.setLinger(100);
         monitorSocket = ZeroMQUtils.createAndConnectMonitorSocket(zeroMQContext, propagationSubscriber);
+        startMonitorThread();
         ZeroMQUtils.bindToRandomPort(propagationSubscriber);
     }
 
@@ -84,8 +85,6 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     @Override
     public void startListening() {
         startPropagationSubscriberThread();
-
-        startMonitorThread();
     }
 
     private void startPropagationSubscriberThread() {
@@ -298,10 +297,14 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     @Override
     public void connectAndSubscribeToServer(String publisherAddressAndPort, NodeType publisherNodeType) {
+        connectAndSubscribeToServer(publisherAddressAndPort, publisherNodeType, true);
+    }
+
+    private void connectAndSubscribeToServer(String publisherAddressAndPort, NodeType publisherNodeType, boolean info) {
         log.info("ZeroMQ subscriber connecting to address {}", publisherAddressAndPort);
         if (propagationSubscriber.connect(publisherAddressAndPort)) {
             log.info("Subscriber connected to server {} of node type {}", publisherAddressAndPort, publisherNodeType);
-            subscribeAll(publisherAddressAndPort, publisherNodeType);
+            subscribeAll(publisherAddressAndPort, publisherNodeType, info);
             connectedNodes.put(publisherAddressAndPort, new ConnectedNodeData(publisherNodeType, Instant.now()));
 
         } else {
@@ -309,13 +312,15 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         }
     }
 
-    private void subscribeAll(String publisherAddressAndPort, NodeType publisherNodeType) {
+    private void subscribeAll(String publisherAddressAndPort, NodeType publisherNodeType, boolean info) {
         propagationSubscriber.subscribe(Channel.getChannelString(PublisherHeartBeatData.class, publisherAddressAndPort));
         publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType ->
         {
             String channel = Channel.getChannelString(messageType, publisherAddressAndPort, publisherNodeType, subscriberNodeType);
             if (propagationSubscriber.subscribe(channel)) {
-                log.info("Subscribed to server {} and channel {}", publisherAddressAndPort, channel);
+                if (info) {
+                    log.info("Subscribed to server {} and channel {}", publisherAddressAndPort, channel);
+                }
             } else {
                 log.error("Subscription failed for server {} and channel {}", publisherAddressAndPort, channel);
             }
@@ -339,7 +344,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         {
             String channel = Channel.getChannelString(messageType, publisherAddressAndPort, publisherNodeType, subscriberNodeType);
             if (propagationSubscriber.unsubscribe(channel)) {
-                log.info("Unsubscribed from server {} and channel {}", publisherAddressAndPort, channel);
+                log.debug("Unsubscribed from server {} and channel {}", publisherAddressAndPort, channel);
             } else {
                 log.error("UnSubscription failed from server {} and channel {}", publisherAddressAndPort, channel);
             }
@@ -351,9 +356,9 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     public void reconnectToPublisher() {
         connectedNodes.forEach((serverAddress, connectedNodeData) -> {
             if (Duration.between(connectedNodeData.getLastConnectionTime(), Instant.now()).toMillis() > HEARTBEAT_INTERVAL) {
-                log.info("Publisher heartbeat message timeout: server = {}, lastHeartBeat = {}", serverAddress, connectedNodeData.getLastConnectionTime());
+                log.error("Publisher heartbeat message timeout: server = {}, lastHeartBeat = {}", serverAddress, connectedNodeData.getLastConnectionTime());
                 unsubscribeAll(serverAddress, connectedNodeData.getNodeType());
-                connectAndSubscribeToServer(serverAddress, connectedNodeData.getNodeType());
+                connectAndSubscribeToServer(serverAddress, connectedNodeData.getNodeType(), false);
             }
         });
     }
