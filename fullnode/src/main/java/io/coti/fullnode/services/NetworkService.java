@@ -50,7 +50,7 @@ public class NetworkService extends BaseNodeNetworkService {
                     recoveryServerAddress = dspNodesToConnect.get(0).getHttpFullAddress();
                 }
                 communicationService.addSubscription(dspNodesToConnect.get(i).getPropagationFullAddress(), NodeType.DspNode);
-                communicationService.addSender(dspNodesToConnect.get(i).getReceivingFullAddress());
+                communicationService.addSender(dspNodesToConnect.get(i).getReceivingFullAddress(), NodeType.DspNode);
                 connectedDspNodes.add(dspNodesToConnect.get(i));
             }
         }

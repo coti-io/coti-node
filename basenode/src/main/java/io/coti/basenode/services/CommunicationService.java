@@ -46,8 +46,8 @@ public class CommunicationService implements ICommunicationService {
     }
 
     @Override
-    public void addSender(String receivingServerAddress) {
-        sender.connectToNode(receivingServerAddress);
+    public void addSender(String receivingServerAddress, NodeType nodeType) {
+        sender.connectToNode(receivingServerAddress, nodeType);
     }
 
     @Override

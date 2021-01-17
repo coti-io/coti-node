@@ -70,6 +70,7 @@ public class ZeroMQReceiver implements IReceiver {
                     addToMessageQueue(classType);
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
+                        log.info("ZeroMQ receiver context terminated");
                         contextTerminated = true;
                     } else {
                         log.error("ZeroMQ exception at receiver thread", e);
@@ -79,7 +80,7 @@ public class ZeroMQReceiver implements IReceiver {
                 }
             }
             receiver.close();
-        }, "RECEIVER");
+        }, "ROUTER");
         receiverThread.start();
     }
 
@@ -91,6 +92,7 @@ public class ZeroMQReceiver implements IReceiver {
                     ZeroMQUtils.getServerSocketEvent(monitorSocket, socketType, monitorInitialized, contextTerminated);
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
+                        log.info("ZeroMQ receiver context terminated");
                         contextTerminated.set(true);
                     } else {
                         log.error("ZeroMQ exception at monitor receiver thread", e);
@@ -100,7 +102,7 @@ public class ZeroMQReceiver implements IReceiver {
                 }
             }
             monitorSocket.close();
-        }, "MONITOR RECEIVER");
+        }, "MONITOR ROUTER");
         monitorThread.start();
     }
 
@@ -118,7 +120,7 @@ public class ZeroMQReceiver implements IReceiver {
 
     @Override
     public void initReceiverHandler() {
-        messagesQueueHandlerThread = new Thread(this::handleMessagesQueueTask, "RECEIVER HANDLER");
+        messagesQueueHandlerThread = new Thread(this::handleMessagesQueueTask, "ROUTER HANDLER");
         messagesQueueHandlerThread.start();
     }
 

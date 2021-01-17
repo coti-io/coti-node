@@ -32,8 +32,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private static final int HEARTBEAT_INTERVAL = 10000;
     private static final int INITIAL_DELAY = 5000;
     private static final int FIXED_DELAY = 5000;
+    private static final String ZMQ_SUBSCRIBER_CONTEXT_TERMINATED = "ZeroMQ subscriber context terminated";
     private static final String ZMQ_SUBSCRIBER_HANDLER_ERROR = "ZMQ subscriber message handler task error";
     private ZMQ.Context zeroMQContext;
+    private SocketType socketType;
     private ZMQ.Socket propagationSubscriber;
     private ZMQ.Socket monitorSocket;
     private final Map<String, ConnectedNodeData> connectedNodes = new ConcurrentHashMap<>();
@@ -48,7 +50,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private NodeType subscriberNodeType;
     @Autowired
     private ISubscriberHandler subscriberHandler;
-    private boolean monitorInitialized;
+    private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
 
     @Override
     public void init() {
@@ -60,7 +62,8 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     private void initSockets() {
         zeroMQContext = ZMQ.context(1);
-        propagationSubscriber = zeroMQContext.socket(SocketType.SUB);
+        socketType = SocketType.SUB;
+        propagationSubscriber = zeroMQContext.socket(socketType);
         propagationSubscriber.setHWM(10000);
         propagationSubscriber.setLinger(100);
         monitorSocket = ZeroMQUtils.createAndConnectMonitorSocket(zeroMQContext, propagationSubscriber);
@@ -95,7 +98,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     addToMessageQueue();
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
-                        log.info("ZeroMQ subscriber context terminated");
+                        log.info(ZMQ_SUBSCRIBER_CONTEXT_TERMINATED);
                         contextTerminated = true;
                     } else if (e.getErrorCode() == ZMQ.Error.EINTR.getCode()) {
                         log.info("ZeroMQ subscriber thread is interrupted");
@@ -121,6 +124,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
                     getEvent(contextTerminated);
                 } catch (ZMQException e) {
                     if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
+                        log.info(ZMQ_SUBSCRIBER_CONTEXT_TERMINATED);
                         contextTerminated.set(true);
                     } else {
                         log.error("ZeroMQ exception at monitor subscriber thread", e);
@@ -135,67 +139,14 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     private void getEvent(AtomicBoolean contextTerminated) {
-        ZMQ.Event event = ZMQ.Event.recv(monitorSocket);
-        if (event != null) {
-            String address = event.getAddress();
-            ZeroMQEvent zeroMQEvent = ZeroMQEvent.getEvent(event.getEvent());
-            if (zeroMQEvent.isDisplayLog() && (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized)) {
-                log.info("ZeroMQ subscriber {} for address {}", zeroMQEvent, address);
-            }
-            if (zeroMQEvent.equals(ZeroMQEvent.DISCONNECTED)) {
-                addToReconnectMonitor(address);
-            } else if (zeroMQEvent.equals(ZeroMQEvent.CONNECTED)) {
-                removeFromReconnectMonitor(address);
-            } else if (zeroMQEvent.equals(ZeroMQEvent.CONNECT_RETRIED)) {
-                incrementRetriesInReconnectMonitor(address);
-            }
-        } else {
-            int errorCode = monitorSocket.base().errno();
-            if (errorCode == ZMQ.Error.ETERM.getCode()) {
-                contextTerminated.set(true);
-            }
-        }
-    }
-
-    private void addToReconnectMonitor(String address) {
-        NodeType nodeType = Optional.ofNullable(connectedNodes.get(address)).map(ConnectedNodeData::getNodeType).orElse(null);
-        Optional<ReconnectMonitorData> optionalPutReconnectMonitorData = Optional.ofNullable(addressToReconnectMonitorMap.putIfAbsent(address, new ReconnectMonitorData(nodeType)));
-        if (!optionalPutReconnectMonitorData.isPresent()) {
-            log.info("Reconnect monitor is started for address {}", address);
-        }
         if (monitorReconnectThread == null) {
-            startMonitorReconnectThread();
+            monitorReconnectThread = ZeroMQUtils.getMonitorReconnectThread(addressToReconnectMonitorMap, socketType);
         }
+        ZeroMQUtils.getClientServerEvent(monitorSocket, socketType, monitorInitialized, contextTerminated, addressToReconnectMonitorMap, this::getNodeTypeByAddress);
     }
 
-    private void incrementRetriesInReconnectMonitor(String address) {
-        Optional.ofNullable(addressToReconnectMonitorMap.get(address)).ifPresent(reconnectMonitorData ->
-                reconnectMonitorData.getRetriesNumber().incrementAndGet()
-        );
-    }
-
-    private void removeFromReconnectMonitor(String address) {
-        Optional.ofNullable(addressToReconnectMonitorMap.remove(address)).ifPresent(reconnectMonitorData ->
-                log.info("Reconnect monitor is finished for address {}", address)
-        );
-    }
-
-    private void startMonitorReconnectThread() {
-        monitorReconnectThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    addressToReconnectMonitorMap.forEach((address, reconnectMonitorData) ->
-                            log.info("Trying to reconnect to node {} with type {}. Retries: {}, DisconnectTime: {}", address,
-                                    Optional.ofNullable(reconnectMonitorData.getNodeType()).map(NodeType::toString).orElse("unknown"),
-                                    reconnectMonitorData.getRetriesNumber(), reconnectMonitorData.getDisconnectTime())
-                    );
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }, "MONITOR RECONNECT SUB");
-        monitorReconnectThread.start();
+    private NodeType getNodeTypeByAddress(String address) {
+        return Optional.ofNullable(connectedNodes.get(address)).map(ConnectedNodeData::getNodeType).orElse(null);
     }
 
     private void addToMessageQueue() throws ClassNotFoundException {
@@ -219,7 +170,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
 
     @Override
     public void initMonitor() {
-        monitorInitialized = true;
+        monitorInitialized.set(true);
     }
 
     private void handleMessagesQueueTask(BlockingQueue<ZeroMQMessageData> messageQueue) {
@@ -332,7 +283,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         if (propagationSubscriber.disconnect(publisherAddressAndPort)) {
             log.info("Subscriber disconnected from server {} of node type {}", publisherAddressAndPort, publisherNodeType);
             connectedNodes.remove(publisherAddressAndPort);
-            removeFromReconnectMonitor(publisherAddressAndPort);
+            ZeroMQUtils.removeFromReconnectMonitor(addressToReconnectMonitorMap, publisherAddressAndPort);
         } else {
             log.info("Subscriber failed disconnection from server {} of node type {}", publisherAddressAndPort, publisherNodeType);
         }
@@ -356,9 +307,10 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     public void reconnectToPublisher() {
         connectedNodes.forEach((serverAddress, connectedNodeData) -> {
             if (Duration.between(connectedNodeData.getLastConnectionTime(), Instant.now()).toMillis() > HEARTBEAT_INTERVAL) {
-                log.error("Publisher heartbeat message timeout: server = {}, lastHeartBeat = {}", serverAddress, connectedNodeData.getLastConnectionTime());
-                unsubscribeAll(serverAddress, connectedNodeData.getNodeType());
-                connectAndSubscribeToServer(serverAddress, connectedNodeData.getNodeType(), false);
+                NodeType nodeType = connectedNodeData.getNodeType();
+                log.error("Publisher heartbeat message timeout: server = {}, nodeType = {}, lastHeartBeat = {}", serverAddress, nodeType, connectedNodeData.getLastConnectionTime());
+                unsubscribeAll(serverAddress, nodeType);
+                connectAndSubscribeToServer(serverAddress, nodeType, false);
             }
         });
     }
