@@ -79,6 +79,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     private void sendUnconfirmedReceivedTransactionsFullNode() {
         if (networkService.isNotConnectedToDspNodes()) {
             log.error("FullNode is not connected to any DspNode. Failed to send unconfirmed transactions.");
+            return;
         }
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()

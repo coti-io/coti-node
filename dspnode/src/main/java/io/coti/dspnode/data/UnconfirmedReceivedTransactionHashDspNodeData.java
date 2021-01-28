@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class UnconfirmedReceivedTransactionHashDspNodeData extends UnconfirmedReceivedTransactionHashData {
 
+    private static final long serialVersionUID = -3273912860056004989L;
     private int retries;
     private boolean dspVoteOnly;
 

@@ -139,6 +139,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     private void propagateUnconfirmedReceivedTransactions() {
         if (!networkService.isZeroSpendServerInNetwork()) {
             log.error("ZeroSpendServer is not in the network. Failed to send unconfirmed transactions.");
+            return;
         }
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
@@ -175,13 +176,6 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     private void sendUnconfirmedReceivedTransactionsDSP(TransactionData transactionData, boolean dspVoteOnly) {
-        TransactionDspVote transactionDspVote = unconfirmedTransactionDspVotes.getByHash(transactionData.getHash());
-        if (transactionDspVote != null) {
-            log.info("Sending dsp vote for transaction {} to ZeroSpendServer", transactionData.getHash());
-            String zeroSpendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
-            sender.send(transactionDspVote, zeroSpendReceivingAddress);
-        }
-
         if (!dspVoteOnly) {
             log.info("Sending unconfirmed transaction {} to ZeroSpendServer", transactionData.getHash());
             propagationPublisher.propagate(transactionData, Arrays.asList(
@@ -193,5 +187,11 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                     NodeType.HistoryNode));
         }
 
+        TransactionDspVote transactionDspVote = unconfirmedTransactionDspVotes.getByHash(transactionData.getHash());
+        if (transactionDspVote != null) {
+            log.info("Sending dsp vote for transaction {} to ZeroSpendServer", transactionData.getHash());
+            String zeroSpendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
+            sender.send(transactionDspVote, zeroSpendReceivingAddress);
+        }
     }
 }

@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class TransactionDspVote extends DspVote implements IPropagatable, ISignable, ISignValidatable {
 
+    private static final long serialVersionUID = 4264452456110712450L;
     private Hash transactionHash;
 
     private TransactionDspVote() {

@@ -3,10 +3,7 @@ package io.coti.dspnode.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.TransactionDspVoteCrypto;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionDspVote;
-import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
@@ -139,9 +136,14 @@ public class TransactionService extends BaseNodeTransactionService {
                 transactionData.getHash(),
                 validationService.fullValidation(transactionData));
         transactionDspVoteCrypto.signMessage(transactionDspVote);
-        String zeroSpendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
-        log.debug("Sending DSP vote to {} for transaction {}", zeroSpendReceivingAddress, transactionData.getHash());
-        sender.send(transactionDspVote, zeroSpendReceivingAddress);
+        NetworkNodeData zeroSpendServer = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
+        if (zeroSpendServer != null) {
+            String zeroSpendReceivingAddress = zeroSpendServer.getReceivingFullAddress();
+            log.debug("Sending DSP vote to {} for transaction {}", zeroSpendReceivingAddress, transactionData.getHash());
+            sender.send(transactionDspVote, zeroSpendReceivingAddress);
+        } else {
+            log.error("ZeroSpendServer is not in the network. Failed to send dsp vote for transaction {}", transactionData.getHash());
+        }
         transactionPropagationCheckService.addUnconfirmedTransactionDSPVote(transactionDspVote);
     }
 
