@@ -515,4 +515,9 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
+    @Override
+    public boolean isZeroSpendServerInNetwork() {
+        return Optional.ofNullable(getSingleNodeData(NodeType.ZeroSpendServer)).isPresent();
+    }
+
 }

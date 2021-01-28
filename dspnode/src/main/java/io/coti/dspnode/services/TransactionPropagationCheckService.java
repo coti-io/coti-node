@@ -137,6 +137,9 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
 
     @Scheduled(initialDelay = 10000, fixedDelay = 30000)
     private void propagateUnconfirmedReceivedTransactions() {
+        if (!networkService.isZeroSpendServerInNetwork()) {
+            log.error("ZeroSpendServer is not in the network. Failed to send unconfirmed transactions.");
+        }
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()

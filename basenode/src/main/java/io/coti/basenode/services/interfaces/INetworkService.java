@@ -59,4 +59,6 @@ public interface INetworkService {
     void connectToNetwork();
 
     String getHost(String webServerUrl);
+
+    boolean isZeroSpendServerInNetwork();
 }
