@@ -12,4 +12,6 @@ public interface ISender {
     <T extends IPropagatable> void send(T toSend, String address);
 
     void disconnectFromNode(String receivingFullAddress, NodeType nodeType);
+
+    void shutdown();
 }

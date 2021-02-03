@@ -16,6 +16,7 @@ public class ShutDownService extends BaseNodeShutDownService {
         propagationSubscriber.shutdown();
         propagationPublisher.shutdown();
         transactionService.shutdown();
+        sender.shutdown();
         confirmationService.shutdown();
         databaseConnector.shutdown();
     }
