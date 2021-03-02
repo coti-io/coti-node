@@ -190,9 +190,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {
-                if (!postponedTransactions.containsKey(transactionData)) {
-                    postponedTransactions.put(transactionData, false);
-                }
+                postponedTransactions.putIfAbsent(transactionData, false);
                 return;
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
