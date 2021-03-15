@@ -10,6 +10,7 @@ import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.ExtendedTransactionResponseData;
 import io.coti.basenode.http.data.ReducedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
@@ -423,25 +424,18 @@ public class TransactionService extends BaseNodeTransactionService {
 
     }
 
-    public ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash) {
-        TransactionData transactionData = transactions.getByHash(transactionHash);
-        if (transactionData == null)
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(
-                            TRANSACTION_DOESNT_EXIST_MESSAGE,
-                            STATUS_ERROR));
+    public ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash, boolean extended) {
         try {
-            TransactionResponseData transactionResponseData = new TransactionResponseData(transactionData);
+            TransactionData transactionData = transactions.getByHash(transactionHash);
+            if (transactionData == null)
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TRANSACTION_DOESNT_EXIST_MESSAGE, STATUS_ERROR));
+            TransactionResponseData transactionResponseData = extended ? new ExtendedTransactionResponseData(transactionData) : new TransactionResponseData(transactionData);
+            GetTransactionResponse getTransactionResponse = extended ? new GetExtendedTransactionResponse((ExtendedTransactionResponseData) transactionResponseData) : new GetTransactionResponse(transactionResponseData);
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(new GetTransactionResponse(transactionResponseData));
+                    .body(getTransactionResponse);
         } catch (Exception e) {
             log.error(e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            TRANSACTION_DETAILS_SERVER_ERROR,
-                            STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(TRANSACTION_DETAILS_SERVER_ERROR, STATUS_ERROR));
         }
     }
 

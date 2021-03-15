@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ReceiverBaseTransactionResponseData extends OutputBaseTransactionResponseData {
+
     private String receiverDescription;
 
     public ReceiverBaseTransactionResponseData(BaseTransactionData baseTransactionData) {

@@ -10,7 +10,12 @@ import java.math.BigDecimal;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public abstract class OutputBaseTransactionResponseData extends BaseTransactionResponseData {
+
     protected BigDecimal originalAmount;
+
+    protected OutputBaseTransactionResponseData() {
+        super();
+    }
 
     protected OutputBaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);

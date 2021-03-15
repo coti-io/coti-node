@@ -11,6 +11,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PaymentInputBaseTransactionResponseData extends InputBaseTransactionResponseData {
+
     private List<PaymentItemData> items;
     private String encryptedMerchantName;
 

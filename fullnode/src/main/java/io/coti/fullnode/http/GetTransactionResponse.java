@@ -9,7 +9,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class GetTransactionResponse extends BaseResponse {
 
-    private TransactionResponseData transactionData;
+    protected TransactionResponseData transactionData;
+
+    protected GetTransactionResponse() {
+    }
 
     public GetTransactionResponse(TransactionResponseData transactionResponseData) {
         this.transactionData = transactionResponseData;

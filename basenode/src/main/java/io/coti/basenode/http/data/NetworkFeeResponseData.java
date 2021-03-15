@@ -13,6 +13,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class NetworkFeeResponseData extends OutputBaseTransactionResponseData {
+
     private BigDecimal reducedAmount;
     private List<TrustScoreNodeResultResponseData> networkFeeTrustScoreNodeResult;
 

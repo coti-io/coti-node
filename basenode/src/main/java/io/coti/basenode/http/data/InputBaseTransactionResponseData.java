@@ -8,6 +8,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class InputBaseTransactionResponseData extends BaseTransactionResponseData {
 
+    protected InputBaseTransactionResponseData() {
+    }
+
     public InputBaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
     }

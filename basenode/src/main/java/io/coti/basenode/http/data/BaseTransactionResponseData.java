@@ -18,6 +18,9 @@ public abstract class BaseTransactionResponseData implements IResponseData {
     private Instant createTime;
     private String name;
 
+    protected BaseTransactionResponseData() {
+    }
+
     protected BaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         this.hash = baseTransactionData.getHash() == null ? null : baseTransactionData.getHash().toString();
         this.addressHash = baseTransactionData.getAddressHash().toString();

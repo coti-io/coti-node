@@ -61,7 +61,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {
-                postponedTransactions.putIfAbsent(transactionData, true);
+                postponedTransactionMap.putIfAbsent(transactionData, true);
                 return;
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {

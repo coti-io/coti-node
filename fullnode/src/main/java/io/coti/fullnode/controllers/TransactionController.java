@@ -41,7 +41,12 @@ public class TransactionController {
 
     @PostMapping()
     public ResponseEntity<IResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
-        return transactionService.getTransactionDetails(getTransactionRequest.getTransactionHash());
+        return transactionService.getTransactionDetails(getTransactionRequest.getTransactionHash(), false);
+    }
+
+    @PostMapping(value = "/extended")
+    public ResponseEntity<IResponse> getExtendedTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
+        return transactionService.getTransactionDetails(getTransactionRequest.getTransactionHash(), true);
     }
 
     @PostMapping(value = "/multiple")

@@ -38,7 +38,7 @@ public class TransactionResponseData implements ITransactionResponseData {
     private Boolean isValid;
     private String transactionDescription;
 
-    private TransactionResponseData() {
+    protected TransactionResponseData() {
     }
 
     public TransactionResponseData(TransactionData transactionData) {

@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetExtendedTransactionsResponse;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -9,6 +10,7 @@ import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +42,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     private IClusterService clusterService;
     @Autowired
+    private IClusterHelper clusterHelper;
+    @Autowired
     private Transactions transactions;
     @Autowired
     private TransactionIndexService transactionIndexService;
@@ -47,7 +51,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
-    protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
+    protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
 
     @Override
@@ -162,8 +166,11 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public ResponseEntity<IResponse> getPostponedTransactions() {
         try {
-            List<TransactionData> postponedTransactionList = new ArrayList<>(postponedTransactions.keySet());
-            return ResponseEntity.ok(new GetTransactionsResponse(postponedTransactionList));
+            Set<TransactionData> postponedTransactionSet = SerializationUtils.clone((HashSet<TransactionData>) postponedTransactionMap.keySet());
+            ConcurrentHashMap<Hash, TransactionData> postponedTransactionCluster = (ConcurrentHashMap<Hash, TransactionData>) postponedTransactionSet.stream().collect(Collectors.toMap(TransactionData::getHash, transactionData -> transactionData));
+            LinkedList<TransactionData> topologicalOrderedPostponedTransactions = new LinkedList<>();
+            clusterHelper.sortByTopologicalOrder(postponedTransactionCluster, topologicalOrderedPostponedTransactions);
+            return ResponseEntity.ok(new GetExtendedTransactionsResponse(topologicalOrderedPostponedTransactions));
         } catch (Exception e) {
             log.info("Exception while getting postponed transactions", e);
             return ResponseEntity
@@ -190,7 +197,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {
-                postponedTransactions.putIfAbsent(transactionData, false);
+                postponedTransactionMap.putIfAbsent(transactionData, false);
                 return;
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
@@ -237,16 +244,16 @@ public class BaseNodeTransactionService implements ITransactionService {
         if (postponedDspConsensusResult != null) {
             dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
         }
-        Map<TransactionData, Boolean> postponedParentTransactions = postponedTransactions.entrySet().stream().filter(
+        Map<TransactionData, Boolean> postponedParentTransactionMap = postponedTransactionMap.entrySet().stream().filter(
                 postponedTransactionMapEntry ->
                         (postponedTransactionMapEntry.getKey().getRightParentHash() != null
                                 && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
                                 || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
                                 && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        postponedParentTransactions.forEach((postponedTransaction, isTransactionFromFullNode) -> {
+        postponedParentTransactionMap.forEach((postponedTransaction, isTransactionFromFullNode) -> {
             log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
-            postponedTransactions.remove(postponedTransaction);
+            postponedTransactionMap.remove(postponedTransaction);
             handlePostponedTransaction(postponedTransaction, isTransactionFromFullNode);
         });
     }
@@ -312,7 +319,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     public int totalPostponedTransactions() {
-        return postponedTransactions.size();
+        return postponedTransactionMap.size();
     }
 
 }
