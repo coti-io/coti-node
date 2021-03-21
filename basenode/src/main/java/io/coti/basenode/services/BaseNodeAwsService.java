@@ -93,7 +93,7 @@ public class BaseNodeAwsService implements IAwsService {
             if (multipleFileDownload.getProgress().getPercentTransferred() == 100) {
                 log.debug("Finished downloading files");
             }
-            removeExcessFolderStructure(directoryToDownload + "/" + s3folderPath, directoryToDownload);
+            removeExcessFolderStructure(directoryToDownload, s3folderPath, directoryToDownload);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new AwsDataTransferException("Unable to download folder and contents to S3. The thread is interrupted");
@@ -171,12 +171,23 @@ public class BaseNodeAwsService implements IAwsService {
     }
 
     @Override
-    public void removeExcessFolderStructure(String source, String destination) {
+    public void removeExcessFolderStructure(String source, String relativeExcessFolderPath, String destination) {
         try {
             String delimiter = "/";
-            FileUtils.copyDirectory(new File(source), new File(destination));
-            String[] folderHierarchyToDelete = source.split(delimiter);
-            FileUtils.deleteDirectory(new File(destination + delimiter + folderHierarchyToDelete[3]));
+            File sourceDirectory = new File(source + delimiter + relativeExcessFolderPath);
+            File[] listOfFiles = sourceDirectory.listFiles();
+            if (listOfFiles == null) {
+                throw new AwsDataTransferException("Error at remove excess folder: source directory file list error");
+            }
+            boolean renamed;
+            for (File file : listOfFiles) {
+                renamed = file.renameTo(new File(destination, file.getName()));
+                if (!renamed) {
+                    throw new AwsDataTransferException("Error at remove excess folder: source directory file name error");
+                }
+            }
+            String[] folderHierarchyToDelete = relativeExcessFolderPath.split(delimiter);
+            FileUtils.deleteDirectory(new File(source + delimiter + folderHierarchyToDelete[0]));
         } catch (IOException e) {
             log.error(e.getMessage());
         }
