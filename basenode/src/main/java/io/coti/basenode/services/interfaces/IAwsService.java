@@ -20,7 +20,7 @@ public interface IAwsService {
 
     void deleteFolderAndContentsFromS3(List<String> remoteBackups, String bucketName);
 
-    void removeExcessFolderStructure(String source, String destination);
+    void removeExcessFolderStructure(String source, String relativeExcessFolderPath, String destination);
 
     boolean isBuildS3ClientWithCredentials();
 }
