@@ -5,7 +5,7 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.services.ClusterService;
-import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.BaseNodeTransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.financialserver.crypto.TransactionCryptoCreator;
@@ -25,7 +25,7 @@ public class TransactionCreationService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    private TransactionHelper transactionHelper;
+    private BaseNodeTransactionHelper transactionHelper;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired

@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.EnumSet;
 
-import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
+import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
 
 
 @Service

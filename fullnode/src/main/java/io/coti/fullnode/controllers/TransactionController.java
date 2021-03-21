@@ -64,9 +64,29 @@ public class TransactionController {
         transactionService.getAddressTransactionBatch(getAddressTransactionBatchRequest, response, false);
     }
 
+    @PostMapping(value = "/dateAddressTransactions/batch")
+    public void getDateAddressTransactionBatch(@Valid @RequestBody GetDateAddressTransactionBatchRequest getDateAddressTransactionBatchRequest, HttpServletResponse response) {
+        transactionService.getDateAddressTransactionBatch(getDateAddressTransactionBatchRequest, response, false);
+    }
+
+    @PostMapping(value = "/dateRangeAddressTransactions/batch")
+    public void getDateRangeAddressTransactionBatch(@Valid @RequestBody GetDateRangeAddressTransactionBatchRequest getDateRangeAddressTransactionBatchRequest, HttpServletResponse response) {
+        transactionService.getDateRangeAddressTransactionBatch(getDateRangeAddressTransactionBatchRequest, response, false);
+    }
+
     @PostMapping(value = "/addressTransactions/reduced/batch")
     public void getAddressReducedTransactionBatch(@Valid @RequestBody GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response) {
         transactionService.getAddressTransactionBatch(getAddressTransactionBatchRequest, response, true);
+    }
+
+    @PostMapping(value = "/dateAddressTransactions/reduced/batch")
+    public void getDateAddressReducedTransactionBatch(@Valid @RequestBody GetDateAddressTransactionBatchRequest getDateAddressTransactionBatchRequest, HttpServletResponse response) {
+        transactionService.getDateAddressTransactionBatch(getDateAddressTransactionBatchRequest, response, true);
+    }
+
+    @PostMapping(value = "/dateRangeAddressTransactions/reduced/batch")
+    public void getDateRangeAddressReducedTransactionBatch(@Valid @RequestBody GetDateRangeAddressTransactionBatchRequest getDateRangeAddressTransactionBatchRequest, HttpServletResponse response) {
+        transactionService.getDateRangeAddressTransactionBatch(getDateRangeAddressTransactionBatchRequest, response, true);
     }
 
     @GetMapping(value = "/lastTransactions")

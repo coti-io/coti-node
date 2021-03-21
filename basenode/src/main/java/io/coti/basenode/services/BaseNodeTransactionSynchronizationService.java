@@ -19,13 +19,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @Slf4j
-public class TransactionSynchronizationService implements ITransactionSynchronizationService {
+public class BaseNodeTransactionSynchronizationService implements ITransactionSynchronizationService {
 
     private static final String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
     private static final String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
     private static final long MAXIMUM_BUFFER_SIZE = 300000;
     @Autowired
-    private ITransactionHelper transactionHelper;
+    protected ITransactionHelper transactionHelper;
     @Autowired
     private ITransactionService transactionService;
     @Autowired
@@ -33,13 +33,13 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
     @Autowired
     private INetworkService networkService;
     @Autowired
-    private AddressTransactionsHistories addressTransactionsHistories;
+    protected AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private RestTemplate restTemplate;
     private final Object finishLock = new Object();
-    private EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap;
+    protected EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap;
 
     public synchronized void requestMissingTransactions(long firstMissingTransactionIndex) {
         try {
@@ -105,11 +105,11 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
 
     private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, final AtomicBoolean finishedToReceive, final AtomicBoolean finishedToInsert) {
         return new Thread(() -> {
-            Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
+            Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();  //TODO 3/21/2021 tomer: Verify reason for initializing map here instead in insertMissingTransactions
             int offset = 0;
             monitorMissingTransactionThread.start();
 
-            insertMissingTransactions(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, finishedToReceive, addressToTransactionsHistoryMap, offset);
+            insertMissingTransactions(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, finishedToReceive, offset);
             missingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
 
             monitorMissingTransactionThread.interrupt();
@@ -127,9 +127,10 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
 
     }
 
-    private void insertMissingTransactions(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap, int offset) {
+    protected void insertMissingTransactions(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, int offset) {
         int missingTransactionsSize;
         int nextOffSet;
+        Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
         while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
             if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
                 nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
