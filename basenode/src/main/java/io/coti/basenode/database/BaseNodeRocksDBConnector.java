@@ -185,7 +185,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             dbOptions.setCreateIfMissing(CREATE_IF_MISSING);
             dbOptions.setCreateMissingColumnFamilies(CREATE_MISSING_COLUMN_FAMILIES);
             dbOptions.setMaxTotalWalSize(MAX_TOTAL_WAL_SIZE_IN_BYTES);
+            log.info("Opening RocksDB");
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
+            log.info("RocksDB opened");
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {
             throw new DataBaseException("Error opening Rocks DB.", e);
@@ -378,6 +380,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     }
 
     private void closeDB() {
+        log.info("Closing RocksDB");
         Iterator<ColumnFamilyHandle> iterator = classNameToColumnFamilyHandleMapping.values().iterator();
         while (iterator.hasNext()) {
             ColumnFamilyHandle columnFamilyHandle = iterator.next();
@@ -386,6 +389,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
         db.close();
         db = null;
+        log.info("RocksDB closed");
     }
 
     @Override
