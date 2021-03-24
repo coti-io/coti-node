@@ -7,12 +7,12 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 @Data
 public class GetDateRangeAddressTransactionBatchRequest implements IRequest {
     @NotNull(message = "Address Hashes must not be blank")
-    private List<@Valid Hash> addresses;
+    private Set<@Valid Hash> addresses;
     @NotNull(message = "Start date must not be blank")
     private @Valid LocalDate startDate;
     @NotNull(message = "End date must not be blank")

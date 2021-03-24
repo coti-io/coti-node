@@ -64,12 +64,12 @@ public class TransactionController {
         transactionService.getAddressTransactionBatch(getAddressTransactionBatchRequest, response, false);
     }
 
-    @PostMapping(value = "/dateAddressTransactions/batch")
+    @PostMapping(value = "/addressTransactions/date/batch")
     public void getDateAddressTransactionBatch(@Valid @RequestBody GetDateAddressTransactionBatchRequest getDateAddressTransactionBatchRequest, HttpServletResponse response) {
         transactionService.getDateAddressTransactionBatch(getDateAddressTransactionBatchRequest, response, false);
     }
 
-    @PostMapping(value = "/dateRangeAddressTransactions/batch")
+    @PostMapping(value = "/addressTransactions/dateRange/batch")
     public void getDateRangeAddressTransactionBatch(@Valid @RequestBody GetDateRangeAddressTransactionBatchRequest getDateRangeAddressTransactionBatchRequest, HttpServletResponse response) {
         transactionService.getDateRangeAddressTransactionBatch(getDateRangeAddressTransactionBatchRequest, response, false);
     }
@@ -79,12 +79,12 @@ public class TransactionController {
         transactionService.getAddressTransactionBatch(getAddressTransactionBatchRequest, response, true);
     }
 
-    @PostMapping(value = "/dateAddressTransactions/reduced/batch")
+    @PostMapping(value = "/addressTransactions/date/reduced/batch")
     public void getDateAddressReducedTransactionBatch(@Valid @RequestBody GetDateAddressTransactionBatchRequest getDateAddressTransactionBatchRequest, HttpServletResponse response) {
         transactionService.getDateAddressTransactionBatch(getDateAddressTransactionBatchRequest, response, true);
     }
 
-    @PostMapping(value = "/dateRangeAddressTransactions/reduced/batch")
+    @PostMapping(value = "/addressTransactions/dateRange/reduced/batch")
     public void getDateRangeAddressReducedTransactionBatch(@Valid @RequestBody GetDateRangeAddressTransactionBatchRequest getDateRangeAddressTransactionBatchRequest, HttpServletResponse response) {
         transactionService.getDateRangeAddressTransactionBatch(getDateRangeAddressTransactionBatchRequest, response, true);
     }

@@ -14,7 +14,7 @@ import java.util.TreeMap;
 
 @Data
 public class DateAddressTransactionsHistory implements IEntity {
-    private static final long serialVersionUID = 6148574209385536578L;
+    private static final long serialVersionUID = 4868526205174968473L;
     private Hash hash;
     private Instant creationTime;
     private NavigableMap<LocalDate, Set<Hash>> transactionsHistoryByDate;

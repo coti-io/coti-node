@@ -363,8 +363,8 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void getDateAddressTransactionBatch(GetDateAddressTransactionBatchRequest getDateAddressTransactionBatchRequest, HttpServletResponse response, boolean reduced) {
         try {
-            List<Hash> addressHashList = getDateAddressTransactionBatchRequest.getAddresses();
-            List<LocalDate> dates = getDateAddressTransactionBatchRequest.getDates();
+            Set<Hash> addressHashList = getDateAddressTransactionBatchRequest.getAddresses();
+            Set<LocalDate> dates = getDateAddressTransactionBatchRequest.getDates();
             PrintWriter output = response.getWriter();
             chunkService.startOfChunk(output);
 
@@ -389,7 +389,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public void getDateRangeAddressTransactionBatch(GetDateRangeAddressTransactionBatchRequest getDateRangeAddressTransactionBatchRequest, HttpServletResponse response, boolean reduced) {
         try {
-            List<Hash> addressHashList = getDateRangeAddressTransactionBatchRequest.getAddresses();
+            Set<Hash> addressHashList = getDateRangeAddressTransactionBatchRequest.getAddresses();
             LocalDate startDate = getDateRangeAddressTransactionBatchRequest.getStartDate();
             LocalDate endDate = getDateRangeAddressTransactionBatchRequest.getEndDate();
 
@@ -410,7 +410,7 @@ public class TransactionService extends BaseNodeTransactionService {
             });
             chunkService.endOfChunk(output);
         } catch (Exception e) {
-            log.error("Error sending date address transaction batch");
+            log.error("Error sending date range address transaction batch");
             log.error(e.getMessage());
         }
     }

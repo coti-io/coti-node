@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,7 +27,7 @@ public class TransactionHelper extends BaseNodeTransactionHelper {
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             DateAddressTransactionsHistory dateAddressTransactionsHistory = Optional.ofNullable(dateAddressTransactionsHistories.getByHash(baseTransactionData.getAddressHash()))
                     .orElse(new DateAddressTransactionsHistory(baseTransactionData.getAddressHash()));
-            LocalDate localDate = LocalDate.from(baseTransactionData.getCreateTime());
+            LocalDate localDate = baseTransactionData.getCreateTime().atZone(ZoneId.of("UTC")).toLocalDate();
             if (!dateAddressTransactionsHistory.addTransactionHashByDateToHistory(transactionData.getHash(), localDate)) {
                 log.debug("Transaction {} in date {} is already in history of address {}", transactionData.getHash(), localDate, baseTransactionData.getAddressHash());
             }

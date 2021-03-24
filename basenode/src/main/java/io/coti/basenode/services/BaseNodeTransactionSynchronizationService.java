@@ -105,7 +105,6 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
 
     private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, final AtomicBoolean finishedToReceive, final AtomicBoolean finishedToInsert) {
         return new Thread(() -> {
-            Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();  //TODO 3/21/2021 tomer: Verify reason for initializing map here instead in insertMissingTransactions
             int offset = 0;
             monitorMissingTransactionThread.start();
 

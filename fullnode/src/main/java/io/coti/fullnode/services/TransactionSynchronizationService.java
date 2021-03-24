@@ -10,11 +10,9 @@ import io.coti.fullnode.model.DateAddressTransactionsHistories;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,7 +33,7 @@ public class TransactionSynchronizationService extends BaseNodeTransactionSynchr
         int nextOffSet;
         Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
         Map<Hash, DateAddressTransactionsHistory> dateAddressToTransactionsHistoryMap = new ConcurrentHashMap<>();
-        new TreeMap<LocalDate, Set<Hash>>();
+
         while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
             if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
                 nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
