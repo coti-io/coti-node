@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
-import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
+import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
 
 @Slf4j
 @Service
