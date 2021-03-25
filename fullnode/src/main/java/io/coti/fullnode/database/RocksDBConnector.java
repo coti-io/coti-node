@@ -2,12 +2,11 @@ package io.coti.fullnode.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.model.*;
-import io.coti.fullnode.model.DateAddressTransactionsHistories;
+import io.coti.fullnode.model.AddressTransactionsByAttachments;
 import io.coti.fullnode.model.ExplorerIndexes;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 @Primary
@@ -21,10 +20,10 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 ExplorerIndexes.class.getName(),
                 RequestedAddressHashes.class.getName(),
                 UnconfirmedReceivedTransactionHashes.class.getName(),
-                DateAddressTransactionsHistories.class.getName()
+                AddressTransactionsByAttachments.class.getName()
         ));
         resetTransactionColumnFamilyNames.addAll(Arrays.asList(
-                DateAddressTransactionsHistories.class.getName()
+                AddressTransactionsByAttachments.class.getName()
         ));
     }
 }

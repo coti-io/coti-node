@@ -21,9 +21,10 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
-import io.coti.fullnode.data.DateAddressTransactionsHistory;
+import io.coti.fullnode.data.AddressTransactionsByAttachment;
 import io.coti.fullnode.http.*;
-import io.coti.fullnode.model.DateAddressTransactionsHistories;
+import io.coti.fullnode.http.data.TimeOrder;
+import io.coti.fullnode.model.AddressTransactionsByAttachments;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -62,7 +64,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private AddressTransactionsHistories addressTransactionHistories;
     @Autowired
-    private DateAddressTransactionsHistories dateAddressTransactionsHistories;
+    private AddressTransactionsByAttachments addressTransactionsByAttachments;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -361,56 +363,70 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    public void getDateAddressTransactionBatch(GetDateAddressTransactionBatchRequest getDateAddressTransactionBatchRequest, HttpServletResponse response, boolean reduced) {
+    public void getAddressTransactionBatchByTimestamp(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response, boolean reduced) {
         try {
-            Set<Hash> addressHashList = getDateAddressTransactionBatchRequest.getAddresses();
-            Set<LocalDate> dates = getDateAddressTransactionBatchRequest.getDates();
             PrintWriter output = response.getWriter();
             chunkService.startOfChunk(output);
 
-            AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
-            addressHashList.forEach(addressHash -> {
-                DateAddressTransactionsHistory dateAddressTransactionsHistory = dateAddressTransactionsHistories.getByHash(addressHash);
-                if (dateAddressTransactionsHistory != null) {
-                    NavigableMap<LocalDate, Set<Hash>> transactionsHistoryByDate = dateAddressTransactionsHistory.getTransactionsHistoryByDate();
-                    dates.forEach( date ->
-                            transactionsHistoryByDate.get(date).forEach(transactionHash ->
-                                    sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced)
-                            )
-                    );
-                }
-            });
+            Instant startTime = getAddressTransactionBatchByTimestampRequest.getStartTime();
+            Instant endTime = getAddressTransactionBatchByTimestampRequest.getEndTime();
+            Instant now = Instant.now();
+
+            if (startTime == null || (!startTime.isAfter(now) && (endTime == null || !startTime.isAfter(endTime)))) {
+                Set<Hash> addressHashSet = getAddressTransactionBatchByTimestampRequest.getAddresses();
+                TimeOrder order = getAddressTransactionBatchByTimestampRequest.getOrder();
+
+                AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+                addressHashSet.forEach(addressHash -> {
+                    AddressTransactionsByAttachment addressTransactionsByAttachment = addressTransactionsByAttachments.getByHash(addressHash);
+                    if (addressTransactionsByAttachment != null) {
+                        NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressTransactionsByAttachment.getTransactionsHistoryByAttachment();
+                        Instant from = startTime;
+                        Instant to = endTime;
+                        if (from == null) {
+                            from = transactionsHistoryByAttachment.firstKey();
+                        }
+                        if (to == null) {
+                            to = transactionsHistoryByAttachment.lastKey();
+                        }
+                        NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachment.subMap(from, true, to, true);
+                        if (order != null && order.equals(TimeOrder.DESC)) {
+                            transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachmentSubMap.descendingMap();
+                        }
+                        transactionsHistoryByAttachmentSubMap.forEach((attachmentTime, transactionHashSet) ->
+                                transactionHashSet.forEach(transactionHash ->
+                                        sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced)
+                                )
+                        );
+                    }
+                });
+            }
             chunkService.endOfChunk(output);
         } catch (Exception e) {
-            log.error("Error sending date address transaction batch");
+            log.error("Error sending address transaction batch by timestamp");
             log.error(e.getMessage());
         }
     }
 
-    public void getDateRangeAddressTransactionBatch(GetDateRangeAddressTransactionBatchRequest getDateRangeAddressTransactionBatchRequest, HttpServletResponse response, boolean reduced) {
+    public void getAddressTransactionBatchByDate(GetAddressTransactionBatchByDateRequest getAddressTransactionBatchByDateRequest, HttpServletResponse response, boolean reduced) {
         try {
-            Set<Hash> addressHashList = getDateRangeAddressTransactionBatchRequest.getAddresses();
-            LocalDate startDate = getDateRangeAddressTransactionBatchRequest.getStartDate();
-            LocalDate endDate = getDateRangeAddressTransactionBatchRequest.getEndDate();
+            Set<Hash> addressHashSet = getAddressTransactionBatchByDateRequest.getAddresses();
+            LocalDate startDate = getAddressTransactionBatchByDateRequest.getStartDate();
+            LocalDate endDate = getAddressTransactionBatchByDateRequest.getEndDate();
+            TimeOrder order = getAddressTransactionBatchByDateRequest.getOrder();
 
-            PrintWriter output = response.getWriter();
-            chunkService.startOfChunk(output);
+            Instant startTime = null;
+            Instant endTime = null;
+            if (startDate != null) {
+                startTime = startDate.atStartOfDay().toInstant(ZoneOffset.UTC);
+            }
+            if (endDate != null) {
+                endTime = endDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            }
 
-            AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
-            addressHashList.forEach(addressHash -> {
-                DateAddressTransactionsHistory dateAddressTransactionsHistory = dateAddressTransactionsHistories.getByHash(addressHash);
-                if (dateAddressTransactionsHistory != null) {
-                    NavigableMap<LocalDate, Set<Hash>> transactionsHistoryByDate = dateAddressTransactionsHistory.getTransactionsHistoryByDate();
-                    transactionsHistoryByDate.subMap(startDate, true, endDate, true).keySet().forEach( date ->
-                            transactionsHistoryByDate.get(date).forEach(transactionHash ->
-                                    sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced)
-                            )
-                    );
-                }
-            });
-            chunkService.endOfChunk(output);
+            getAddressTransactionBatchByTimestamp(new GetAddressTransactionBatchByTimestampRequest(addressHashSet, startTime, endTime, order), response, reduced);
         } catch (Exception e) {
-            log.error("Error sending date range address transaction batch");
+            log.error("Error sending date range address transaction batch by date");
             log.error(e.getMessage());
         }
     }
