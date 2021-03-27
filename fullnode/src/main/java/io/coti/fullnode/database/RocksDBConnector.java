@@ -1,7 +1,8 @@
 package io.coti.fullnode.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.basenode.model.*;
+import io.coti.basenode.model.RequestedAddressHashes;
+import io.coti.basenode.model.UnconfirmedReceivedTransactionHashes;
 import io.coti.fullnode.model.AddressTransactionsByAttachments;
 import io.coti.fullnode.model.ExplorerIndexes;
 import org.springframework.context.annotation.Primary;

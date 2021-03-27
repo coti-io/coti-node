@@ -5,7 +5,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.BaseNodeTransactionHelper;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.config.rules.UserNetworkFeeByTrustScoreRange;
 import io.coti.trustscore.data.Enums.TrustScoreRangeType;
@@ -42,7 +42,7 @@ public class NetworkFeeService {
     @Value("${network.fee.difference.validation}")
     private BigDecimal networkFeeDifferenceValidation;
     @Autowired
-    private BaseNodeTransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private TrustScores trustScores;
     @Autowired

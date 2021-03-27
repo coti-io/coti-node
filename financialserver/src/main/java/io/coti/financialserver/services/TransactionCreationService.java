@@ -5,9 +5,9 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.services.ClusterService;
-import io.coti.basenode.services.BaseNodeTransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.financialserver.crypto.TransactionCryptoCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class TransactionCreationService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    private BaseNodeTransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired

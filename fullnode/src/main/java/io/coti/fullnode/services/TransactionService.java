@@ -377,34 +377,40 @@ public class TransactionService extends BaseNodeTransactionService {
                 TimeOrder order = getAddressTransactionBatchByTimestampRequest.getOrder();
 
                 AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
-                addressHashSet.forEach(addressHash -> {
-                    AddressTransactionsByAttachment addressTransactionsByAttachment = addressTransactionsByAttachments.getByHash(addressHash);
-                    if (addressTransactionsByAttachment != null) {
-                        NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressTransactionsByAttachment.getTransactionsHistoryByAttachment();
-                        Instant from = startTime;
-                        Instant to = endTime;
-                        if (from == null) {
-                            from = transactionsHistoryByAttachment.firstKey();
-                        }
-                        if (to == null) {
-                            to = transactionsHistoryByAttachment.lastKey();
-                        }
-                        NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachment.subMap(from, true, to, true);
-                        if (order != null && order.equals(TimeOrder.DESC)) {
-                            transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachmentSubMap.descendingMap();
-                        }
-                        transactionsHistoryByAttachmentSubMap.forEach((attachmentTime, transactionHashSet) ->
-                                transactionHashSet.forEach(transactionHash ->
-                                        sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced)
-                                )
-                        );
-                    }
-                });
+                addressHashSet.forEach(addressHash ->
+                        sendAddressTransactionsByAttachment(addressHash, startTime, endTime, order, reduced, firstTransactionSent, output)
+                );
             }
             chunkService.endOfChunk(output);
         } catch (Exception e) {
             log.error("Error sending address transaction batch by timestamp");
             log.error(e.getMessage());
+        }
+    }
+
+    private void sendAddressTransactionsByAttachment(Hash addressHash, Instant startTime, Instant endTime, TimeOrder order, boolean reduced, AtomicBoolean firstTransactionSent, PrintWriter output) {
+        AddressTransactionsByAttachment addressTransactionsByAttachment = addressTransactionsByAttachments.getByHash(addressHash);
+        if (addressTransactionsByAttachment != null) {
+            NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressTransactionsByAttachment.getTransactionsHistoryByAttachment();
+            Instant from = startTime;
+            Instant to = endTime;
+            if (from == null) {
+                from = transactionsHistoryByAttachment.firstKey();
+            }
+            if (to == null) {
+                to = transactionsHistoryByAttachment.lastKey();
+            }
+            if (!from.isAfter(to)) {
+                NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachment.subMap(from, true, to, true);
+                if (order != null && order.equals(TimeOrder.DESC)) {
+                    transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachmentSubMap.descendingMap();
+                }
+                transactionsHistoryByAttachmentSubMap.forEach((attachmentTime, transactionHashSet) ->
+                        transactionHashSet.forEach(transactionHash ->
+                                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced)
+                        )
+                );
+            }
         }
     }
 
