@@ -23,8 +23,6 @@ public class TransactionSynchronizationService extends BaseNodeTransactionSynchr
     @Autowired
     private AddressTransactionsByAttachments addressTransactionsByAttachments;
     @Autowired
-    private TransactionHelper transactionHelper;
-    @Autowired
     private ITransactionService transactionService;
 
     @Override
@@ -41,7 +39,7 @@ public class TransactionSynchronizationService extends BaseNodeTransactionSynchr
                     TransactionData transactionData = missingTransactions.get(i);
                     transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes, missingTransactionExecutorMap);
                     transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
-                    transactionHelper.updateAddressTransactionByAttachment(addressToTransactionsByAttachmentMap, transactionData);
+                    ((TransactionHelper) transactionHelper).updateAddressTransactionByAttachment(addressToTransactionsByAttachmentMap, transactionData);
                     missingTransactions.set(i, null);
                     completedMissingTransactionNumber.incrementAndGet();
                 }
