@@ -17,7 +17,7 @@ public abstract class GetDisputeResponseData implements IDisputeEventResponseDat
     protected String hash;
     protected String transactionHash;
     protected Instant transactionCreationTime;
-    protected List<DisputeItemResponseData> disputeItems;
+    protected ArrayList<DisputeItemResponseData> disputeItems;
     protected DisputeStatus disputeStatus;
     protected BigDecimal amount;
     protected BigDecimal chargeBackAmount;

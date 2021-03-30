@@ -13,7 +13,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class GetTransactionsResponse extends BaseResponse {
 
-    protected List<TransactionResponseData> transactionsData;
+    protected ArrayList<TransactionResponseData> transactionsData;
 
     protected GetTransactionsResponse() {
 
