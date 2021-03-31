@@ -7,6 +7,7 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -17,5 +18,6 @@ public class GetAddressTransactionBatchByDateRequest implements IRequest {
     private Set<@Valid Hash> addresses;
     private @Valid LocalDate startDate;
     private @Valid LocalDate endDate;
+    private @Valid @Positive Integer limit;
     private @Valid TimeOrder order;
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import java.time.Instant;
 import java.util.Set;
 
@@ -16,15 +17,17 @@ public class GetAddressTransactionBatchByTimestampRequest {
     private Set<@Valid Hash> addresses;
     private @Valid Instant startTime;
     private @Valid Instant endTime;
+    private @Valid @Positive Integer limit;
     private @Valid TimeOrder order;
 
     private GetAddressTransactionBatchByTimestampRequest() {
     }
 
-    public GetAddressTransactionBatchByTimestampRequest(Set<Hash> addresses, Instant startTime, Instant endTime, TimeOrder order) {
+    public GetAddressTransactionBatchByTimestampRequest(Set<Hash> addresses, Instant startTime, Instant endTime, Integer limit, TimeOrder order) {
         this.addresses = addresses;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.limit = limit;
         this.order = order;
     }
 }

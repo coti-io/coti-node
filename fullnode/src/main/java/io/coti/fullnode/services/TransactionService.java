@@ -373,13 +373,7 @@ public class TransactionService extends BaseNodeTransactionService {
             Instant now = Instant.now();
 
             if (startTime == null || (!startTime.isAfter(now) && (endTime == null || !startTime.isAfter(endTime)))) {
-                Set<Hash> addressHashSet = getAddressTransactionBatchByTimestampRequest.getAddresses();
-                TimeOrder order = getAddressTransactionBatchByTimestampRequest.getOrder();
-
-                AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
-                addressHashSet.forEach(addressHash ->
-                        sendAddressTransactionsByAttachment(addressHash, startTime, endTime, order, reduced, firstTransactionSent, output)
-                );
+                sendAddressTransactionBatchByAttachment(getAddressTransactionBatchByTimestampRequest, reduced, output);
             }
             chunkService.endOfChunk(output);
         } catch (Exception e) {
@@ -388,28 +382,56 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    private void sendAddressTransactionsByAttachment(Hash addressHash, Instant startTime, Instant endTime, TimeOrder order, boolean reduced, AtomicBoolean firstTransactionSent, PrintWriter output) {
-        AddressTransactionsByAttachment addressTransactionsByAttachment = addressTransactionsByAttachments.getByHash(addressHash);
-        if (addressTransactionsByAttachment != null) {
-            NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressTransactionsByAttachment.getTransactionsHistoryByAttachment();
-            Instant from = startTime;
-            Instant to = endTime;
-            if (from == null) {
-                from = transactionsHistoryByAttachment.firstKey();
-            }
-            if (to == null) {
-                to = transactionsHistoryByAttachment.lastKey();
-            }
-            if (!from.isAfter(to)) {
-                NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachment.subMap(from, true, to, true);
-                if (order != null && order.equals(TimeOrder.DESC)) {
-                    transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachmentSubMap.descendingMap();
+    private void sendAddressTransactionBatchByAttachment(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, boolean reduced, PrintWriter output) {
+        Set<Hash> addressHashSet = getAddressTransactionBatchByTimestampRequest.getAddresses();
+        Instant startTime = getAddressTransactionBatchByTimestampRequest.getStartTime();
+        Instant endTime = getAddressTransactionBatchByTimestampRequest.getEndTime();
+        Integer limit = getAddressTransactionBatchByTimestampRequest.getLimit();
+        TimeOrder order = getAddressTransactionBatchByTimestampRequest.getOrder();
+
+        AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+        addressHashSet.forEach(addressHash -> {
+            AddressTransactionsByAttachment addressTransactionsByAttachment = addressTransactionsByAttachments.getByHash(addressHash);
+            if (addressTransactionsByAttachment != null) {
+                NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressTransactionsByAttachment.getTransactionsHistoryByAttachment();
+                Instant from = startTime;
+                Instant to = endTime;
+                if (from == null) {
+                    from = transactionsHistoryByAttachment.firstKey();
                 }
-                transactionsHistoryByAttachmentSubMap.forEach((attachmentTime, transactionHashSet) ->
-                        transactionHashSet.forEach(transactionHash ->
-                                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced)
-                        )
-                );
+                if (to == null) {
+                    to = transactionsHistoryByAttachment.lastKey();
+                }
+                if (!from.isAfter(to)) {
+                    NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = getTransactionHistoryByAttachmentSubMap(transactionsHistoryByAttachment, from, to, order);
+                    sendAddressTransactionsByAttachmentResponse(addressHash, transactionsHistoryByAttachmentSubMap, limit, reduced, firstTransactionSent, output);
+                }
+            }
+        });
+    }
+
+    private NavigableMap<Instant, Set<Hash>> getTransactionHistoryByAttachmentSubMap(NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment, Instant from, Instant to, TimeOrder order) {
+        NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachment.subMap(from, true, to, true);
+        if (order != null && order.equals(TimeOrder.DESC)) {
+            transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachmentSubMap.descendingMap();
+        }
+        return transactionsHistoryByAttachmentSubMap;
+    }
+
+    private void sendAddressTransactionsByAttachmentResponse(Hash addressHash, NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap, Integer limit, boolean reduced, AtomicBoolean firstTransactionSent, PrintWriter output) {
+        int sentTxNumber = 0;
+        for (Set<Hash> transactionHashSet : transactionsHistoryByAttachmentSubMap.values()) {
+            boolean maxLimitReached = false;
+            for (Hash transactionHash : transactionHashSet) {
+                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced);
+                sentTxNumber++;
+                if (limit != null && sentTxNumber == limit) {
+                    maxLimitReached = true;
+                    break;
+                }
+            }
+            if (maxLimitReached) {
+                break;
             }
         }
     }
@@ -419,6 +441,7 @@ public class TransactionService extends BaseNodeTransactionService {
             Set<Hash> addressHashSet = getAddressTransactionBatchByDateRequest.getAddresses();
             LocalDate startDate = getAddressTransactionBatchByDateRequest.getStartDate();
             LocalDate endDate = getAddressTransactionBatchByDateRequest.getEndDate();
+            Integer limit = getAddressTransactionBatchByDateRequest.getLimit();
             TimeOrder order = getAddressTransactionBatchByDateRequest.getOrder();
 
             Instant startTime = null;
@@ -430,7 +453,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 endTime = endDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
             }
 
-            getAddressTransactionBatchByTimestamp(new GetAddressTransactionBatchByTimestampRequest(addressHashSet, startTime, endTime, order), response, reduced);
+            getAddressTransactionBatchByTimestamp(new GetAddressTransactionBatchByTimestampRequest(addressHashSet, startTime, endTime, limit, order), response, reduced);
         } catch (Exception e) {
             log.error("Error sending date range address transaction batch by date");
             log.error(e.getMessage());
