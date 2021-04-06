@@ -18,7 +18,7 @@ public class ReducedTransactionData implements Comparable<ReducedTransactionData
     @Override
     public int compareTo(ReducedTransactionData o) {
         if (attachmentTime.equals(o.attachmentTime)) {
-            return 0;
+            return transactionHash.compareTo(o.transactionHash);
         }
         return attachmentTime.isAfter(o.attachmentTime) ? 1 : -1;
     }

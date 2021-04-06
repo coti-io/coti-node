@@ -21,13 +21,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @Slf4j
-public class TransactionSynchronizationService implements ITransactionSynchronizationService {
+public class BaseNodeTransactionSynchronizationService implements ITransactionSynchronizationService {
 
     private static final String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
     private static final String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
     private static final long MAXIMUM_BUFFER_SIZE = 300000;
     @Autowired
-    private ITransactionHelper transactionHelper;
+    protected ITransactionHelper transactionHelper;
     @Autowired
     private ITransactionService transactionService;
     @Autowired
@@ -35,7 +35,7 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
     @Autowired
     private INetworkService networkService;
     @Autowired
-    private AddressTransactionsHistories addressTransactionsHistories;
+    protected AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
     private JacksonSerializer jacksonSerializer;
     @Autowired
@@ -51,7 +51,7 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
             AtomicBoolean finishedToReceive = new AtomicBoolean(false);
             Thread monitorMissingTransactionThread = transactionService.monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber);
             Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive);
-            ResponseExtractor responseExtractor = response -> {
+            ResponseExtractor<Void> responseExtractor = response -> {
                 byte[] buf = new byte[Math.toIntExact(MAXIMUM_BUFFER_SIZE)];
                 int offset = 0;
                 int n;
@@ -96,26 +96,11 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
 
     private Thread insertMissingTransactionThread(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, Thread monitorMissingTransactionThread, AtomicBoolean finishedToReceive) {
         return new Thread(() -> {
-            Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
             int offset = 0;
-            int nextOffSet;
-            int missingTransactionsSize;
             monitorMissingTransactionThread.start();
 
-            while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
-                if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
-                    nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
-                    for (int i = offset; i < nextOffSet; i++) {
-                        TransactionData transactionData = missingTransactions.get(i);
-                        transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
-                        transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
-                        missingTransactions.set(i, null);
-                        completedMissingTransactionNumber.incrementAndGet();
-                    }
-                    offset = nextOffSet;
-                }
-            }
-            addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
+            insertMissingTransactions(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, finishedToReceive, offset);
+
             monitorMissingTransactionThread.interrupt();
             synchronized (finishedToReceive) {
                 finishedToReceive.notify();
@@ -123,6 +108,26 @@ public class TransactionSynchronizationService implements ITransactionSynchroniz
 
         });
 
+    }
+
+    protected void insertMissingTransactions(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, int offset) {
+        int missingTransactionsSize;
+        int nextOffSet;
+        Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
+        while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
+            if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
+                nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
+                for (int i = offset; i < nextOffSet; i++) {
+                    TransactionData transactionData = missingTransactions.get(i);
+                    transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+                    transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+                    missingTransactions.set(i, null);
+                    completedMissingTransactionNumber.incrementAndGet();
+                }
+                offset = nextOffSet;
+            }
+        }
+        addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
     }
 
 }

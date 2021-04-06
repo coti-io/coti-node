@@ -40,7 +40,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private RocksDB db;
     protected List<String> columnFamilyClassNames;
     protected List<String> resetColumnFamilyNames = new ArrayList<>();
-    private List<String> resetTransactionColumnFamilyNames;
+    protected List<String> resetTransactionColumnFamilyNames;
     private final Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
 
     public void init() {

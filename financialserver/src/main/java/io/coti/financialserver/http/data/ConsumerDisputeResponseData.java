@@ -3,9 +3,12 @@ package io.coti.financialserver.http.data;
 import io.coti.basenode.data.SignatureData;
 import io.coti.financialserver.data.DisputeData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ConsumerDisputeResponseData extends GetDisputeResponseData {
+
     private String consumerHash;
     private SignatureData consumerSignature;
 

@@ -25,7 +25,10 @@ import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
+import io.coti.fullnode.data.AddressTransactionsByAttachment;
 import io.coti.fullnode.http.*;
+import io.coti.fullnode.http.data.TimeOrder;
+import io.coti.fullnode.model.AddressTransactionsByAttachments;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,9 +39,9 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +66,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private IClusterService clusterService;
     @Autowired
     private AddressTransactionsHistories addressTransactionHistories;
+    @Autowired
+    private AddressTransactionsByAttachments addressTransactionsByAttachments;
     @Autowired
     private Transactions transactions;
     @Autowired
@@ -334,6 +339,104 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error(e.getMessage());
         }
     }
+
+    public void getAddressTransactionBatchByTimestamp(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response, boolean reduced) {
+        try {
+            PrintWriter output = response.getWriter();
+            chunkService.startOfChunk(output);
+
+            Instant startTime = getAddressTransactionBatchByTimestampRequest.getStartTime();
+            Instant endTime = getAddressTransactionBatchByTimestampRequest.getEndTime();
+            Instant now = Instant.now();
+
+            if (startTime == null || (!startTime.isAfter(now) && (endTime == null || !startTime.isAfter(endTime)))) {
+                sendAddressTransactionBatchByAttachment(getAddressTransactionBatchByTimestampRequest, reduced, output);
+            }
+            chunkService.endOfChunk(output);
+        } catch (Exception e) {
+            log.error("Error sending address transaction batch by timestamp");
+            log.error(e.getMessage());
+        }
+    }
+
+    private void sendAddressTransactionBatchByAttachment(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, boolean reduced, PrintWriter output) {
+        Set<Hash> addressHashSet = getAddressTransactionBatchByTimestampRequest.getAddresses();
+        Instant startTime = getAddressTransactionBatchByTimestampRequest.getStartTime();
+        Instant endTime = getAddressTransactionBatchByTimestampRequest.getEndTime();
+        Integer limit = getAddressTransactionBatchByTimestampRequest.getLimit();
+        TimeOrder order = getAddressTransactionBatchByTimestampRequest.getOrder();
+
+        AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+        addressHashSet.forEach(addressHash -> {
+            AddressTransactionsByAttachment addressTransactionsByAttachment = addressTransactionsByAttachments.getByHash(addressHash);
+            if (addressTransactionsByAttachment != null) {
+                NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressTransactionsByAttachment.getTransactionsHistoryByAttachment();
+                Instant from = startTime;
+                Instant to = endTime;
+                if (from == null) {
+                    from = transactionsHistoryByAttachment.firstKey();
+                }
+                if (to == null) {
+                    to = transactionsHistoryByAttachment.lastKey();
+                }
+                if (!from.isAfter(to)) {
+                    NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = getTransactionHistoryByAttachmentSubMap(transactionsHistoryByAttachment, from, to, order);
+                    sendAddressTransactionsByAttachmentResponse(addressHash, transactionsHistoryByAttachmentSubMap, limit, reduced, firstTransactionSent, output);
+                }
+            }
+        });
+    }
+
+    private NavigableMap<Instant, Set<Hash>> getTransactionHistoryByAttachmentSubMap(NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment, Instant from, Instant to, TimeOrder order) {
+        NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachment.subMap(from, true, to, true);
+        if (order != null && order.equals(TimeOrder.DESC)) {
+            transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachmentSubMap.descendingMap();
+        }
+        return transactionsHistoryByAttachmentSubMap;
+    }
+
+    private void sendAddressTransactionsByAttachmentResponse(Hash addressHash, NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap, Integer limit, boolean reduced, AtomicBoolean firstTransactionSent, PrintWriter output) {
+        int sentTxNumber = 0;
+        for (Set<Hash> transactionHashSet : transactionsHistoryByAttachmentSubMap.values()) {
+            boolean maxLimitReached = false;
+            for (Hash transactionHash : transactionHashSet) {
+                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced);
+                sentTxNumber++;
+                if (limit != null && sentTxNumber == limit) {
+                    maxLimitReached = true;
+                    break;
+                }
+            }
+            if (maxLimitReached) {
+                break;
+            }
+        }
+    }
+
+    public void getAddressTransactionBatchByDate(GetAddressTransactionBatchByDateRequest getAddressTransactionBatchByDateRequest, HttpServletResponse response, boolean reduced) {
+        try {
+            Set<Hash> addressHashSet = getAddressTransactionBatchByDateRequest.getAddresses();
+            LocalDate startDate = getAddressTransactionBatchByDateRequest.getStartDate();
+            LocalDate endDate = getAddressTransactionBatchByDateRequest.getEndDate();
+            Integer limit = getAddressTransactionBatchByDateRequest.getLimit();
+            TimeOrder order = getAddressTransactionBatchByDateRequest.getOrder();
+
+            Instant startTime = null;
+            Instant endTime = null;
+            if (startDate != null) {
+                startTime = startDate.atStartOfDay().toInstant(ZoneOffset.UTC);
+            }
+            if (endDate != null) {
+                endTime = endDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            }
+
+            getAddressTransactionBatchByTimestamp(new GetAddressTransactionBatchByTimestampRequest(addressHashSet, startTime, endTime, limit, order), response, reduced);
+        } catch (Exception e) {
+            log.error("Error sending date range address transaction batch by date");
+            log.error(e.getMessage());
+        }
+    }
+
 
     private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output) {
         sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false);
