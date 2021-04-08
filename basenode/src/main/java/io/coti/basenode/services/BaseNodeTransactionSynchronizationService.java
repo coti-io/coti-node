@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 @Service
 @Slf4j
@@ -127,22 +128,34 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
     }
 
     protected void insertMissingTransactions(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, int offset) {
+        Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
+        Consumer<TransactionData> handleTransactionConsumer = transactionData -> {
+            transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes, missingTransactionExecutorMap);
+            transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+        };
+        handleMissingTransactions(missingTransactions, handleTransactionConsumer, completedMissingTransactionNumber, finishedToReceive, offset);
+
+        insertAddressTransactionsHistory(addressToTransactionsHistoryMap);
+    }
+
+    protected void handleMissingTransactions(List<TransactionData> missingTransactions, Consumer<TransactionData> handleTransactionConsumer, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, int offset) {
         int missingTransactionsSize;
         int nextOffSet;
-        Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
         while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
             if (missingTransactionsSize - 1 > offset || (missingTransactionsSize - 1 == offset && missingTransactions.get(offset) != null)) {
                 nextOffSet = offset + (finishedToReceive.get() ? missingTransactionsSize - offset : 1);
                 for (int i = offset; i < nextOffSet; i++) {
                     TransactionData transactionData = missingTransactions.get(i);
-                    transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes, missingTransactionExecutorMap);
-                    transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+                    handleTransactionConsumer.accept(transactionData);
                     missingTransactions.set(i, null);
                     completedMissingTransactionNumber.incrementAndGet();
                 }
                 offset = nextOffSet;
             }
         }
+    }
+
+    protected void insertAddressTransactionsHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap) {
         log.info("Starting to insert address transactions history");
         addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
         log.info("Finished to insert address transactions history");
