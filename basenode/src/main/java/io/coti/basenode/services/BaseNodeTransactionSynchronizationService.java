@@ -143,7 +143,9 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
                 offset = nextOffSet;
             }
         }
+        log.info("Starting to insert address transactions history");
         addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
+        log.info("Finished to insert address transactions history");
     }
 
 }
