@@ -7,6 +7,7 @@ import io.coti.basenode.services.BaseNodeTransactionSynchronizationService;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import io.coti.fullnode.data.AddressTransactionsByAttachment;
 import io.coti.fullnode.model.AddressTransactionsByAttachments;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
+@Slf4j
 public class TransactionSynchronizationService extends BaseNodeTransactionSynchronizationService {
 
     @Autowired
@@ -46,7 +48,11 @@ public class TransactionSynchronizationService extends BaseNodeTransactionSynchr
                 offset = nextOffSet;
             }
         }
+        log.info("Starting to insert address transactions history");
         addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
+        log.info("Finished to insert address transactions history");
+        log.info("Starting to insert address transactions by attachment");
         addressTransactionsByAttachments.putBatch(addressToTransactionsByAttachmentMap);
+        log.info("Finished to insert address transactions by attachment");
     }
 }
