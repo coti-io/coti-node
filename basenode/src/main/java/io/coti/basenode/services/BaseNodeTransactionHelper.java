@@ -28,7 +28,7 @@ import static io.coti.basenode.data.TransactionState.*;
 
 @Slf4j
 @Service
-public class TransactionHelper implements ITransactionHelper {
+public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     public static final int CURRENCY_SCALE = 8;
     @Autowired
@@ -103,7 +103,6 @@ public class TransactionHelper implements ITransactionHelper {
     }
 
     public void updateAddressTransactionHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap, TransactionData transactionData) {
-
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             AddressTransactionsHistory addressHistory;
             if (!addressToTransactionsHistoryMap.containsKey(baseTransactionData.getAddressHash())) {

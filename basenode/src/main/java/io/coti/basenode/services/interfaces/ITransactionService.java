@@ -33,5 +33,5 @@ public interface ITransactionService {
 
     int totalPostponedTransactions();
 
-    void addToExplorerIndexes(TransactionData transactionData);
+    void addDataToMemory(TransactionData transactionData);
 }

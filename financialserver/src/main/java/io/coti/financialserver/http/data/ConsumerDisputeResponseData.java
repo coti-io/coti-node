@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ConsumerDisputeResponseData extends GetDisputeResponseData {
+
     private String consumerHash;
     private SignatureData consumerSignature;
 

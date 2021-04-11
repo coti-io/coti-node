@@ -18,7 +18,7 @@ public class ExplorerTransactionData implements Comparable<ExplorerTransactionDa
     @Override
     public int compareTo(ExplorerTransactionData o) {
         if (attachmentTime.equals(o.attachmentTime)) {
-            return 0;
+            return transactionHash.compareTo(o.transactionHash);
         }
         return attachmentTime.isAfter(o.attachmentTime) ? 1 : -1;
     }

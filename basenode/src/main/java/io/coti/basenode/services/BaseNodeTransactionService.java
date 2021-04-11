@@ -274,7 +274,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         transactions.put(transactionData);
         if (!transactionExists) {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> {
-                addToExplorerIndexes(transactionData);
+                addDataToMemory(transactionData);
                 propagateMissingTransaction(transactionData);
             });
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
@@ -309,7 +309,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         }, monitorThreadName);
     }
 
-    public void addToExplorerIndexes(TransactionData transactionData) {
+    public void addDataToMemory(TransactionData transactionData) {
         log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
     }
 
