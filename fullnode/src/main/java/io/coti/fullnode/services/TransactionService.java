@@ -2,6 +2,7 @@ package io.coti.fullnode.services;
 
 import com.dictiography.collections.IndexedNavigableSet;
 import com.dictiography.collections.IndexedTreeSet;
+import com.google.common.collect.Sets;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.PotException;
@@ -21,10 +22,8 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
-import io.coti.fullnode.data.AddressTransactionsByAttachment;
 import io.coti.fullnode.http.*;
 import io.coti.fullnode.http.data.TimeOrder;
-import io.coti.fullnode.model.AddressTransactionsByAttachments;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +37,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
@@ -64,8 +61,6 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private AddressTransactionsHistories addressTransactionHistories;
     @Autowired
-    private AddressTransactionsByAttachments addressTransactionsByAttachments;
-    @Autowired
     private Transactions transactions;
     @Autowired
     private WebSocketSender webSocketSender;
@@ -79,17 +74,31 @@ public class TransactionService extends BaseNodeTransactionService {
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
     private BlockingQueue<ExplorerTransactionData> explorerIndexQueue;
     private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
+    private BlockingQueue<TransactionData> addressTransactionsByAttachmentQueue;
+    private Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
     private final LockData transactionLockData = new LockData();
 
     @Override
     public void init() {
+        startExplorerIndexThread();
+        startAddressTransactionsByAttachmentThread();
+        super.init();
+    }
+
+    private void startExplorerIndexThread() {
         explorerIndexedTransactionSet = new IndexedTreeSet<>();
         explorerIndexQueue = new LinkedBlockingQueue<>();
         Thread explorerIndexThread = new Thread(this::updateExplorerIndex);
         explorerIndexThread.start();
-        super.init();
+    }
+
+    private void startAddressTransactionsByAttachmentThread() {
+        addressToTransactionsByAttachmentMap = new ConcurrentHashMap<>();
+        addressTransactionsByAttachmentQueue = new LinkedBlockingQueue<>();
+        Thread addressTransactionsByAttachmentThread = new Thread(this::updateAddressTransactionsByAttachment);
+        addressTransactionsByAttachmentThread.start();
     }
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
@@ -155,7 +164,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 transactionHelper.attachTransactionToCluster(transactionData);
                 transactionHelper.setTransactionStateToSaved(transactionData);
                 webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-                addToExplorerIndexes(transactionData);
+                addDataToMemory(transactionData);
                 ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);
                 transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
                 transactionHelper.setTransactionStateToFinished(transactionData);
@@ -391,9 +400,8 @@ public class TransactionService extends BaseNodeTransactionService {
 
         AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
         addressHashSet.forEach(addressHash -> {
-            AddressTransactionsByAttachment addressTransactionsByAttachment = addressTransactionsByAttachments.getByHash(addressHash);
-            if (addressTransactionsByAttachment != null) {
-                NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressTransactionsByAttachment.getTransactionsHistoryByAttachment();
+            NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressToTransactionsByAttachmentMap.get(addressHash);
+            if (transactionsHistoryByAttachment != null) {
                 Instant from = startTime;
                 Instant to = endTime;
                 if (from == null) {
@@ -542,9 +550,12 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Override
-    public void addToExplorerIndexes(TransactionData transactionData) {
+    public void addDataToMemory(TransactionData transactionData) {
         try {
             explorerIndexQueue.put(new ExplorerTransactionData(transactionData));
+            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+                addressTransactionsByAttachmentQueue.put(transactionData);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -554,16 +565,32 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-        addToExplorerIndexes(transactionData);
+        addDataToMemory(transactionData);
     }
 
     private void updateExplorerIndex() {
         while (!Thread.currentThread().isInterrupted()) {
-
             try {
                 ExplorerTransactionData explorerTransactionData = explorerIndexQueue.take();
                 explorerIndexedTransactionSet.add(explorerTransactionData);
                 webSocketSender.notifyTotalTransactionsChange(explorerIndexedTransactionSet.size());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void updateAddressTransactionsByAttachment() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                TransactionData transactionData = addressTransactionsByAttachmentQueue.take();
+                transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+                    NavigableMap<Instant, Set<Hash>> transactionHashesByAttachmentMap = addressToTransactionsByAttachmentMap.getOrDefault(baseTransactionData.getAddressHash(), new ConcurrentSkipListMap<>());
+                    Set<Hash> transactionHashSet = transactionHashesByAttachmentMap.getOrDefault(transactionData.getAttachmentTime(), Sets.newConcurrentHashSet());
+                    transactionHashSet.add(transactionData.getHash());
+                    transactionHashesByAttachmentMap.put(transactionData.getAttachmentTime(), transactionHashSet);
+                    addressToTransactionsByAttachmentMap.put(baseTransactionData.getAddressHash(), transactionHashesByAttachmentMap);
+                });
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

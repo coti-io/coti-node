@@ -26,7 +26,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
     private static final String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
     private static final long MAXIMUM_BUFFER_SIZE = 300000;
     @Autowired
-    protected ITransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private ITransactionService transactionService;
     @Autowired
@@ -34,13 +34,13 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
     @Autowired
     private INetworkService networkService;
     @Autowired
-    protected AddressTransactionsHistories addressTransactionsHistories;
+    private AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private RestTemplate restTemplate;
     private final Object finishLock = new Object();
-    protected EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap;
+    private EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap;
 
     public synchronized void requestMissingTransactions(long firstMissingTransactionIndex) {
         try {
@@ -127,7 +127,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
 
     }
 
-    protected void insertMissingTransactions(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, int offset) {
+    private void insertMissingTransactions(List<TransactionData> missingTransactions, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, int offset) {
         Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
         Consumer<TransactionData> handleTransactionConsumer = transactionData -> {
             transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes, missingTransactionExecutorMap);
@@ -138,7 +138,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
         insertAddressTransactionsHistory(addressToTransactionsHistoryMap);
     }
 
-    protected void handleMissingTransactions(List<TransactionData> missingTransactions, Consumer<TransactionData> handleTransactionConsumer, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, int offset) {
+    private void handleMissingTransactions(List<TransactionData> missingTransactions, Consumer<TransactionData> handleTransactionConsumer, AtomicLong completedMissingTransactionNumber, AtomicBoolean finishedToReceive, int offset) {
         int missingTransactionsSize;
         int nextOffSet;
         while ((missingTransactionsSize = missingTransactions.size()) > offset || !finishedToReceive.get()) {
@@ -155,7 +155,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
         }
     }
 
-    protected void insertAddressTransactionsHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap) {
+    private void insertAddressTransactionsHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap) {
         log.info("Starting to insert address transactions history");
         addressTransactionsHistories.putBatch(addressToTransactionsHistoryMap);
         log.info("Finished to insert address transactions history");
