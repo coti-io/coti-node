@@ -27,6 +27,11 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -104,6 +109,8 @@ public abstract class BaseNodeInitializationService {
     private BuildProperties buildProperties;
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
+    private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
+    private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -133,22 +140,32 @@ public abstract class BaseNodeInitializationService {
 
     private void initTransactionSync() {
         try {
-            AtomicLong maxTransactionIndex = new AtomicLong(-1);
             log.info("Starting to read existing transactions");
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
-            Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null);
+            Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null, "Db Txs Monitor");
+            final AtomicBoolean executorServicesInitiated = new AtomicBoolean(false);
             transactions.forEach(transactionData -> {
+                if (!executorServicesInitiated.get()) {
+                    existingTransactionExecutorMap = new EnumMap<>(InitializationTransactionHandlerType.class);
+                    EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> existingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData()));
+                    executorServicesInitiated.set(true);
+                }
+
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingTransaction(maxTransactionIndex, transactionData);
+                handleExistingTransaction(transactionData);
                 completedExistedTransactionNumber.incrementAndGet();
             });
+            if (executorServicesInitiated.get()) {
+                existingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
+            }
             if (monitorExistingTransactions.isAlive()) {
                 monitorExistingTransactions.interrupt();
                 monitorExistingTransactions.join();
             }
-            confirmationService.setLastDspConfirmationIndex(maxTransactionIndex);
+            confirmationService.setLastDspConfirmationIndex(indexToTransactionMap);
+            indexToTransactionMap.clear();
             log.info("Finished to read existing transactions");
 
             if (networkService.getRecoveryServerAddress() != null) {
@@ -175,12 +192,11 @@ public abstract class BaseNodeInitializationService {
         databaseConnector.init();
     }
 
-    private void handleExistingTransaction(AtomicLong maxTransactionIndex, TransactionData transactionData) {
-        clusterService.addExistingTransactionOnInit(transactionData);
+    private void handleExistingTransaction(TransactionData transactionData) {
+        existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addExistingTransactionOnInit(transactionData));
+        existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap));
+        existingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addDataToMemory(transactionData));
 
-        confirmationService.insertSavedTransaction(transactionData, maxTransactionIndex);
-
-        transactionService.addToExplorerIndexes(transactionData);
         transactionHelper.incrementTotalTransactions();
     }
 

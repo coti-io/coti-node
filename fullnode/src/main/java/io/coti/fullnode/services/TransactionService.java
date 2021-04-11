@@ -2,11 +2,9 @@ package io.coti.fullnode.services;
 
 import com.dictiography.collections.IndexedNavigableSet;
 import com.dictiography.collections.IndexedTreeSet;
+import com.google.common.collect.Sets;
 import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.data.AddressTransactionsHistory;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.ReducedTransactionData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.CustomGson;
@@ -26,6 +24,7 @@ import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
 import io.coti.fullnode.http.*;
+import io.coti.fullnode.http.data.TimeOrder;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +35,10 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
@@ -73,18 +70,32 @@ public class TransactionService extends BaseNodeTransactionService {
     private IChunkService chunkService;
     @Autowired
     private PotService potService;
-    private BlockingQueue<ReducedTransactionData> explorerIndexQueue;
-    private IndexedNavigableSet<ReducedTransactionData> explorerIndexedTransactionSet;
+    private BlockingQueue<ExplorerTransactionData> explorerIndexQueue;
+    private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
+    private BlockingQueue<TransactionData> addressTransactionsByAttachmentQueue;
+    private Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
 
     @Override
     public void init() {
+        startExplorerIndexThread();
+        startAddressTransactionsByAttachmentThread();
+        super.init();
+    }
+
+    private void startExplorerIndexThread() {
         explorerIndexedTransactionSet = new IndexedTreeSet<>();
         explorerIndexQueue = new LinkedBlockingQueue<>();
         Thread explorerIndexThread = new Thread(this::updateExplorerIndex);
         explorerIndexThread.start();
-        super.init();
+    }
+
+    private void startAddressTransactionsByAttachmentThread() {
+        addressToTransactionsByAttachmentMap = new ConcurrentHashMap<>();
+        addressTransactionsByAttachmentQueue = new LinkedBlockingQueue<>();
+        Thread addressTransactionsByAttachmentThread = new Thread(this::updateAddressTransactionsByAttachment);
+        addressTransactionsByAttachmentThread.start();
     }
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
@@ -154,7 +165,7 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.attachTransactionToCluster(transactionData);
             transactionHelper.setTransactionStateToSaved(transactionData);
             webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-            addToExplorerIndexes(transactionData);
+            addDataToMemory(transactionData);
             final TransactionData finalTransactionData = transactionData;
             ((NetworkService) networkService).sendDataToConnectedDspNodes(finalTransactionData);
             transactionPropagationCheckService.addUnconfirmedTransaction(transactionData.getHash());
@@ -335,6 +346,102 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    public void getAddressTransactionBatchByTimestamp(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response, boolean reduced) {
+        try {
+            PrintWriter output = response.getWriter();
+            chunkService.startOfChunk(output);
+
+            Instant startTime = getAddressTransactionBatchByTimestampRequest.getStartTime();
+            Instant endTime = getAddressTransactionBatchByTimestampRequest.getEndTime();
+            Instant now = Instant.now();
+
+            if (startTime == null || (!startTime.isAfter(now) && (endTime == null || !startTime.isAfter(endTime)))) {
+                sendAddressTransactionBatchByAttachment(getAddressTransactionBatchByTimestampRequest, reduced, output);
+            }
+            chunkService.endOfChunk(output);
+        } catch (Exception e) {
+            log.error("Error sending address transaction batch by timestamp");
+            log.error(e.getMessage());
+        }
+    }
+
+    private void sendAddressTransactionBatchByAttachment(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, boolean reduced, PrintWriter output) {
+        Set<Hash> addressHashSet = getAddressTransactionBatchByTimestampRequest.getAddresses();
+        Instant startTime = getAddressTransactionBatchByTimestampRequest.getStartTime();
+        Instant endTime = getAddressTransactionBatchByTimestampRequest.getEndTime();
+        Integer limit = getAddressTransactionBatchByTimestampRequest.getLimit();
+        TimeOrder order = getAddressTransactionBatchByTimestampRequest.getOrder();
+
+        AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+        addressHashSet.forEach(addressHash -> {
+            NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment = addressToTransactionsByAttachmentMap.get(addressHash);
+            if (transactionsHistoryByAttachment != null) {
+                Instant from = startTime;
+                Instant to = endTime;
+                if (from == null) {
+                    from = transactionsHistoryByAttachment.firstKey();
+                }
+                if (to == null) {
+                    to = transactionsHistoryByAttachment.lastKey();
+                }
+                if (!from.isAfter(to)) {
+                    NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = getTransactionHistoryByAttachmentSubMap(transactionsHistoryByAttachment, from, to, order);
+                    sendAddressTransactionsByAttachmentResponse(addressHash, transactionsHistoryByAttachmentSubMap, limit, reduced, firstTransactionSent, output);
+                }
+            }
+        });
+    }
+
+    private NavigableMap<Instant, Set<Hash>> getTransactionHistoryByAttachmentSubMap(NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachment, Instant from, Instant to, TimeOrder order) {
+        NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachment.subMap(from, true, to, true);
+        if (order != null && order.equals(TimeOrder.DESC)) {
+            transactionsHistoryByAttachmentSubMap = transactionsHistoryByAttachmentSubMap.descendingMap();
+        }
+        return transactionsHistoryByAttachmentSubMap;
+    }
+
+    private void sendAddressTransactionsByAttachmentResponse(Hash addressHash, NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap, Integer limit, boolean reduced, AtomicBoolean firstTransactionSent, PrintWriter output) {
+        int sentTxNumber = 0;
+        for (Set<Hash> transactionHashSet : transactionsHistoryByAttachmentSubMap.values()) {
+            boolean maxLimitReached = false;
+            for (Hash transactionHash : transactionHashSet) {
+                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced);
+                sentTxNumber++;
+                if (limit != null && sentTxNumber == limit) {
+                    maxLimitReached = true;
+                    break;
+                }
+            }
+            if (maxLimitReached) {
+                break;
+            }
+        }
+    }
+
+    public void getAddressTransactionBatchByDate(GetAddressTransactionBatchByDateRequest getAddressTransactionBatchByDateRequest, HttpServletResponse response, boolean reduced) {
+        try {
+            Set<Hash> addressHashSet = getAddressTransactionBatchByDateRequest.getAddresses();
+            LocalDate startDate = getAddressTransactionBatchByDateRequest.getStartDate();
+            LocalDate endDate = getAddressTransactionBatchByDateRequest.getEndDate();
+            Integer limit = getAddressTransactionBatchByDateRequest.getLimit();
+            TimeOrder order = getAddressTransactionBatchByDateRequest.getOrder();
+
+            Instant startTime = null;
+            Instant endTime = null;
+            if (startDate != null) {
+                startTime = startDate.atStartOfDay().toInstant(ZoneOffset.UTC);
+            }
+            if (endDate != null) {
+                endTime = endDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            }
+
+            getAddressTransactionBatchByTimestamp(new GetAddressTransactionBatchByTimestampRequest(addressHashSet, startTime, endTime, limit, order), response, reduced);
+        } catch (Exception e) {
+            log.error("Error sending date range address transaction batch by date");
+            log.error(e.getMessage());
+        }
+    }
+
     private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output) {
         sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false);
     }
@@ -359,12 +466,12 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public ResponseEntity<IResponse> getLastTransactions() {
         List<TransactionData> transactionsDataList = new ArrayList<>();
-        Iterator<ReducedTransactionData> iterator = explorerIndexedTransactionSet.descendingIterator();
+        Iterator<ExplorerTransactionData> iterator = explorerIndexedTransactionSet.descendingIterator();
         int count = 0;
 
         while (count < EXPLORER_LAST_TRANSACTIONS_NUMBER && iterator.hasNext()) {
-            ReducedTransactionData reducedTransactionData = iterator.next();
-            transactionsDataList.add(transactions.getByHash(reducedTransactionData.getTransactionHash()));
+            ExplorerTransactionData explorerTransactionData = iterator.next();
+            transactionsDataList.add(transactions.getByHash(explorerTransactionData.getTransactionHash()));
             count++;
         }
 
@@ -424,28 +531,47 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Override
-    public void addToExplorerIndexes(TransactionData transactionData) {
+    public void addDataToMemory(TransactionData transactionData) {
         try {
-            explorerIndexQueue.put(new ReducedTransactionData(transactionData));
+            explorerIndexQueue.put(new ExplorerTransactionData(transactionData));
+            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+                addressTransactionsByAttachmentQueue.put(transactionData);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
-        addToExplorerIndexes(transactionData);
+        addDataToMemory(transactionData);
     }
 
     private void updateExplorerIndex() {
         while (!Thread.currentThread().isInterrupted()) {
 
             try {
-                ReducedTransactionData reducedTransactionData = explorerIndexQueue.take();
-                explorerIndexedTransactionSet.add(reducedTransactionData);
+                ExplorerTransactionData explorerTransactionData = explorerIndexQueue.take();
+                explorerIndexedTransactionSet.add(explorerTransactionData);
                 webSocketSender.notifyTotalTransactionsChange(explorerIndexedTransactionSet.size());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void updateAddressTransactionsByAttachment() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                TransactionData transactionData = addressTransactionsByAttachmentQueue.take();
+                transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+                    NavigableMap<Instant, Set<Hash>> transactionHashesByAttachmentMap = addressToTransactionsByAttachmentMap.getOrDefault(baseTransactionData.getAddressHash(), new ConcurrentSkipListMap<>());
+                    Set<Hash> transactionHashSet = transactionHashesByAttachmentMap.getOrDefault(transactionData.getAttachmentTime(), Sets.newConcurrentHashSet());
+                    transactionHashSet.add(transactionData.getHash());
+                    transactionHashesByAttachmentMap.put(transactionData.getAttachmentTime(), transactionHashSet);
+                    addressToTransactionsByAttachmentMap.put(baseTransactionData.getAddressHash(), transactionHashesByAttachmentMap);
+                });
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

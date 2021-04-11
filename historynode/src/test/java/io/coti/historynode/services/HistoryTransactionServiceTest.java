@@ -59,7 +59,7 @@ import static utils.TransactionTestUtils.generateRandomHash;
         Transactions.class,
         AddressTransactionsByDates.class, AddressTransactionsByAddresses.class,
         IDatabaseConnector.class, BaseNodeRocksDBConnector.class, TransactionService.class,
-        GetTransactionsByAddressRequestCrypto.class, TransactionHelper.class, StorageConnector.class,
+        GetTransactionsByAddressRequestCrypto.class, BaseNodeTransactionHelper.class, StorageConnector.class,
         AddressTransactionsHistories.class, TransactionCrypto.class, NodeCryptoHelper.class, BaseNodeBalanceService.class,
         BaseNodeConfirmationService.class, LiveViewService.class, TransactionIndexService.class, TransactionIndexes.class,
         ClusterService.class, JacksonSerializer.class, ChunkService.class, HttpJacksonSerializer.class, NodeCryptoHelper.class,
