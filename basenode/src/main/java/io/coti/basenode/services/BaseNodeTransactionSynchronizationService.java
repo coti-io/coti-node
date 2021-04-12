@@ -87,7 +87,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
                         receivedMissingTransactionNumber.incrementAndGet();
                         if (!insertMissingTransactionThread.isAlive()) {
                             missingTransactionExecutorMap = new EnumMap<>(InitializationTransactionHandlerType.class);
-                            EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> missingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData()));
+                            EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> missingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData(initializationTransactionHandlerType)));
                             insertMissingTransactionThread.start();
                         }
                         Arrays.fill(buf, 0, offset + n, (byte) 0);
@@ -110,7 +110,6 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
             monitorMissingTransactionThread.start();
 
             insertMissingTransactions(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, finishedToReceive, offset);
-            missingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
 
             monitorMissingTransactionThread.interrupt();
             try {
@@ -118,6 +117,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+            missingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
             synchronized (finishLock) {
                 finishedToInsert.set(true);
                 finishLock.notifyAll();
