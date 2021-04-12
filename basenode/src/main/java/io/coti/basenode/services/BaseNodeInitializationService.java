@@ -152,7 +152,7 @@ public abstract class BaseNodeInitializationService {
             transactions.forEach(transactionData -> {
                 if (!executorServicesInitiated.get()) {
                     existingTransactionExecutorMap = new EnumMap<>(InitializationTransactionHandlerType.class);
-                    EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> existingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData()));
+                    EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> existingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData(initializationTransactionHandlerType)));
                     executorServicesInitiated.set(true);
                 }
 
@@ -162,12 +162,12 @@ public abstract class BaseNodeInitializationService {
                 handleExistingTransaction(transactionData);
                 completedExistedTransactionNumber.incrementAndGet();
             });
-            if (executorServicesInitiated.get()) {
-                existingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
-            }
             if (monitorExistingTransactions.isAlive()) {
                 monitorExistingTransactions.interrupt();
                 monitorExistingTransactions.join();
+            }
+            if (executorServicesInitiated.get()) {
+                existingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
             }
             confirmationService.setLastDspConfirmationIndex(indexToTransactionMap);
             indexToTransactionMap.clear();
