@@ -52,10 +52,6 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private String backupBucket;
     @Value("${db.restore.backup.local}")
     private boolean backupToLocalWhenRestoring;
-    @Value("${db.backup.time}")
-    private String backupTime;
-    @Value("${database.folder.name}")
-    private String databaseFolderName;
     @Value("${application.name}")
     private String applicationName;
     @Value("${network}")
