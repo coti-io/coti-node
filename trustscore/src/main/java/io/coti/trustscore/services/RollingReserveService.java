@@ -123,11 +123,11 @@ public class RollingReserveService {
             String financialServerHttpAddress = financialServer.getHttpFullAddress();
             GetMerchantRollingReserveAddressResponse result = restTemplate.postForObject(financialServerHttpAddress + MERCHANT_ADDRESS_END_POINT, getMerchantRollingReserveAddressRequest, GetMerchantRollingReserveAddressResponse.class);
             if (result == null) {
-                throw new RollingReserveException(String.format(MERCHANT_ADRRESS_GET_ERROR, "Null result from financial server"));
+                throw new RollingReserveException(String.format(MERCHANT_ADDRESS_GET_ERROR, "Null result from financial server"));
             }
             return result.getMerchantRollingReserveAddressData();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            throw new RollingReserveException(String.format(MERCHANT_ADRRESS_GET_ERROR, ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
+            throw new RollingReserveException(String.format(MERCHANT_ADDRESS_GET_ERROR, ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage()));
         }
 
 
