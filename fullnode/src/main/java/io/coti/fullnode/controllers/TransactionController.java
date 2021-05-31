@@ -1,5 +1,7 @@
 package io.coti.fullnode.controllers;
 
+import com.weddini.throttling.Throttling;
+import com.weddini.throttling.ThrottlingType;
 import io.coti.basenode.data.TransactionIndexData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -16,6 +18,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 
+import java.util.concurrent.TimeUnit;
+
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_INVALID;
 
 @Slf4j
@@ -29,6 +33,7 @@ public class TransactionController {
     @Autowired
     private TransactionIndexService transactionIndexService;
 
+    @Throttling(type = ThrottlingType.RemoteAddr, limit = 50, timeUnit = TimeUnit.SECONDS)
     @PutMapping()
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
         return transactionService.addNewTransaction(addTransactionRequest);

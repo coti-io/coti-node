@@ -11,7 +11,23 @@
 
     <artifactId>fullnode</artifactId>
 
+    <repositories>
+        <repository>
+            <id>spring-boot-throttling-repo</id>
+            <url>https://raw.github.com/shlomokoren/spring-boot-throttling/mvn-repo/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
     <dependencies>
+        <dependency>
+            <groupId>com.weddini.throttling</groupId>
+            <artifactId>spring-boot-throttling-starter</artifactId>
+            <version>0.0.9</version>
+            <type>pom</type>
+        </dependency>
         <dependency>
             <groupId>io.coti</groupId>
             <artifactId>basenode</artifactId>
@@ -42,7 +58,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
-            <version>2.0.3.RELEASE</version>
+            <version>2.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.weddini.throttling</groupId>
+            <artifactId>spring-boot-throttling</artifactId>
+            <version>0.0.9</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -55,7 +77,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.0.3.RELEASE</version>
+                <version>2.4.2</version>
                 <executions>
                     <execution>
                         <id>build-info</id>
