@@ -36,7 +36,7 @@ public class TransactionController {
     @PutMapping()
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) throws Exception {
 
-        if (currentlyConnected.incrementAndGet() > 5) {
+        if (currentlyConnected.incrementAndGet() > 20) {
             currentlyConnected.decrementAndGet();
             throw new Exception("too many requests, please try again later...");
         }
