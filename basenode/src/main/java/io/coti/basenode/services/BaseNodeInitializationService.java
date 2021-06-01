@@ -181,6 +181,9 @@ public abstract class BaseNodeInitializationService {
             clusterService.finalizeInit();
         } catch (TransactionSyncException e) {
             throw new TransactionSyncException("Error at sync transactions.\n" + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new TransactionSyncException("Error at sync transactions.", e);
         } catch (Exception e) {
             throw new TransactionSyncException("Error at sync transactions.", e);
         }

@@ -183,6 +183,12 @@ public class TransactionService extends BaseNodeTransactionService {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new Response(e.getMessage() + " Cause: " + e.getCause().getMessage(), STATUS_ERROR));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Interrupted exception while adding transaction: {}", transactionData.getHash());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(TRANSACTION_INTERNAL_ERROR_MESSAGE, STATUS_ERROR));
         } catch (Exception e) {
             log.error("Exception while adding transaction: {}", transactionData.getHash());
             throw new TransactionException(e);

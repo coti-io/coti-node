@@ -68,8 +68,11 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
             log.info("Finished to get missing transactions");
         } catch (TransactionSyncException e) {
             throw new TransactionSyncException("Error at missing transactions from recovery Node.\n" + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new TransactionSyncException("Error at missing transactions from recovery Node.", e);
         } catch (Exception e) {
-            throw new TransactionSyncException("Error at missing transactions from recovery Node", e);
+            throw new TransactionSyncException("Error at missing transactions from recovery Node.", e);
         }
 
     }
