@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -40,6 +41,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
@@ -76,6 +78,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
+    private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
 
     @Override
     public void init() {
@@ -111,7 +114,10 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
-
+            if (currentlyAddTransaction.incrementAndGet() > 20) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new Response("Too many requests, please try again later...", STATUS_ERROR));
+            }
             if (transactionHelper.isTransactionExists(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash());
                 return ResponseEntity
@@ -188,6 +194,7 @@ public class TransactionService extends BaseNodeTransactionService {
             throw new TransactionException(e);
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
+            currentlyAddTransaction.decrementAndGet();
         }
     }
 
@@ -575,6 +582,14 @@ public class TransactionService extends BaseNodeTransactionService {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+    }
+
+    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
+    public void monitorCurrentAddTransaction() {
+        int currentAddTransactionForMonitoring = currentlyAddTransaction.get();
+        if (currentAddTransactionForMonitoring > 0) {
+            log.info("Current add tx number: {}", currentAddTransactionForMonitoring);
         }
     }
 

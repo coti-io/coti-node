@@ -6,7 +6,7 @@ COTI Node
 
 [![GitHub Stars](https://img.shields.io/github/stars/coti-io/coti-node.svg)](https://github.com/coti-io/coti-node/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/coti-io/coti-node.svg)](https://github.com/coti-io/coti-node/issues)
-[![Current Version](https://img.shields.io/badge/version-1.2.1.RELEASE-green.svg)](https://github.com/coti-io/coti-node/)
+[![Current Version](https://img.shields.io/badge/version-1.2.2--SNAPSHOT-yellow.svg)](https://github.com/coti-io/coti-node/)
 [![Discord Server](https://img.shields.io/discord/386571547508473876.svg)](https://discord.me/coti)
 
 ---
@@ -66,7 +66,7 @@ Find out more about COTI in our [Medium](https://medium.com/cotinetwork).
 build:
 ```
 mvn initialize && mvn clean compile && mvn package -DskipTests
-java -jar fullnode/target/fullnode-1.2.1.RELEASE.jar --spring.config.additional-location=fullnode1.properties
+java -jar fullnode/target/fullnode-1.2.2-SNAPSHOT.jar --spring.config.additional-location=fullnode1.properties
 ```
 #### Docker container
 There is a dockerfile and docker compose in this folder.

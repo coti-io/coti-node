@@ -16,8 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_INVALID;
 
 @Slf4j
@@ -31,23 +29,9 @@ public class TransactionController {
     @Autowired
     private TransactionIndexService transactionIndexService;
 
-    private static AtomicInteger currentlyConnected = new AtomicInteger(0);
-
     @PutMapping()
-    public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) throws Exception {
-
-        if (currentlyConnected.incrementAndGet() > 20) {
-            currentlyConnected.decrementAndGet();
-            throw new Exception("too many requests, please try again later...");
-        }
-        try
-        {
-            return transactionService.addNewTransaction(addTransactionRequest);
-        }
-        finally {
-            currentlyConnected.decrementAndGet();
-        }
-
+    public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
+        return transactionService.addNewTransaction(addTransactionRequest);
     }
 
     @PostMapping(value = "/repropagate")
