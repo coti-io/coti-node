@@ -3,13 +3,13 @@ package io.coti.fullnode.websocket;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
+import io.coti.basenode.services.interfaces.ISimpleMessagingTemplate;
 import io.coti.fullnode.websocket.data.GeneratedAddressMessage;
 import io.coti.fullnode.websocket.data.NotifyTransactionChange;
 import io.coti.fullnode.websocket.data.TotalTransactionsMessage;
 import io.coti.fullnode.websocket.data.UpdatedBalanceMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -18,11 +18,11 @@ import java.math.BigDecimal;
 @Component
 public class WebSocketSender {
 
-    private final SimpMessagingTemplate messagingSender;
-
     @Autowired
-    public WebSocketSender(SimpMessagingTemplate simpMessagingTemplate) {
-        this.messagingSender = simpMessagingTemplate;
+    private final ISimpleMessagingTemplate messagingSender;
+
+    public WebSocketSender(ISimpleMessagingTemplate messagingSender) {
+        this.messagingSender = messagingSender;
     }
 
     public void notifyBalanceChange(Hash addressHash, BigDecimal balance, BigDecimal preBalance) {
