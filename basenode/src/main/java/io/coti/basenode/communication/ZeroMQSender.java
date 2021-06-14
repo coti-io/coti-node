@@ -3,6 +3,7 @@ package io.coti.basenode.communication;
 import io.coti.basenode.communication.data.MonitorSocketData;
 import io.coti.basenode.communication.data.ReconnectMonitorData;
 import io.coti.basenode.communication.data.SenderSocketData;
+import io.coti.basenode.communication.data.ZeroMQSenderData;
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.NodeType;
@@ -18,7 +19,9 @@ import javax.annotation.PostConstruct;
 import java.nio.channels.ClosedSelectorException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -34,12 +37,49 @@ public class ZeroMQSender implements ISender {
     private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
     private Thread monitorReconnectThread;
     private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();
+    private static BlockingQueue<ZeroMQSenderData> queue = new LinkedBlockingQueue<>();
+    private static Thread senderQueueThread = null;
 
     @PostConstruct
     private void init() {
         zeroMQContext = ZMQ.context(1);
         socketType = SocketType.DEALER;
         receivingAddressToSenderSocketMapping = new ConcurrentHashMap<>();
+        senderQueueThread = new Thread(() -> send(queue));
+        senderQueueThread.start();
+    }
+
+    public <T extends IPropagatable> void send(T toSend, String address) {
+        ZeroMQSenderData senderData = new ZeroMQSenderData((IPropagatable)toSend, address);
+        try {
+            queue.put(senderData);
+        } catch (InterruptedException e) {
+            log.error("Interrupted - Sender Data Queue Full!");
+        }
+    }
+
+    private void send(BlockingQueue<ZeroMQSenderData> queue) {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                ZeroMQSenderData senderData = queue.take();
+                String address = senderData.getAddress();
+                IPropagatable toSend = senderData.getData();
+                byte[] message = this.serializer.serialize(toSend);
+                synchronized (zeroMQContext) {
+                    try {
+                        ZMQ.Socket senderSocket = receivingAddressToSenderSocketMapping.get(address).getSenderSocket();
+                        senderSocket.sendMore(toSend.getClass().getName());
+                        senderSocket.send(message);
+                        log.debug("Message {} was sent to {}", toSend, toSend.getClass().getName());
+                    } catch (ZMQException exception) {
+                        log.error("Exception in sending", (Throwable) exception);
+                    }
+                }
+            }
+            catch (InterruptedException e) {
+                log.info("Interrupted - stopped taking data from Sender Data Queue");
+            }
+        }
     }
 
     @Override
@@ -106,21 +146,6 @@ public class ZeroMQSender implements ISender {
 
     private NodeType getNodeTypeByAddress(String address) {
         return Optional.ofNullable(receivingAddressToSenderSocketMapping.get(address)).map(SenderSocketData::getNodeType).orElse(null);
-    }
-
-    @Override
-    public <T extends IPropagatable> void send(T toSend, String address) {
-        byte[] message = serializer.serialize(toSend);
-        synchronized (this) {
-            try {
-                ZMQ.Socket senderSocket = receivingAddressToSenderSocketMapping.get(address).getSenderSocket();
-                senderSocket.sendMore(toSend.getClass().getName());
-                senderSocket.send(message);
-                log.debug("Message {} was sent to {}", toSend, address);
-            } catch (ZMQException exception) {
-                log.error("Exception in sending", exception);
-            }
-        }
     }
 
     @Override
