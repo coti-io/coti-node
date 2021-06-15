@@ -293,4 +293,14 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     }
 
+    @Override
+    public long getWaitingDspConsensusResultsMapSize() {
+        return waitingMissingTransactionIndexes.size();
+    }
+
+    @Override
+    public long getConfirmationQueue() {
+        return confirmationQueue.size();
+    }
+
 }
