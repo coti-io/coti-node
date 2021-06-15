@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 
 import io.coti.basenode.data.WebSocketData;
-import io.coti.basenode.services.interfaces.ISimpleMessagingTemplate;
+import io.coti.basenode.services.interfaces.IWebSocketMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -13,14 +13,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 @Service
-public class BaseNodeSimpMessagingTemplateService implements ISimpleMessagingTemplate {
+public class BaseNodeWebSocketMessageService implements IWebSocketMessage {
 
     private final SimpMessagingTemplate messagingSender;
     private static BlockingQueue<WebSocketData> queue = new LinkedBlockingQueue<>();
     private static Thread senderQueueThread = null;
 
     @Autowired
-    public BaseNodeSimpMessagingTemplateService(SimpMessagingTemplate messagingSender) {
+    public BaseNodeWebSocketMessageService(SimpMessagingTemplate messagingSender) {
         this.messagingSender = messagingSender;
         senderQueueThread = new Thread(() -> convertAndSend(queue));
         senderQueueThread.start();
@@ -36,6 +36,11 @@ public class BaseNodeSimpMessagingTemplateService implements ISimpleMessagingTem
         }
     }
 
+    @Override
+    public int getMessageQueueSize() {
+        return queue.size();
+    }
+
     private void convertAndSend(BlockingQueue<WebSocketData> queue) {
         while (!Thread.currentThread().isInterrupted()) {
             try {
@@ -45,6 +50,7 @@ public class BaseNodeSimpMessagingTemplateService implements ISimpleMessagingTem
                 messagingSender.convertAndSend(address, toSend);
             } catch (InterruptedException e) {
                 log.info("Interrupted - stopped taking data from Sender Data Queue");
+                Thread.currentThread().interrupt();
             }
         }
     }

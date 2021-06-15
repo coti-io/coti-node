@@ -3,7 +3,7 @@ package io.coti.fullnode.websocket;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
-import io.coti.basenode.services.interfaces.ISimpleMessagingTemplate;
+import io.coti.basenode.services.interfaces.IWebSocketMessage;
 import io.coti.fullnode.websocket.data.GeneratedAddressMessage;
 import io.coti.fullnode.websocket.data.NotifyTransactionChange;
 import io.coti.fullnode.websocket.data.TotalTransactionsMessage;
@@ -19,11 +19,7 @@ import java.math.BigDecimal;
 public class WebSocketSender {
 
     @Autowired
-    private final ISimpleMessagingTemplate messagingSender;
-
-    public WebSocketSender(ISimpleMessagingTemplate messagingSender) {
-        this.messagingSender = messagingSender;
-    }
+    private IWebSocketMessage messagingSender;
 
     public void notifyBalanceChange(Hash addressHash, BigDecimal balance, BigDecimal preBalance) {
         log.trace("Address {} with balance {} and pre balance {} is about to be sent to the subscribed user", addressHash, balance, preBalance);

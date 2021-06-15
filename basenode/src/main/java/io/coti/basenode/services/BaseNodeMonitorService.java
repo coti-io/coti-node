@@ -25,6 +25,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     private ITransactionService transactionService;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
+    @Autowired
+    private IWebSocketMessage webSocketMessageService;
     @Value("${allow.transaction.monitoring}")
     private boolean allowTransactionMonitoring;
 
@@ -35,7 +37,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void lastState() {
         if (allowTransactionMonitoring) {
-            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}",
+            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}, WebSocketMessagesQueueLength = {}",
                     transactionHelper.getTotalTransactions(),
                     confirmationService.getTrustChainConfirmed(),
                     confirmationService.getDspConfirmed(),
@@ -43,7 +45,8 @@ public class BaseNodeMonitorService implements IMonitorService {
                     transactionIndexService.getLastTransactionIndexData().getIndex(),
                     clusterService.getTotalSources(),
                     transactionService.totalPostponedTransactions(),
-                    propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION));
+                    propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION),
+                    webSocketMessageService.getMessageQueueSize());
         }
     }
 }
