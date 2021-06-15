@@ -27,4 +27,8 @@ public interface IConfirmationService {
     long getDspConfirmed();
 
     void shutdown();
+
+    long getWaitingDspConsensusResultsMapSize();
+
+    long getConfirmationQueue();
 }
