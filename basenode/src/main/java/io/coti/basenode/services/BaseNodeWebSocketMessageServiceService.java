@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 
 import io.coti.basenode.data.WebSocketData;
-import io.coti.basenode.services.interfaces.IWebSocketMessage;
+import io.coti.basenode.services.interfaces.IWebSocketMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -13,14 +13,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 @Service
-public class BaseNodeWebSocketMessageService implements IWebSocketMessage {
+public class BaseNodeWebSocketMessageServiceService implements IWebSocketMessageService {
 
     private final SimpMessagingTemplate messagingSender;
     private static BlockingQueue<WebSocketData> queue = new LinkedBlockingQueue<>();
     private static Thread senderQueueThread = null;
 
     @Autowired
-    public BaseNodeWebSocketMessageService(SimpMessagingTemplate messagingSender) {
+    public BaseNodeWebSocketMessageServiceService(SimpMessagingTemplate messagingSender) {
         this.messagingSender = messagingSender;
         senderQueueThread = new Thread(() -> convertAndSend(queue));
         senderQueueThread.start();

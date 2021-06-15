@@ -26,7 +26,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
     @Autowired
-    private IWebSocketMessage webSocketMessageService;
+    private IWebSocketMessageService webSocketMessageService;
     @Value("${allow.transaction.monitoring}")
     private boolean allowTransactionMonitoring;
 
