@@ -13,14 +13,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 @Service
-public class BaseNodeWebSocketMessageServiceService implements IWebSocketMessageService {
+public class BaseNodeWebSocketMessageService implements IWebSocketMessageService {
 
     private final SimpMessagingTemplate messagingSender;
-    private static BlockingQueue<WebSocketData> queue = new LinkedBlockingQueue<>();
-    private static Thread senderQueueThread = null;
+    private static final BlockingQueue<WebSocketData> queue = new LinkedBlockingQueue<>();
+    private static Thread senderQueueThread;
 
     @Autowired
-    public BaseNodeWebSocketMessageServiceService(SimpMessagingTemplate messagingSender) {
+    public BaseNodeWebSocketMessageService(SimpMessagingTemplate messagingSender) {
         this.messagingSender = messagingSender;
         senderQueueThread = new Thread(() -> convertAndSend(queue));
         senderQueueThread.start();
