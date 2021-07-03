@@ -115,13 +115,21 @@ public class BaseNodeAwsService implements IAwsService {
                             .withPrefix(path + "/");
             List<String> keys = new ArrayList<>();
             ObjectListing objects = s3Client.listObjects(listObjectsRequest);
+            getS3ObjectSummaryKeys(keys, objects);
 
-            List<S3ObjectSummary> summaries = objects.getObjectSummaries();
-            summaries.forEach(s -> keys.add(s.getKey()));
+            while (objects.isTruncated()) {
+                objects = s3Client.listNextBatchOfObjects(objects);
+                getS3ObjectSummaryKeys(keys, objects);
+            }
             return keys;
         } catch (Exception e) {
             throw new AwsDataTransferException("List S3 paths error.", e);
         }
+    }
+
+    private void getS3ObjectSummaryKeys(List<String> keys, ObjectListing objects) {
+        List<S3ObjectSummary> summaries = objects.getObjectSummaries();
+        summaries.forEach(s -> keys.add(s.getKey()));
     }
 
     @Override
