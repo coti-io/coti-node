@@ -16,6 +16,7 @@ import org.springframework.util.SerializationUtils;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -396,6 +397,25 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         closeDB();
+    }
+
+    @Override
+    public boolean compactRange() {
+        try {
+            log.info("Manifest file size: " + String.valueOf(db.getLiveFiles().manifestFileSize));
+            log.info("Database file:" + String.valueOf(db.getLiveFiles().files));
+            log.info("Compacting entire range...");
+            long beforeCompactTime = Instant.now().getEpochSecond();
+            db.compactRange();
+            long afterCompactTime = Instant.now().getEpochSecond();
+            log.info("Compact took: " + String.valueOf(afterCompactTime - beforeCompactTime) + " seconds.");
+            log.info("Manifest file size: " + String.valueOf(db.getLiveFiles().manifestFileSize));
+            log.info("Database file:" + String.valueOf(db.getLiveFiles().files));
+        } catch (RocksDBException e) {
+            log.error("Error at compactRange db", e);
+            return false;
+        }
+        return true;
     }
 
 }
