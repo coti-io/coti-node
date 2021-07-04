@@ -36,4 +36,6 @@ public interface IDatabaseConnector {
 
     void shutdown();
 
+    boolean compactRange();
+
 }
