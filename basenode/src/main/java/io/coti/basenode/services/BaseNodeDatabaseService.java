@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class BaseDatabaseService implements IDatabaseService {
+public class BaseNodeDatabaseService implements IDatabaseService {
 
     @Autowired
     private IDatabaseConnector dBConnector;
