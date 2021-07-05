@@ -16,6 +16,7 @@ import org.springframework.util.SerializationUtils;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -402,15 +403,19 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     @Override
     public boolean compactRange() {
         try {
-            log.info("Manifest file size: " + String.valueOf(db.getLiveFiles().manifestFileSize));
-            log.info("Database file:" + String.valueOf(db.getLiveFiles().files));
+            log.info("PreCompact manifest file size: {}", db.getLiveFiles().manifestFileSize);
+            List<String> preCompactFiles = db.getLiveFiles().files;
+            log.info("PreCompact number of database files: {}", preCompactFiles.size());
+            log.info("PreCompact database files: {}", preCompactFiles);
             log.info("Compacting entire range...");
-            long beforeCompactTime = Instant.now().getEpochSecond();
+            Instant beforeCompactTime = Instant.now();
             db.compactRange();
-            long afterCompactTime = Instant.now().getEpochSecond();
-            log.info("Compact took: " + String.valueOf(afterCompactTime - beforeCompactTime) + " seconds.");
-            log.info("Manifest file size: " + String.valueOf(db.getLiveFiles().manifestFileSize));
-            log.info("Database file:" + String.valueOf(db.getLiveFiles().files));
+            Instant afterCompactTime = Instant.now();
+            log.info("Compact took: {} seconds.", (double) Duration.between(beforeCompactTime, afterCompactTime).toMillis() / 1000);
+            log.info("PostCompact manifest file size: {}", db.getLiveFiles().manifestFileSize);
+            List<String> postCompactFiles = db.getLiveFiles().files;
+            log.info("PostCompact number of database files: {}", postCompactFiles.size());
+            log.info("PostCompact database files: {}", postCompactFiles);
         } catch (RocksDBException e) {
             log.error("Error at compactRange db", e);
             return false;
