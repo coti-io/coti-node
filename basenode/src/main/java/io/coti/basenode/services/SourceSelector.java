@@ -1,8 +1,10 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +12,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.stream.Collectors.toList;
 
@@ -25,58 +29,63 @@ public class SourceSelector implements ISourceSelector {
 
     @Override
     public List<TransactionData> selectSourcesForAttachment(
-            List<Set<TransactionData>> trustScoreToTransactionMapping,
-            double transactionTrustScore) {
+            List<Set<Hash>> trustScoreToTransactionMapping,
+            Map<Hash, TransactionData> sourceMap, double transactionTrustScore, ReentrantReadWriteLock readWriteLock) {
 
         List<TransactionData> neighbourSources = getNeighbourSources(
                 trustScoreToTransactionMapping,
-                transactionTrustScore);
+                sourceMap,
+                transactionTrustScore, readWriteLock);
 
         return selectTwoOptimalSources(neighbourSources);
     }
 
     private List<TransactionData> getNeighbourSources(
-            List<Set<TransactionData>> trustScoreToSourceListMapping,
-            double transactionTrustScore) {
+            List<Set<Hash>> trustScoreToSourceListMapping,
+            Map<Hash, TransactionData> sourceMap, double transactionTrustScore, ReentrantReadWriteLock readWriteLock) {
 
         List<TransactionData> neighbourSources = new LinkedList<>();
+        try {
+            readWriteLock.readLock().lock();
+            int roundedTrustScore = (int) Math.round(transactionTrustScore);
+            int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
+            if (numberOfSources > 0) {
+                int lowIndex = roundedTrustScore - 1;
+                int highIndex = roundedTrustScore + 1;
 
-        int roundedTrustScore = (int) Math.round(transactionTrustScore);
-        int numberOfSources = getNumberOfSources(trustScoreToSourceListMapping);
-        if (numberOfSources > 0) {
-            int lowIndex = roundedTrustScore - 1;
-            int highIndex = roundedTrustScore + 1;
+                neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore).stream().map(hash -> SerializationUtils.clone(sourceMap.get(hash))).collect(toList()));
 
-            neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore));
-
-            for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
-                if (lowIndex >= 0) {
-                    neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex));
+                for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
+                    if (lowIndex >= 0) {
+                        neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex).stream().map(hash -> SerializationUtils.clone(sourceMap.get(hash))).collect(toList()));
+                    }
+                    if (highIndex <= 100) {
+                        neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex).stream().map(hash -> SerializationUtils.clone(sourceMap.get(hash))).collect(toList()));
+                    }
+                    if ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
+                        break;
+                    }
+                    lowIndex--;
+                    highIndex++;
                 }
-                if (highIndex <= 100) {
-                    neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex));
-                }
-                if ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
-                    break;
-                }
-                lowIndex--;
-                highIndex++;
             }
+            return neighbourSources;
+        } finally {
+            readWriteLock.readLock().unlock();
         }
-        return neighbourSources;
     }
 
-    private int getNumberOfSources(List<Set<TransactionData>> trustScoreToSourceListMapping) {
+    private int getNumberOfSources(List<Set<Hash>> trustScoreToSourceListMapping) {
         int numberOfSources = 0;
-        for (int i = 0; i < trustScoreToSourceListMapping.size(); i++) {
-            if (trustScoreToSourceListMapping.get(i) != null) {
-                numberOfSources += trustScoreToSourceListMapping.get(i).size();
+        for (Set<Hash> hashes : trustScoreToSourceListMapping) {
+            if (hashes != null) {
+                numberOfSources += hashes.size();
             }
         }
         return numberOfSources;
     }
 
-    public List<TransactionData> selectTwoOptimalSources(List<TransactionData> transactions) {
+    private List<TransactionData> selectTwoOptimalSources(List<TransactionData> transactions) {
 
         Instant now = Instant.now();
         List<TransactionData> olderSources =
