@@ -19,5 +19,9 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 UnconfirmedReceivedTransactionHashes.class.getName(),
                 UnconfirmedTransactionDspVotes.class.getName()
         ));
+        resetTransactionColumnFamilyNames.addAll(Arrays.asList(
+                UnconfirmedReceivedTransactionHashes.class.getName(),
+                UnconfirmedTransactionDspVotes.class.getName()
+        ));
     }
 }
