@@ -8,6 +8,7 @@ import io.coti.basenode.model.Collection;
 import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
+import org.rocksdb.util.SizeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -210,9 +211,24 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
+    private static final long COLUMN_WRITE_BUFFER_SIZE = (1 * SizeUnit.MB);     // how many bytes until .log turned to .sst
+                                                                                // once reached - it will dump as much as possible so the log
+                                                                                // file will remain less then the size stated
+
+    private static final long TARGET_FILE_SIZE_BASE = (20 * SizeUnit.MB);       // max size of the first level sst after pushing enough data down in levels
+
+    private static final int TARGET_FILE_SIZE_MULTIPLIER = 2;                   // size ratio of between sst level files
+
+    private static final int NUM_LEVELS = 7;                                    // number of levels
+
+
+    private static ColumnFamilyOptions cfOpts = new ColumnFamilyOptions().setWriteBufferSize(COLUMN_WRITE_BUFFER_SIZE)
+            .setTargetFileSizeBase(TARGET_FILE_SIZE_BASE).setTargetFileSizeMultiplier(TARGET_FILE_SIZE_MULTIPLIER)
+            .setNumLevels(NUM_LEVELS);
+
     private void initiateColumnFamilyDescriptors(List<String> dbColumnFamilies, List<ColumnFamilyDescriptor> columnFamilyDescriptors) {
         List<String> columnFamilyNamesToInit = Optional.ofNullable(dbColumnFamilies).orElse(columnFamilyClassNames);
-        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes())));
+        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes(),cfOpts)));
     }
 
     @Override
