@@ -6,6 +6,7 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 public interface IPropagationSubscriber {
 
@@ -28,4 +29,6 @@ public interface IPropagationSubscriber {
     int getMessageQueueSize(ZeroMQSubscriberQueue zeroMQSubscriberQueue);
 
     void shutdown();
+
+    Map<String, String> getQueueSize();
 }

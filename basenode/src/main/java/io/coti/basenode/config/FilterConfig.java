@@ -22,6 +22,7 @@ public class FilterConfig {
         adminFilter.setWhiteListIps(new HashSet<>(Arrays.asList(whitelistIps.split(","))));
         registrationBean.setFilter(adminFilter);
         registrationBean.addUrlPatterns("/admin/*");
+        registrationBean.addUrlPatterns("/metrics");
         registrationBean.setOrder(1);
         return registrationBean;
     }
