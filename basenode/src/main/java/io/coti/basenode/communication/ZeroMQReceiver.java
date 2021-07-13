@@ -175,4 +175,12 @@ public class ZeroMQReceiver implements IReceiver {
         }
     }
 
+    @Override
+    public int getQueueSize() {
+        if (messageQueue != null)
+            return messageQueue.size();
+        else
+            return -1;
+    }
+
 }
