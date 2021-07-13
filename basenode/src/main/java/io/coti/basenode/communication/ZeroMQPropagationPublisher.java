@@ -187,4 +187,12 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
         }
     }
+
+    @Override
+    public int getQueueCount() {
+        if (publishMessageQueue != null)
+            return publishMessageQueue.size();
+        else
+            return -1;
+    }
 }

@@ -31,5 +31,9 @@ public interface IConfirmationService {
 
     long getWaitingDspConsensusResultsMapSize();
 
+    long getWaitingMissingTransactionIndexes();
+
     long getConfirmationQueue();
+
+    int getQueueSize();
 }
