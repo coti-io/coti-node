@@ -127,8 +127,9 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                     awsService.createS3Folder(backupBucket, backupS3Path);
                 }
                 File backupFolderToUpload = new File(remoteBackupFolderPath);
-                log.info("Uploading remote backup to S3 bucket");
-                awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + BACK_UP_FOLDER_PREFIX + Instant.now().toEpochMilli(), backupFolderToUpload);
+                String s3FolderName = BACK_UP_FOLDER_PREFIX + Instant.now().toEpochMilli();
+                log.info("Uploading remote backup to S3 bucket {} and folderName {}", backupBucket, s3FolderName);
+                awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + s3FolderName, backupFolderToUpload);
                 if (!backupFiles.isEmpty()) {
                     Set<Long> s3BackupTimeStampSet = getS3BackupTimeStampSet(backupFiles);
                     if (s3BackupTimeStampSet.size() >= ALLOWED_NUMBER_OF_BACKUPS) {
@@ -136,7 +137,10 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                         Collections.sort(s3BackupTimeStamps);
                         String[] backupFoldersToRemove = s3BackupTimeStamps.stream().limit((long) s3BackupTimeStampSet.size() - ALLOWED_NUMBER_OF_BACKUPS + 1).map(s3BackupTimeStamp -> backupS3Path + BACK_UP_FOLDER_PREFIX + s3BackupTimeStamp.toString()).toArray(String[]::new);
                         backupFiles = backupFiles.stream().filter(backupFile -> StringUtils.startsWithAny(backupFile, backupFoldersToRemove)).collect(Collectors.toList());
+                        log.info("Deleting {} older backup folder(s) with total {} file(s).", backupFoldersToRemove.length, backupFiles.size());
+                        log.info("Folders: {}", Arrays.toString(backupFoldersToRemove));
                         awsService.deleteFolderAndContentsFromS3(backupFiles, backupBucket);
+                        log.info("Finished to delete older backup folders");
                     }
                 }
                 log.info("Finished DB backup flow");
