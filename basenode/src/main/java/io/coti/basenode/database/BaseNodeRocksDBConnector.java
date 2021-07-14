@@ -215,9 +215,11 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
+    private static ColumnFamilyOptions cfOpts = new ColumnFamilyOptions().optimizeUniversalStyleCompaction();
+
     private void initiateColumnFamilyDescriptors(List<String> dbColumnFamilies, List<ColumnFamilyDescriptor> columnFamilyDescriptors) {
         List<String> columnFamilyNamesToInit = Optional.ofNullable(dbColumnFamilies).orElse(columnFamilyClassNames);
-        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes())));
+        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes(), cfOpts)));
     }
 
     @Override
