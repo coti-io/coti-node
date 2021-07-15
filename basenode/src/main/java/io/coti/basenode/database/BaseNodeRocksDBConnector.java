@@ -44,6 +44,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     protected List<String> resetColumnFamilyNames = new ArrayList<>();
     protected List<String> resetTransactionColumnFamilyNames;
     private final Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
+    private final ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions().optimizeUniversalStyleCompaction();
 
     public void init() {
         setColumnFamily();
@@ -212,11 +213,9 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
-    private static ColumnFamilyOptions cfOpts = new ColumnFamilyOptions().optimizeUniversalStyleCompaction();
-
     private void initiateColumnFamilyDescriptors(List<String> dbColumnFamilies, List<ColumnFamilyDescriptor> columnFamilyDescriptors) {
         List<String> columnFamilyNamesToInit = Optional.ofNullable(dbColumnFamilies).orElse(columnFamilyClassNames);
-        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes(), cfOpts)));
+        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes(), columnFamilyOptions)));
     }
 
     @Override
