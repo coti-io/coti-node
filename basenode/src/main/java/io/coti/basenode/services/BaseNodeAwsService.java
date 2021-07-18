@@ -168,11 +168,18 @@ public class BaseNodeAwsService implements IAwsService {
 
     @Override
     public void deleteFolderAndContentsFromS3(List<String> remoteBackups, String bucketName) {
-        List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
-        remoteBackups.forEach(backup -> keysToDelete.add(new DeleteObjectsRequest.KeyVersion(backup)));
         try {
-            DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keysToDelete);
-            s3Client.deleteObjects(deleteObjectsRequest);
+            final int chuckSize = 500;
+            int chunkCount = 0;
+            while (chunkCount * chuckSize < remoteBackups.size()) {
+                List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
+                for (int i = chunkCount * chuckSize; i < Math.min(remoteBackups.size(), (chunkCount + 1) * chuckSize); i++) {
+                    keysToDelete.add(new DeleteObjectsRequest.KeyVersion(remoteBackups.get(i)));
+                }
+                DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keysToDelete);
+                s3Client.deleteObjects(deleteObjectsRequest);
+                chunkCount++;
+            }
         } catch (Exception e) {
             throw new AwsDataTransferException("Delete folder and contents from S3 error", e);
         }
