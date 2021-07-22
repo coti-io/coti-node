@@ -115,7 +115,6 @@ public abstract class BaseNodeInitializationService {
     private ITransactionPropagationCheckService transactionPropagationCheckService;
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
-
     @Autowired
     protected IMetricsService metricsService;
 

@@ -167,6 +167,15 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
         monitorThread.start();
     }
 
+    @Override
+    public int getQueueSize() {
+        if (publishMessageQueue != null) {
+            return publishMessageQueue.size();
+        } else {
+            return -1;
+        }
+    }
+
     public void shutdown() {
         if (propagator != null) {
             log.info("Shutting down {}", this.getClass().getSimpleName());
@@ -186,13 +195,5 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
             }
 
         }
-    }
-
-    @Override
-    public int getQueueSize() {
-        if (publishMessageQueue != null)
-            return publishMessageQueue.size();
-        else
-            return -1;
     }
 }

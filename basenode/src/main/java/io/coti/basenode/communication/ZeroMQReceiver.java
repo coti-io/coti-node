@@ -157,6 +157,15 @@ public class ZeroMQReceiver implements IReceiver {
     }
 
     @Override
+    public int getQueueSize() {
+        if (messageQueue != null) {
+            return messageQueue.size();
+        } else {
+            return -1;
+        }
+    }
+
+    @Override
     public void shutdown() {
         try {
             if (receiver != null) {
@@ -173,14 +182,6 @@ public class ZeroMQReceiver implements IReceiver {
             log.error("Interrupted shutdown ZeroMQ receiver");
             Thread.currentThread().interrupt();
         }
-    }
-
-    @Override
-    public int getQueueSize() {
-        if (messageQueue != null)
-            return messageQueue.size();
-        else
-            return -1;
     }
 
 }

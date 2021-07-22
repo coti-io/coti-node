@@ -29,9 +29,9 @@ public interface IConfirmationService {
 
     void shutdown();
 
-    long getWaitingDspConsensusResultsMapSize();
+    int getWaitingDspConsensusResultsMapSize();
 
-    long getWaitingMissingTransactionIndexesSize();
+    int getWaitingMissingTransactionIndexesSize();
 
     int getQueueSize();
 }
