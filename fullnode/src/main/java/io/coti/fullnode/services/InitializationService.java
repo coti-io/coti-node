@@ -55,7 +55,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
             for (int i = 0; i < dspNetworkNodeData.size() && i < 2; i++) {
                 communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress(), NodeType.DspNode);
-                communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress());
+                communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress(), NodeType.DspNode);
                 ((NetworkService) networkService).addToConnectedDspNodes(dspNetworkNodeData.get(i));
             }
 

@@ -33,7 +33,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private AddressService addressService;
     @Autowired
     private ICommunicationService communicationService;
-    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override
@@ -55,7 +55,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
             networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
             communicationService.initPublisher(propagationPort, NodeType.DspNode);
-            HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
+            HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping = new HashMap<>();
             classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
                     transactionService.handleNewTransactionFromFullNode((TransactionData) data));
 
@@ -63,7 +63,7 @@ public class InitializationService extends BaseNodeInitializationService {
                     addressService.handleNewAddressFromFullNode((AddressData) data));
 
             communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-            communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
+            communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress(), NodeType.ZeroSpendServer);
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             List<NetworkNodeData> dspNetworkNodeDataList = networkService.getMapFromFactory(NodeType.DspNode).values().stream()
                     .filter(dspNode -> !dspNode.equals(networkService.getNetworkNodeData()))

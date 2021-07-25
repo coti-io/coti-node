@@ -2,6 +2,8 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.communication.interfaces.IReceiver;
+import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.IShutDownService;
@@ -20,6 +22,10 @@ public class BaseNodeShutDownService implements IShutDownService {
     @Autowired
     protected IPropagationSubscriber propagationSubscriber;
     @Autowired
+    protected IReceiver receiver;
+    @Autowired
+    protected ISender sender;
+    @Autowired
     protected IDatabaseConnector databaseConnector;
 
     public void shutdown() {
@@ -27,8 +33,10 @@ public class BaseNodeShutDownService implements IShutDownService {
     }
 
     public void shutDownServices() {
+        receiver.shutdown();
         propagationSubscriber.shutdown();
         propagationPublisher.shutdown();
+        sender.shutdown();
         confirmationService.shutdown();
         databaseConnector.shutdown();
     }

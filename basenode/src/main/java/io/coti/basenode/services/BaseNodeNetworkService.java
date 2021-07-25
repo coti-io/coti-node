@@ -303,7 +303,7 @@ public class BaseNodeNetworkService implements INetworkService {
                 }
                 if (nodeType.equals(NodeType.FullNode) && !newDspNode.getReceivingPort().equals(dspNode.getReceivingPort())) {
                     communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
-                    communicationService.addSender(newDspNode.getReceivingFullAddress());
+                    communicationService.addSender(newDspNode.getReceivingFullAddress(), NodeType.DspNode);
                 }
                 if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress()) && !newDspNode.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
                     recoveryServerAddress = newDspNode.getHttpFullAddress();
@@ -334,10 +334,10 @@ public class BaseNodeNetworkService implements INetworkService {
                 if (singleNodeData != null && singleNodeData.getReceivingPort() != null &&
                         !(newSingleNodeData.getReceivingPort().equals(singleNodeData.getReceivingPort()) && newSingleNodeData.getAddress().equals(singleNodeData.getAddress()))) {
                     communicationService.removeSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
-                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
+                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
                 }
                 if (singleNodeData == null) {
-                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress());
+                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
                 }
             }
             if (recoveryServerAddress != null && (singleNodeData == null || recoveryServerAddress.equals(singleNodeData.getHttpFullAddress()))) {

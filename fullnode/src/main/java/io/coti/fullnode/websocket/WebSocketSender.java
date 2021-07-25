@@ -10,7 +10,6 @@ import io.coti.fullnode.websocket.data.TotalTransactionsMessage;
 import io.coti.fullnode.websocket.data.UpdatedBalanceMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

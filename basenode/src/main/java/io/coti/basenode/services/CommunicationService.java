@@ -40,13 +40,14 @@ public class CommunicationService implements ICommunicationService {
     }
 
     @Override
-    public void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping) {
+    public void initReceiver(String receivingPort, HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping) {
         receiver.init(receivingPort, classNameToReceiverHandlerMapping);
+        receiver.startListening();
     }
 
     @Override
-    public void addSender(String receivingServerAddress) {
-        sender.connectToNode(receivingServerAddress);
+    public void addSender(String receivingServerAddress, NodeType nodeType) {
+        sender.connectToNode(receivingServerAddress, nodeType);
     }
 
     @Override

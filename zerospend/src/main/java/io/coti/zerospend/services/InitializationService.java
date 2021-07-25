@@ -40,7 +40,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private TransactionCreationService transactionCreationService;
     @Autowired
     private Transactions transactions;
-    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override
@@ -55,7 +55,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             communicationService.initSubscriber(NodeType.ZeroSpendServer, publisherNodeTypeToMessageTypesMap);
 
-            HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
+            HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping = new HashMap<>();
             classNameToReceiverHandlerMapping.put(
                     TransactionDspVote.class.getName(), data ->
                             dspVoteService.receiveDspVote((TransactionDspVote) data));

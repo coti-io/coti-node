@@ -3,31 +3,26 @@ package io.coti.dspnode.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.TransactionDspVoteCrypto;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionDspVote;
-import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    private Queue<TransactionData> transactionsToValidate;
-    private AtomicBoolean isValidatorRunning;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -40,11 +35,14 @@ public class TransactionService extends BaseNodeTransactionService {
     private TransactionDspVoteCrypto transactionDspVoteCrypto;
     @Autowired
     private INetworkService networkService;
+    private BlockingQueue<TransactionData> transactionsToValidate;
+    private Thread transactionValidationThread;
 
     @Override
     public void init() {
-        transactionsToValidate = new PriorityQueue<>();
-        isValidatorRunning = new AtomicBoolean(false);
+        transactionsToValidate = new PriorityBlockingQueue<>();
+        transactionValidationThread = new Thread(this::checkAttachedTransactions, "DSP Validation");
+        transactionValidationThread.start();
         super.init();
     }
 
@@ -102,23 +100,46 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    @Scheduled(fixedRate = 1000)
     private void checkAttachedTransactions() {
-        if (!isValidatorRunning.compareAndSet(false, true)) {
-            return;
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                TransactionData transactionData = transactionsToValidate.take();
+                log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
+                dspValidation(transactionData);
+            } catch (InterruptedException e) {
+                log.info("Dsp validation interrupted");
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error("Dsp validation error", e);
+            }
         }
-        while (!transactionsToValidate.isEmpty()) {
-            TransactionData transactionData = transactionsToValidate.remove();
-            log.debug("DSP Fully Checking transaction: {}", transactionData.getHash());
-            TransactionDspVote transactionDspVote = new TransactionDspVote(
-                    transactionData.getHash(),
-                    validationService.fullValidation(transactionData));
-            transactionDspVoteCrypto.signMessage(transactionDspVote);
-            String zerospendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
-            log.debug("Sending DSP vote to {} for transaction {}", zerospendReceivingAddress, transactionData.getHash());
-            sender.send(transactionDspVote, zerospendReceivingAddress);
+        List<TransactionData> remainingValidations = new LinkedList<>();
+        transactionsToValidate.drainTo(remainingValidations);
+        if (!remainingValidations.isEmpty()) {
+            log.info("Please wait for dsp validation of {} remaining transactions", remainingValidations.size());
+            remainingValidations.forEach(transactionData -> {
+                try {
+                    dspValidation(transactionData);
+                } catch (Exception e) {
+                    log.error("Dsp validation error", e);
+                }
+            });
         }
-        isValidatorRunning.set(false);
+    }
+
+    private void dspValidation(TransactionData transactionData) {
+        TransactionDspVote transactionDspVote = new TransactionDspVote(
+                transactionData.getHash(),
+                validationService.fullValidation(transactionData));
+        transactionDspVoteCrypto.signMessage(transactionDspVote);
+        NetworkNodeData zeroSpendServer = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
+        if (zeroSpendServer != null) {
+            String zeroSpendReceivingAddress = zeroSpendServer.getReceivingFullAddress();
+            log.debug("Sending DSP vote to {} for transaction {}", zeroSpendReceivingAddress, transactionData.getHash());
+            sender.send(transactionDspVote, zeroSpendReceivingAddress);
+        } else {
+            log.error("ZeroSpendServer is not in the network. Failed to send dsp vote for transaction {}", transactionData.getHash());
+        }
     }
 
     @Override
@@ -134,5 +155,17 @@ public class TransactionService extends BaseNodeTransactionService {
     protected void propagateMissingTransaction(TransactionData transactionData) {
         log.debug("Propagate missing transaction {} by {} to {}", transactionData.getHash(), NodeType.DspNode, NodeType.FullNode);
         propagationPublisher.propagate(transactionData, Arrays.asList(NodeType.FullNode));
+    }
+
+    public void shutdown() {
+        log.info("Shutting down {}", this.getClass().getSimpleName());
+        transactionValidationThread.interrupt();
+        try {
+            transactionValidationThread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
+        }
+
     }
 }
