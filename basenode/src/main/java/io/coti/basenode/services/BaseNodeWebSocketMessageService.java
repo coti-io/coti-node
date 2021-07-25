@@ -32,7 +32,8 @@ public class BaseNodeWebSocketMessageService implements IWebSocketMessageService
         try {
             queue.put(webSocketData);
         } catch (InterruptedException e) {
-            log.error("Interrupted - Web Socket Queue Full!");
+            log.error("Interrupted while putting data to websocket queue");
+            Thread.currentThread().interrupt();
         }
     }
 
