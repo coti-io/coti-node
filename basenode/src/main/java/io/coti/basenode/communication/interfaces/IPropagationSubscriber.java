@@ -1,5 +1,6 @@
 package io.coti.basenode.communication.interfaces;
 
+import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IPropagatable;
 
@@ -23,6 +24,8 @@ public interface IPropagationSubscriber {
     void disconnect(String propagationFullAddress, NodeType nodeType);
 
     int getMessageQueueSize();
+
+    int getMessageQueueSize(ZeroMQSubscriberQueue zeroMQSubscriberQueue);
 
     void shutdown();
 }

@@ -1,8 +1,11 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.ZeroMQSubscriberQueue;
+import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.NetworkChangeException;
 import io.coti.basenode.exceptions.NetworkException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
@@ -55,6 +58,8 @@ public class BaseNodeNetworkService implements INetworkService {
     private NodeRegistrationCrypto nodeRegistrationCrypto;
     @Autowired
     private ApplicationContext applicationContext;
+    @Autowired
+    private IPropagationSubscriber propagationSubscriber;
     protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
     protected NetworkNodeData networkNodeData;
@@ -85,6 +90,10 @@ public class BaseNodeNetworkService implements INetworkService {
     public void handleNetworkChanges(NetworkData newNetworkData) {
         log.info("New network structure received");
 
+        if (propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.NETWORK) != 0) {
+            throw new NetworkChangeException("Skipped handling network data due to pending newer network changes");
+        }
+
         if (!isNodeConnectedToNetwork(newNetworkData)) {
             try {
                 connectToNetwork();
@@ -96,6 +105,7 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     public boolean isNodeConnectedToNetwork(NetworkData networkData) {
+        log.debug("{} is connected to network", networkData);
         return true;
     }
 
