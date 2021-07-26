@@ -47,16 +47,16 @@ public class BaseNodeMetricsService implements IMetricsService {
     @Autowired
     private IWebSocketMessageService webSocketMessageService;
     @Value("${metrics.sample.milisec.interval:0}")
-    private String metricsSampleInterval;
+    private int metricsSampleInterval;
 
     public void init() {
-        if (Integer.parseInt(metricsSampleInterval) == 0) {
+        if (metricsSampleInterval == 0) {
             log.info("Not using metrics endpoint, {} initialization stopped...", this.getClass().getSimpleName());
             return;
         }
-        if (Integer.parseInt(metricsSampleInterval) < 1000) {
+        if (metricsSampleInterval < 1000) {
             log.error("Metrics samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
-            metricsSampleInterval = "0";
+            metricsSampleInterval = 0;
             return;
         }
         String hostName = "unknown";
@@ -69,16 +69,16 @@ public class BaseNodeMetricsService implements IMetricsService {
         metricQueuesTemplate = metricTemplate.replace("componentTemplate", "queues");
         metricTransactionsTemplate = metricTemplate.replace("componentTemplate", "transactions");
 
-        sampleThread = new Thread(this::sample, "MetricsSample");
+        sampleThread = new Thread(this::getMetricsSample, "MetricsSample");
         sampleThread.start();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
 
     @Override
-    public String getMetrics(HttpServletRequest request)  {
-        if ( sampleThread == null || ! sampleThread.isAlive()) {
-            log.error("metrics sample thread not initialized!, returning null to {}...", request.getRemoteAddr());
+    public String getMetrics(HttpServletRequest request) {
+        if (sampleThread == null || !sampleThread.isAlive()) {
+            log.error("Metrics sample thread not initialized!, returning null to {}...", request.getRemoteAddr());
             return null;
         }
         synchronized (metrics) {
@@ -99,7 +99,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                 .replace("num", String.valueOf(value)).replace("timestamp", String.valueOf(Instant.now().toEpochMilli())));
     }
 
-    public void sample() {
+    public void getMetricsSample() {
         while (!Thread.currentThread().isInterrupted()) {
             synchronized (metrics) {
                 if (numberOfNonFetchedSamples.incrementAndGet() > MAX_NUMBER_OF_NON_FETCHED_SAMPLES) {
@@ -108,9 +108,8 @@ public class BaseNodeMetricsService implements IMetricsService {
                 addQueue("ZeroMQReceiver", receiver.getQueueSize());
                 addQueue("PropagationPublisher", propagationPublisher.getQueueSize());
 
-                Map<String, String> maps = propagationSubscriber.getQueueSize();
-                for (Map.Entry<String, String> entry : maps.entrySet())
-                {
+                Map<String, String> maps = propagationSubscriber.getQueueSizeMap();
+                for (Map.Entry<String, String> entry : maps.entrySet()) {
                     addQueue("PropagationSubscriber_" + entry.getKey(), Integer.parseInt(entry.getValue()));
                 }
 
@@ -127,7 +126,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                 addTransaction("TotalPostponedTransactions", transactionService.totalPostponedTransactions());
             }
             try {
-                Thread.sleep(Integer.parseInt(metricsSampleInterval));
+                Thread.sleep(metricsSampleInterval);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

@@ -24,11 +24,6 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class BaseNodeConfirmationService implements IConfirmationService {
 
-    private final Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
-    private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
-    private final AtomicLong totalConfirmed = new AtomicLong(0);
-    private final AtomicLong trustChainConfirmed = new AtomicLong(0);
-    private final AtomicLong dspConfirmed = new AtomicLong(0);
     @Autowired
     private IBalanceService balanceService;
     @Autowired
@@ -40,6 +35,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     @Autowired
     private Transactions transactions;
     private BlockingQueue<ConfirmationData> confirmationQueue;
+    private final Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
+    private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
+    private final AtomicLong totalConfirmed = new AtomicLong(0);
+    private final AtomicLong trustChainConfirmed = new AtomicLong(0);
+    private final AtomicLong dspConfirmed = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
 
     public void init() {
@@ -295,12 +295,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     @Override
-    public long getWaitingDspConsensusResultsMapSize() {
+    public int getWaitingDspConsensusResultsMapSize() {
         return waitingDspConsensusResults.size();
     }
 
     @Override
-    public long getWaitingMissingTransactionIndexesSize() {
+    public int getWaitingMissingTransactionIndexesSize() {
         return waitingMissingTransactionIndexes.size();
     }
 

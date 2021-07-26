@@ -68,7 +68,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     @Override
     public void setPublisherNodeTypeToMessageTypesMap(EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap) {
         this.publisherNodeTypeToMessageTypesMap = publisherNodeTypeToMessageTypesMap;
-        publisherNodeTypeToMessageTypesMap.forEach(((nodeType, classes) -> classes.forEach(messageType -> {
+        publisherNodeTypeToMessageTypesMap.forEach(((nodeType, messageTypes) -> messageTypes.forEach(messageType -> {
             ZeroMQSubscriberQueue queueEnum = ZeroMQSubscriberQueue.getQueueEnum(messageType);
             queueNameToThreadMap.putIfAbsent(queueEnum.toString(), new Thread(() -> this.handleMessagesQueueTask(queueEnum.getQueue())));
         })));
@@ -255,6 +255,18 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     }
 
     @Override
+    public Map<String, String> getQueueSizeMap() {
+        Map<String, String> queueSizeMap = new HashMap<>();
+        EnumSet.allOf(ZeroMQSubscriberQueue.class).forEach(zeroMQSubscriberQueue -> {
+            if (queueNameToThreadMap.containsKey(zeroMQSubscriberQueue.toString())) {
+                int queueSize = this.getMessageQueueSize(zeroMQSubscriberQueue);
+                queueSizeMap.put(zeroMQSubscriberQueue.toString(), String.valueOf(queueSize));
+            }
+        });
+        return queueSizeMap;
+    }
+
+    @Override
     public void shutdown() {
         try {
             if (propagationReceiver != null) {
@@ -276,16 +288,5 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             log.error("Interrupted shutdown ZeroMQ subscriber");
             Thread.currentThread().interrupt();
         }
-    }
-
-    @Override
-    public Map<String, String> getQueueSize() {
-        Map<String, String> queues = new HashMap<>();
-        publisherNodeTypeToMessageTypesMap.forEach(((nodeType, classes) -> classes.forEach(messageType -> {
-            ZeroMQSubscriberQueue queueEnum = ZeroMQSubscriberQueue.getQueueEnum(messageType);
-
-            queues.put(messageType.toString(), String.valueOf(queueEnum.getQueue().size()));
-        })));
-        return queues;
     }
 }
