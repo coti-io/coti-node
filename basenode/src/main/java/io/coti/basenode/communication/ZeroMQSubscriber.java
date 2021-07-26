@@ -277,4 +277,15 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             Thread.currentThread().interrupt();
         }
     }
+
+    @Override
+    public Map<String, String> getQueueSize() {
+        Map<String, String> queues = new HashMap<>();
+        publisherNodeTypeToMessageTypesMap.forEach(((nodeType, classes) -> classes.forEach(messageType -> {
+            ZeroMQSubscriberQueue queueEnum = ZeroMQSubscriberQueue.getQueueEnum(messageType);
+
+            queues.put(messageType.toString(), String.valueOf(queueEnum.getQueue().size()));
+        })));
+        return queues;
+    }
 }

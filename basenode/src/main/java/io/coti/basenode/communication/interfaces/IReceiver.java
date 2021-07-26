@@ -16,4 +16,6 @@ public interface IReceiver {
     void initReceiverHandler();
 
     void shutdown();
+
+    int getQueueSize();
 }

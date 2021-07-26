@@ -12,4 +12,6 @@ public interface IPropagationPublisher {
     <T extends IPropagatable> void propagate(T toPropagate, List<NodeType> subscriberNodeTypes);
 
     void shutdown();
+
+    int getQueueSize();
 }

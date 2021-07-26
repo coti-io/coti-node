@@ -47,7 +47,7 @@ public class BaseNodeMonitorService implements IMonitorService {
                     propagationSubscriber.getMessageQueueSize(),
                     webSocketMessageService.getMessageQueueSize(),
                     confirmationService.getWaitingDspConsensusResultsMapSize(),
-                    confirmationService.getConfirmationQueue());
+                    confirmationService.getQueueSize());
         }
     }
 }

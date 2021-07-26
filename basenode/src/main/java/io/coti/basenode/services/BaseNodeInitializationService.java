@@ -112,6 +112,9 @@ public abstract class BaseNodeInitializationService {
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
 
+    @Autowired
+    protected IMetricsService metricsService;
+
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
     }
@@ -136,6 +139,7 @@ public abstract class BaseNodeInitializationService {
         networkService.connectToNetwork();
         propagationSubscriber.initPropagationHandler();
         monitorService.init();
+        metricsService.init();
     }
 
     private void initTransactionSync() {
