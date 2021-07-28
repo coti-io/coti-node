@@ -31,10 +31,12 @@ public class BaseNodeAwsService implements IAwsService {
     @Value("${aws.credentials}")
     protected boolean buildS3ClientWithCredentials;
     protected AmazonS3 s3Client;
+    protected TransferManager transferManager;
 
     @Override
     public void init() {
         s3Client = getS3Client();
+        transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
     }
 
     @Override
@@ -52,7 +54,6 @@ public class BaseNodeAwsService implements IAwsService {
 
     @Override
     public void uploadFolderAndContentsToS3(String bucketName, String s3folderPath, File directoryToUpload) {
-        TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
 
         ObjectCannedAclProvider cannedAclProvider = file -> CannedAccessControlList.PublicRead;
         Thread monitorTransferProgress = null;
@@ -81,7 +82,7 @@ public class BaseNodeAwsService implements IAwsService {
 
     @Override
     public void downloadFolderAndContents(String bucketName, String s3folderPath, String directoryToDownload) {
-        TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
+
         Thread monitorTransferProgress = null;
         try {
             MultipleFileDownload multipleFileDownload = transferManager.downloadDirectory(bucketName, s3folderPath, new File(directoryToDownload));

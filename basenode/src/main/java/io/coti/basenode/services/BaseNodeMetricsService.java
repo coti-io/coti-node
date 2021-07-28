@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,14 +23,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BaseNodeMetricsService implements IMetricsService {
 
     private static final int MAX_NUMBER_OF_NON_FETCHED_SAMPLES = 50;
+    private static final String COMPONENT_TEMPLATE = "componentTemplate";
+    private static final String METRIC_TEMPLATE = "metricTemplate";
+    final ArrayList<String> metrics = new ArrayList<>();
     @Autowired
     IReceiver receiver;
     @Autowired
     IPropagationPublisher propagationPublisher;
-    String metricTemplate = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",metric=\"metricTemplate\"} num timestamp";
+    String metricTemplate = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",metric=\"metricTemplate\"}";
+    String metricTemplateSubComponent = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",componentName=\"componentNameTemplate\",metric=\"metricTemplate\"}";
     String metricQueuesTemplate;
     String metricTransactionsTemplate;
-    final ArrayList<String> metrics = new ArrayList<>();
+    String metricBackupsTemplate;
     Thread sampleThread;
     AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
     @Autowired
@@ -46,6 +51,8 @@ public class BaseNodeMetricsService implements IMetricsService {
     private IPropagationSubscriber propagationSubscriber;
     @Autowired
     private IWebSocketMessageService webSocketMessageService;
+    @Autowired
+    private IDBRecoveryService dbRecoveryService;
     @Value("${metrics.sample.milisec.interval:0}")
     private int metricsSampleInterval;
 
@@ -66,8 +73,11 @@ public class BaseNodeMetricsService implements IMetricsService {
             log.error(e.toString());
         }
         metricTemplate = metricTemplate.replace("nodeTemplate", hostName);
-        metricQueuesTemplate = metricTemplate.replace("componentTemplate", "queues");
-        metricTransactionsTemplate = metricTemplate.replace("componentTemplate", "transactions");
+        metricTemplateSubComponent = metricTemplateSubComponent.replace("nodeTemplate", hostName);
+
+        metricQueuesTemplate = metricTemplate.replace(COMPONENT_TEMPLATE, "queues");
+        metricTransactionsTemplate = metricTemplate.replace(COMPONENT_TEMPLATE, "transactions");
+        metricBackupsTemplate = metricTemplateSubComponent.replace(COMPONENT_TEMPLATE, "backups");
 
         sampleThread = new Thread(this::getMetricsSample, "MetricsSample");
         sampleThread.start();
@@ -90,13 +100,32 @@ public class BaseNodeMetricsService implements IMetricsService {
     }
 
     private void addQueue(String queueMetric, long value) {
-        metrics.add(metricQueuesTemplate.replace("metricTemplate", queueMetric)
-                .replace("num", String.valueOf(value)).replace("timestamp", String.valueOf(Instant.now().toEpochMilli())));
+        metrics.add(metricQueuesTemplate.replace(METRIC_TEMPLATE, queueMetric)
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
     }
 
     private void addTransaction(String transactionMetric, long value) {
-        metrics.add(metricTransactionsTemplate.replace("metricTemplate", transactionMetric)
-                .replace("num", String.valueOf(value)).replace("timestamp", String.valueOf(Instant.now().toEpochMilli())));
+        metrics.add(metricTransactionsTemplate.replace(METRIC_TEMPLATE, transactionMetric)
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
+    }
+
+    private void addBackup(String backupMetric, String backupName, long value) {
+        metrics.add(metricBackupsTemplate.replace(METRIC_TEMPLATE, backupMetric).replace("componentNameTemplate", backupName)
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
+    }
+
+    private void addBackups() {
+        HashMap<String, HashMap<String, Long>> backupLog = dbRecoveryService.getBackUpLog();
+        for (Map.Entry<String, HashMap<String, Long>> entry : backupLog.entrySet()) {
+            String backupName = entry.getKey();
+            for (Map.Entry<String, Long> subEntry : entry.getValue().entrySet()) {
+                String backupMetric = subEntry.getKey();
+                long value = subEntry.getValue();
+                addBackup(backupMetric, backupName, value);
+            }
+        }
+        if (backupLog.size() > 0)
+            dbRecoveryService.clearBackupLog();
     }
 
     public void getMetricsSample() {
@@ -124,6 +153,8 @@ public class BaseNodeMetricsService implements IMetricsService {
                 addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
                 addTransaction("Sources", clusterService.getTotalSources());
                 addTransaction("TotalPostponedTransactions", transactionService.totalPostponedTransactions());
+
+                addBackups();
             }
             try {
                 Thread.sleep(metricsSampleInterval);
