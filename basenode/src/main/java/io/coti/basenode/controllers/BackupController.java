@@ -22,4 +22,7 @@ public class BackupController {
         return dbRecoveryService.getBackupBucket();
     }
 
+    @GetMapping(path = "/now")
+    public boolean backup() { return dbRecoveryService.backupDB(); }
+
 }

@@ -8,4 +8,6 @@ public interface IDBRecoveryService {
     void init();
 
     ResponseEntity<IResponse> getBackupBucket();
+
+    boolean backupDB();
 }

@@ -116,7 +116,8 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     }
 
     @Scheduled(cron = "${db.backup.time}", zone = "UTC")
-    private void backupDB() {
+    public boolean backupDB() {
+        boolean success = false;
         if (backup) {
             try {
                 log.info("Starting DB backup flow");
@@ -144,6 +145,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                     }
                 }
                 log.info("Finished DB backup flow");
+                success = true;
             } catch (CotiRunTimeException e) {
                 log.error("Backup DB error.");
                 e.logMessage();
@@ -153,6 +155,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 deleteBackup(remoteBackupFolderPath);
             }
         }
+        return success;
     }
 
     private void restoreDB() {
