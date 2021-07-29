@@ -80,6 +80,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private String remoteBackupFolderPath;
     private String backupS3Path;
     private String restoreS3Path;
+    private String s3FolderName;
 
     @Override
     public void init() {
@@ -121,15 +122,8 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
     }
 
-    private Map<String, String> handleS3() {
+    private void removeOlderBackupsFromS3() {
         List<String> backupFiles = awsService.listS3Paths(backupBucket, backupS3Path);
-        if (backupFiles.isEmpty()) {
-            awsService.createS3Folder(backupBucket, backupS3Path);
-        }
-        File backupFolderToUpload = new File(remoteBackupFolderPath);
-        String s3FolderName = BACK_UP_FOLDER_PREFIX + Instant.now().toEpochMilli();
-        log.info("Uploading remote backup to S3 bucket {} and folderName {}", backupBucket, s3FolderName);
-        awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + s3FolderName, backupFolderToUpload);
         if (!backupFiles.isEmpty()) {
             Set<Long> s3BackupTimeStampSet = getS3BackupTimeStampSet(backupFiles);
             if (s3BackupTimeStampSet.size() >= ALLOWED_NUMBER_OF_BACKUPS) {
@@ -143,34 +137,44 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 log.info("Finished to delete older backup folders");
             }
         }
-        Map<String, String> returnValues = new HashMap<>();
-        returnValues.put("folderName", s3FolderName);
-        returnValues.put("numberOfFiles", String.valueOf(backupFiles.size()));
-        return returnValues;
     }
 
-    private void generateBackupLog(Map<String, String> backupValues, long duration) {
-        String s3FolderName = backupValues.get("folderName");
+    private void uploadRecentBackupToS3() {
+        List<String> backupFiles = awsService.listS3Paths(backupBucket, backupS3Path);
+        if (backupFiles.isEmpty()) {
+            awsService.createS3Folder(backupBucket, backupS3Path);
+        }
+        File backupFolderToUpload = new File(remoteBackupFolderPath);
+        s3FolderName = BACK_UP_FOLDER_PREFIX + Instant.now().toEpochMilli();
+        log.info("Uploading remote backup to S3 bucket {} and folderName {}", backupBucket, s3FolderName);
+        awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + s3FolderName, backupFolderToUpload);
+    }
+
+    private void generateBackupLog(long duration) {
+        List<String> backupFiles = awsService.listS3Paths(backupBucket, backupS3Path);
         HashMap<String, Long> metricsList = new HashMap<>();
         metricsList.put("success", 1L);
         metricsList.put("epoch", java.time.Instant.now().getEpochSecond());
-        metricsList.put("number_of_files", Long.valueOf(backupValues.get("numberOfFiles")));
+        metricsList.put("number_of_files", (long) backupFiles.size());
         metricsList.put("duration", duration);
         synchronized (backupLog) {
             backupLog.put(s3FolderName, metricsList);
         }
     }
 
-
     @Scheduled(cron = "${db.backup.time}", zone = "UTC")
-    public void backupDBCron() {
+    private void backupDBCron() {
         backupDB();
     }
 
-    public ResponseEntity<Boolean> backupDB() {
+    public ResponseEntity<Boolean> backupDBController() {
+        return ResponseEntity.ok(backupDB());
+    }
+
+    private boolean backupDB() {
         boolean success = false;
         if (!backup) {
-            return ResponseEntity.ok(false);
+            return false;
         }
 
         if (backupInProgress.compareAndSet(false, true)) {
@@ -179,11 +183,12 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 log.info("Starting DB backup flow");
                 deleteBackup(remoteBackupFolderPath);
                 dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
-                Map<String, String> backupValues = handleS3();
+                uploadRecentBackupToS3();
+                removeOlderBackupsFromS3();
                 log.info("Finished DB backup flow");
                 success = true;
                 long duration = java.time.Instant.now().getEpochSecond() - backupStartedTime;
-                generateBackupLog(backupValues, duration);
+                generateBackupLog(duration);
             } catch (CotiRunTimeException e) {
                 log.error("Backup DB error.");
                 e.logMessage();
@@ -197,7 +202,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         } else {
             log.error("Backup failed, another backup is in progress! check previous log messages");
         }
-        return ResponseEntity.ok(success);
+        return success;
     }
 
     @Override
