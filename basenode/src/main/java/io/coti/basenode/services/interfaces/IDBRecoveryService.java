@@ -11,7 +11,7 @@ public interface IDBRecoveryService {
 
     ResponseEntity<IResponse> getBackupBucket();
 
-    ResponseEntity<Boolean> backupDB();
+    ResponseEntity<Boolean> backupDBController();
 
     HashMap<String, HashMap<String, Long>> getBackUpLog();
 
