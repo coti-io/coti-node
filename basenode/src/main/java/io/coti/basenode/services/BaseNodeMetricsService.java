@@ -25,18 +25,18 @@ public class BaseNodeMetricsService implements IMetricsService {
     private static final int MAX_NUMBER_OF_NON_FETCHED_SAMPLES = 50;
     private static final String COMPONENT_TEMPLATE = "componentTemplate";
     private static final String METRIC_TEMPLATE = "metricTemplate";
-    final ArrayList<String> metrics = new ArrayList<>();
+    private final ArrayList<String> metrics = new ArrayList<>();
     @Autowired
-    IReceiver receiver;
+    private IReceiver receiver;
     @Autowired
-    IPropagationPublisher propagationPublisher;
-    String metricTemplate = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",metric=\"metricTemplate\"}";
-    String metricTemplateSubComponent = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",componentName=\"componentNameTemplate\",metric=\"metricTemplate\"}";
-    String metricQueuesTemplate;
-    String metricTransactionsTemplate;
-    String metricBackupsTemplate;
-    Thread sampleThread;
-    AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
+    private IPropagationPublisher propagationPublisher;
+    private String metricTemplate = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",metric=\"metricTemplate\"}";
+    private String metricTemplateSubComponent = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",componentName=\"componentNameTemplate\",metric=\"metricTemplate\"}";
+    private String metricQueuesTemplate;
+    private String metricTransactionsTemplate;
+    private String metricBackupsTemplate;
+    private Thread sampleThread;
+    private final AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
