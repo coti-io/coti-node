@@ -43,8 +43,8 @@ public class BaseNodeAdminController {
     }
 
     @GetMapping(path = "/database/backup")
-    public ResponseEntity<Boolean> backup() {
-        return dbRecoveryService.backupDBController();
+    public ResponseEntity<IResponse> backup() {
+        return dbRecoveryService.manualBackupDB();
     }
 
 }

@@ -60,4 +60,8 @@ public class BaseNodeHttpStringConstants {
     public static final String DOCUMENT_NOT_FOUND = "Document not found";
 
     public static final String NOT_BACKUP_NODE = "The node is not a backup node";
+
+    public static final String DB_MANUAL_BACKUP_SUCCESS = "Successful manual DB backup";
+    public static final String DB_MANUAL_BACKUP_NOT_ALLOWED = "Manual DB backup not allowed";
+
 }
