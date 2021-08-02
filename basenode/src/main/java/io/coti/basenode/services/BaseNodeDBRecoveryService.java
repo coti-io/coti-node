@@ -166,7 +166,11 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     @Scheduled(cron = "${db.backup.time}", zone = "UTC")
     private void backupDBCron() {
         if (backup) {
-            backupDB();
+            try {
+                backupDB();
+            } catch (Exception e) {
+                log.error("Error at backup DB cron");
+            }
         }
     }
 
@@ -179,6 +183,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             backupDB();
             return ResponseEntity.ok(new Response(DB_MANUAL_BACKUP_SUCCESS));
         } catch (Exception e) {
+            log.error("Error at manual backup DB");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage()));
         }
     }
