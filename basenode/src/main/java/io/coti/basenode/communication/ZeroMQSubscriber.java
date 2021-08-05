@@ -177,7 +177,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZeroMQMessageData zeroMQMessageData = messageQueue.take();
-                log.debug("ZMQ message arrived: {}", zeroMQMessageData);
+                log.debug("ZMQ message arrived: {}", zeroMQMessageData.getChannel());
                 propagationProcess(zeroMQMessageData);
             } catch (InterruptedException e) {
                 log.info("ZMQ subscriber message handler interrupted");
