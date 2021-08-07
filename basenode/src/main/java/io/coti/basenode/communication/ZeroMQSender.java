@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
+import zmq.SocketBase;
 
 import javax.annotation.PostConstruct;
 import java.nio.channels.ClosedSelectorException;
@@ -115,7 +116,12 @@ public class ZeroMQSender implements ISender {
             try {
                 ZMQ.Socket senderSocket = receivingAddressToSenderSocketMapping.get(address).getSenderSocket();
                 senderSocket.sendMore(toSend.getClass().getName());
-                senderSocket.send(message);
+                boolean isSent = senderSocket.send(message);
+                if (!isSent) {
+                    SocketBase senderSocketBase = senderSocket.base();
+                    log.error("Error {} at sender socket. Socket channel status: {}", senderSocketBase.errno(), senderSocketBase.getFD().isOpen());
+                    return;
+                }
                 log.debug("Message {} was sent to {}", toSend, address);
             } catch (ZMQException exception) {
                 log.error("Exception in sending", exception);
