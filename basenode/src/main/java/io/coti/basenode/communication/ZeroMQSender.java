@@ -15,6 +15,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.nio.channels.ClosedSelectorException;
 import java.util.Map;
 import java.util.Optional;
@@ -25,15 +26,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class ZeroMQSender implements ISender {
 
-    private static final String INTERRUPTED_MESSAGE = "Interrupted {}";
+    public static final String INTERRUPTED_MESSAGE = "Interrupted {}";
+    private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
+    private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();
     private ZMQ.Context zeroMQContext;
     private SocketType socketType;
     private Map<String, SenderSocketData> receivingAddressToSenderSocketMapping;
     @Autowired
     private ISerializer serializer;
-    private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
     private Thread monitorReconnectThread;
-    private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();
 
     @PostConstruct
     private void init() {
@@ -46,15 +47,17 @@ public class ZeroMQSender implements ISender {
     public void connectToNode(String receivingServerAddress, NodeType nodeType) {
         SenderSocketData senderSocketData = receivingAddressToSenderSocketMapping.get(receivingServerAddress);
         if (senderSocketData == null) {
-            senderSocketData = new SenderSocketData(zeroMQContext, nodeType);
-            ZMQ.Socket senderSocket = senderSocketData.getSenderSocket();
-            ZMQ.Socket monitorSocket = senderSocketData.getMonitorSocketData().getMonitorSocket();
-            senderSocketData.setMonitorThread(startMonitorThread(monitorSocket, receivingServerAddress));
-            if (senderSocket.connect(receivingServerAddress)) {
-                log.info("ZeroMQ sender connected to address {}", receivingServerAddress);
-                receivingAddressToSenderSocketMapping.put(receivingServerAddress, senderSocketData);
-            } else {
-                log.error("ZeroMQ sender failed to connect to address {}", receivingServerAddress);
+            if (!zeroMQContext.isClosed()) {
+                senderSocketData = new SenderSocketData(zeroMQContext, nodeType);
+                ZMQ.Socket senderSocket = senderSocketData.getSenderSocket();
+                ZMQ.Socket monitorSocket = senderSocketData.getMonitorSocketData().getMonitorSocket();
+                senderSocketData.setMonitorThread(startMonitorThread(monitorSocket, receivingServerAddress));
+                if (senderSocket.connect(receivingServerAddress)) {
+                    log.info("ZeroMQ sender connected to address {}", receivingServerAddress);
+                    receivingAddressToSenderSocketMapping.put(receivingServerAddress, senderSocketData);
+                } else {
+                    log.error("ZeroMQ sender failed to connect to address {}", receivingServerAddress);
+                }
             }
         } else {
             log.error("ZeroMQ sender already connected to address {}", receivingServerAddress);
@@ -127,10 +130,12 @@ public class ZeroMQSender implements ISender {
     public void disconnectFromNode(String receivingFullAddress, NodeType nodeType) {
         SenderSocketData senderSocketData = receivingAddressToSenderSocketMapping.get(receivingFullAddress);
         if (senderSocketData != null) {
-            closeSenderSocketData(senderSocketData);
-            log.info("ZeroMQ sender closing connection with node of type {} and address {}", nodeType, receivingFullAddress);
-            receivingAddressToSenderSocketMapping.remove(receivingFullAddress);
-            ZeroMQUtils.removeFromReconnectMonitor(addressToReconnectMonitorMap, receivingFullAddress);
+            synchronized (senderSocketData.getSenderSocket()) {
+                closeSenderSocketData(senderSocketData);
+                log.info("ZeroMQ sender closing connection with node of type {} and address {}", nodeType, receivingFullAddress);
+                receivingAddressToSenderSocketMapping.remove(receivingFullAddress);
+                ZeroMQUtils.removeFromReconnectMonitor(addressToReconnectMonitorMap, receivingFullAddress);
+            }
         } else {
             log.error("ZeroMQ sender doesn't have connection with node of type {} and address {}", nodeType, receivingFullAddress);
         }
@@ -160,6 +165,22 @@ public class ZeroMQSender implements ISender {
             Thread.currentThread().interrupt();
         }
     }
+
+    @Override
+    public Map<String, NodeType> validateSenders() throws IOException {
+        Map<String, NodeType> invalidSenders = new ConcurrentHashMap<>();
+        if (receivingAddressToSenderSocketMapping.size() > 0) {
+            for (Map.Entry<String, SenderSocketData> entry : receivingAddressToSenderSocketMapping.entrySet()) {
+                String key = entry.getKey();
+                boolean portIsOpened = ZeroMQUtils.isPortOpened(key);
+                if (!portIsOpened) {
+                    invalidSenders.put(key, entry.getValue().getNodeType());
+                }
+            }
+        }
+        return invalidSenders;
+    }
+
 
     @Override
     public void shutdown() {
