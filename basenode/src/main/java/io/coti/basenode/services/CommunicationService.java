@@ -12,9 +12,12 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -29,6 +32,8 @@ public class CommunicationService implements ICommunicationService {
     private IPropagationPublisher propagationPublisher;
     @Autowired
     private ISender sender;
+
+    private AtomicInteger historicInvalidSenders = new AtomicInteger(0);
 
     @Override
     public void initSubscriber(NodeType subscriberNodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> initialPublisherNodeTypeToMessageTypesMap) {
@@ -68,5 +73,33 @@ public class CommunicationService implements ICommunicationService {
     @Override
     public void initPublisher(String propagationPort, NodeType propagatorType) {
         propagationPublisher.init(propagationPort, propagatorType);
+    }
+
+    @Override
+    public int resetHistoricInvalidSendersSize() {
+        return historicInvalidSenders.getAndSet(0);
+    }
+
+
+    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
+    private void validateSenders() {
+        Map<String, NodeType> invalidSenders = null;
+        try {
+            invalidSenders = sender.validateSenders();
+        } catch (IOException e) {
+            log.error("Exception in isPortOpened: " + e);
+        }
+        if (invalidSenders != null && invalidSenders.size() > 0) {
+            for (Map.Entry<String, NodeType> entry : invalidSenders.entrySet()) {
+                String receivingFullAddress = entry.getKey();
+                NodeType nodeType = entry.getValue();
+                log.error("invalid Sender: " + receivingFullAddress + " , removing and adding it.");
+                removeSender(receivingFullAddress, nodeType);
+                addSender(receivingFullAddress, nodeType);
+            }
+            historicInvalidSenders.compareAndSet(BaseNodeMetricsService.MAX_NUMBER_OF_NON_FETCHED_SAMPLES,0);
+            historicInvalidSenders.addAndGet(invalidSenders.size());
+            invalidSenders.clear();
+        }
     }
 }

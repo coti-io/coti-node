@@ -8,7 +8,11 @@ import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -144,5 +148,32 @@ public class ZeroMQUtils {
         }, "MONITOR RECONNECT " + socketType.name());
         monitorReconnectThread.start();
         return monitorReconnectThread;
+    }
+
+    public static synchronized boolean isPortOpened(String receivingAddress) throws IOException {
+        Runtime rt = Runtime.getRuntime();
+        String[] commands = {"netstat", "-tn"};
+        Process proc = rt.exec(commands);
+
+        BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+
+        String s;
+        while ((s = stdInput.readLine()) != null) {
+            log.debug(s);
+            boolean isOpened = Arrays.stream(s.split(" ")).filter(str -> receivingAddress.contains(str) && str.contains(":")).toArray(String[]::new).length > 0;
+            if (isOpened) {
+                return true;
+            }
+        }
+
+        StringBuilder error = new StringBuilder();
+        while ((s = stdError.readLine()) != null) {
+            error.append(s);
+        }
+        if (error.length() > 0)
+            throw new IOException(error.toString());
+
+        return false;
     }
 }

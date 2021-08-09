@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class BaseNodeMetricsService implements IMetricsService {
 
-    private static final int MAX_NUMBER_OF_NON_FETCHED_SAMPLES = 50;
+    public static final int MAX_NUMBER_OF_NON_FETCHED_SAMPLES = 50;
     private static final String COMPONENT_TEMPLATE = "componentTemplate";
     private static final String METRIC_TEMPLATE = "metricTemplate";
     private final ArrayList<String> metrics = new ArrayList<>();
@@ -53,6 +53,8 @@ public class BaseNodeMetricsService implements IMetricsService {
     private IWebSocketMessageService webSocketMessageService;
     @Autowired
     private IDBRecoveryService dbRecoveryService;
+    @Autowired
+    private ICommunicationService communicationService;
     @Value("${metrics.sample.milisec.interval:0}")
     private int metricsSampleInterval;
 
@@ -153,6 +155,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                 addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
                 addTransaction("Sources", clusterService.getTotalSources());
                 addTransaction("TotalPostponedTransactions", transactionService.totalPostponedTransactions());
+                addTransaction("invalidSenders", communicationService.resetHistoricInvalidSendersSize());
 
                 addBackups();
             }
