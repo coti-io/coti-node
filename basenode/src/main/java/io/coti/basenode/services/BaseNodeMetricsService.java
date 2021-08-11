@@ -155,7 +155,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                 addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
                 addTransaction("Sources", clusterService.getTotalSources());
                 addTransaction("TotalPostponedTransactions", transactionService.totalPostponedTransactions());
-                addTransaction("invalidSenders", communicationService.resetHistoricInvalidSendersSize());
+                addTransaction("InvalidSenders", communicationService.getAndResetHistoricInvalidSendersSize());
 
                 addBackups();
             }

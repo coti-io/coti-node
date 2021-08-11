@@ -187,7 +187,6 @@ public class ZeroMQSender implements ISender {
         return invalidSenders;
     }
 
-
     @Override
     public void shutdown() {
         if (!receivingAddressToSenderSocketMapping.isEmpty()) {

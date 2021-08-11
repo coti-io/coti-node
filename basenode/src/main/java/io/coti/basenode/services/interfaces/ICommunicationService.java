@@ -24,6 +24,6 @@ public interface ICommunicationService {
 
     void initPublisher(String propagationPort, NodeType propagatorType);
 
-    int resetHistoricInvalidSendersSize();
+    int getAndResetHistoricInvalidSendersSize();
 
 }
