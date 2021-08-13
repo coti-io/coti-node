@@ -136,12 +136,10 @@ public class ZeroMQSender implements ISender {
     public void disconnectFromNode(String receivingFullAddress, NodeType nodeType) {
         SenderSocketData senderSocketData = receivingAddressToSenderSocketMapping.get(receivingFullAddress);
         if (senderSocketData != null) {
-            synchronized (senderSocketData.getSenderSocket()) {
-                closeSenderSocketData(senderSocketData);
-                log.info("ZeroMQ sender closing connection with node of type {} and address {}", nodeType, receivingFullAddress);
-                receivingAddressToSenderSocketMapping.remove(receivingFullAddress);
-                ZeroMQUtils.removeFromReconnectMonitor(addressToReconnectMonitorMap, receivingFullAddress);
-            }
+            closeSenderSocketData(senderSocketData);
+            log.info("ZeroMQ sender closing connection with node of type {} and address {}", nodeType, receivingFullAddress);
+            receivingAddressToSenderSocketMapping.remove(receivingFullAddress);
+            ZeroMQUtils.removeFromReconnectMonitor(addressToReconnectMonitorMap, receivingFullAddress);
         } else {
             log.error("ZeroMQ sender doesn't have connection with node of type {} and address {}", nodeType, receivingFullAddress);
         }
