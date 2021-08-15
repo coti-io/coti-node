@@ -5,14 +5,14 @@
     <parent>
         <artifactId>coti-node</artifactId>
         <groupId>io.coti</groupId>
-        <version>1.2.2-SNAPSHOT</version>
+        <version>1.2.2.RELEASE</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <dependencies>
         <dependency>
             <groupId>io.coti</groupId>
             <artifactId>basenode</artifactId>
-            <version>1.2.2-SNAPSHOT</version>
+            <version>1.2.2.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
