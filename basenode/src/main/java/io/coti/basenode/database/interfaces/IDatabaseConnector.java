@@ -10,6 +10,10 @@ public interface IDatabaseConnector {
 
     void init();
 
+    void resetColumnFamilies();
+
+    void resetTransactionColumnFamilies();
+
     void generateDataBaseBackup(String backupPath);
 
     void restoreDataBase(String backupPath);
