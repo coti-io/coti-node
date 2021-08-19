@@ -7,7 +7,8 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.BaseNodeBalanceService;
+import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.financialserver.crypto.FundDistributionFileCrypto;
 import io.coti.financialserver.crypto.FundDistributionFileResultCrypto;
@@ -56,9 +57,13 @@ public class FundDistributionService {
     @Autowired
     private TransactionCreationService transactionCreationService;
     @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
+    @Autowired
     private BaseNodeBalanceService baseNodeBalanceService;
     @Autowired
     protected INetworkService networkService;
+    @Autowired
+    private ICurrencyService currencyService;
     @Autowired
     private AwsService awsService;
     @Autowired
@@ -120,14 +125,15 @@ public class FundDistributionService {
     }
 
     public ResponseEntity<IResponse> getFundBalances() {
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
         List<FundDistributionBalanceResultData> fundDistributionBalanceResultDataList = new ArrayList<>();
         fundReservedBalanceMap.values().forEach(fundDistributionReservedBalanceData -> {
             Hash fundAddress = (fundDistributionReservedBalanceData.getFund().getFundHash() == null) ?
                     getFundAddressHash(fundDistributionReservedBalanceData.getFund()) : fundDistributionReservedBalanceData.getFund().getFundHash();
             fundDistributionBalanceResultDataList.add(
                     new FundDistributionBalanceResultData(fundDistributionReservedBalanceData.getFund().getText(),
-                            baseNodeBalanceService.getBalanceByAddress(fundAddress),
-                            baseNodeBalanceService.getPreBalanceByAddress(fundAddress),
+                            balanceService.getBalance(fundAddress, nativeCurrencyHash),
+                            balanceService.getPreBalance(fundAddress, nativeCurrencyHash),
                             fundDistributionReservedBalanceData.getReservedAmount()));
         });
         return ResponseEntity.status(HttpStatus.OK)
@@ -381,8 +387,8 @@ public class FundDistributionService {
         }
         FundDistributionReservedBalanceData fundDistributionReservedBalanceData = fundReservedBalanceMap.get(fundAddress);
         BigDecimal updatedAmountToLock = fundDistributionReservedBalanceData.getReservedAmount().add(amount);
-        if (updatedAmountToLock.compareTo(baseNodeBalanceService.getPreBalanceByAddress(fundAddress)) > 0 ||
-                updatedAmountToLock.compareTo(baseNodeBalanceService.getBalanceByAddress(fundAddress)) > 0) {
+        if (updatedAmountToLock.compareTo(balanceService.getPreBalance(fundAddress, currencyService.getNativeCurrencyHash())) > 0 ||
+                updatedAmountToLock.compareTo(balanceService.getBalance(fundAddress, currencyService.getNativeCurrencyHash())) > 0) {
             return false;
         } else {
             fundDistributionReservedBalanceData.setReservedAmount(updatedAmountToLock);
@@ -592,7 +598,7 @@ public class FundDistributionService {
         try {
             int sourceAddressIndex = Math.toIntExact(fundDistributionData.getDistributionPoolFund().getReservedAddress().getIndex());
             Hash sourceAddress = fundDistributionData.getDistributionPoolFund().getFundHash();
-            initialTransactionHash = transactionCreationService.createInitialTransactionToFund(fundDistributionData.getAmount(),
+            initialTransactionHash = transactionCreationService.createInitialTransaction(fundDistributionData.getAmount(), currencyService.getNativeCurrencyHash(),
                     sourceAddress, fundDistributionData.getReceiverAddress(), sourceAddressIndex);
         } catch (Exception e) {
             log.error("Failed to create initial transaction.");

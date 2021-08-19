@@ -3,6 +3,7 @@ package io.coti.financialserver.services;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.InitialFundData;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.financialserver.data.ReservedAddress;
 import io.coti.financialserver.model.InitialFunds;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,10 @@ public class DistributionService {
     private InitialFunds initialFunds;
     @Autowired
     private TransactionCreationService transactionCreationService;
+    @Autowired
+    private ICurrencyService currencyService;
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
 
     public void distributeToInitialFunds() {
         Hash cotiGenesisAddress = NodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
@@ -39,7 +44,7 @@ public class DistributionService {
                 BigDecimal amount = getInitialAmountByReservedAddress(initialFundDistributionAddress);
                 Hash initialTransactionHash;
                 try {
-                    initialTransactionHash = transactionCreationService.createInitialTransactionToFund(amount, cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
+                    initialTransactionHash = transactionCreationService.createInitialTransaction(amount, currencyService.getNativeCurrencyHash(), cotiGenesisAddress, fundAddress, COTI_GENESIS_ADDRESS_INDEX);
                 } catch (Exception e) {
                     log.error("Failed to create initial fund");
                     log.error("{}: {}", e.getClass().getName(), e.getMessage());
