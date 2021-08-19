@@ -5,6 +5,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
+import io.coti.basenode.http.GetTokenBalancesRequest;
+import io.coti.basenode.http.GetTokenBalancesResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
@@ -18,21 +20,21 @@ public interface IBalanceService {
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
 
-    void continueHandleBalanceChanges(Hash addressHash);
+    ResponseEntity<GetTokenBalancesResponse> getTokenBalances(GetTokenBalancesRequest getTokenBalancesRequest);
+
+    void continueHandleBalanceChanges(Hash addressHash, Hash currencyHash);
 
     void rollbackBaseTransactions(TransactionData transactionData);
 
     void validateBalances();
 
-    void updateBalanceFromClusterStamp(Hash addressHash, BigDecimal amount);
+    void updateBalanceAndPreBalanceFromClusterStamp(Hash addressHash, Hash currencyHash, BigDecimal amount);
 
-    void updatePreBalanceFromClusterStamp();
+    void updateBalance(Hash addressHash, Hash currencyHash, BigDecimal amount);
 
-    void updateBalance(Hash addressHash, BigDecimal amount);
+    void updatePreBalance(Hash addressHash, Hash currencyHash, BigDecimal amount);
 
-    void updatePreBalance(Hash addressHash, BigDecimal amount);
+    BigDecimal getBalance(Hash addressHash, Hash currencyHash);
 
-    BigDecimal getBalanceByAddress(Hash addressHash);
-
-    BigDecimal getPreBalanceByAddress(Hash addressHash);
+    BigDecimal getPreBalance(Hash addressHash, Hash currencyHash);
 }

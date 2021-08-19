@@ -4,6 +4,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.financialserver.crypto.TokenSaleDistributionCrypto;
 import io.coti.financialserver.data.Fund;
 import io.coti.financialserver.data.ReservedAddress;
@@ -41,6 +42,10 @@ public class DistributeTokenService {
     private TokenSaleDistributionCrypto tokenSaleDistributionCrypto;
     @Autowired
     private TransactionCreationService transactionCreationService;
+    @Autowired
+    private NodeCryptoHelper nodeCryptoHelper;
+    @Autowired
+    private ICurrencyService currencyService;
     @Autowired
     private TokenSaleDistributions tokenSaleDistributions;
 
@@ -98,7 +103,7 @@ public class DistributeTokenService {
         Hash fundTargetAddress = NodeCryptoHelper.generateAddress(seed, targetSaleIndex);
         Hash transactionHash;
         try {
-            transactionHash = transactionCreationService.createInitialTransactionToFund(entry.getAmount(), fundSourceAddress, fundTargetAddress, tokenSaleIndex);
+            transactionHash = transactionCreationService.createInitialTransaction(entry.getAmount(), currencyService.getNativeCurrencyHash(), fundSourceAddress, fundTargetAddress, tokenSaleIndex);
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             entry.setCompletedSuccessfully(false);

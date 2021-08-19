@@ -2,10 +2,12 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +29,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
 
     protected static final String CLUSTERSTAMP_FILE_SUFFIX = "_clusterstamp.csv";
     private static final int NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES = 1; // Genesis One and Two + heading
-    private static final int NUMBER_OF_ADDRESS_LINE_DETAILS = 2;
-    private static final int ADDRESS_DETAILS_HASH_PLACEMENT = 0;
-    private static final int ADDRESS_DETAILS_AMOUNT_PLACEMENT = 1;
+    private static final int DETAILS_IN_CLUSTERSTAMP_LINE_WITHOUT_CURRENCY_HASH = 2;
+    private static final int DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH = 3;
+    private static final int ADDRESS_HASH_INDEX_IN_CLUSTERSTAMP_LINE = 0;
+    private static final int AMOUNT_INDEX_IN_CLUSTERSTAMP_LINE = 1;
+    private static final int CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE = 2;
     protected static final String BAD_CSV_FILE_FORMAT = "Bad csv file format";
     private static final String SIGNATURE_LINE_TOKEN = "# Signature";
     private static final int NUMBER_OF_SIGNATURE_LINE_DETAILS = 2;
@@ -47,6 +51,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected ClusterStampCrypto clusterStampCrypto;
     @Autowired
     protected INetworkService networkService;
+    @Autowired
+    protected ICurrencyService currencyService;
+
+    @Override
+    public void init() {
+        loadClusterStamp();
+        log.info("{} is up", this.getClass().getSimpleName());
+    }
 
     @Override
     public void loadClusterStamp() {
@@ -73,16 +85,14 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             if (signatureRelevantLines.get() == 0) {
                 handleClusterStampWithoutSignature(clusterStampData);
             } else if (signatureRelevantLines.get() == 1) {
-                throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+                throw new ClusterStampValidationException("Signature lines can not be a single line at clusterstamp file");
             } else {
                 handleClusterStampWithSignature(clusterStampData);
             }
-            balanceService.updatePreBalanceFromClusterStamp();
-            log.info("Clusterstamp is loaded");
-        } catch (ClusterStampValidationException e) {
-            throw new ClusterStampValidationException("Errors on clusterstamp loading.\n" + e.getMessage(), e);
+        } catch (ClusterStampException e) {
+            throw new ClusterStampException("Errors on balance clusterstamp file loading.%n" + e.getMessage(), e);
         } catch (Exception e) {
-            throw new ClusterStampValidationException("Errors on clusterstamp loading", e);
+            throw new ClusterStampException("Errors on balance clusterstamp file loading.", e);
         }
     }
 
@@ -114,19 +124,26 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     }
 
     private void fillBalanceFromLine(ClusterStampData clusterStampData, String line) {
-        String[] addressDetails;
-        addressDetails = line.split(",");
-        if (addressDetails.length != NUMBER_OF_ADDRESS_LINE_DETAILS) {
+        String[] lineDetails = line.split(",");
+        int numOfDetailsInLine = lineDetails.length;
+        if (numOfDetailsInLine != DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH && numOfDetailsInLine != DETAILS_IN_CLUSTERSTAMP_LINE_WITHOUT_CURRENCY_HASH) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         }
-        Hash addressHash = new Hash(addressDetails[ADDRESS_DETAILS_HASH_PLACEMENT]);
-        BigDecimal addressAmount = new BigDecimal(addressDetails[ADDRESS_DETAILS_AMOUNT_PLACEMENT]);
-        log.trace("The hash {} was loaded from the clusterstamp with amount {}", addressHash, addressAmount);
+        Hash addressHash = new Hash(lineDetails[ADDRESS_HASH_INDEX_IN_CLUSTERSTAMP_LINE]);
+        BigDecimal currencyAmountInAddress = new BigDecimal(lineDetails[AMOUNT_INDEX_IN_CLUSTERSTAMP_LINE]);
+        Hash currencyHash = numOfDetailsInLine == DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH && !lineDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE].isEmpty() ? new Hash(lineDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE]) : null;
+        if (currencyHash == null) {
+            currencyHash = currencyService.getNativeCurrencyHash();
+        }
 
-        balanceService.updateBalanceFromClusterStamp(addressHash, addressAmount);
+        balanceService.updateBalanceAndPreBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
+        log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyHash, currencyAmountInAddress);
+
         byte[] addressHashInBytes = addressHash.getBytes();
-        byte[] addressAmountInBytes = addressAmount.stripTrailingZeros().toPlainString().getBytes();
-        byte[] balanceInBytes = ByteBuffer.allocate(addressHashInBytes.length + addressAmountInBytes.length).put(addressHashInBytes).put(addressAmountInBytes).array();
+        byte[] addressCurrencyAmountInBytes = currencyAmountInAddress.stripTrailingZeros().toPlainString().getBytes();
+        byte[] currencyHashInBytes = numOfDetailsInLine == DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH ? currencyHash.getBytes() : new byte[0];
+        byte[] balanceInBytes = ByteBuffer.allocate(addressHashInBytes.length + addressCurrencyAmountInBytes.length + currencyHashInBytes.length)
+                .put(addressHashInBytes).put(addressCurrencyAmountInBytes).put(currencyHashInBytes).array();
         clusterStampData.getSignatureMessage().add(balanceInBytes);
         clusterStampData.incrementMessageByteSize(balanceInBytes.length);
     }
