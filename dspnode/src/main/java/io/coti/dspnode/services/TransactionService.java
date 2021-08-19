@@ -64,12 +64,9 @@ public class TransactionService extends BaseNodeTransactionService {
                 postponedTransactionMap.putIfAbsent(transactionData, true);
                 return;
             }
-            if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-                log.error("Balance check failed: {}", transactionData.getHash());
+            if (!validateAndAttachTransaction(transactionData)) {
                 return;
             }
-            transactionHelper.attachTransactionToCluster(transactionData);
-            transactionHelper.setTransactionStateToSaved(transactionData);
             propagationPublisher.propagate(transactionData, Arrays.asList(
                     NodeType.FullNode,
                     NodeType.TrustScoreNode,
@@ -156,7 +153,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Override
-    protected void propagateMissingTransaction(TransactionData transactionData) {
+    protected void continueHandleMissingTransaction(TransactionData transactionData) {
         log.debug("Propagate missing transaction {} by {} to {}", transactionData.getHash(), NodeType.DspNode, NodeType.FullNode);
         propagationPublisher.propagate(transactionData, Collections.singletonList(NodeType.FullNode));
     }

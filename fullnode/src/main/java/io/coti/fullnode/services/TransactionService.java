@@ -304,10 +304,6 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error("Invalid fullnode fee data for transaction {}", transactionData.getHash());
             throw new TransactionValidationException(INVALID_FULL_NODE_FEE);
         }
-        if (!validationService.validateBaseTransactionAmounts(transactionData)) {
-            log.error("Illegal base transaction amounts for transaction {}", transactionData.getHash());
-            throw new TransactionValidationException(ILLEGAL_BASE_TRANSACTIONS_AMOUNT);
-        }
         if (!validationService.validateTransactionTimeFields(transactionData)) {
             log.error("Invalid transaction time field for transaction {}", transactionData.getHash());
             throw new TransactionValidationException(String.format(INVALID_TRANSACTION_TIME_FIELD, Instant.now()));
@@ -323,6 +319,17 @@ public class TransactionService extends BaseNodeTransactionService {
             throw new TransactionValidationException(INSUFFICIENT_FUNDS_MESSAGE);
         }
 
+        if (transactionData.getType().equals(TransactionType.TokenGeneration)
+                && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
+            log.error("Token uniqueness check failed: {}", transactionData.getHash());
+            throw new TransactionValidationException(NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION);
+        }
+
+        if (transactionData.getType().equals(TransactionType.TokenMinting)
+                && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
+            log.error("Minting balance check failed: {}", transactionData.getHash());
+            throw new TransactionValidationException(INSUFFICIENT_MINTING_FUNDS_MESSAGE);
+        }
     }
 
     public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {
