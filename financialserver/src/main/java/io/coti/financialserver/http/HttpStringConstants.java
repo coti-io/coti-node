@@ -33,7 +33,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String DISTRIBUTION_REQUEST_HANDLED_PREVIOUSLY = "Distribution request handled previously";
 
     public static final String DOCUMENT_EXISTS_ERROR = "Document already exists";
-    public static final String DOCUMENT_NOT_FOUND = "Document not found";
+
     public static final String DOCUMENT_UPLOAD_ERROR = "Some error occurred during upload";
     public static final String COMMENT_NOT_FOUND = "Comment not found";
     public static final String ITEM_NOT_FOUND = "Item not found";
@@ -46,7 +46,7 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String HEADER_ATTACHMENT_PREFIX = "attachment; filename=";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String S3_SUFFIX_METADATA_KEY = "x-amz-meta-suffix";
-    public static final String S3_NOT_REACHABLE = "S3 not reachable for a response";
+
 
     public static final String NOT_COTI_POOL = "Transaction receiver isn't Coti pool";
     public static final String ALREADY_GOT_THIS_RECOURSE_CLAIM = "Recourse claim transaction already processed";
@@ -73,5 +73,18 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
 
     public static final String DISTRIBUTION_FILE_RECORD_DELETED = "Distribution file record deleted";
 
+    public static final String TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE = "Signature check failed for token generation request";
+    public static final String TOKEN_GENERATION_REQUEST_NOT_REGULAR_CMD_TOKEN = "Attempt to generate not Regular type token";
+    public static final String TOKEN_GENERATION_REQUEST_FAILURE = "Failed to create requested token";
+    public static final String TOKEN_MINTING_FAILURE = "Failed to create requested token fee";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_SIGNATURE = "Signature check failed for token minting request";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_CURRENCY = "Non-existing currency in token minting fee request";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_ORIGINATOR = "Request for token minting fee by user not the token originator";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE = "The minting request details for minting differ from provided quote";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_ADDRESS = "The receiver address provided for minting is invalid";
+    public static final String TOKEN_MINTING_REQUEST_INVALID_AMOUNT = "The amount to be minted exceeds available funds";
+
+    public static final String TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_CURRENCY = "Non-existing currency in token minting fee quote request";
+    public static final String TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_ORIGINATOR = "Request for token minting fee quote by user not the token originator";
 
 }

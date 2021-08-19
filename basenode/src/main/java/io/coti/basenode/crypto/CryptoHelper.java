@@ -35,6 +35,7 @@ public class CryptoHelper {
     private static final ECParameterSpec spec = new ECParameterSpec(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
     public static final int ADDRESS_SIZE_IN_BYTES = 68;
     public static final int ADDRESS_CHECKSUM_SIZE_IN_BYTES = 4;
+    public static final int DEFAULT_HASH_BYTE_SIZE = 32;
 
     private CryptoHelper() {
 
@@ -179,7 +180,11 @@ public class CryptoHelper {
     }
 
     public static Hash cryptoHash(byte[] input) {
-        Keccak.Digest256 digest = new Keccak.Digest256();
+        return cryptoHash(input, 256);
+    }
+
+    public static Hash cryptoHash(byte[] input, int bit) {
+        Keccak.DigestKeccak digest = new Keccak.DigestKeccak(bit);
         digest.update(input);
         return new Hash(digest.digest());
     }

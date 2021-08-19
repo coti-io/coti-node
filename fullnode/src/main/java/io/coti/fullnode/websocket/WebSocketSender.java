@@ -21,10 +21,10 @@ public class WebSocketSender {
     @Autowired
     private IWebSocketMessageService messagingSender;
 
-    public void notifyBalanceChange(Hash addressHash, BigDecimal balance, BigDecimal preBalance) {
-        log.trace("Address {} with balance {} and pre balance {} is about to be sent to the subscribed user", addressHash, balance, preBalance);
+    public void notifyBalanceChange(Hash addressHash, Hash currencyHash, BigDecimal balance, BigDecimal preBalance) {
+        log.trace("Address {} with currency {} , balance {} and pre balance {} is about to be sent to the subscribed user", addressHash, currencyHash, balance, preBalance);
         messagingSender.convertAndSend("/topic/" + addressHash.toString(),
-                new UpdatedBalanceMessage(addressHash, balance, preBalance));
+                new UpdatedBalanceMessage(addressHash, currencyHash, balance, preBalance));
     }
 
     public void notifyTransactionHistoryChange(TransactionData transactionData, TransactionStatus transactionStatus) {

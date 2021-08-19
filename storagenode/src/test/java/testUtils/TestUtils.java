@@ -1,13 +1,16 @@
 package testUtils;
 
 import io.coti.basenode.data.*;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
+
 
 public class TestUtils {
 
@@ -18,10 +21,12 @@ public class TestUtils {
     private static final int ANY_NUMBER = 10000;
     private static final String TRANSACTION_DESCRIPTION = "test";
 
-    public final static String TRANSACTION_INDEX_NAME = ElasticSearchData.TRANSACTIONS.getIndex();
-    public final static String TRANSACTION_OBJECT_NAME = ElasticSearchData.TRANSACTIONS.getObjectName();
-    public final static String ADDRESS_INDEX_NAME = ElasticSearchData.ADDRESSES.getIndex();
-    public final static String ADDRESS_OBJECT_NAME = ElasticSearchData.ADDRESSES.getObjectName();
+    public static final String TRANSACTION_INDEX_NAME = ElasticSearchData.TRANSACTIONS.getIndex();
+    public static final String TRANSACTION_OBJECT_NAME = ElasticSearchData.TRANSACTIONS.getObjectName();
+    public static final String ADDRESS_INDEX_NAME = ElasticSearchData.ADDRESSES.getIndex();
+    public static final String ADDRESS_OBJECT_NAME = ElasticSearchData.ADDRESSES.getObjectName();
+    @Autowired
+    private static ICurrencyService currencyService;
 
     public static Hash generateRandomHash(int lengthOfHash) {
         StringBuilder hexa = new StringBuilder();
@@ -40,6 +45,7 @@ public class TestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData(
                         generateRandomHash(SIZE_OF_BASE_TRANSACTION_HASH),
+                        currencyService.getNativeCurrencyHash(),
                         new BigDecimal(0),
                         Instant.now())));
         TransactionData transactionData = new TransactionData(baseTransactions,
