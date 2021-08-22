@@ -287,20 +287,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         }
     }
 
-    private void revertPayloadAction(TransactionData transactionData) {
-        if (transactionData.getType() == TransactionType.TokenMinting) {
-            log.error("Reverting minting transaction: {}", transactionData.getHash());
-            mintingService.revertMintingAllocation(transactionData);
-        }
-    }
-
-    private void revertPayloadAction(TransactionData transactionData) {
-        if (transactionData.getType() == TransactionType.TokenMinting) {
-            log.error("Reverting minting transaction: {}", transactionData.getHash());
-            mintingService.revertMintingAllocation(transactionData);
-        }
-    }
-
     private void revertSavedInDB(TransactionData transactionData) {
         log.error("Reverting transaction saved in DB: {}", transactionData.getHash());
     }
@@ -315,42 +301,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             return false;
         }
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PRE_BALANCE_CHANGED);
-        return true;
-    }
-
-    @Override
-    public boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
-        if (!mintingService.checkMintingAmountAndUpdateMintableAmount(transactionData)) {
-            return false;
-        }
-        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
-        return true;
-    }
-
-    @Override
-    public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
-        if (!currencyService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
-            return false;
-        }
-        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
-        return true;
-    }
-
-    @Override
-    public boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
-        if (!mintingService.checkMintingAmountAndUpdateMintableAmount(transactionData)) {
-            return false;
-        }
-        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
-        return true;
-    }
-
-    @Override
-    public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
-        if (!currencyService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
-            return false;
-        }
-        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
         return true;
     }
 
