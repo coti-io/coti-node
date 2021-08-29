@@ -424,4 +424,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         return true;
     }
 
+    @Override
+    public long size(String columnFamilyName) throws RocksDBException {
+        return db.getLongProperty(classNameToColumnFamilyHandleMapping.get(columnFamilyName), "rocksdb.estimate-num-keys");
+    }
 }

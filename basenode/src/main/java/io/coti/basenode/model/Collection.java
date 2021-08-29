@@ -6,6 +6,7 @@ import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.DataBaseDeleteException;
 import io.coti.basenode.exceptions.DataBaseWriteException;
 import lombok.extern.slf4j.Slf4j;
+import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
@@ -145,7 +146,7 @@ public abstract class Collection<T extends IEntity> {
         }
     }
 
-    private RocksIterator getIterator() {
+    public RocksIterator getIterator() {
         return databaseConnector.getIterator(columnFamilyName);
     }
 
@@ -177,6 +178,14 @@ public abstract class Collection<T extends IEntity> {
                 byte[] byteArray = new byte[]{(byte) i, (byte) j};
                 lockByteArrayMap.put(new Hash(byteArray), byteArray);
             }
+        }
+    }
+
+    public long size() {
+        try {
+            return databaseConnector.size(columnFamilyName);
+        } catch (RocksDBException e) {
+            return 0;
         }
     }
 }

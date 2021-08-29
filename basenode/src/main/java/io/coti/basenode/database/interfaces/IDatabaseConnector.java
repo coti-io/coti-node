@@ -2,6 +2,7 @@ package io.coti.basenode.database.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
+import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
@@ -38,4 +39,5 @@ public interface IDatabaseConnector {
 
     boolean compactRange();
 
+    long size(String columnFamilyName) throws RocksDBException;
 }

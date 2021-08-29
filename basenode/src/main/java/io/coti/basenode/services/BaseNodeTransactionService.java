@@ -322,4 +322,10 @@ public class BaseNodeTransactionService implements ITransactionService {
         return postponedTransactionMap.size();
     }
 
+    @Override
+    public long invalidTransactions() {
+        // implemented by DSP node
+        return 0;
+    }
+
 }
