@@ -42,7 +42,7 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     private List<TransactionTrustScoreData> trustScoreResults;
     private int[] nonces;
 
-    private TransactionData() {
+    protected TransactionData() {
     }
 
     public TransactionData(List<BaseTransactionData> baseTransactions) {
