@@ -25,6 +25,8 @@ public interface ITransactionService {
 
     ResponseEntity<IResponse> getPostponedTransactions();
 
+    ResponseEntity<IResponse> getInvalidTransactions();
+
     void handlePropagatedTransaction(TransactionData transactionData);
 
     void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap);
@@ -32,6 +34,8 @@ public interface ITransactionService {
     Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber, String monitorThreadName);
 
     int totalPostponedTransactions();
+
+    long getInvalidTransactionsSize();
 
     void addDataToMemory(TransactionData transactionData);
 }

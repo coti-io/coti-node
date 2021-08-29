@@ -31,6 +31,8 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @Service
 public class BaseNodeTransactionService implements ITransactionService {
 
+    private final LockData transactionLockData = new LockData();
+    protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -51,8 +53,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
-    protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
-    private final LockData transactionLockData = new LockData();
 
     @Override
     public void init() {
@@ -179,6 +179,15 @@ public class BaseNodeTransactionService implements ITransactionService {
                             TRANSACTION_POSTPONED_SERVER_ERROR,
                             STATUS_ERROR));
         }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getInvalidTransactions() {
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(new Response(
+                        METHOD_NOT_ALLOWED,
+                        STATUS_ERROR));
     }
 
     @Override
@@ -320,6 +329,12 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactionMap.size();
+    }
+
+    @Override
+    public long getInvalidTransactionsSize() {
+        // implemented by DSP node
+        return 0;
     }
 
 }

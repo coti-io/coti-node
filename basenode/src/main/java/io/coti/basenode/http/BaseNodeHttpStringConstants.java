@@ -74,6 +74,8 @@ public class BaseNodeHttpStringConstants {
     public static final String DB_MANUAL_BACKUP_SUCCESS = "Successful manual DB backup";
     public static final String DB_MANUAL_BACKUP_NOT_ALLOWED = "Manual DB backup not allowed";
 
+    public static final String METHOD_NOT_ALLOWED = "This method is not in use";
+
     protected BaseNodeHttpStringConstants() {
 
     }

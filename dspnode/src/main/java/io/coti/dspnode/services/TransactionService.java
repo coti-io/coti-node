@@ -2,25 +2,39 @@ package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.crypto.InvalidTransactionCrypto;
 import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetInvalidTransactionsResponse;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.model.InvalidTransactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_NONE_INDEXED_SERVER_ERROR;
 
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
+    public static final int NUMBER_OF_SECONDS_IN_DAY = 24 * 60 * 60;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -37,6 +51,10 @@ public class TransactionService extends BaseNodeTransactionService {
     private TransactionPropagationCheckService transactionPropagationCheckService;
     private BlockingQueue<TransactionData> transactionsToValidate;
     private Thread transactionValidationThread;
+    @Autowired
+    private InvalidTransactions invalidTransactions;
+    @Autowired
+    private InvalidTransactionCrypto invalidTransactionCrypto;
 
     @Override
     public void init() {
@@ -44,6 +62,20 @@ public class TransactionService extends BaseNodeTransactionService {
         transactionValidationThread = new Thread(this::checkAttachedTransactions, "DSP Validation");
         transactionValidationThread.start();
         super.init();
+    }
+
+    private void notifyNodesOnInvalidTransaction(InvalidTransactionData invalidTransactionData) {
+        propagationPublisher.propagate(invalidTransactionData, Arrays.asList(
+                NodeType.FullNode));
+    }
+
+    private void handleInvalidTransactionToFullNode(TransactionData transactionData, InvalidTransactionDataReason invalidTransactionDataReason) {
+        log.debug("informing full node that transaction is invalid");
+        InvalidTransactionData invalidTransactionData = new InvalidTransactionData(transactionData);
+        invalidTransactionData.setInvalidationReason(invalidTransactionDataReason);
+        invalidTransactionCrypto.signMessage(invalidTransactionData);
+        notifyNodesOnInvalidTransaction(invalidTransactionData);
+        invalidTransactions.put(invalidTransactionData);
     }
 
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
@@ -56,8 +88,14 @@ public class TransactionService extends BaseNodeTransactionService {
                 log.debug("Transaction already exists: {}", transactionData.getHash());
                 return;
             }
+            if (invalidTransactions.getByHash(transactionData.getHash()) != null) {
+                log.debug("Transaction already rejected as invalid: {}", transactionData.getHash());
+                notifyNodesOnInvalidTransaction(invalidTransactions.getByHash(transactionData.getHash()));
+                return;
+            }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
+                handleInvalidTransactionToFullNode(transactionData, InvalidTransactionDataReason.DATA_INTEGRITY);
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {
@@ -66,6 +104,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.error("Balance check failed: {}", transactionData.getHash());
+                handleInvalidTransactionToFullNode(transactionData, InvalidTransactionDataReason.BALANCE);
                 return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);
@@ -88,6 +127,8 @@ public class TransactionService extends BaseNodeTransactionService {
                 transactionHelper.endHandleTransaction(transactionData);
                 if (isTransactionFinished) {
                     processPostponedTransactions(transactionData);
+                } else {
+                    processPostponedInvalidTransactions();
                 }
             }
         }
@@ -100,6 +141,66 @@ public class TransactionService extends BaseNodeTransactionService {
         } else {
             handlePropagatedTransaction(postponedTransaction);
         }
+    }
+
+    @Scheduled(initialDelay = 1000, fixedDelay = NUMBER_OF_SECONDS_IN_DAY * 1000)
+    private void clearInvalidTransactions() {
+        invalidTransactions.forEach(invalidTransaction -> {
+                    if (invalidTransaction != null && (Instant.now().getEpochSecond() - invalidTransaction.getInvalidationTime().getEpochSecond() > NUMBER_OF_SECONDS_IN_DAY)) {
+                        log.debug("removing transaction due to TTL. hash: {}, invalidation time: {}, reason: {}",
+                                invalidTransaction.getHash(), invalidTransaction.getInvalidationTime(), invalidTransaction.getInvalidationReason());
+                        invalidTransactions.delete(invalidTransaction);
+                    }
+                }
+        );
+    }
+
+    private void processPostponedInvalidTransactions() {
+        if (postponedTransactionMap.size() > 0) {
+            final AtomicBoolean[] foundNewInvalid = {new AtomicBoolean()};
+            do {
+                foundNewInvalid[0].set(false);
+                invalidTransactions.forEach(invalidTransaction -> {
+                            Map<TransactionData, Boolean> postponedParentTransactionMap = postponedTransactionMap.entrySet().stream().filter(
+                                    postponedTransactionMapEntry ->
+                                            (postponedTransactionMapEntry.getKey().getRightParentHash() != null
+                                                    && postponedTransactionMapEntry.getKey().getRightParentHash().equals(invalidTransaction.getHash()))
+                                                    || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
+                                                    && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(invalidTransaction.getHash())))
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                            for (Map.Entry<TransactionData, Boolean> entry : postponedParentTransactionMap.entrySet()) {
+                                if (entry.getValue().equals(true)) {
+                                    handleInvalidTransactionToFullNode(entry.getKey(), InvalidTransactionDataReason.INVALID_PARENT);
+                                    postponedTransactionMap.remove(entry.getKey());
+                                    foundNewInvalid[0].set(true);
+                                }
+                            }
+                        }
+                );
+            } while (foundNewInvalid[0].get());
+        }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getInvalidTransactions() {
+        try {
+            List<InvalidTransactionData> invalidTransactionDataList = new ArrayList<>();
+            invalidTransactions.forEach(invalidTransaction -> invalidTransactionDataList.add(invalidTransaction));
+            return ResponseEntity.ok(new GetInvalidTransactionsResponse(invalidTransactionDataList));
+        } catch (Exception e) {
+            log.info("Exception while getting invalid transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            TRANSACTION_NONE_INDEXED_SERVER_ERROR,
+                            STATUS_ERROR));
+        }
+    }
+
+    @Override
+    public long getInvalidTransactionsSize() {
+        return invalidTransactions.size();
     }
 
     private void checkAttachedTransactions() {
