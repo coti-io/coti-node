@@ -1,9 +1,6 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.ExecutorData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.InitializationTransactionHandlerType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import reactor.core.publisher.FluxSink;
 
 import javax.servlet.http.HttpServletResponse;
@@ -20,6 +17,8 @@ public interface ITransactionService {
     void getTransactionBatch(long startingIndex, FluxSink sink);
 
     void handlePropagatedTransaction(TransactionData transactionData);
+
+    void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData);
 
     void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap);
 
