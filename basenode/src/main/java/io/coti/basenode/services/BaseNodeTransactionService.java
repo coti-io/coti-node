@@ -168,6 +168,46 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
     }
 
+    public void deleteInvalidTransactionSubDAG(Hash invalidTransactionDataHash) {
+        if (invalidTransactionDataHash == null)
+            return;
+        TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
+        if (transactionData == null)
+            return;
+        transactionData.getChildrenTransactionHashes().forEach(childHash -> {
+            deleteInvalidTransactionSubDAG(childHash);
+        });
+        transactionHelper.endHandleInvalidTransaction(invalidTransactionDataHash);
+    }
+
+    public void deleteChildHashFromParent(Hash parentHash, Hash childHash) {
+        if (parentHash == null || childHash == null)
+            return;
+        TransactionData transactionDataParent = transactions.getByHash(parentHash);
+
+        if (transactionDataParent == null)
+            return;
+        transactionDataParent.getChildrenTransactionHashes().removeIf(item -> item.equals(childHash));
+    }
+
+    @Override
+    public void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData) {
+        Hash invalidTransactionHash = invalidTransactionData.getHash();
+        if (!transactionHelper.isTransactionHashExists(invalidTransactionHash)) {
+            return;
+        }
+        if (!validationService.validatePropagatedInvalidTransactionDataIntegrity(invalidTransactionData)) {
+            log.error("Data Integrity validation failed for invalid transaction: {}", invalidTransactionHash);
+            return;
+        }
+        if (!invalidTransactionData.getInvalidationReason().equals(InvalidTransactionDataReason.INVALID_PARENT.toString())) {
+            TransactionData transactionData = transactions.getByHash(invalidTransactionHash);
+            deleteChildHashFromParent(transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash(), invalidTransactionHash);
+            deleteChildHashFromParent(transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash(), invalidTransactionHash);
+        }
+        deleteInvalidTransactionSubDAG(invalidTransactionHash);
+    }
+
     protected void processPostponedTransactions(TransactionData transactionData) {
         DspConsensusResult postponedDspConsensusResult = dspVoteService.getPostponedDspConsensusResult(transactionData.getHash());
         if (postponedDspConsensusResult != null) {

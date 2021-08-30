@@ -202,6 +202,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         return false;
     }
 
+    
     private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
         if (dspConsensusResult == null) {
             return;
@@ -252,6 +253,17 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
     }
 
+    public void endHandleInvalidTransaction(Hash invalidTransactionDataHash) {
+        if (invalidTransactionDataHash == null)
+            return;
+        TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
+
+        if ( transactionData != null ) {
+            revertInvalidTransactionPreBalance(transactionData);
+            revertSavedInvalidTransactionFromDB(transactionData);
+        }
+    }
+
     @Override
     public boolean isTransactionFinished(TransactionData transactionData) {
         return transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
@@ -283,8 +295,19 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         log.error("Reverting transaction saved in DB: {}", transactionData.getHash());
     }
 
+    private void revertSavedInvalidTransactionFromDB(TransactionData transactionData) {
+        log.info("Reverting invalid transaction saved from DB: {}", transactionData.getHash());
+
+        transactions.deleteByHash(transactionData.getHash());
+    }
+
     private void revertPreBalance(TransactionData transactionData) {
         log.error("Reverting pre balance: {}", transactionData.getHash());
+        balanceService.rollbackBaseTransactions(transactionData);
+    }
+
+    private void revertInvalidTransactionPreBalance(TransactionData transactionData) {
+        log.info("Reverting pre balance: {}", transactionData.getHash());
         balanceService.rollbackBaseTransactions(transactionData);
     }
 

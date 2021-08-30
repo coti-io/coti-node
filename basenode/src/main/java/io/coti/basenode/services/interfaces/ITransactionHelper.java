@@ -30,6 +30,8 @@ public interface ITransactionHelper {
 
     void endHandleTransaction(TransactionData transactionData);
 
+    void endHandleInvalidTransaction(Hash invalidTransactionDataHash);
+
     boolean isTransactionFinished(TransactionData transactionData);
 
     boolean checkBalancesAndAddToPreBalance(TransactionData transactionData);
