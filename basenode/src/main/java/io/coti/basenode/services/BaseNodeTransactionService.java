@@ -185,7 +185,8 @@ public class BaseNodeTransactionService implements ITransactionService {
 
         if (transactionDataParent == null)
             return;
-        transactionDataParent.getChildrenTransactionHashes().removeIf(item -> item.equals(childHash));
+        if (transactionDataParent.getChildrenTransactionHashes().removeIf(item -> item.equals(childHash)))
+            transactions.put(transactionDataParent);
     }
 
     @Override
@@ -198,7 +199,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             log.error("Data Integrity validation failed for invalid transaction: {}", invalidTransactionHash);
             return;
         }
-        if (!invalidTransactionData.getInvalidationReason().equals(InvalidTransactionDataReason.INVALID_PARENT.toString())) {
+        if (!InvalidTransactionDataReason.INVALID_PARENT.toString().equals(invalidTransactionData.getInvalidationReason())) {
             TransactionData transactionData = transactions.getByHash(invalidTransactionHash);
             if (transactionData != null) {
                 deleteChildHashFromParent(transactionData.getLeftParentHash(), invalidTransactionHash);
