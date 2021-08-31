@@ -174,9 +174,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
         if (transactionData == null)
             return;
-        transactionData.getChildrenTransactionHashes().forEach(childHash -> {
-            deleteInvalidTransactionSubDAG(childHash);
-        });
+        transactionData.getChildrenTransactionHashes().forEach(this::deleteInvalidTransactionSubDAG);
         transactionHelper.endHandleInvalidTransaction(invalidTransactionDataHash);
     }
 
@@ -202,8 +200,10 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
         if (!invalidTransactionData.getInvalidationReason().equals(InvalidTransactionDataReason.INVALID_PARENT.toString())) {
             TransactionData transactionData = transactions.getByHash(invalidTransactionHash);
-            deleteChildHashFromParent(transactionData.getLeftParentHash() == null ? null : transactionData.getLeftParentHash(), invalidTransactionHash);
-            deleteChildHashFromParent(transactionData.getRightParentHash() == null ? null : transactionData.getRightParentHash(), invalidTransactionHash);
+            if (transactionData != null) {
+                deleteChildHashFromParent(transactionData.getLeftParentHash(), invalidTransactionHash);
+                deleteChildHashFromParent(transactionData.getRightParentHash(), invalidTransactionHash);
+            }
         }
         deleteInvalidTransactionSubDAG(invalidTransactionHash);
     }
