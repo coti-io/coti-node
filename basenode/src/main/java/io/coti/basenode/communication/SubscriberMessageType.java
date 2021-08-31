@@ -21,7 +21,7 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
     },
     INVALID_TRANSACTION_DATA(InvalidTransactionData.class) {
         @Override
-        public Consumer<Object> getHandler(NodeType publisherNodeType) {
+        public Consumer<IPropagatable> getHandler(NodeType publisherNodeType) {
             return invalidTransactionData -> transactionService.handlePropagatedInvalidTransaction((InvalidTransactionData) invalidTransactionData);
         }
     },
