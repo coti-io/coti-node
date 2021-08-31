@@ -9,7 +9,9 @@ import lombok.Data;
 import java.time.Instant;
 
 @Data
-public class InvalidTransactionData implements IPropagatable, Comparable<TransactionData>, ISignable, ISignValidatable {
+public class InvalidTransactionData implements IPropagatable, ISignable, ISignValidatable {
+
+    private static final long serialVersionUID = -4057207227904211625L;
 
     private Hash hash;
     private Instant invalidationTime;
@@ -47,8 +49,4 @@ public class InvalidTransactionData implements IPropagatable, Comparable<Transac
         nodeHash = signerHash;
     }
 
-    @Override
-    public int compareTo(TransactionData o) {
-        return 0;
-    }
 }
