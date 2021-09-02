@@ -166,8 +166,9 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public ResponseEntity<IResponse> getPostponedTransactions() {
         try {
-            Set<TransactionData> postponedTransactionSet = SerializationUtils.clone((HashSet<TransactionData>) postponedTransactionMap.keySet());
-            ConcurrentHashMap<Hash, TransactionData> postponedTransactionCluster = (ConcurrentHashMap<Hash, TransactionData>) postponedTransactionSet.stream().collect(Collectors.toMap(TransactionData::getHash, transactionData -> transactionData));
+            ConcurrentHashMap<Hash, TransactionData> postponedTransactionCluster = new ConcurrentHashMap<>();
+            postponedTransactionCluster.putAll(postponedTransactionMap.keySet().stream().collect(Collectors.toMap(TransactionData::getHash, transactionData -> transactionData)));
+
             LinkedList<TransactionData> topologicalOrderedPostponedTransactions = new LinkedList<>();
             clusterHelper.sortByTopologicalOrder(postponedTransactionCluster, topologicalOrderedPostponedTransactions);
             return ResponseEntity.ok(new GetExtendedTransactionsResponse(topologicalOrderedPostponedTransactions));
