@@ -13,10 +13,7 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -24,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SourceStarvationService {
 
     private static final long MINIMUM_WAIT_TIME_IN_SECONDS = 10;
+    private static final long WAIT_REDUCTION_FACTOR = 4;
     private static final long SOURCE_STARVATION_CHECK_TASK_DELAY = 10000;
     @Autowired
     private IClusterService clusterService;
@@ -42,24 +40,12 @@ public class SourceStarvationService {
 
         clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
 
-        for (int i = topologicalOrderedGraph.size() - 1; i >= 0; i--) {
-            TransactionData transactionData = topologicalOrderedGraph.get(i);
-            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
-                nonZeroSpendChainTransactions.put(transactionData.getHash(), transactionData.getAttachmentTime());
-            }
-            parentInNonZeroChain(transactionData.getLeftParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
-            parentInNonZeroChain(transactionData.getRightParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
+        createNewStarvationZeroSpendTransactions(now, topologicalOrderedGraph, nonZeroSpendChainTransactions);
 
-            if (transactionData.getChildrenTransactionHashes().isEmpty() && nonZeroSpendChainTransactions.containsKey(transactionData.getHash())) {
-                long minimumWaitingTimeInMilliseconds = (long) (100 - transactionData.getSenderTrustScore() + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
-                long actualWaitingTimeInMilliseconds = Duration.between(nonZeroSpendChainTransactions.get(transactionData.getHash()), now).toMillis();
-                log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
-                if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
-                    transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
-                }
-            }
-        }
+        createNewGenesisZeroSpendTransactions();
+    }
 
+    private void createNewGenesisZeroSpendTransactions() {
         List<Set<TransactionData>> sourceListsByTrustScore = clusterService.getSourceListsByTrustScore();
         boolean isTrustScoreRangeContainsSource = false;
         for (int i = 1; i <= 100; i++) {
@@ -75,15 +61,34 @@ public class SourceStarvationService {
         }
     }
 
+    private void createNewStarvationZeroSpendTransactions(Instant now, LinkedList<TransactionData> topologicalOrderedGraph, ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions) {
+        for (int i = topologicalOrderedGraph.size() - 1; i >= 0; i--) {
+            TransactionData transactionData = topologicalOrderedGraph.get(i);
+            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+                nonZeroSpendChainTransactions.put(transactionData.getHash(), transactionData.getAttachmentTime());
+            }
+            parentInNonZeroChain(transactionData.getLeftParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
+            parentInNonZeroChain(transactionData.getRightParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
+
+            if (transactionData.getChildrenTransactionHashes().isEmpty() && nonZeroSpendChainTransactions.containsKey(transactionData.getHash())) {
+                long minimumWaitingTimeInMilliseconds = (long) ((100 - transactionData.getSenderTrustScore()) / WAIT_REDUCTION_FACTOR + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
+                long actualWaitingTimeInMilliseconds = Duration.between(nonZeroSpendChainTransactions.get(transactionData.getHash()), now).toMillis();
+                log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
+                if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
+                    transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
+                }
+            }
+        }
+    }
+
     private void parentInNonZeroChain(Hash parentHash, Hash transactionHash, ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions) {
         if (parentHash != null) {
             Instant parentAttachmentTime = nonZeroSpendChainTransactions.get(parentHash);
             if (parentAttachmentTime != null) {
-                Instant transactionAttachTime = nonZeroSpendChainTransactions.get(transactionHash);
-                if (transactionAttachTime == null || transactionAttachTime.isBefore(parentAttachmentTime)) {
-                    transactionAttachTime = parentAttachmentTime;
-                }
-                nonZeroSpendChainTransactions.put(transactionHash, transactionAttachTime);
+                nonZeroSpendChainTransactions.computeIfPresent(transactionHash, (transactionHashKey, transactionAttachmentTime) ->
+                        transactionAttachmentTime.isAfter(parentAttachmentTime) ? parentAttachmentTime : transactionAttachmentTime
+                );
+                nonZeroSpendChainTransactions.putIfAbsent(transactionHash, parentAttachmentTime);
             }
         }
     }
