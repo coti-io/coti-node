@@ -7,6 +7,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.CotiRunTimeException;
+import io.coti.basenode.exceptions.DataBaseBackupException;
 import io.coti.basenode.exceptions.DataBaseRecoveryException;
 import io.coti.basenode.exceptions.DataBaseRestoreException;
 import io.coti.basenode.http.GetBackupBucketResponse;
@@ -33,10 +34,10 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.NOT_BACKUP_NODE;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -46,8 +47,11 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private static final int INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME = 1;
     private static final int ALLOWED_NUMBER_OF_BACKUPS = 2;
     private static final String BACK_UP_FOLDER_PREFIX = "/backup-";
+    private final AtomicBoolean backupInProgress = new AtomicBoolean(false);
     @Value("${db.backup}")
     private boolean backup;
+    @Value("${db.backup.manual:false}")
+    private boolean manualBackup;
     @Value("${db.backup.bucket}")
     private String backupBucket;
     @Value("${db.restore.backup.local}")
@@ -78,6 +82,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private String remoteBackupFolderPath;
     private String backupS3Path;
     private String restoreS3Path;
+    private String s3FolderName;
 
     @Override
     public void init() {
@@ -100,7 +105,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     }
 
     private void validateInjectedProperties() {
-        if (backup) {
+        if (backup || manualBackup) {
             if (!awsService.isBuildS3ClientWithCredentials()) {
                 throw new DataBaseRecoveryException("Aws s3 client should be with credentials when backup flag is set to true");
             }
@@ -119,39 +124,86 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
     }
 
+    private void removeOlderBackupsFromS3(List<String> backupFiles) {
+        if (!backupFiles.isEmpty()) {
+            Set<Long> s3BackupTimeStampSet = getS3BackupTimeStampSet(backupFiles);
+            if (s3BackupTimeStampSet.size() >= ALLOWED_NUMBER_OF_BACKUPS) {
+                List<Long> s3BackupTimeStamps = new ArrayList<>(s3BackupTimeStampSet);
+                Collections.sort(s3BackupTimeStamps);
+                String[] backupFoldersToRemove = s3BackupTimeStamps.stream().limit((long) s3BackupTimeStampSet.size() - ALLOWED_NUMBER_OF_BACKUPS + 1).map(s3BackupTimeStamp -> backupS3Path + BACK_UP_FOLDER_PREFIX + s3BackupTimeStamp.toString()).toArray(String[]::new);
+                List<String> backupFilesToRemove = backupFiles.stream().filter(backupFile -> StringUtils.startsWithAny(backupFile, backupFoldersToRemove)).collect(Collectors.toList());
+                log.info("Deleting {} older backup folder(s) with total {} file(s).", backupFoldersToRemove.length, backupFilesToRemove.size());
+                log.info("Folders: {}", Arrays.toString(backupFoldersToRemove));
+                awsService.deleteFolderAndContentsFromS3(backupFilesToRemove, backupBucket);
+                log.info("Finished to delete older backup folders");
+            }
+        }
+    }
+
+    private void uploadRecentBackupToS3(List<String> backupFiles) {
+        if (backupFiles.isEmpty()) {
+            awsService.createS3Folder(backupBucket, backupS3Path);
+        }
+        File backupFolderToUpload = new File(remoteBackupFolderPath);
+        s3FolderName = BACK_UP_FOLDER_PREFIX + Instant.now().toEpochMilli();
+        log.info("Uploading remote backup to S3 bucket {} and folderName {}", backupBucket, s3FolderName);
+        awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + s3FolderName, backupFolderToUpload);
+    }
+
+    private List<String> getBackupFiles() {
+        return awsService.listS3Paths(backupBucket, backupS3Path);
+    }
+
     @Scheduled(cron = "${db.backup.time}", zone = "UTC")
-    private void backupDB() {
+    private void backupDBCron() {
         if (backup) {
+            try {
+                backupDB();
+            } catch (Exception e) {
+                log.error("Error at backup DB cron");
+            }
+        }
+    }
+
+    public ResponseEntity<IResponse> manualBackupDB() {
+        try {
+            if (!manualBackup) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DB_MANUAL_BACKUP_NOT_ALLOWED));
+            }
+            log.info("Manual DB backup initialized");
+            backupDB();
+            return ResponseEntity.ok(new Response(DB_MANUAL_BACKUP_SUCCESS));
+        } catch (Exception e) {
+            log.error("Error at manual backup DB");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage()));
+        }
+    }
+
+    private void backupDB() {
+        if (backupInProgress.compareAndSet(false, true)) {
             try {
                 log.info("Starting DB backup flow");
                 deleteBackup(remoteBackupFolderPath);
                 dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
-                List<String> backupFiles = awsService.listS3Paths(backupBucket, backupS3Path);
-                if (backupFiles.isEmpty()) {
-                    awsService.createS3Folder(backupBucket, backupS3Path);
-                }
-                File backupFolderToUpload = new File(remoteBackupFolderPath);
-                log.info("Uploading remote backup to S3 bucket");
-                awsService.uploadFolderAndContentsToS3(backupBucket, backupS3Path + BACK_UP_FOLDER_PREFIX + Instant.now().toEpochMilli(), backupFolderToUpload);
-                if (!backupFiles.isEmpty()) {
-                    Set<Long> s3BackupTimeStampSet = getS3BackupTimeStampSet(backupFiles);
-                    if (s3BackupTimeStampSet.size() >= ALLOWED_NUMBER_OF_BACKUPS) {
-                        List<Long> s3BackupTimeStamps = new ArrayList<>(s3BackupTimeStampSet);
-                        Collections.sort(s3BackupTimeStamps);
-                        String[] backupFoldersToRemove = s3BackupTimeStamps.stream().limit((long) s3BackupTimeStampSet.size() - ALLOWED_NUMBER_OF_BACKUPS + 1).map(s3BackupTimeStamp -> backupS3Path + BACK_UP_FOLDER_PREFIX + s3BackupTimeStamp.toString()).toArray(String[]::new);
-                        backupFiles = backupFiles.stream().filter(backupFile -> StringUtils.startsWithAny(backupFile, backupFoldersToRemove)).collect(Collectors.toList());
-                        awsService.deleteFolderAndContentsFromS3(backupFiles, backupBucket);
-                    }
-                }
+                List<String> uploadedBackupFiles = getBackupFiles();
+                uploadRecentBackupToS3(uploadedBackupFiles);
+                removeOlderBackupsFromS3(uploadedBackupFiles);
                 log.info("Finished DB backup flow");
             } catch (CotiRunTimeException e) {
                 log.error("Backup DB error.");
                 e.logMessage();
+                throw e;
             } catch (Exception e) {
                 log.error("Backup DB error.\n{}: {}", e.getClass().getName(), e.getMessage());
+                throw e;
             } finally {
+                backupInProgress.set(false);
                 deleteBackup(remoteBackupFolderPath);
             }
+        } else {
+            String errorMessage = "Backup failed, another backup is in progress! check previous log messages";
+            log.error(errorMessage);
+            throw new DataBaseBackupException(errorMessage);
         }
     }
 
