@@ -37,4 +37,6 @@ public interface ITransactionService {
     int totalPostponedTransactions();
 
     void addDataToMemory(TransactionData transactionData);
+
+    void removeDataFromMemory(TransactionData transactionData);
 }

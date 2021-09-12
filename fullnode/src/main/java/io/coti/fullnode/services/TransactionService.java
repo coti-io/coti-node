@@ -114,6 +114,14 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
+            // Check for flag of handling an invalid transaction
+            if (isStartedHandlingInvalidTransaction()) {
+                log.debug("Received transaction: {} while processing an invalid transaction", transactionData.getHash());
+                return ResponseEntity
+                        .status(HttpStatus.METHOD_NOT_ALLOWED)
+                        .body(new Response(
+                                TRANSACTION_HANDLING_REJECTED_INVALID_TRANSACTION, STATUS_ERROR));
+            }
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 if (((NetworkService) networkService).isNotConnectedToDspNodes()) {
                     log.error("FullNode is not connected to any DspNode. Rejecting transaction {}", transactionData.getHash());
@@ -567,6 +575,17 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
+    public void removeDataFromMemory(TransactionData transactionData) {
+        try {
+            explorerIndexQueue.put(new ExplorerTransactionData(transactionData));
+            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+                removeAddressTransactionsByAttachment(transactionData);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -578,7 +597,11 @@ public class TransactionService extends BaseNodeTransactionService {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ExplorerTransactionData explorerTransactionData = explorerIndexQueue.take();
-                explorerIndexedTransactionSet.add(explorerTransactionData);
+                if (explorerTransactionData.isRevert()) {
+                    explorerIndexedTransactionSet.remove(explorerTransactionData);
+                } else {
+                    explorerIndexedTransactionSet.add(explorerTransactionData);
+                }
                 webSocketSender.notifyTotalTransactionsChange(explorerIndexedTransactionSet.size());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -601,6 +624,16 @@ public class TransactionService extends BaseNodeTransactionService {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    private void removeAddressTransactionsByAttachment(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            NavigableMap<Instant, Set<Hash>> transactionHashesByAttachmentMap = addressToTransactionsByAttachmentMap.getOrDefault(baseTransactionData.getAddressHash(), new ConcurrentSkipListMap<>());
+            Set<Hash> transactionHashSet = transactionHashesByAttachmentMap.getOrDefault(transactionData.getAttachmentTime(), Sets.newConcurrentHashSet());
+            transactionHashSet.remove(transactionData.getHash());
+            transactionHashesByAttachmentMap.put(transactionData.getAttachmentTime(), transactionHashSet);
+            addressToTransactionsByAttachmentMap.put(baseTransactionData.getAddressHash(), transactionHashesByAttachmentMap);
+        });
     }
 
     @Override

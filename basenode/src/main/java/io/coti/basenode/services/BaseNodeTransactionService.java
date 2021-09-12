@@ -51,12 +51,16 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
     protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
+    private boolean isStartedHandlingInvalidTransaction;
 
     @Override
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
+        isStartedHandlingInvalidTransaction = false;
     }
 
     @Override
@@ -246,18 +250,10 @@ public class BaseNodeTransactionService implements ITransactionService {
         if (transactionData == null)
             return;
         transactionData.getChildrenTransactionHashes().forEach(this::deleteInvalidTransactionSubDAG);
+
+        removeDataFromMemory(transactionData);
+        transactionPropagationCheckService.removeConfirmedReceiptTransaction(invalidTransactionDataHash);
         transactionHelper.endHandleInvalidTransaction(invalidTransactionDataHash);
-    }
-
-    public void deleteChildHashFromParent(Hash parentHash, Hash childHash) {
-        if (parentHash == null || childHash == null)
-            return;
-        TransactionData transactionDataParent = transactions.getByHash(parentHash);
-
-        if (transactionDataParent == null)
-            return;
-        if (transactionDataParent.getChildrenTransactionHashes().removeIf(item -> item.equals(childHash)))
-            transactions.put(transactionDataParent);
     }
 
     @Override
@@ -270,14 +266,15 @@ public class BaseNodeTransactionService implements ITransactionService {
             log.error("Data Integrity validation failed for invalid transaction: {}", invalidTransactionHash);
             return;
         }
-        if (!InvalidTransactionDataReason.INVALID_PARENT.toString().equals(invalidTransactionData.getInvalidationReason())) {
-            TransactionData transactionData = transactions.getByHash(invalidTransactionHash);
-            if (transactionData != null) {
-                deleteChildHashFromParent(transactionData.getLeftParentHash(), invalidTransactionHash);
-                deleteChildHashFromParent(transactionData.getRightParentHash(), invalidTransactionHash);
-            }
+
+        try {
+            // Add flag to prevent processing new transactions
+            isStartedHandlingInvalidTransaction = true;
+            deleteInvalidTransactionSubDAG(invalidTransactionHash);
+        } finally {
+            // Remove flag to prevent processing new transactions
+            isStartedHandlingInvalidTransaction = false;
         }
-        deleteInvalidTransactionSubDAG(invalidTransactionHash);
     }
 
     protected void processPostponedTransactions(TransactionData transactionData) {
@@ -354,6 +351,10 @@ public class BaseNodeTransactionService implements ITransactionService {
         log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
     }
 
+    public void removeDataFromMemory(TransactionData transactionData) {
+        log.debug("Removing the transaction {} from explorer indexes by base node", transactionData.getHash());
+    }
+
     protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 (transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null);
@@ -361,6 +362,10 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactionMap.size();
+    }
+
+    public boolean isStartedHandlingInvalidTransaction() {
+        return isStartedHandlingInvalidTransaction;
     }
 
 }
