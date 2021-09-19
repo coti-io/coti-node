@@ -22,12 +22,14 @@ import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.utilities.MemoryUtils;
 import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
 import io.coti.fullnode.http.*;
 import io.coti.fullnode.http.data.TimeOrder;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -79,6 +81,8 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
     private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
+    @Value("${java.process.memory.limit:95}")
+    private int javaProcessMemoryLimit;
 
     @Override
     public void init() {
@@ -318,11 +322,21 @@ public class TransactionService extends BaseNodeTransactionService {
             if (addressTransactionsHistory == null) {
                 return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
             }
-            addressTransactionsHistory.getTransactionsHistory().forEach(transactionHash -> {
+
+            Set<Hash> transactionsHash = addressTransactionsHistory.getTransactionsHistory();
+            for ( Hash transactionHash : transactionsHash )
+            {
                 TransactionData transactionData = transactions.getByHash(transactionHash);
                 transactionsDataList.add(transactionData);
-            });
-            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
+                if (MemoryUtils.getPercentageUsedHeap() >= javaProcessMemoryLimit) {
+                    log.warn("Not all transactions for {} in response of getAddressTransactions, current {} , limit {}%", addressHash,
+                            MemoryUtils.getPercentageUsedFormatted(), javaProcessMemoryLimit);
+                    log.debug(MemoryUtils.debugInfo());
+                    break;
+                }
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList, addressTransactionsHistory.getTransactionsHistory().size()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
