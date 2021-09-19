@@ -21,12 +21,14 @@ import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.utilities.MemoryUtils;
 import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
 import io.coti.fullnode.http.*;
 import io.coti.fullnode.http.data.TimeOrder;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -50,6 +52,9 @@ public class TransactionService extends BaseNodeTransactionService {
 
     private static final int EXPLORER_LAST_TRANSACTIONS_NUMBER = 20;
     private static final int EXPLORER_TRANSACTION_NUMBER_BY_PAGE = 10;
+    private final LockData transactionLockData = new LockData();
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -70,15 +75,14 @@ public class TransactionService extends BaseNodeTransactionService {
     private IChunkService chunkService;
     @Autowired
     private PotService potService;
-    @Autowired
-    protected ITransactionPropagationCheckService transactionPropagationCheckService;
     private BlockingQueue<ExplorerTransactionData> explorerIndexQueue;
     private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
     private BlockingQueue<TransactionData> addressTransactionsByAttachmentQueue;
     private Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
-    private final LockData transactionLockData = new LockData();
+    @Value("${java.process.memory.limit:95}")
+    private int javaProcessMemoryLimit;
 
     @Override
     public void init() {
@@ -342,11 +346,21 @@ public class TransactionService extends BaseNodeTransactionService {
             if (addressTransactionsHistory == null) {
                 return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
             }
-            addressTransactionsHistory.getTransactionsHistory().forEach(transactionHash -> {
+
+            Set<Hash> transactionsHash = addressTransactionsHistory.getTransactionsHistory();
+            for ( Hash transactionHash : transactionsHash )
+            {
                 TransactionData transactionData = transactions.getByHash(transactionHash);
                 transactionsDataList.add(transactionData);
-            });
-            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
+                if (MemoryUtils.getPercentageUsedHeap() >= javaProcessMemoryLimit) {
+                    log.warn("Not all transactions for {} in response of getAddressTransactions, current {} , limit {}%", addressHash,
+                            MemoryUtils.getPercentageUsedFormatted(), javaProcessMemoryLimit);
+                    log.debug(MemoryUtils.debugInfo());
+                    break;
+                }
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList, addressTransactionsHistory.getTransactionsHistory().size()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
