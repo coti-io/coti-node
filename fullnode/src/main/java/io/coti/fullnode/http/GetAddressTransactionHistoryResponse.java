@@ -11,6 +11,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class GetAddressTransactionHistoryResponse extends GetTransactionsResponse {
 
+    public GetAddressTransactionHistoryResponse(List<TransactionData> transactionsData, int totalNumberOfTransactions) {
+        super(transactionsData, totalNumberOfTransactions);
+    }
+
     public GetAddressTransactionHistoryResponse(List<TransactionData> transactionsData) {
         super(transactionsData);
     }
