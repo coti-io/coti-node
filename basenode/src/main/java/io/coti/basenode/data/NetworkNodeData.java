@@ -6,6 +6,7 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.Objects;
 
 @Data
@@ -25,17 +26,20 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private FeeData feeData;
     private SignatureData nodeSignature;
     private NodeRegistrationData nodeRegistrationData;
+    private HashMap<String, String> features;
 
     public NetworkNodeData() {
     }
 
-    public NetworkNodeData(NodeType nodeType, String version, String address, String httpPort, Hash nodeHash, NetworkType networkType) {
+    public NetworkNodeData(NodeType nodeType, String version, String address, String httpPort, Hash nodeHash, NetworkType networkType,
+                           HashMap<String, String> features) {
         this.nodeType = nodeType;
         this.version = version;
         this.address = address;
         this.httpPort = httpPort;
         this.nodeHash = nodeHash;
         this.networkType = networkType;
+        this.features = features;
     }
 
     @Override
@@ -111,5 +115,6 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
         feeData = networkNodeData.getFeeData();
         nodeSignature = networkNodeData.getNodeSignature();
         nodeRegistrationData = networkNodeData.getNodeRegistrationData();
+        features = networkNodeData.getFeatures();
     }
 }

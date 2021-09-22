@@ -1,5 +1,6 @@
 package io.coti.fullnode.services;
 
+import io.coti.basenode.constants.NodeConfig;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
@@ -16,6 +17,7 @@ import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -35,6 +37,8 @@ public class InitializationService extends BaseNodeInitializationService {
     @Value("${server.url}")
     private String webServerUrl;
     private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    @Value("${exclude.from.wallet:false}")
+    private String excludeFromWallet;
 
     @PostConstruct
     @Override
@@ -74,7 +78,9 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         FeeData feeData = new FeeData(nodeFee, minimumFee, maximumFee);
         if (networkService.validateFeeData(feeData)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+            HashMap<String, String> features = new HashMap<>();
+            features.put(NodeConfig.EXCLUDE_FROM_WALLET, excludeFromWallet);
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, features);
             networkNodeData.setFeeData(feeData);
             networkNodeData.setWebServerUrl(webServerUrl);
             return networkNodeData;

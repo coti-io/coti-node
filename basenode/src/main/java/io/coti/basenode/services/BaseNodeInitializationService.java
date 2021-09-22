@@ -117,6 +117,7 @@ public abstract class BaseNodeInitializationService {
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
     @Autowired
     protected IMetricsService metricsService;
+    protected HashMap<String, String> features = new HashMap<>();
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());

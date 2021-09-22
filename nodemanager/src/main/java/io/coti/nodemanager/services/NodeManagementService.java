@@ -1,6 +1,7 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.constants.NodeConfig;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
@@ -56,6 +57,8 @@ public class NodeManagementService implements INodeManagementService {
     private static final String FINANCIAL_SERVER_FOR_WALLET_KEY = "FinancialServer";
     private static final int BLACKLIST_INACTIVITY_NUMBER = 4;
     private static final int BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES = 10;
+    private final Set<Hash> blacklistedNodes = new LinkedHashSet<>();
+    private final LockData nodeHashLockData = new LockData();
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -80,8 +83,8 @@ public class NodeManagementService implements INodeManagementService {
     private String nodeManagerIp;
     @Value("${propagation.port}")
     private String propagationPort;
-    private final Set<Hash> blacklistedNodes = new LinkedHashSet<>();
-    private final LockData nodeHashLockData = new LockData();
+    @Value("${fn.wallet.exclusions.list:}")
+    private String[] fullNodeListExcludeFromWallet;
 
     @Override
     public void init() {
@@ -545,6 +548,19 @@ public class NodeManagementService implements INodeManagementService {
         return nodeHistoryData;
     }
 
+    private boolean isIncludeFullNodeAsWalletSource(SingleNodeDetailsForWallet singleNodeDetailsForWallet) {
+        boolean excludedByNodeManager = Arrays.stream(fullNodeListExcludeFromWallet).anyMatch(hash -> hash.equals(singleNodeDetailsForWallet.getNodeHash()));
+        boolean excludedByFullNode = Boolean.parseBoolean(getNodeFeature(singleNodeDetailsForWallet, NodeConfig.EXCLUDE_FROM_WALLET));
+        return (!excludedByNodeManager && !excludedByFullNode);
+    }
+
+    private String getNodeFeature(SingleNodeDetailsForWallet nodeData, String featureName) {
+        if (nodeData.getFeatures() != null) {
+            return nodeData.getFeatures().get(featureName);
+        }
+        return null;
+    }
+
     @Override
     public Map<String, List<SingleNodeDetailsForWallet>> getNetworkDetailsForWallet() {
         Map<String, List<SingleNodeDetailsForWallet>> networkDetailsForWallet = new HashedMap<>();
@@ -553,7 +569,7 @@ public class NodeManagementService implements INodeManagementService {
         NetworkNodeData selectedNode = stakingService.selectStakedNode(fullNodesDetails);
         List<SingleNodeDetailsForWallet> fullNodesDetailsForWallet = fullNodesDetails.values().stream()
                 .map(this::createSingleNodeDetailsForWallet)
-                .filter(singleNodeDetailsForWallet -> stakingService.filterFullNode(singleNodeDetailsForWallet))
+                .filter(singleNodeDetailsForWallet -> stakingService.filterFullNode(singleNodeDetailsForWallet)).filter(this::isIncludeFullNodeAsWalletSource)
                 .collect(Collectors.toList());
         if (selectedNode != null) {
             SingleNodeDetailsForWallet selectedNodeForWallet = createSingleNodeDetailsForWallet(selectedNode);
@@ -587,7 +603,7 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
-        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl(), node.getVersion());
+        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl(), node.getVersion(), node.getFeatures());
         if (NodeType.FullNode.equals(node.getNodeType())) {
             singleNodeDetailsForWallet.setFeeData(node.getFeeData());
             singleNodeDetailsForWallet.setTrustScore(node.getTrustScore());
