@@ -53,10 +53,15 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
+
+    private boolean isStartedHandlingInvalidTransaction;
 
     @Override
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
+        isStartedHandlingInvalidTransaction = false;
     }
 
     @Override
@@ -248,6 +253,40 @@ public class BaseNodeTransactionService implements ITransactionService {
         // Implemented by Full Node
     }
 
+    public void deleteInvalidTransactionSubDAG(Hash invalidTransactionDataHash) {
+        if (invalidTransactionDataHash == null)
+            return;
+        TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
+        if (transactionData == null)
+            return;
+        transactionData.getChildrenTransactionHashes().forEach(this::deleteInvalidTransactionSubDAG);
+
+        removeDataFromMemory(transactionData);
+        transactionPropagationCheckService.removeConfirmedReceiptTransaction(invalidTransactionDataHash);
+        transactionHelper.endHandleInvalidTransaction(invalidTransactionDataHash);
+    }
+
+    @Override
+    public void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData) {
+        Hash invalidTransactionHash = invalidTransactionData.getHash();
+        if (!transactionHelper.isTransactionHashExists(invalidTransactionHash)) {
+            return;
+        }
+        if (!validationService.validatePropagatedInvalidTransactionDataIntegrity(invalidTransactionData)) {
+            log.error("Data Integrity validation failed for invalid transaction: {}", invalidTransactionHash);
+            return;
+        }
+
+        try {
+            // Add flag to prevent processing new transactions
+            isStartedHandlingInvalidTransaction = true;
+            deleteInvalidTransactionSubDAG(invalidTransactionHash);
+        } finally {
+            // Remove flag to prevent processing new transactions
+            isStartedHandlingInvalidTransaction = false;
+        }
+    }
+
     protected void processPostponedTransactions(TransactionData transactionData) {
         DspConsensusResult postponedDspConsensusResult = dspVoteService.getPostponedDspConsensusResult(transactionData.getHash());
         if (postponedDspConsensusResult != null) {
@@ -322,6 +361,10 @@ public class BaseNodeTransactionService implements ITransactionService {
         log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
     }
 
+    public void removeDataFromMemory(TransactionData transactionData) {
+        log.debug("Removing the transaction {} from explorer indexes by base node", transactionData.getHash());
+    }
+
     protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 (transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null);
@@ -335,6 +378,10 @@ public class BaseNodeTransactionService implements ITransactionService {
     public long getInvalidTransactionsSize() {
         // implemented by DSP node
         return 0;
+    }
+
+    public boolean isStartedHandlingInvalidTransaction() {
+        return isStartedHandlingInvalidTransaction;
     }
 
 }

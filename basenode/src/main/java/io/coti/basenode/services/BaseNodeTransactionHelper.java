@@ -8,10 +8,7 @@ import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,6 +44,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     private TransactionIndexes transactionIndexes;
     @Autowired
     private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private final AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
@@ -99,6 +98,19 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
                 log.debug("Transaction {} is already in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
             }
             addressTransactionsHistories.put(addressHistory);
+        });
+    }
+
+    @Override
+    public void removeAddressTransactionHistory(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            AddressTransactionsHistory addressHistory = Optional.ofNullable(addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash()))
+                    .orElse(new AddressTransactionsHistory(baseTransactionData.getAddressHash()));
+
+            if (!addressHistory.removeTransactionHashToHistory(transactionData.getHash())) {
+                log.debug("Transaction {} is already not in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
+            }
+            addressTransactionsHistories.delete(addressHistory);
         });
     }
 
@@ -199,6 +211,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         return false;
     }
 
+
     private void addDspResultToDb(DspConsensusResult dspConsensusResult) {
         if (dspConsensusResult == null) {
             return;
@@ -249,6 +262,19 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
     }
 
+    public void endHandleInvalidTransaction(Hash invalidTransactionDataHash) {
+        if (invalidTransactionDataHash == null)
+            return;
+        TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
+        transactionHashToTransactionStateStackMapping.remove(invalidTransactionDataHash);
+
+        if (transactionData != null) {
+            detachTransactionFromCluster(transactionData);
+            revertInvalidTransactionPreBalance(transactionData);
+            revertSavedInvalidTransactionFromDB(transactionData);
+        }
+    }
+
     @Override
     public boolean isTransactionFinished(TransactionData transactionData) {
         return isTransactionHashProcessing(transactionData.getHash()) && transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).peek().equals(FINISHED);
@@ -279,8 +305,20 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         log.error("Reverting transaction saved in DB: {}", transactionData.getHash());
     }
 
+    private void revertSavedInvalidTransactionFromDB(TransactionData transactionData) {
+        log.info("Reverting invalid transaction saved from DB: {}", transactionData.getHash());
+
+        transactions.deleteByHash(transactionData.getHash());
+        totalTransactions.decrementAndGet();
+    }
+
     private void revertPreBalance(TransactionData transactionData) {
         log.error("Reverting pre balance: {}", transactionData.getHash());
+        balanceService.rollbackBaseTransactions(transactionData);
+    }
+
+    private void revertInvalidTransactionPreBalance(TransactionData transactionData) {
+        log.info("Reverting pre balance: {}", transactionData.getHash());
         balanceService.rollbackBaseTransactions(transactionData);
     }
 
@@ -310,6 +348,16 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         }
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);
+    }
+
+    public void detachTransactionFromCluster(TransactionData transactionData) {
+        transactionPropagationCheckService.removeTransactionHashFromUnconfirmed(transactionData.getHash());
+        clusterService.detachFromCluster(transactionData);
+        removeAddressTransactionHistory(transactionData);
+        if (!isDspConfirmed(transactionData)) {
+            removeNoneIndexedTransaction(transactionData);
+        }
+
     }
 
     public void setTransactionStateToSaved(TransactionData transactionData) {

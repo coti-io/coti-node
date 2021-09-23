@@ -25,6 +25,7 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_NONE_INDEXED_SERVER_ERROR = "Server error while getting none indexed transactions";
     public static final String TRANSACTION_POSTPONED_SERVER_ERROR = "Server error while getting postponed transactions";
     public static final String TRANSACTION_INTERNAL_ERROR_MESSAGE = "Internal error while adding new transaction";
+    public static final String TRANSACTION_HANDLING_REJECTED_INVALID_TRANSACTION = "Transaction handling rejected due to invalid transaction!";
 
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
