@@ -11,12 +11,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class GetAddressTransactionHistoryResponse extends GetTransactionsResponse {
 
-    public GetAddressTransactionHistoryResponse(List<TransactionData> transactionsData, int totalNumberOfTransactions) {
-        super(transactionsData, totalNumberOfTransactions);
-    }
+    private int totalNumberOfTransactions;
+    private int missingNumberOfTransactions;
 
-    public GetAddressTransactionHistoryResponse(List<TransactionData> transactionsData) {
+    public GetAddressTransactionHistoryResponse(List<TransactionData> transactionsData, int totalNumberOfTransactions) {
         super(transactionsData);
+        this.totalNumberOfTransactions = totalNumberOfTransactions;
+        missingNumberOfTransactions = totalNumberOfTransactions - transactionsData.size();
     }
 }
 
