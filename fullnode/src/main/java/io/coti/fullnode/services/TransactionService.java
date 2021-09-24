@@ -326,8 +326,8 @@ public class TransactionService extends BaseNodeTransactionService {
             Set<Hash> transactionsHash = addressTransactionsHistory.getTransactionsHistory();
             for (Hash transactionHash : transactionsHash) {
                 if (MemoryUtils.getPercentageUsedHeap() >= javaProcessMemoryLimit) {
-                    log.warn("Not all transactions for {} in response of getAddressTransactions, current {} , limit {}%", addressHash,
-                            MemoryUtils.getPercentageUsedFormatted(), javaProcessMemoryLimit);
+                    log.warn("Not all transactions for {} in response of getAddressTransactions, used heap {} , limit {}%, total txs {}, sent txs {}",
+                            addressHash, MemoryUtils.getPercentageUsedHeapFormatted(), javaProcessMemoryLimit, transactionsHash.size(), transactionsDataList.size());
                     log.debug(MemoryUtils.debugInfo());
                     break;
                 }
