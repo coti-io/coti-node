@@ -13,8 +13,8 @@ public class MemoryUtils {
     private static final DecimalFormat ROUNDED_DOUBLE_DECIMALFORMAT;
     private static final String MIB = "MiB";
     private static final String STRING_FORMAT = "%s %s";
-    private static MemoryMXBean memBean = ManagementFactory.getMemoryMXBean();
-    private static MemoryUsage heapMemoryUsage = memBean.getHeapMemoryUsage();
+    private static final MemoryMXBean memBean = ManagementFactory.getMemoryMXBean();
+    private static final MemoryUsage heapMemoryUsage = memBean.getHeapMemoryUsage();
 
     static {
         DecimalFormatSymbols otherSymbols = new DecimalFormatSymbols(Locale.ENGLISH);
@@ -81,6 +81,11 @@ public class MemoryUtils {
 
     public static double getPercentageUsedHeap() {
         return ((double) getUsedHeap() / getCommittedHeap()) * 100;
+    }
+
+    public static String getPercentageUsedHeapFormatted() {
+        double percentageUsedHeap = getPercentageUsedHeap();
+        return ROUNDED_DOUBLE_DECIMALFORMAT.format(percentageUsedHeap) + "%";
     }
 
     public static double getPercentageUsed() {
