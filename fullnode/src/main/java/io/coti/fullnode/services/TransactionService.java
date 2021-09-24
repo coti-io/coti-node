@@ -320,23 +320,22 @@ public class TransactionService extends BaseNodeTransactionService {
 
         try {
             if (addressTransactionsHistory == null) {
-                return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList));
+                return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList, 0));
             }
 
             Set<Hash> transactionsHash = addressTransactionsHistory.getTransactionsHistory();
-            for ( Hash transactionHash : transactionsHash )
-            {
-                TransactionData transactionData = transactions.getByHash(transactionHash);
-                transactionsDataList.add(transactionData);
+            for (Hash transactionHash : transactionsHash) {
                 if (MemoryUtils.getPercentageUsedHeap() >= javaProcessMemoryLimit) {
                     log.warn("Not all transactions for {} in response of getAddressTransactions, current {} , limit {}%", addressHash,
                             MemoryUtils.getPercentageUsedFormatted(), javaProcessMemoryLimit);
                     log.debug(MemoryUtils.debugInfo());
                     break;
                 }
+                TransactionData transactionData = transactions.getByHash(transactionHash);
+                transactionsDataList.add(transactionData);
             }
 
-            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList, addressTransactionsHistory.getTransactionsHistory().size()));
+            return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList, transactionsHash.size()));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)

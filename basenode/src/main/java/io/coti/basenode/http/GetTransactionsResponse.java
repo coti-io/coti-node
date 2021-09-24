@@ -12,19 +12,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class GetTransactionsResponse extends BaseResponse {
 
-    protected int totalNumberOfTransactions;
-    protected int missingNumberOfTransactions;
     protected ArrayList<TransactionResponseData> transactionsData;
 
     protected GetTransactionsResponse() {
 
-    }
-
-    public GetTransactionsResponse(List<TransactionData> transactionsData, int numberOfTotalTransactions) {
-        super();
-        totalNumberOfTransactions = numberOfTotalTransactions;
-        missingNumberOfTransactions = numberOfTotalTransactions - transactionsData.size();
-        createTransactionsDataArray(transactionsData);
     }
 
     public GetTransactionsResponse(List<TransactionData> transactionsData) {
