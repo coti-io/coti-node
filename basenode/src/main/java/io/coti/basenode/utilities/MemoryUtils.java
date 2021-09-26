@@ -2,7 +2,6 @@ package io.coti.basenode.utilities;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
@@ -14,7 +13,6 @@ public class MemoryUtils {
     private static final String MIB = "MiB";
     private static final String STRING_FORMAT = "%s %s";
     private static final MemoryMXBean memBean = ManagementFactory.getMemoryMXBean();
-    private static final MemoryUsage heapMemoryUsage = memBean.getHeapMemoryUsage();
 
     static {
         DecimalFormatSymbols otherSymbols = new DecimalFormatSymbols(Locale.ENGLISH);
@@ -28,15 +26,15 @@ public class MemoryUtils {
     }
 
     public static long getMaxHeap() {
-        return heapMemoryUsage.getMax(); // max memory allowed for jvm -Xmx flag (-1 if isn't specified)
+        return memBean.getHeapMemoryUsage().getMax(); // max memory allowed for jvm -Xmx flag (-1 if isn't specified)
     }
 
     public static long getCommittedHeap() {
-        return heapMemoryUsage.getCommitted();  // given memory to JVM by OS ( may fail to reach getMax, if there isn't more memory)
+        return memBean.getHeapMemoryUsage().getCommitted();  // given memory to JVM by OS ( may fail to reach getMax, if there isn't more memory)
     }
 
     public static long getUsedHeap() {
-        return heapMemoryUsage.getUsed(); // used now by your heap
+        return memBean.getHeapMemoryUsage().getUsed(); // used now by your heap
     }
 
     public static long getMaxMemory() {
