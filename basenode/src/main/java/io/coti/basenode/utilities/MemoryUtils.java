@@ -42,7 +42,7 @@ public class MemoryUtils {
     }
 
     public static long getUsedMemory() {
-        return getMaxMemory() - getFreeMemory();
+        return getTotalMemory() - getFreeMemory();
     }
 
     public static long getTotalMemory() {
