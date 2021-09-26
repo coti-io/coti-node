@@ -315,7 +315,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     public ResponseEntity<IResponse> getAddressTransactions(Hash addressHash) {
-        List<TransactionData> transactionsDataList = new ArrayList<>();
+        List<TransactionResponseData> transactionsDataList = new ArrayList<>();
         AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
 
         try {
@@ -332,7 +332,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     break;
                 }
                 TransactionData transactionData = transactions.getByHash(transactionHash);
-                transactionsDataList.add(transactionData);
+                transactionsDataList.add(new TransactionResponseData(transactionData));
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(new GetAddressTransactionHistoryResponse(transactionsDataList, transactionsHash.size()));
