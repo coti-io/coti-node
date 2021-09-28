@@ -134,12 +134,12 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
 
     @JsonIgnore
     public List<OutputBaseTransactionData> getOutputBaseTransactions() {
-        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof OutputBaseTransactionData).map(OutputBaseTransactionData.class::cast).collect(Collectors.toList());
+        return this.getBaseTransactions().stream().filter(OutputBaseTransactionData.class::isInstance).map(OutputBaseTransactionData.class::cast).collect(Collectors.toList());
     }
 
     @JsonIgnore
     public List<InputBaseTransactionData> getInputBaseTransactions() {
-        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof InputBaseTransactionData).map(InputBaseTransactionData.class::cast).collect(Collectors.toList());
+        return this.getBaseTransactions().stream().filter(InputBaseTransactionData.class::isInstance).map(InputBaseTransactionData.class::cast).collect(Collectors.toList());
     }
 
     @Override
