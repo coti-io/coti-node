@@ -56,12 +56,12 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
 
-    private boolean isStartedHandlingInvalidTransaction;
+    private boolean isHandlingInvalidTransaction;
 
     @Override
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
-        isStartedHandlingInvalidTransaction = false;
+        isHandlingInvalidTransaction = false;
     }
 
     @Override
@@ -253,17 +253,19 @@ public class BaseNodeTransactionService implements ITransactionService {
         // Implemented by Full Node
     }
 
-    public void deleteInvalidTransactionSubDAG(Hash invalidTransactionDataHash) {
+    public boolean deleteInvalidTransactionSubDAG(Hash invalidTransactionDataHash) {
         if (invalidTransactionDataHash == null)
-            return;
+            return false;
         TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
         if (transactionData == null)
-            return;
+            return false;
         transactionData.getChildrenTransactionHashes().forEach(this::deleteInvalidTransactionSubDAG);
 
+        log.debug("Starting to remove the invalid transaction {}", transactionData.getHash());
         removeDataFromMemory(transactionData);
         transactionPropagationCheckService.removeConfirmedReceiptTransaction(invalidTransactionDataHash);
         transactionHelper.endHandleInvalidTransaction(invalidTransactionDataHash);
+        return true;
     }
 
     @Override
@@ -278,12 +280,16 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
 
         try {
-            // Add flag to prevent processing new transactions
-            isStartedHandlingInvalidTransaction = true;
-            deleteInvalidTransactionSubDAG(invalidTransactionHash);
+            synchronized (transactionLockData.addLockToLockMap(invalidTransactionHash)) {
+                isHandlingInvalidTransaction = true;
+                boolean deletedSuccessfully = deleteInvalidTransactionSubDAG(invalidTransactionHash);
+                if (!deletedSuccessfully) {
+                    log.error("Error encountered during the handling of invalid transaction: {}", invalidTransactionHash);
+                }
+            }
         } finally {
-            // Remove flag to prevent processing new transactions
-            isStartedHandlingInvalidTransaction = false;
+            transactionLockData.removeLockFromLocksMap(invalidTransactionHash);
+            isHandlingInvalidTransaction = false;
         }
     }
 
@@ -380,8 +386,8 @@ public class BaseNodeTransactionService implements ITransactionService {
         return 0;
     }
 
-    public boolean isStartedHandlingInvalidTransaction() {
-        return isStartedHandlingInvalidTransaction;
+    public boolean isHandlingInvalidTransaction() {
+        return isHandlingInvalidTransaction;
     }
 
 }

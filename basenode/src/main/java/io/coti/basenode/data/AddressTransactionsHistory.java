@@ -28,7 +28,7 @@ public class AddressTransactionsHistory implements IEntity {
         return transactionsHistory.add(transactionHash);
     }
 
-    public boolean removeTransactionHashToHistory(Hash transactionHash) {
+    public boolean removeTransactionHashFromHistory(Hash transactionHash) {
         return transactionsHistory.remove(transactionHash);
     }
 

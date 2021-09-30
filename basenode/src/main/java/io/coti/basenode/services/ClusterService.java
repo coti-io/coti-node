@@ -128,7 +128,9 @@ public class ClusterService implements IClusterService {
                 if (parentTransactionData != null && parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash())) {
                     parentTransactionData.removeFromChildrenTransactions(transactionData.getHash());
                     if (trustChainConfirmationCluster.containsKey(parentTransactionData.getHash())) {
-                        trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
+                        TransactionData removedTransactionData = trustChainConfirmationCluster.remove(parentTransactionData.getHash());
+                        if (removedTransactionData == null)
+                            log.error("Failed to remove from trustChainConfirmationCluster parent transaction: {}", parentTransactionData.getHash());
                     }
                     transactions.put(parentTransactionData);
                 }
@@ -150,13 +152,12 @@ public class ClusterService implements IClusterService {
         if (transactionData != null) {
             addTransactionToTrustChainConfirmationCluster(transactionData);
         } else {
-            log.debug("Failed to find parent Transaction with hash:{}", transactionHash);
+            log.error("Failed to find parent Transaction with hash:{}", transactionHash);
         }
     }
 
 
     private void updateParents(TransactionData transactionData) {
-
         updateSingleParent(transactionData, transactionData.getLeftParentHash());
         updateSingleParent(transactionData, transactionData.getRightParentHash());
         removeTransactionParentsFromSources(transactionData);

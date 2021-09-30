@@ -114,9 +114,9 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
-            // Check for flag of handling an invalid transaction
-            if (isStartedHandlingInvalidTransaction()) {
+            if (isHandlingInvalidTransaction()) {
                 log.debug("Received transaction: {} while processing an invalid transaction", transactionData.getHash());
+                // TODO: add for monitoring
                 return ResponseEntity
                         .status(HttpStatus.METHOD_NOT_ALLOWED)
                         .body(new Response(

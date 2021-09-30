@@ -107,8 +107,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             AddressTransactionsHistory addressHistory = Optional.ofNullable(addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash()))
                     .orElse(new AddressTransactionsHistory(baseTransactionData.getAddressHash()));
 
-            if (!addressHistory.removeTransactionHashToHistory(transactionData.getHash())) {
-                log.debug("Transaction {} is already not in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
+            if (!addressHistory.removeTransactionHashFromHistory(transactionData.getHash())) {
+                log.error("Transaction {} is not in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
             }
             addressTransactionsHistories.delete(addressHistory);
         });
@@ -270,7 +270,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
         if (transactionData != null) {
             detachTransactionFromCluster(transactionData);
-            revertInvalidTransactionPreBalance(transactionData);
+            revertPreBalance(transactionData);
             revertSavedInvalidTransactionFromDB(transactionData);
         }
     }
@@ -306,19 +306,13 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     }
 
     private void revertSavedInvalidTransactionFromDB(TransactionData transactionData) {
-        log.info("Reverting invalid transaction saved from DB: {}", transactionData.getHash());
-
+        log.error("Reverting invalid transaction saved from DB: {}", transactionData.getHash());
         transactions.deleteByHash(transactionData.getHash());
         totalTransactions.decrementAndGet();
     }
 
     private void revertPreBalance(TransactionData transactionData) {
         log.error("Reverting pre balance: {}", transactionData.getHash());
-        balanceService.rollbackBaseTransactions(transactionData);
-    }
-
-    private void revertInvalidTransactionPreBalance(TransactionData transactionData) {
-        log.info("Reverting pre balance: {}", transactionData.getHash());
         balanceService.rollbackBaseTransactions(transactionData);
     }
 
