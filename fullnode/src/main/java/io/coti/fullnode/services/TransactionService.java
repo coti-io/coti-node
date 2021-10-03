@@ -642,4 +642,12 @@ public class TransactionService extends BaseNodeTransactionService {
     public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
         transactionPropagationCheckService.removeTransactionHashFromUnconfirmed(transactionData.getHash());
     }
+
+    @Override
+    public void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData) {
+        TransactionData transactionData = transactions.getByHash(invalidTransactionData.getHash());
+        super.handlePropagatedInvalidTransaction(invalidTransactionData);
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.INVALID_TRANSACTION);
+
+    }
 }
