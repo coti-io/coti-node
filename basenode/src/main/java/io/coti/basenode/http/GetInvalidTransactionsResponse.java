@@ -1,7 +1,7 @@
 package io.coti.basenode.http;
 
 
-import io.coti.basenode.data.InvalidTransactionData;
+import io.coti.basenode.http.data.InvalidTransactionResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,13 +12,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class GetInvalidTransactionsResponse extends BaseResponse {
 
-    protected ArrayList<InvalidTransactionData> invalidtransactionsDataList;
+    protected ArrayList<InvalidTransactionResponseData> invalidtransactionsDataList;
 
     protected GetInvalidTransactionsResponse() {
 
     }
 
-    public GetInvalidTransactionsResponse(List<InvalidTransactionData> invalidTransactions) {
+    public GetInvalidTransactionsResponse(List<InvalidTransactionResponseData> invalidTransactions) {
         this.invalidtransactionsDataList = new ArrayList<>();
         invalidtransactionsDataList.addAll(invalidTransactions);
     }

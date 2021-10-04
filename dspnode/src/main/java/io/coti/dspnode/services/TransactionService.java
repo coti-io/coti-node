@@ -7,6 +7,7 @@ import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetInvalidTransactionsResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.InvalidTransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.InvalidTransactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
@@ -185,8 +186,8 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     public ResponseEntity<IResponse> getInvalidTransactions() {
         try {
-            List<InvalidTransactionData> invalidTransactionDataList = new ArrayList<>();
-            invalidTransactions.forEach(invalidTransaction -> invalidTransactionDataList.add(invalidTransaction));
+            List<InvalidTransactionResponseData> invalidTransactionDataList = new ArrayList<>();
+            invalidTransactions.forEach(invalidTransaction -> invalidTransactionDataList.add(new InvalidTransactionResponseData(invalidTransaction)));
             return ResponseEntity.ok(new GetInvalidTransactionsResponse(invalidTransactionDataList));
         } catch (Exception e) {
             log.info("Exception while getting invalid transactions", e);
