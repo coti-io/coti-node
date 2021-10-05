@@ -266,7 +266,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         if (invalidTransactionDataHash == null)
             return;
         TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
-        transactionHashToTransactionStateStackMapping.remove(invalidTransactionDataHash);
+
 
         if (transactionData != null) {
             detachTransactionFromCluster(transactionData);
