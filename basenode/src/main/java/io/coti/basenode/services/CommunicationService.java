@@ -93,9 +93,9 @@ public class CommunicationService implements ICommunicationService {
             for (Map.Entry<String, NodeType> entry : invalidSenders.entrySet()) {
                 String receivingFullAddress = entry.getKey();
                 NodeType nodeType = entry.getValue();
-                log.error("invalid Sender: " + receivingFullAddress + " , removing and adding it.");
-                removeSender(receivingFullAddress, nodeType);
-                addSender(receivingFullAddress, nodeType);
+                log.error("invalid Sender: " + receivingFullAddress);
+                //removeSender(receivingFullAddress, nodeType);
+                //addSender(receivingFullAddress, nodeType);
             }
             historicInvalidSenders.compareAndSet(BaseNodeMetricsService.MAX_NUMBER_OF_NON_FETCHED_SAMPLES,0);
             historicInvalidSenders.addAndGet(invalidSenders.size());

@@ -172,7 +172,9 @@ public class ZeroMQSender implements ISender {
         if (receivingAddressToSenderSocketMapping.size() > 0) {
             for (Map.Entry<String, SenderSocketData> entry : receivingAddressToSenderSocketMapping.entrySet()) {
                 String key = entry.getKey();
+                log.debug("validating sender: " + key);
                 boolean portIsOpened = ZeroMQUtils.isPortOpened(key);
+                log.debug("for sender: " + key + " port is opened: " + String.valueOf(portIsOpened));
                 if (!portIsOpened) {
                     invalidSenders.put(key, entry.getValue().getNodeType());
                 }
