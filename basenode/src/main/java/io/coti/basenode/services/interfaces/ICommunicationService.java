@@ -23,7 +23,4 @@ public interface ICommunicationService {
     void removeSubscription(String propagationServerAddress, NodeType publisherNodeType);
 
     void initPublisher(String propagationPort, NodeType propagatorType);
-
-    int resetHistoricRejectedSendersSize();
-
 }
