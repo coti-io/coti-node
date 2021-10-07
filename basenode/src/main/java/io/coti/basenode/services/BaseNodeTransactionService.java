@@ -56,12 +56,12 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Autowired
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
 
-    private boolean isHandlingInvalidTransaction;
+    private boolean isHandlingRejectedTransaction;
 
     @Override
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
-        isHandlingInvalidTransaction = false;
+        isHandlingRejectedTransaction = false;
     }
 
     @Override
@@ -187,7 +187,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public ResponseEntity<IResponse> getInvalidTransactions() {
+    public ResponseEntity<IResponse> getRejectedTransactions() {
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(new Response(
@@ -253,43 +253,43 @@ public class BaseNodeTransactionService implements ITransactionService {
         // Implemented by Full Node
     }
 
-    public boolean deleteInvalidTransactionSubDAG(Hash invalidTransactionDataHash) {
-        if (invalidTransactionDataHash == null)
+    public boolean deleteRejectedTransactionSubDAG(Hash rejectedTransactionDataHash) {
+        if (rejectedTransactionDataHash == null)
             return false;
-        TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
+        TransactionData transactionData = transactions.getByHash(rejectedTransactionDataHash);
         if (transactionData == null)
             return false;
-        transactionData.getChildrenTransactionHashes().forEach(this::deleteInvalidTransactionSubDAG);
+        transactionData.getChildrenTransactionHashes().forEach(this::deleteRejectedTransactionSubDAG);
 
-        log.debug("Starting to remove the invalid transaction {}", transactionData.getHash());
+        log.debug("Starting to remove the rejected transaction {}", transactionData.getHash());
         removeDataFromMemory(transactionData);
-        transactionPropagationCheckService.removeConfirmedReceiptTransaction(invalidTransactionDataHash);
-        transactionHelper.endHandleInvalidTransaction(invalidTransactionDataHash);
+        transactionPropagationCheckService.removeConfirmedReceiptTransaction(rejectedTransactionDataHash);
+        transactionHelper.endHandleRejectedTransaction(rejectedTransactionDataHash);
         return true;
     }
 
     @Override
-    public void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData) {
-        Hash invalidTransactionHash = invalidTransactionData.getHash();
-        if (!transactionHelper.isTransactionHashExists(invalidTransactionHash)) {
+    public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+        Hash rejectedTransactionHash = rejectedTransactionData.getHash();
+        if (!transactionHelper.isTransactionHashExists(rejectedTransactionHash)) {
             return;
         }
-        if (!validationService.validatePropagatedInvalidTransactionDataIntegrity(invalidTransactionData)) {
-            log.error("Data Integrity validation failed for invalid transaction: {}", invalidTransactionHash);
+        if (!validationService.validatePropagatedRejectedTransactionDataIntegrity(rejectedTransactionData)) {
+            log.error("Data Integrity validation failed for rejected transaction: {}", rejectedTransactionHash);
             return;
         }
 
         try {
-            synchronized (transactionLockData.addLockToLockMap(invalidTransactionHash)) {
-                isHandlingInvalidTransaction = true;
-                boolean deletedSuccessfully = deleteInvalidTransactionSubDAG(invalidTransactionHash);
+            synchronized (transactionLockData.addLockToLockMap(rejectedTransactionHash)) {
+                isHandlingRejectedTransaction = true;
+                boolean deletedSuccessfully = deleteRejectedTransactionSubDAG(rejectedTransactionHash);
                 if (!deletedSuccessfully) {
-                    log.error("Error encountered during the handling of invalid transaction: {}", invalidTransactionHash);
+                    log.error("Error encountered during the handling of rejected transaction: {}", rejectedTransactionHash);
                 }
             }
         } finally {
-            transactionLockData.removeLockFromLocksMap(invalidTransactionHash);
-            isHandlingInvalidTransaction = false;
+            transactionLockData.removeLockFromLocksMap(rejectedTransactionHash);
+            isHandlingRejectedTransaction = false;
         }
     }
 
@@ -381,13 +381,13 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public long getInvalidTransactionsSize() {
+    public long getRejectedTransactionsSize() {
         // implemented by DSP node
         return 0;
     }
 
-    public boolean isHandlingInvalidTransaction() {
-        return isHandlingInvalidTransaction;
+    public boolean isHandlingRejectedTransaction() {
+        return isHandlingRejectedTransaction;
     }
 
 }

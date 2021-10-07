@@ -31,7 +31,7 @@ public class BaseNodeValidationService implements IValidationService {
     @Autowired
     private IPotService potService;
     @Autowired
-    private InvalidTransactionCrypto invalidTransactionCrypto;
+    private RejectedTransactionCrypto rejectedTransactionCrypto;
 
 
     @Override
@@ -66,8 +66,8 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
-    public boolean validatePropagatedInvalidTransactionDataIntegrity(InvalidTransactionData invalidTransactionData) {
-        return invalidTransactionCrypto.verifySignature(invalidTransactionData);
+    public boolean validatePropagatedRejectedTransactionDataIntegrity(RejectedTransactionData rejectedTransactionData) {
+        return rejectedTransactionCrypto.verifySignature(rejectedTransactionData);
     }
 
     @Override

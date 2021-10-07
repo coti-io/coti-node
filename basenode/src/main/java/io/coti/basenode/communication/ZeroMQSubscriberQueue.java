@@ -12,7 +12,7 @@ public enum ZeroMQSubscriberQueue {
     HEARTBEAT(new HashSet<>(Collections.singletonList(PublisherHeartBeatData.class))),
     NETWORK(new HashSet<>(Collections.singletonList(NetworkData.class))),
     ADDRESS(new HashSet<>(Collections.singletonList(AddressData.class))),
-    TRANSACTION(new HashSet<>(Arrays.asList(InvalidTransactionData.class, TransactionData.class, DspConsensusResult.class)));
+    TRANSACTION(new HashSet<>(Arrays.asList(RejectedTransactionData.class, TransactionData.class, DspConsensusResult.class)));
 
     private final BlockingQueue<ZeroMQMessageData> queue = new LinkedBlockingQueue<>();
 

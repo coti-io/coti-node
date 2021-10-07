@@ -9,22 +9,22 @@ import lombok.Data;
 import java.time.Instant;
 
 @Data
-public class InvalidTransactionData implements IPropagatable, ISignable, ISignValidatable {
+public class RejectedTransactionData implements IPropagatable, ISignable, ISignValidatable {
 
     private static final long serialVersionUID = -4057207227904211625L;
 
     private Hash hash;
-    private Instant invalidationTime;
-    private InvalidTransactionDataReason invalidationReason;
+    private Instant rejectionTime;
+    private RejectedTransactionDataReason rejectionReason;
     private Hash nodeHash;
     private SignatureData nodeSignature;
 
-    private InvalidTransactionData() {
+    private RejectedTransactionData() {
     }
 
-    public InvalidTransactionData(TransactionData transactionData) {
+    public RejectedTransactionData(TransactionData transactionData) {
         this.hash = transactionData.getHash();
-        this.invalidationTime = Instant.now();
+        this.rejectionTime = Instant.now();
     }
 
     @Override

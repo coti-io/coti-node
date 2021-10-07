@@ -114,13 +114,13 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
-            if (isHandlingInvalidTransaction()) {
-                log.debug("Received transaction: {} while processing an invalid transaction", transactionData.getHash());
+            if (isHandlingRejectedTransaction()) {
+                log.debug("Received transaction: {} while processing a rejected transaction", transactionData.getHash());
 
                 return ResponseEntity
                         .status(HttpStatus.METHOD_NOT_ALLOWED)
                         .body(new Response(
-                                TRANSACTION_HANDLING_REJECTED_INVALID_TRANSACTION, STATUS_ERROR));
+                                TRANSACTION_HANDLING_REJECTED_TRANSACTION, STATUS_ERROR));
             }
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 if (((NetworkService) networkService).isNotConnectedToDspNodes()) {
@@ -644,10 +644,10 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Override
-    public void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData) {
-        TransactionData transactionData = transactions.getByHash(invalidTransactionData.getHash());
-        super.handlePropagatedInvalidTransaction(invalidTransactionData);
-        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.INVALID_TRANSACTION);
+    public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+        TransactionData transactionData = transactions.getByHash(rejectedTransactionData.getHash());
+        super.handlePropagatedRejectedTransaction(rejectedTransactionData);
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.REJECTED_TRANSACTION);
 
     }
 }

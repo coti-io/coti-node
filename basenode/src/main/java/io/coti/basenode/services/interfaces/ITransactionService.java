@@ -26,11 +26,11 @@ public interface ITransactionService {
 
     ResponseEntity<IResponse> getPostponedTransactions();
 
-    ResponseEntity<IResponse> getInvalidTransactions();
+    ResponseEntity<IResponse> getRejectedTransactions();
 
     void handlePropagatedTransaction(TransactionData transactionData);
 
-    void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData);
+    void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData);
 
     void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap);
 
@@ -38,7 +38,7 @@ public interface ITransactionService {
 
     int totalPostponedTransactions();
 
-    long getInvalidTransactionsSize();
+    long getRejectedTransactionsSize();
 
     void addDataToMemory(TransactionData transactionData);
 

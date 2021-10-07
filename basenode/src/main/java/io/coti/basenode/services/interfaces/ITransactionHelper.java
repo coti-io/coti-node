@@ -32,7 +32,7 @@ public interface ITransactionHelper {
 
     void endHandleTransaction(TransactionData transactionData);
 
-    void endHandleInvalidTransaction(Hash invalidTransactionDataHash);
+    void endHandleRejectedTransaction(Hash rejectedTransactionDataHash);
 
     boolean isTransactionFinished(TransactionData transactionData);
 

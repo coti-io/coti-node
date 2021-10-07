@@ -1,7 +1,7 @@
 package io.coti.dspnode.database;
 
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.basenode.model.InvalidTransactions;
+import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.model.UnconfirmedReceivedTransactionHashes;
 import io.coti.dspnode.model.UnconfirmedTransactionDspVotes;
 import org.springframework.context.annotation.Primary;
@@ -19,7 +19,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
         columnFamilyClassNames.addAll(Arrays.asList(
                 UnconfirmedReceivedTransactionHashes.class.getName(),
                 UnconfirmedTransactionDspVotes.class.getName(),
-                InvalidTransactions.class.getName()
+                RejectedTransactions.class.getName()
         ));
         resetTransactionColumnFamilyNames.addAll(Arrays.asList(
                 UnconfirmedReceivedTransactionHashes.class.getName(),

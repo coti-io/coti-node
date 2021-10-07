@@ -1,9 +1,9 @@
 package io.coti.basenode.data;
 
-public enum InvalidTransactionDataReason {
+public enum RejectedTransactionDataReason {
     DATA_INTEGRITY,
     BALANCE,
-    INVALID_PARENT;
+    REJECTED_PARENT;
 
 }
 

@@ -37,7 +37,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void lastState() {
         if (allowTransactionMonitoring) {
-            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}, WebSocketMessagesQueueLength = {}, waitingDspConsensus = {}, confirmationQueueSize = {}, invalidTransactions = {}",
+            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}, WebSocketMessagesQueueLength = {}, waitingDspConsensus = {}, confirmationQueueSize = {}, rejectedTransactions = {}",
                     transactionHelper.getTotalTransactions(),
                     confirmationService.getTrustChainConfirmed(),
                     confirmationService.getDspConfirmed(),
@@ -49,7 +49,7 @@ public class BaseNodeMonitorService implements IMonitorService {
                     webSocketMessageService.getMessageQueueSize(),
                     confirmationService.getWaitingDspConsensusResultsMapSize(),
                     confirmationService.getQueueSize(),
-                    transactionService.getInvalidTransactionsSize());
+                    transactionService.getRejectedTransactionsSize());
         }
     }
 }

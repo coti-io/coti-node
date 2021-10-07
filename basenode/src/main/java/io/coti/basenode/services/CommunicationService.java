@@ -30,7 +30,7 @@ public class CommunicationService implements ICommunicationService {
     @Autowired
     private ISender sender;
 
-    private AtomicInteger historicInvalidSenders = new AtomicInteger(0);
+    private AtomicInteger historicRejectedSenders = new AtomicInteger(0);
 
     @Override
     public void initSubscriber(NodeType subscriberNodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> initialPublisherNodeTypeToMessageTypesMap) {
@@ -40,7 +40,7 @@ public class CommunicationService implements ICommunicationService {
         initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(
                 TransactionData.class,
                 AddressData.class,
-                InvalidTransactionData.class));
+                RejectedTransactionData.class));
         propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(initialPublisherNodeTypeToMessageTypesMap);
     }
 
@@ -76,8 +76,8 @@ public class CommunicationService implements ICommunicationService {
     }
 
     @Override
-    public int resetHistoricInvalidSendersSize() {
-        return historicInvalidSenders.getAndSet(0);
+    public int resetHistoricRejectedSendersSize() {
+        return historicRejectedSenders.getAndSet(0);
     }
 
 
@@ -97,8 +97,8 @@ public class CommunicationService implements ICommunicationService {
                 //removeSender(receivingFullAddress, nodeType);
                 //addSender(receivingFullAddress, nodeType);
             }
-            historicInvalidSenders.compareAndSet(BaseNodeMetricsService.MAX_NUMBER_OF_NON_FETCHED_SAMPLES,0);
-            historicInvalidSenders.addAndGet(invalidSenders.size());
+            historicRejectedSenders.compareAndSet(BaseNodeMetricsService.MAX_NUMBER_OF_NON_FETCHED_SAMPLES,0);
+            historicRejectedSenders.addAndGet(invalidSenders.size());
             invalidSenders.clear();
         }
     }

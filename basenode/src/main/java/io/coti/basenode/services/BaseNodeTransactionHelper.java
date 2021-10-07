@@ -262,16 +262,16 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
     }
 
-    public void endHandleInvalidTransaction(Hash invalidTransactionDataHash) {
-        if (invalidTransactionDataHash == null)
+    public void endHandleRejectedTransaction(Hash rejectedTransactionDataHash) {
+        if (rejectedTransactionDataHash == null)
             return;
-        TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
+        TransactionData transactionData = transactions.getByHash(rejectedTransactionDataHash);
 
 
         if (transactionData != null) {
             detachTransactionFromCluster(transactionData);
             revertPreBalance(transactionData);
-            revertSavedInvalidTransactionFromDB(transactionData);
+            revertSavedRejectedTransactionFromDB(transactionData);
         }
     }
 
@@ -305,8 +305,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         log.error("Reverting transaction saved in DB: {}", transactionData.getHash());
     }
 
-    private void revertSavedInvalidTransactionFromDB(TransactionData transactionData) {
-        log.error("Reverting invalid transaction saved from DB: {}", transactionData.getHash());
+    private void revertSavedRejectedTransactionFromDB(TransactionData transactionData) {
+        log.error("Reverting rejected transaction saved from DB: {}", transactionData.getHash());
         transactions.deleteByHash(transactionData.getHash());
         totalTransactions.decrementAndGet();
     }

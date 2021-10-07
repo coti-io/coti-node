@@ -47,7 +47,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(
                     TransactionData.class,
-                    InvalidTransactionData.class,
+                    RejectedTransactionData.class,
                     AddressData.class,
                     DspConsensusResult.class));
 
