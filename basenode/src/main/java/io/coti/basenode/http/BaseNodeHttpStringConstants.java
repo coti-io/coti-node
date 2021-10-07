@@ -25,6 +25,7 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_NONE_INDEXED_SERVER_ERROR = "Server error while getting none indexed transactions";
     public static final String TRANSACTION_POSTPONED_SERVER_ERROR = "Server error while getting postponed transactions";
     public static final String TRANSACTION_INTERNAL_ERROR_MESSAGE = "Internal error while adding new transaction";
+    public static final String TRANSACTION_HANDLING_REJECTED_INVALID_TRANSACTION = "New transaction was rejected as server is dedicated exclusively to the handling of an identified existing invalid transaction";
 
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
@@ -73,6 +74,8 @@ public class BaseNodeHttpStringConstants {
 
     public static final String DB_MANUAL_BACKUP_SUCCESS = "Successful manual DB backup";
     public static final String DB_MANUAL_BACKUP_NOT_ALLOWED = "Manual DB backup not allowed";
+
+    public static final String METHOD_NOT_ALLOWED = "This method is not in use";
 
     protected BaseNodeHttpStringConstants() {
 

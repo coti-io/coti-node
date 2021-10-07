@@ -38,4 +38,5 @@ public interface IDatabaseConnector {
 
     boolean compactRange();
 
+    long size(String columnFamilyName);
 }

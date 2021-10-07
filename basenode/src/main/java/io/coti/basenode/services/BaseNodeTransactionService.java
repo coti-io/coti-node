@@ -31,6 +31,8 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @Service
 public class BaseNodeTransactionService implements ITransactionService {
 
+    private final LockData transactionLockData = new LockData();
+    protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -51,12 +53,15 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
-    protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
-    private final LockData transactionLockData = new LockData();
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
+
+    private boolean isHandlingInvalidTransaction;
 
     @Override
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
+        isHandlingInvalidTransaction = false;
     }
 
     @Override
@@ -182,6 +187,15 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
+    public ResponseEntity<IResponse> getInvalidTransactions() {
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(new Response(
+                        METHOD_NOT_ALLOWED,
+                        STATUS_ERROR));
+    }
+
+    @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
 
@@ -237,6 +251,46 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
         // Implemented by Full Node
+    }
+
+    public boolean deleteInvalidTransactionSubDAG(Hash invalidTransactionDataHash) {
+        if (invalidTransactionDataHash == null)
+            return false;
+        TransactionData transactionData = transactions.getByHash(invalidTransactionDataHash);
+        if (transactionData == null)
+            return false;
+        transactionData.getChildrenTransactionHashes().forEach(this::deleteInvalidTransactionSubDAG);
+
+        log.debug("Starting to remove the invalid transaction {}", transactionData.getHash());
+        removeDataFromMemory(transactionData);
+        transactionPropagationCheckService.removeConfirmedReceiptTransaction(invalidTransactionDataHash);
+        transactionHelper.endHandleInvalidTransaction(invalidTransactionDataHash);
+        return true;
+    }
+
+    @Override
+    public void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData) {
+        Hash invalidTransactionHash = invalidTransactionData.getHash();
+        if (!transactionHelper.isTransactionHashExists(invalidTransactionHash)) {
+            return;
+        }
+        if (!validationService.validatePropagatedInvalidTransactionDataIntegrity(invalidTransactionData)) {
+            log.error("Data Integrity validation failed for invalid transaction: {}", invalidTransactionHash);
+            return;
+        }
+
+        try {
+            synchronized (transactionLockData.addLockToLockMap(invalidTransactionHash)) {
+                isHandlingInvalidTransaction = true;
+                boolean deletedSuccessfully = deleteInvalidTransactionSubDAG(invalidTransactionHash);
+                if (!deletedSuccessfully) {
+                    log.error("Error encountered during the handling of invalid transaction: {}", invalidTransactionHash);
+                }
+            }
+        } finally {
+            transactionLockData.removeLockFromLocksMap(invalidTransactionHash);
+            isHandlingInvalidTransaction = false;
+        }
     }
 
     protected void processPostponedTransactions(TransactionData transactionData) {
@@ -313,6 +367,10 @@ public class BaseNodeTransactionService implements ITransactionService {
         log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
     }
 
+    public void removeDataFromMemory(TransactionData transactionData) {
+        log.debug("Removing the transaction {} from explorer indexes by base node", transactionData.getHash());
+    }
+
     protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 (transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null);
@@ -320,6 +378,16 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactionMap.size();
+    }
+
+    @Override
+    public long getInvalidTransactionsSize() {
+        // implemented by DSP node
+        return 0;
+    }
+
+    public boolean isHandlingInvalidTransaction() {
+        return isHandlingInvalidTransaction;
     }
 
 }

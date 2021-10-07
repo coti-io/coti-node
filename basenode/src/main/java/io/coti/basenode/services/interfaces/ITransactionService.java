@@ -6,6 +6,7 @@ import io.coti.basenode.data.InitializationTransactionHandlerType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
+import io.coti.basenode.data.*;
 import reactor.core.publisher.FluxSink;
 
 import javax.servlet.http.HttpServletResponse;
@@ -25,7 +26,11 @@ public interface ITransactionService {
 
     ResponseEntity<IResponse> getPostponedTransactions();
 
+    ResponseEntity<IResponse> getInvalidTransactions();
+
     void handlePropagatedTransaction(TransactionData transactionData);
+
+    void handlePropagatedInvalidTransaction(InvalidTransactionData invalidTransactionData);
 
     void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap);
 
@@ -33,5 +38,9 @@ public interface ITransactionService {
 
     int totalPostponedTransactions();
 
+    long getInvalidTransactionsSize();
+
     void addDataToMemory(TransactionData transactionData);
+
+    void removeDataFromMemory(TransactionData transactionData);
 }

@@ -26,4 +26,10 @@ public class BaseNodeTransactionController {
     public ResponseEntity<IResponse> getPostponedTransactions() {
         return transactionService.getPostponedTransactions();
     }
+
+    @GetMapping(path = "/invalid")
+    public ResponseEntity<IResponse> getInvalidTransactions() {
+        return transactionService.getInvalidTransactions();
+    }
+
 }
