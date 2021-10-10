@@ -26,4 +26,10 @@ public class BaseNodeTransactionController {
     public ResponseEntity<IResponse> getPostponedTransactions() {
         return transactionService.getPostponedTransactions();
     }
+
+    @GetMapping(path = "/rejected")
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        return transactionService.getRejectedTransactions();
+    }
+
 }
