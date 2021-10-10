@@ -107,8 +107,57 @@ public class ClusterService implements IClusterService {
         addTransactionToTrustChainConfirmationCluster(transactionData);
     }
 
-    private void updateParents(TransactionData transactionData) {
+    @Override
+    public void detachFromCluster(TransactionData transactionData) {
+        removeTransactionFromTrustChainConfirmationCluster(transactionData);
 
+        updateParentsToDetachChild(transactionData);
+    }
+
+    private void updateParentsToDetachChild(TransactionData transactionData) {
+        deleteChildHashFromParent(transactionData, transactionData.getLeftParentHash());
+        deleteChildHashFromParent(transactionData, transactionData.getRightParentHash());
+
+        restoreTransactionParentsToSources(transactionData);
+
+    }
+
+    private void deleteChildHashFromParent(TransactionData transactionData, Hash parentHash) {
+        if (parentHash != null) {
+            transactions.lockAndGetByHash(parentHash, parentTransactionData -> {
+                if (parentTransactionData != null && parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash())) {
+                    parentTransactionData.removeFromChildrenTransactions(transactionData.getHash());
+                    if (trustChainConfirmationCluster.containsKey(parentTransactionData.getHash())) {
+                        TransactionData removedTransactionData = trustChainConfirmationCluster.remove(parentTransactionData.getHash());
+                        if (removedTransactionData == null)
+                            log.error("Failed to remove from trustChainConfirmationCluster parent transaction: {}", parentTransactionData.getHash());
+                    }
+                    transactions.put(parentTransactionData);
+                }
+            });
+        }
+    }
+
+    private void restoreTransactionParentsToSources(TransactionData transactionData) {
+        if (transactionData.getLeftParentHash() != null) {
+            restoreTransactionToSources(transactionData.getLeftParentHash());
+        }
+        if (transactionData.getRightParentHash() != null) {
+            restoreTransactionToSources(transactionData.getRightParentHash());
+        }
+    }
+
+    private void restoreTransactionToSources(Hash transactionHash) {
+        TransactionData transactionData = transactions.getByHash(transactionHash);
+        if (transactionData != null) {
+            addTransactionToTrustChainConfirmationCluster(transactionData);
+        } else {
+            log.error("Failed to find parent Transaction with hash:{}", transactionHash);
+        }
+    }
+
+
+    private void updateParents(TransactionData transactionData) {
         updateSingleParent(transactionData, transactionData.getLeftParentHash());
         updateSingleParent(transactionData, transactionData.getRightParentHash());
         removeTransactionParentsFromSources(transactionData);

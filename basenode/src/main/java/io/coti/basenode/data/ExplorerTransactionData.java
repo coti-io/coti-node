@@ -9,10 +9,12 @@ public class ExplorerTransactionData implements Comparable<ExplorerTransactionDa
 
     private Hash transactionHash;
     private Instant attachmentTime;
+    private boolean isRevert;
 
     public ExplorerTransactionData(TransactionData transactionData) {
         transactionHash = transactionData.getHash();
         attachmentTime = transactionData.getAttachmentTime();
+        isRevert = false;
     }
 
     @Override
