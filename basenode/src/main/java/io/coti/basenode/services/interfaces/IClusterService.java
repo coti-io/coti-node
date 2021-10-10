@@ -12,6 +12,8 @@ public interface IClusterService {
 
     void attachToCluster(TransactionData transactionData);
 
+    void detachFromCluster(TransactionData transactionData);
+
     void selectSources(TransactionData transactionData);
 
     void addExistingTransactionOnInit(TransactionData transactionData);
