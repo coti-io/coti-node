@@ -13,4 +13,6 @@ public class GetAddressTransactionBatchRequest extends Request {
 
     @NotEmpty(message = "Addresses must not be blank")
     private List<@Valid Hash> addresses;
+    @Valid
+    private boolean extended;
 }
