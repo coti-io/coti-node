@@ -372,6 +372,7 @@ public class TransactionService extends BaseNodeTransactionService {
     public void getAddressTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response, boolean reduced) {
         try {
             List<Hash> addressHashList = getAddressTransactionBatchRequest.getAddresses();
+            boolean extended = getAddressTransactionBatchRequest.isExtended();
             PrintWriter output = response.getWriter();
             chunkService.startOfChunk(output);
 
@@ -380,7 +381,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
                 if (addressTransactionsHistory != null) {
                     addressTransactionsHistory.getTransactionsHistory().forEach(transactionHash ->
-                            sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced)
+                            sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced, extended)
                     );
                 }
             });
@@ -450,7 +451,7 @@ public class TransactionService extends BaseNodeTransactionService {
         for (Set<Hash> transactionHashSet : transactionsHistoryByAttachmentSubMap.values()) {
             boolean maxLimitReached = false;
             for (Hash transactionHash : transactionHashSet) {
-                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced);
+                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced, false);
                 sentTxNumber++;
                 if (limit != null && sentTxNumber == limit) {
                     maxLimitReached = true;
@@ -488,14 +489,19 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output) {
-        sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false);
+        sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false, false);
     }
 
-    private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output, Hash addressHash, boolean reduced) {
+    private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output, Hash addressHash, boolean reduced, boolean extended) {
         try {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             if (transactionData != null) {
-                ITransactionResponseData transactionResponseData = !reduced ? new TransactionResponseData(transactionData) : new ReducedTransactionResponseData(transactionData, addressHash);
+                ITransactionResponseData transactionResponseData;
+                if (reduced) {
+                    transactionResponseData = new ReducedTransactionResponseData(transactionData, addressHash);
+                } else {
+                    transactionResponseData = extended ? new ExtendedTransactionResponseData(transactionData) : new TransactionResponseData(transactionData);
+                }
                 if (firstTransactionSent.get()) {
                     chunkService.sendChunk(",", output);
                 } else {
