@@ -33,6 +33,7 @@ public class TransactionResponseData implements ITransactionResponseData {
     private Instant transactionConsensusUpdateTime;
     private Instant createTime;
     private Instant attachmentTime;
+    private String senderHash;
     private double senderTrustScore;
     private List<String> childrenTransactionHashes;
     private Boolean isValid;
@@ -68,6 +69,9 @@ public class TransactionResponseData implements ITransactionResponseData {
         transactionConsensusUpdateTime = transactionData.getTransactionConsensusUpdateTime();
         createTime = transactionData.getCreateTime();
         attachmentTime = transactionData.getAttachmentTime();
+        if (transactionData.getSenderHash() != null) {
+            senderHash = transactionData.getSenderHash().toString();
+        }
         senderTrustScore = transactionData.getSenderTrustScore();
 
         childrenTransactionHashes = new ArrayList<>();
