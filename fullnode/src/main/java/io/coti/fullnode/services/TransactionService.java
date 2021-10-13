@@ -118,11 +118,7 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", transactionData.getHash());
-            if (currentlyAddTransaction.incrementAndGet() > 20) {
-                log.error("Transaction {} from sender {} is rejected due to too many requests.", transactionData.getHash(), transactionData.getSenderHash());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(new Response("Too many requests, please try again later...", STATUS_ERROR));
-            }
+            currentlyAddTransaction.incrementAndGet();
             if (transactionHelper.isTransactionExists(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash());
                 return ResponseEntity
