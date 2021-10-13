@@ -8,12 +8,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ExtendedTransactionResponseData extends TransactionResponseData {
 
-    private String senderHash;
     private String nodeHash;
 
     public ExtendedTransactionResponseData(TransactionData transactionData) {
         super(transactionData);
-        this.senderHash = transactionData.getSenderHash().toString();
         this.nodeHash = transactionData.getNodeHash().toString();
     }
 
