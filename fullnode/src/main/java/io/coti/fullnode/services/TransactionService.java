@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -41,6 +42,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
@@ -80,6 +82,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
+    private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
     private final LockData transactionLockData = new LockData();
     @Value("${java.process.memory.limit:95}")
     private int javaProcessMemoryLimit;
@@ -118,6 +121,7 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
+            currentlyAddTransaction.incrementAndGet();
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 if (((NetworkService) networkService).isNotConnectedToDspNodes()) {
                     log.error("FullNode is not connected to any DspNode. Rejecting transaction {}", transactionData.getHash());
@@ -199,6 +203,7 @@ public class TransactionService extends BaseNodeTransactionService {
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
             transactionLockData.removeLockFromLocksMap(transactionData.getHash());
+            currentlyAddTransaction.decrementAndGet();
         }
     }
 
@@ -625,5 +630,13 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
         transactionPropagationCheckService.removeTransactionHashFromUnconfirmed(transactionData.getHash());
+    }
+
+    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
+    public void monitorCurrentAddTransaction() {
+        int currentAddTransactionForMonitoring = currentlyAddTransaction.get();
+        if (currentAddTransactionForMonitoring > 0) {
+            log.info("Current add tx number: {}", currentAddTransactionForMonitoring);
+        }
     }
 }
