@@ -121,6 +121,14 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
+            if (isHandlingRejectedTransaction()) {
+                log.debug("Received transaction: {} while processing a rejected transaction", transactionData.getHash());
+
+                return ResponseEntity
+                        .status(HttpStatus.METHOD_NOT_ALLOWED)
+                        .body(new Response(
+                                TRANSACTION_HANDLING_REJECTED_TRANSACTION, STATUS_ERROR));
+            }
             currentlyAddTransaction.incrementAndGet();
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 if (((NetworkService) networkService).isNotConnectedToDspNodes()) {
@@ -591,6 +599,19 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
+    public void removeDataFromMemory(TransactionData transactionData) {
+        try {
+            ExplorerTransactionData explorerTransactionData = new ExplorerTransactionData(transactionData);
+            explorerTransactionData.setRevert(true);
+            explorerIndexQueue.put(explorerTransactionData);
+            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+                removeAddressTransactionsByAttachment(transactionData);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -602,7 +623,11 @@ public class TransactionService extends BaseNodeTransactionService {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ExplorerTransactionData explorerTransactionData = explorerIndexQueue.take();
-                explorerIndexedTransactionSet.add(explorerTransactionData);
+                if (explorerTransactionData.isRevert()) {
+                    explorerIndexedTransactionSet.remove(explorerTransactionData);
+                } else {
+                    explorerIndexedTransactionSet.add(explorerTransactionData);
+                }
                 webSocketSender.notifyTotalTransactionsChange(explorerIndexedTransactionSet.size());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -627,6 +652,16 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    private void removeAddressTransactionsByAttachment(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            NavigableMap<Instant, Set<Hash>> transactionHashesByAttachmentMap = addressToTransactionsByAttachmentMap.getOrDefault(baseTransactionData.getAddressHash(), new ConcurrentSkipListMap<>());
+            Set<Hash> transactionHashSet = transactionHashesByAttachmentMap.getOrDefault(transactionData.getAttachmentTime(), Sets.newConcurrentHashSet());
+            transactionHashSet.remove(transactionData.getHash());
+            transactionHashesByAttachmentMap.put(transactionData.getAttachmentTime(), transactionHashSet);
+            addressToTransactionsByAttachmentMap.put(baseTransactionData.getAddressHash(), transactionHashesByAttachmentMap);
+        });
+    }
+
     @Override
     public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
         transactionPropagationCheckService.removeTransactionHashFromUnconfirmed(transactionData.getHash());
@@ -638,5 +673,13 @@ public class TransactionService extends BaseNodeTransactionService {
         if (currentAddTransactionForMonitoring > 0) {
             log.info("Current add tx number: {}", currentAddTransactionForMonitoring);
         }
+    }
+
+    @Override
+    public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+        TransactionData transactionData = transactions.getByHash(rejectedTransactionData.getHash());
+        super.handlePropagatedRejectedTransaction(rejectedTransactionData);
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.REJECTED_TRANSACTION);
+
     }
 }
