@@ -10,7 +10,6 @@ import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
-@Data
 @Service
 @Slf4j
 public class AddressStorageService extends EntityStorageService {

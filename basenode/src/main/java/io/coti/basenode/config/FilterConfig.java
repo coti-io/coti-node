@@ -17,11 +17,12 @@ public class FilterConfig {
 
     @Bean
     public FilterRegistrationBean<AdminFilter> adminFilterRegistrationBean() {
-        FilterRegistrationBean<AdminFilter> registrationBean = new FilterRegistrationBean();
+        FilterRegistrationBean<AdminFilter> registrationBean = new FilterRegistrationBean<>();
         AdminFilter adminFilter = new AdminFilter();
         adminFilter.setWhiteListIps(new HashSet<>(Arrays.asList(whitelistIps.split(","))));
         registrationBean.setFilter(adminFilter);
         registrationBean.addUrlPatterns("/admin/*");
+        registrationBean.addUrlPatterns("/metrics");
         registrationBean.setOrder(1);
         return registrationBean;
     }

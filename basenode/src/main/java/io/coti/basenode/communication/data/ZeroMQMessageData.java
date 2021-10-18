@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class ZeroMQMessageData {
+
     private String channel;
     private byte[] message;
 

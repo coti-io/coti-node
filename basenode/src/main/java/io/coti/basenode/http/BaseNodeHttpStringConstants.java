@@ -1,6 +1,7 @@
 package io.coti.basenode.http;
 
 public class BaseNodeHttpStringConstants {
+
     public static final String STATUS_SUCCESS = "Success";
     public static final String STATUS_ERROR = "Error";
     public static final String SERVER_ERROR = "Server error";
@@ -21,6 +22,10 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_RESENT_PROCESSING_MESSAGE = "Transaction requested to resend is still processed";
     public static final String TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE = "Transaction requested to resend is not available in the database";
     public static final String TRANSACTION_RESENT_NOT_ALLOWED_MESSAGE = "Transaction is requested to resend not by the transaction sender";
+    public static final String TRANSACTION_NONE_INDEXED_SERVER_ERROR = "Server error while getting none indexed transactions";
+    public static final String TRANSACTION_POSTPONED_SERVER_ERROR = "Server error while getting postponed transactions";
+    public static final String TRANSACTION_INTERNAL_ERROR_MESSAGE = "Internal error while adding new transaction";
+    public static final String TRANSACTION_HANDLING_REJECTED_TRANSACTION = "New transaction was rejected as server is dedicated exclusively to the handling of an identified existing rejected transaction";
 
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
@@ -44,9 +49,15 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_SERVER_URL_EMPTY_HOST = "Invalid node server URL %s: empty host";
     public static final String INVALID_NODE_SERVER_URL_HOST_RESERVED = "Invalid node server URL %s: host %s reserved to another user";
     public static final String INVALID_NODE_SERVER_URL_SSL_REQUIRED = "Invalid node server URL %s: SSL required";
+    public static final String INVALID_NODE_SERVER_URL_SSL_CONNECTION_NOT_OPENED = "Invalid node server URL %s: SSL connection failed to be opened";
+    public static final String INVALID_NODE_SERVER_URL_SSL_CERTIFICATE_NOT_FOUND = "Invalid node server URL %s: SSL certificate not found";
+    public static final String INVALID_NODE_SERVER_URL_SSL_INVALID_SERVER_CERTIFICATE = "Invalid node server URL %s: invalid SSL server certificate";
+    public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION = "Invalid node server URL %s: failed to verify SSL certificate. Certificate is expired";
+    public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE = "Invalid node server URL %s: failed to verify certificate";
     public static final String INVALID_NODE_IP_FOR_SERVER_URL = "Invalid node server URL %s: host %s is not matching with ip %s. The expected ip is %s";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
+    public static final String INVALID_NODE_TYPE = "Unsupported node type : %s";
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";
     public static final String INVALID_AMOUNT = "Invalid amount";
     public static final String INVALID_AMOUNT_VS_FULL_NODE_FEE = "Transaction amount should be greater than minimum full node fee %s";
@@ -60,4 +71,13 @@ public class BaseNodeHttpStringConstants {
     public static final String DOCUMENT_NOT_FOUND = "Document not found";
 
     public static final String NOT_BACKUP_NODE = "The node is not a backup node";
+
+    public static final String DB_MANUAL_BACKUP_SUCCESS = "Successful manual DB backup";
+    public static final String DB_MANUAL_BACKUP_NOT_ALLOWED = "Manual DB backup not allowed";
+
+    public static final String METHOD_NOT_ALLOWED = "This method is not in use";
+
+    protected BaseNodeHttpStringConstants() {
+
+    }
 }

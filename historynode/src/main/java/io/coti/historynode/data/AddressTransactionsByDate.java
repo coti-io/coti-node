@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class AddressTransactionsByDate implements IEntity {
@@ -17,9 +17,9 @@ public class AddressTransactionsByDate implements IEntity {
     private static final long serialVersionUID = 4576893520654304534L;
     private Hash hash;
     private Instant date;
-    private HashSet<Hash> transactionHashes;
+    private Set<Hash> transactionHashes;
 
-    public AddressTransactionsByDate(Instant date, HashSet<Hash> transactionHashes) {
+    public AddressTransactionsByDate(Instant date, Set<Hash> transactionHashes) {
         this.date = date;
         this.transactionHashes = transactionHashes;
         initHashByDate();

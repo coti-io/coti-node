@@ -21,12 +21,12 @@ public class TransactionBatchController {
     private ITransactionService transactionService;
 
     @GetMapping(value = "/transaction_batch")
-    public void getTransactionBatch(@RequestParam @Valid @NotNull Long starting_index, HttpServletResponse response) {
-        transactionService.getTransactionBatch(starting_index, response);
+    public void getTransactionBatch(@RequestParam(name = "starting_index") @Valid @NotNull Long startingIndex, HttpServletResponse response) {
+        transactionService.getTransactionBatch(startingIndex, response);
     }
 
     @GetMapping(value = "/transaction_batch/reactive", produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
-    public Flux<byte[]> getTransactionBatchReactive(@RequestParam @Valid @NotNull Long starting_index) {
-        return Flux.create(fluxSink -> transactionService.getTransactionBatch(starting_index, fluxSink));
+    public Flux<byte[]> getTransactionBatchReactive(@RequestParam(name = "starting_index") @Valid @NotNull Long startingIndex) {
+        return Flux.create(fluxSink -> transactionService.getTransactionBatch(startingIndex, fluxSink));
     }
 }

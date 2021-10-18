@@ -1,7 +1,9 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.utilities.MemoryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +26,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     private ITransactionService transactionService;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
+    @Autowired
+    private IWebSocketMessageService webSocketMessageService;
     @Value("${allow.transaction.monitoring}")
     private boolean allowTransactionMonitoring;
 
@@ -34,7 +38,9 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void lastState() {
         if (allowTransactionMonitoring) {
-            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, PropagationQueue = {}",
+            log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, " +
+                            "PropagationQueue = {}, WebSocketMessagesQueueLength = {}, waitingDspConsensus = {}, confirmationQueueSize = {}, " +
+                            "percentageUsedHeapMemory = {}, percentageUsedMemory = {}, rejectedTransactions = {}",
                     transactionHelper.getTotalTransactions(),
                     confirmationService.getTrustChainConfirmed(),
                     confirmationService.getDspConfirmed(),
@@ -42,7 +48,13 @@ public class BaseNodeMonitorService implements IMonitorService {
                     transactionIndexService.getLastTransactionIndexData().getIndex(),
                     clusterService.getTotalSources(),
                     transactionService.totalPostponedTransactions(),
-                    propagationSubscriber.getMessageQueueSize());
+                    propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION),
+                    webSocketMessageService.getMessageQueueSize(),
+                    confirmationService.getWaitingDspConsensusResultsMapSize(),
+                    confirmationService.getQueueSize(),
+                    MemoryUtils.getPercentageUsedHeapFormatted(),
+                    MemoryUtils.getPercentageUsedFormatted(),
+                    transactionService.getRejectedTransactionsSize());
         }
     }
 }

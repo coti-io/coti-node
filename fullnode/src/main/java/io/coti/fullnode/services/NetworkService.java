@@ -6,6 +6,7 @@ import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.exceptions.NetworkChangeException;
 import io.coti.basenode.services.BaseNodeNetworkService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,11 +27,16 @@ public class NetworkService extends BaseNodeNetworkService {
     private ICommunicationService communicationService;
     @Autowired
     private ISender sender;
-    private List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
+    private final List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
-        super.handleNetworkChanges(newNetworkData);
+        try {
+            super.handleNetworkChanges(newNetworkData);
+        } catch (NetworkChangeException e) {
+            log.info(e.getMessage());
+            return;
+        }
 
         Map<Hash, NetworkNodeData> newDspNodeMap = newNetworkData.getMultipleNodeMaps().get(NodeType.DspNode);
 
@@ -44,13 +50,12 @@ public class NetworkService extends BaseNodeNetworkService {
                     recoveryServerAddress = dspNodesToConnect.get(0).getHttpFullAddress();
                 }
                 communicationService.addSubscription(dspNodesToConnect.get(i).getPropagationFullAddress(), NodeType.DspNode);
-                communicationService.addSender(dspNodesToConnect.get(i).getReceivingFullAddress());
+                communicationService.addSender(dspNodesToConnect.get(i).getReceivingFullAddress(), NodeType.DspNode);
                 connectedDspNodes.add(dspNodesToConnect.get(i));
             }
         }
 
         setNetworkData(newNetworkData);
-
     }
 
     public void addToConnectedDspNodes(NetworkNodeData networkNodeData) {
@@ -59,6 +64,10 @@ public class NetworkService extends BaseNodeNetworkService {
 
     public void sendDataToConnectedDspNodes(IPropagatable propagatable) {
         connectedDspNodes.forEach(networkNodeData -> sender.send(propagatable, networkNodeData.getReceivingFullAddress()));
+    }
+
+    public boolean isNotConnectedToDspNodes() {
+        return connectedDspNodes.isEmpty();
     }
 
     @Override

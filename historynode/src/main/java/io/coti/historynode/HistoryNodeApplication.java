@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class HistoryNodeApplication {
 
     public static void main(String[] args) {
-
+        Thread.currentThread().setName("History Node Main");
         SpringApplication.run(HistoryNodeApplication.class, args);
         log.info("############################################################");
         log.info("#############    COTI HISTORY NODE IS UP       ################");

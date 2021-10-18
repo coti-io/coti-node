@@ -52,7 +52,7 @@ public class RecourseClaimData implements ISignable, ISignValidatable, IPropagat
 
     @Override
     public Hash getSignerHash() {
-        return merchantHash;
+        return getHash();
     }
 
     @Override

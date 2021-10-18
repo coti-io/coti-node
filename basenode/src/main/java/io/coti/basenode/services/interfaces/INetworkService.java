@@ -12,6 +12,8 @@ public interface INetworkService {
 
     void handleNetworkChanges(NetworkData networkData);
 
+    void verifyNodeManager(NetworkData newNetworkData);
+
     String getRecoveryServerAddress();
 
     void setRecoveryServerAddress(String recoveryServerAddress);
@@ -25,8 +27,6 @@ public interface INetworkService {
     void removeNode(NetworkNodeData networkNodeData);
 
     void validateNetworkNodeData(NetworkNodeData networkNodeData);
-
-    String getProtocol(String webServerUrl);
 
     boolean validateFeeData(FeeData feeData);
 
@@ -48,6 +48,8 @@ public interface INetworkService {
 
     NetworkData getNetworkData();
 
+    NetworkData getSignedNetworkData();
+
     void setNetworkData(NetworkData networkData);
 
     void setNetworkNodeData(NetworkNodeData networkNodeData);
@@ -57,4 +59,6 @@ public interface INetworkService {
     void connectToNetwork();
 
     String getHost(String webServerUrl);
+
+    boolean isZeroSpendServerInNetwork();
 }

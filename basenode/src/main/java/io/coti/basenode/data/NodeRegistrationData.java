@@ -70,12 +70,12 @@ public class NodeRegistrationData implements IEntity, ISignValidatable {
 
     @JsonIgnore
     public String getNode() {
-        return NodeTypeName.valueOf(nodeType.toString()).getNode();
+        return NodeTypeName.getByNodeType(nodeType).getNode();
     }
 
     @JsonIgnore
     public String getNetwork() {
-        return NetworkTypeName.valueOf(networkType.toString()).getNetwork();
+        return NetworkTypeName.getByNetworkType(networkType).getNetwork();
     }
 
 }

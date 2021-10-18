@@ -1,5 +1,6 @@
 package io.coti.fullnode.controllers;
 
+import io.coti.basenode.data.TransactionIndexData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.TransactionIndexService;
@@ -35,12 +36,17 @@ public class TransactionController {
 
     @PostMapping(value = "/repropagate")
     public ResponseEntity<IResponse> repropagateTransaction(@Valid @RequestBody RepropagateTransactionRequest repropagateTransactionRequest) {
-        return transactionService.repropagateTransaction(repropagateTransactionRequest);
+        return transactionService.repropagateTransactionByWallet(repropagateTransactionRequest);
     }
 
     @PostMapping()
     public ResponseEntity<IResponse> getTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
-        return transactionService.getTransactionDetails(getTransactionRequest.getTransactionHash());
+        return transactionService.getTransactionDetails(getTransactionRequest.getTransactionHash(), false);
+    }
+
+    @PostMapping(value = "/extended")
+    public ResponseEntity<IResponse> getExtendedTransactionDetails(@Valid @RequestBody GetTransactionRequest getTransactionRequest) {
+        return transactionService.getTransactionDetails(getTransactionRequest.getTransactionHash(), true);
     }
 
     @PostMapping(value = "/multiple")
@@ -58,9 +64,29 @@ public class TransactionController {
         transactionService.getAddressTransactionBatch(getAddressTransactionBatchRequest, response, false);
     }
 
+    @PostMapping(value = "/addressTransactions/timestamp/batch")
+    public void getAddressTransactionBatchByTimestamp(@Valid @RequestBody GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response) {
+        transactionService.getAddressTransactionBatchByTimestamp(getAddressTransactionBatchByTimestampRequest, response, false);
+    }
+
+    @PostMapping(value = "/addressTransactions/date/batch")
+    public void getAddressTransactionBatchByDate(@Valid @RequestBody GetAddressTransactionBatchByDateRequest getAddressTransactionBatchByDateRequest, HttpServletResponse response) {
+        transactionService.getAddressTransactionBatchByDate(getAddressTransactionBatchByDateRequest, response, false);
+    }
+
     @PostMapping(value = "/addressTransactions/reduced/batch")
     public void getAddressReducedTransactionBatch(@Valid @RequestBody GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response) {
         transactionService.getAddressTransactionBatch(getAddressTransactionBatchRequest, response, true);
+    }
+
+    @PostMapping(value = "/addressTransactions/timestamp/reduced/batch")
+    public void getAddressReducedTransactionBatchByTimestamp(@Valid @RequestBody GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response) {
+        transactionService.getAddressTransactionBatchByTimestamp(getAddressTransactionBatchByTimestampRequest, response, true);
+    }
+
+    @PostMapping(value = "/addressTransactions/date/reduced/batch")
+    public void getAddressReducedTransactionBatchByDate(@Valid @RequestBody GetAddressTransactionBatchByDateRequest getAddressTransactionBatchByDateRequest, HttpServletResponse response) {
+        transactionService.getAddressTransactionBatchByDate(getAddressTransactionBatchByDateRequest, response, true);
     }
 
     @GetMapping(value = "/lastTransactions")
@@ -79,7 +105,7 @@ public class TransactionController {
     }
 
     @GetMapping(value = "/index")
-    public ResponseEntity getCurrentIndex() {
+    public ResponseEntity<TransactionIndexData> getCurrentIndex() {
         return ResponseEntity.ok(transactionIndexService.getLastTransactionIndexData());
     }
 }

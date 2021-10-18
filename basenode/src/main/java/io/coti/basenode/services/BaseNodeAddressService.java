@@ -15,12 +15,10 @@ import io.coti.basenode.model.Addresses;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
-import org.rocksdb.RocksIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.SerializationUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -41,6 +39,8 @@ public class BaseNodeAddressService implements IAddressService {
     private Addresses addresses;
     @Autowired
     private IValidationService validationService;
+    @Autowired
+    private FileService fileService;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
@@ -94,18 +94,13 @@ public class BaseNodeAddressService implements IAddressService {
             output.write("[");
             output.flush();
 
-            RocksIterator iterator = addresses.getIterator();
-            iterator.seekToFirst();
-            while (iterator.isValid()) {
-                AddressData addressData = (AddressData) SerializationUtils.deserialize(iterator.value());
-                addressData.setHash(new Hash(iterator.key()));
+            addresses.forEachWithLastIteration((addressData, isLastIteration) -> {
                 output.write(new CustomGson().getInstance().toJson(new AddressResponseData(addressData)));
-                iterator.next();
-                if (iterator.isValid()) {
+                if (isLastIteration.equals(Boolean.FALSE)) {
                     output.write(",");
                 }
                 output.flush();
-            }
+            });
             output.write("]");
             output.flush();
         } catch (Exception e) {
@@ -122,9 +117,7 @@ public class BaseNodeAddressService implements IAddressService {
 
         try {
             if (file.createNewFile()) {
-                FileOutputStream fileOutputStream = new FileOutputStream(file);
-                fileOutputStream.write(multiPartFile.getBytes());
-                fileOutputStream.close();
+                fileService.writeToFile(multiPartFile, file);
             }
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(ADDRESS_BATCH_UPLOAD_ERROR, e.getMessage())));

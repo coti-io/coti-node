@@ -16,7 +16,7 @@ public class MonitorBucketStatistics {
     }
 
     public double getAverage() {
-        return (totalTime.toNanos() / numberOfTransaction) / 1000000;
+        return ((double) totalTime.toNanos() / numberOfTransaction) / 1000000;
     }
 
     public synchronized void addTransactionStatistics(Duration time) {

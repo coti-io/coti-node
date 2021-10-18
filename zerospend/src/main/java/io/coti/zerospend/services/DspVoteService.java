@@ -36,8 +36,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     @Autowired
     private INetworkService networkService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
-    private Map<Hash, Hash> lockVotedTransactionRecordHashMap = new ConcurrentHashMap<>();
-    private final Object lock = new Object();
+    private final LockData transactionHashLockData = new LockData();
     private Map<Hash, HashSet<TransactionDspVote>> missingTransactionsAwaitingHandling;
 
     @Override
@@ -45,19 +44,6 @@ public class DspVoteService extends BaseNodeDspVoteService {
         transactionHashToVotesListMapping = new ConcurrentHashMap<>();
         missingTransactionsAwaitingHandling = new ConcurrentHashMap<>();
         super.init();
-    }
-
-    private Hash addLockToLockMap(Hash hash) {
-        synchronized (lock) {
-            lockVotedTransactionRecordHashMap.putIfAbsent(hash, hash);
-            return lockVotedTransactionRecordHashMap.get(hash);
-        }
-    }
-
-    private void removeLockFromLocksMap(Hash hash) {
-        synchronized (lock) {
-            lockVotedTransactionRecordHashMap.remove(hash);
-        }
     }
 
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
@@ -69,7 +55,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         Hash transactionHash = transactionData.getHash();
         TransactionVoteData transactionVoteData = new TransactionVoteData(transactionHash, dspHashList);
         try {
-            synchronized (addLockToLockMap(transactionHash)) {
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 transactionVotes.put(transactionVoteData);
                 transactionHashToVotesListMapping.put(transactionHash, new LinkedList<>());
 
@@ -80,7 +66,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 }
             }
         } finally {
-            removeLockFromLocksMap(transactionHash);
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
         }
 
     }
@@ -116,19 +102,18 @@ public class DspVoteService extends BaseNodeDspVoteService {
         Hash voterDspHash = transactionDspVote.getVoterDspHash();
         log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", voterDspHash, transactionHash);
         try {
-            synchronized (addLockToLockMap(transactionHash)) {
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
                 if (transactionVoteData == null) {
-                    missingTransactionsAwaitingHandling.putIfAbsent(transactionHash, new HashSet<>());
-                    missingTransactionsAwaitingHandling.get(transactionHash).add(transactionDspVote);
-                    log.info("Transaction {} does not exist for dsp vote. Vote processing is delayed.", transactionHash);
+                    missingTransactionsAwaitingHandling.computeIfAbsent(transactionHash, key -> new HashSet<>()).add(transactionDspVote);
+                    log.debug("Transaction {} does not exist for dsp vote. Vote processing is delayed.", transactionHash);
                     return;
                 }
 
                 handleDspVote(transactionDspVote, transactionVoteData, voterDspHash, transactionHash);
             }
         } finally {
-            removeLockFromLocksMap(transactionHash);
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
         }
 
     }
@@ -139,7 +124,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                 transactionHashToVotesListMapping.entrySet()) {
             Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
             try {
-                synchronized (addLockToLockMap(transactionHash)) {
+                synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                     List<DspVote> dspVotes = transactionHashToVotesListEntrySet.getValue();
                     if (dspVotes != null && !dspVotes.isEmpty()) {
                         TransactionVoteData currentTransactionVoteData = transactionVotes.getByHash(transactionHash);
@@ -157,7 +142,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
                     }
                 }
             } finally {
-                removeLockFromLocksMap(transactionHash);
+                transactionHashLockData.removeLockFromLocksMap(transactionHash);
             }
         }
     }

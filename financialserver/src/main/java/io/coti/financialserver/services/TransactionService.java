@@ -54,7 +54,7 @@ public class TransactionService extends BaseNodeTransactionService {
             ReceiverBaseTransactionOwnerData rbtOwnerData = receiverBaseTransactionOwners.getByHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
 
             if (rbtOwnerData == null) {
-                log.error("Owner(merchant) not found for RBT hash in received transaction.", transactionData);
+                log.error("Owner(merchant) not found for RBT hash in received transaction {}.", transactionData.getHash());
             } else {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }

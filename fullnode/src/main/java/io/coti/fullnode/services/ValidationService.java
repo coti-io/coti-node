@@ -10,11 +10,12 @@ import java.util.Optional;
 
 @Service
 public class ValidationService extends BaseNodeValidationService {
+
     @Autowired
     private FeeService feeService;
 
     public boolean validateFullNodeFeeDataIntegrity(TransactionData transactionData) {
-        Optional<FullNodeFeeData> optionalFullNodeFeeData = transactionData.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof FullNodeFeeData).map(FullNodeFeeData.class::cast).findFirst();
+        Optional<FullNodeFeeData> optionalFullNodeFeeData = transactionData.getBaseTransactions().stream().filter(FullNodeFeeData.class::isInstance).map(FullNodeFeeData.class::cast).findFirst();
         return optionalFullNodeFeeData.isPresent() && feeService.validateFeeData(optionalFullNodeFeeData.get());
     }
 }

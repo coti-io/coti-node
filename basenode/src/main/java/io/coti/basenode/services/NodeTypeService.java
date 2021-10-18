@@ -2,24 +2,31 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.NodeType;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 public enum NodeTypeService {
-    FullNode(NodeType.FullNode, true),
-    DspNode(NodeType.DspNode, true),
-    TrustScoreNode(NodeType.TrustScoreNode, true),
-    ZeroSpendServer(NodeType.ZeroSpendServer, false),
-    FinancialServer(NodeType.FinancialServer, false),
-    HistoryNode(NodeType.HistoryNode, true);
+    FULL_NODE(NodeType.FullNode, true),
+    DSP_NODE(NodeType.DspNode, true),
+    TRUST_SCORE_NODE(NodeType.TrustScoreNode, true),
+    ZERO_SPEND_SERVER(NodeType.ZeroSpendServer, false),
+    FINANCIAL_SERVER(NodeType.FinancialServer, false),
+    HISTORY_NODE(NodeType.HistoryNode, true);
 
-    private NodeType nodeType;
-    private boolean multipleNode;
+    private final NodeType nodeType;
+    private final boolean multipleNode;
+
+    private static class NodeTypeServices {
+        private static final Map<NodeType, NodeTypeService> nodeTypeServiceMap = new EnumMap<>(NodeType.class);
+    }
 
     NodeTypeService(NodeType nodeType, boolean multipleNode) {
         this.nodeType = nodeType;
+        NodeTypeServices.nodeTypeServiceMap.put(nodeType, this);
         this.multipleNode = multipleNode;
+    }
+
+    public static NodeTypeService getByNodeType(NodeType nodeType) {
+        return NodeTypeServices.nodeTypeServiceMap.get(nodeType);
     }
 
     public NodeType getNodeType() {

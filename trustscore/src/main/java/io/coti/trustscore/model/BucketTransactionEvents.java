@@ -9,7 +9,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class BucketTransactionEvents extends Collection<BucketTransactionEventsData> {
 
-    public void init() {
-        super.init();
-    }
 }

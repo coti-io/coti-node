@@ -43,16 +43,6 @@ public class DisputeCommentData implements IDisputeEvent, IEntity, ISignable, IS
     }
 
     @Override
-    public Hash getHash() {
-        return hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
-    }
-
-    @Override
     public SignatureData getSignature() {
         return userSignature;
     }

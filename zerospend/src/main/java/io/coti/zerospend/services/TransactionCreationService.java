@@ -5,7 +5,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.zerospend.crypto.TransactionCryptoCreator;
 import io.coti.zerospend.data.ZeroSpendTransactionType;
@@ -27,7 +27,7 @@ public class TransactionCreationService {
 
     private static final int ZERO_SPEND_ADDRESS_INDEX = 0;
     @Autowired
-    private TransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private IValidationService validationService;
     @Autowired
@@ -38,17 +38,15 @@ public class TransactionCreationService {
     private TransactionCryptoCreator transactionCryptoCreator;
     @Autowired
     private DspVoteService dspVoteService;
-    @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
     @Value("${zerospend.seed}")
     private String seed;
 
-    public String createNewStarvationZeroSpendTransaction(TransactionData transactionData) {
-        return createNewZeroSpendTransaction(transactionData, STARVATION);
+    public void createNewStarvationZeroSpendTransaction(TransactionData transactionData) {
+        createNewZeroSpendTransaction(transactionData, STARVATION);
     }
 
-    public void createNewGenesisZeroSpendTransaction(double trustscore) {
-        createZeroSpendTransaction(trustscore, GENESIS);
+    public void createNewGenesisZeroSpendTransaction(double trustScore) {
+        createZeroSpendTransaction(trustScore, GENESIS);
     }
 
     public String createNewZeroSpendTransaction(TransactionData incomingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
@@ -116,7 +114,7 @@ public class TransactionCreationService {
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
         Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
-        Hash addressHash = nodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
+        Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, BigDecimal.ZERO, Instant.now());
         addressHashToAddressIndexMap.put(addressHash, ZERO_SPEND_ADDRESS_INDEX);
         baseTransactions.add(baseTransactionData);

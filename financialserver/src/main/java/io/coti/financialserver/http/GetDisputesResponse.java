@@ -7,11 +7,13 @@ import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.http.data.GetDisputeResponseClass;
 import io.coti.financialserver.http.data.GetDisputeResponseData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class GetDisputesResponse extends BaseResponse {
 
     private List<GetDisputeResponseData> disputesData;
@@ -20,6 +22,6 @@ public class GetDisputesResponse extends BaseResponse {
         super();
 
         this.disputesData = new ArrayList<>();
-        disputesData.forEach(disputeData -> this.disputesData.add(GetDisputeResponseClass.valueOf(actionSide.toString()).getNewInstance(disputeData, userHash)));
+        disputesData.forEach(disputeData -> this.disputesData.add(GetDisputeResponseClass.getByActionSide(actionSide).getNewInstance(disputeData, userHash)));
     }
 }

@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.FileService;
 import io.coti.financialserver.crypto.DisputeDocumentCrypto;
 import io.coti.financialserver.crypto.GetDisputeItemDetailCrypto;
 import io.coti.financialserver.crypto.GetDocumentFileCrypto;
@@ -25,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +52,8 @@ public class DocumentService {
     private DisputeService disputeService;
     @Autowired
     private WebSocketService webSocketService;
+    @Autowired
+    private FileService fileService;
 
     public ResponseEntity<IResponse> newDocument(NewDocumentRequest request) {
 
@@ -74,7 +76,7 @@ public class DocumentService {
         }
 
         for (DisputeItemData disputeItemData : disputeItemsData) {
-            if (disputeItemData.getStatus() != DisputeItemStatus.Recall) {
+            if (disputeItemData.getStatus() != DisputeItemStatus.RECALL) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ITEM_PASSED_RECALL_STATUS, STATUS_ERROR));
             }
 
@@ -94,9 +96,7 @@ public class DocumentService {
 
         try {
             if (file.createNewFile()) {
-                FileOutputStream fileOutputStream = new FileOutputStream(file);
-                fileOutputStream.write(multiPartFile.getBytes());
-                fileOutputStream.close();
+                fileService.writeToFile(multiPartFile, file);
             }
         } catch (IOException e) {
             log.error("Can't save file on disk.", e);
@@ -108,9 +108,7 @@ public class DocumentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(uploadError, STATUS_ERROR));
         }
 
-        if (!file.delete()) {
-            log.error("Couldn't delete file: {}", disputeDocumentData.getHash());
-        }
+        fileService.deleteFile(file);
 
         disputeDocumentData.setFileName(multiPartFile.getOriginalFilename());
 

@@ -6,8 +6,8 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.BaseResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.crypto.FullNodeFeeRequestCrypto;
 import io.coti.fullnode.http.FullNodeFeeRequest;
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
-import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
+import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
 
 @Slf4j
 @Service
@@ -45,13 +45,11 @@ public class FeeService {
     @Value("${fullnode.seed}")
     private String seed;
     @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
-    @Autowired
     private FullNodeFeeRequestCrypto fullNodeFeeRequestCrypto;
     @Autowired
     private IValidationService validationService;
 
-    public ResponseEntity<BaseResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
+    public ResponseEntity<IResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         try {
             if (!fullNodeFeeRequestCrypto.verifySignature(fullNodeFeeRequest)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -99,11 +97,11 @@ public class FeeService {
     }
 
     public Hash getAddress() {
-        return nodeCryptoHelper.generateAddress(seed, FULL_NODE_FEE_ADDRESS_INDEX);
+        return NodeCryptoHelper.generateAddress(seed, FULL_NODE_FEE_ADDRESS_INDEX);
     }
 
     public void setFullNodeFeeHash(FullNodeFeeData fullNodeFeeData) {
-        BaseTransactionCrypto.FULL_NODE_FEE_DATA.setBaseTransactionHash(fullNodeFeeData);
+        BaseTransactionCrypto.FULL_NODE_FEE_DATA.createAndSetBaseTransactionHash(fullNodeFeeData);
     }
 
     public void signFullNodeFee(FullNodeFeeData fullNodeFeeData) {

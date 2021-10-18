@@ -9,7 +9,7 @@ public enum BaseTransactionName {
     RBT(ReceiverBaseTransactionData.class);
 
 
-    private Class<? extends BaseTransactionData> baseTransactionClass;
+    private final Class<? extends BaseTransactionData> baseTransactionClass;
 
     <T extends BaseTransactionData> BaseTransactionName(Class<T> baseTransactionClass) {
         this.baseTransactionClass = baseTransactionClass;

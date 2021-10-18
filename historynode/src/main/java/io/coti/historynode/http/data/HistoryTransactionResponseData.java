@@ -2,16 +2,17 @@ package io.coti.historynode.http.data;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
-import java.util.HashMap;
+import java.util.Map;
 
 @Data
-public class HistoryTransactionResponseData {
+public class HistoryTransactionResponseData implements IResponseData {
 
-    private HashMap<Hash, TransactionData> HistoryTransactionResults;
+    private Map<Hash, TransactionData> historyTransactionResultMap;
 
-    public HistoryTransactionResponseData(HashMap<Hash, TransactionData> historyTransactionResults) {
-        HistoryTransactionResults = historyTransactionResults;
+    public HistoryTransactionResponseData(Map<Hash, TransactionData> historyTransactionResultMap) {
+        this.historyTransactionResultMap = historyTransactionResultMap;
     }
 }

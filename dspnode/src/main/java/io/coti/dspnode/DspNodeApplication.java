@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class DspNodeApplication {
 
     public static void main(String[] args) {
-
+        Thread.currentThread().setName("DSP Main");
         SpringApplication.run(DspNodeApplication.class, args);
         log.info("############################################################");
         log.info("################    DSP NODE IS UP       ##################");

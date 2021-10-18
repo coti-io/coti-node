@@ -5,7 +5,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.TransactionHelper;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.config.rules.UserNetworkFeeByTrustScoreRange;
 import io.coti.trustscore.data.Enums.TrustScoreRangeType;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.basenode.services.TransactionHelper.CURRENCY_SCALE;
+import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
 import static io.coti.trustscore.http.HttpStringConstants.*;
 
 @Slf4j
@@ -42,7 +42,7 @@ public class NetworkFeeService {
     @Value("${network.fee.difference.validation}")
     private BigDecimal networkFeeDifferenceValidation;
     @Autowired
-    private TransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private TrustScores trustScores;
     @Autowired
@@ -91,8 +91,8 @@ public class NetworkFeeService {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new NetworkFeeResponse(networkFeeResponseData));
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
@@ -113,8 +113,7 @@ public class NetworkFeeService {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(new NetworkFeeResponse(new NetworkFeeResponseData(networkFeeData)));
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
@@ -136,7 +135,7 @@ public class NetworkFeeService {
                 && isNetworkFeeValid(networkFeeData, userHash);
     }
 
-    public boolean isNetworkFeeValid(NetworkFeeData networkFeeData, Hash userHash) {
+    private boolean isNetworkFeeValid(NetworkFeeData networkFeeData, Hash userHash) {
         TrustScoreData trustScoreData = trustScores.getByHash(userHash);
         if (trustScoreData == null) {
             return false;
@@ -161,12 +160,12 @@ public class NetworkFeeService {
                 && validateNetworkFeeCrypto(networkFeeData) && transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData);
     }
 
-    public void setNetworkFeeHash(NetworkFeeData networkFeeData) throws ClassNotFoundException {
-        BaseTransactionCrypto.NETWORK_FEE_DATA.setBaseTransactionHash(networkFeeData);
+    private void setNetworkFeeHash(NetworkFeeData networkFeeData) {
+        BaseTransactionCrypto.NETWORK_FEE_DATA.createAndSetBaseTransactionHash(networkFeeData);
     }
 
 
-    public void signNetworkFee(NetworkFeeData networkFeeData, boolean isValid) throws ClassNotFoundException {
+    private void signNetworkFee(NetworkFeeData networkFeeData, boolean isValid) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(networkFeeData);
         BaseTransactionCrypto.NETWORK_FEE_DATA.signMessage(new TransactionData(baseTransactions), networkFeeData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));

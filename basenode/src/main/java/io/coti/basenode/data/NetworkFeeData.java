@@ -2,6 +2,7 @@ package io.coti.basenode.data;
 
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class NetworkFeeData extends OutputBaseTransactionData implements ITrustScoreNodeValidatable {
 
     private static final long serialVersionUID = -7553003211129196688L;

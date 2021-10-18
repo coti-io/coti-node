@@ -11,12 +11,19 @@ public class UnconfirmedReceivedTransactionHashData implements IEntity {
     private static final long serialVersionUID = 231411106093463531L;
     private Hash transactionHash;
     private Instant createdTime;
-    private int retries;
 
-    public UnconfirmedReceivedTransactionHashData(Hash transactionHash, int retries) {
+    protected UnconfirmedReceivedTransactionHashData() {
+
+    }
+
+    public UnconfirmedReceivedTransactionHashData(Hash transactionHash) {
         this.transactionHash = transactionHash;
         this.createdTime = Instant.now();
-        this.retries = retries;
+    }
+
+    public UnconfirmedReceivedTransactionHashData(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
+        this.transactionHash = unconfirmedReceivedTransactionHashData.getTransactionHash();
+        this.createdTime = unconfirmedReceivedTransactionHashData.getCreatedTime();
     }
 
     @Override

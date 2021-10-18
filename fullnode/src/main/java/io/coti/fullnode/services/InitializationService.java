@@ -34,7 +34,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private BigDecimal nodeFee;
     @Value("${server.url}")
     private String webServerUrl;
-    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override
@@ -45,7 +45,11 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.DspNode, Arrays.asList(
+                    TransactionData.class,
+                    RejectedTransactionData.class,
+                    AddressData.class,
+                    DspConsensusResult.class));
 
             communicationService.initSubscriber(NodeType.FullNode, publisherNodeTypeToMessageTypesMap);
 
@@ -55,7 +59,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
             for (int i = 0; i < dspNetworkNodeData.size() && i < 2; i++) {
                 communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress(), NodeType.DspNode);
-                communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress());
+                communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress(), NodeType.DspNode);
                 ((NetworkService) networkService).addToConnectedDspNodes(dspNetworkNodeData.get(i));
             }
 
@@ -74,7 +78,7 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         FeeData feeData = new FeeData(nodeFee, minimumFee, maximumFee);
         if (networkService.validateFeeData(feeData)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
             networkNodeData.setFeeData(feeData);
             networkNodeData.setWebServerUrl(webServerUrl);
             return networkNodeData;

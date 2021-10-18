@@ -11,8 +11,8 @@ public enum OutputBaseTransactionName {
     ROLLING_RESERVE_DATA(RollingReserveData.class, EnumSet.of(TransactionType.Payment)),
     RECEIVER_BASE_TRANSACTION_DATA(ReceiverBaseTransactionData.class, EnumSet.of(TransactionType.Initial, TransactionType.Transfer, TransactionType.Payment));
 
-    private Class<? extends OutputBaseTransactionData> outputBaseTransactionClass;
-    private Set<TransactionType> transactionTypes;
+    private final Class<? extends OutputBaseTransactionData> outputBaseTransactionClass;
+    private final Set<TransactionType> transactionTypes;
 
     <T extends OutputBaseTransactionData> OutputBaseTransactionName(Class<T> outputBaseTransactionClass, Set<TransactionType> transactionTypes) {
         this.outputBaseTransactionClass = outputBaseTransactionClass;

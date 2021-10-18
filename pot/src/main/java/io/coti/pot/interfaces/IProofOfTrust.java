@@ -3,7 +3,7 @@ package io.coti.pot.interfaces;
 import java.util.List;
 
 public interface IProofOfTrust {
-    List<IAlgorithm.AlgorithmTypes> getHashingAlgorithms();
+    List<IAlgorithm.AlgorithmType> getHashingAlgorithms();
 
     int[] hash(byte[] data, byte[] target);
 

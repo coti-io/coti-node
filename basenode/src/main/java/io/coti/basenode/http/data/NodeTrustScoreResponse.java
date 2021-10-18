@@ -7,11 +7,13 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import io.coti.basenode.http.Response;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class NodeTrustScoreResponse extends Response implements ISignable, ISignValidatable {
 
     @NotNull

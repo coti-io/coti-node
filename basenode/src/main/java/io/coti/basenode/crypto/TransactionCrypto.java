@@ -54,7 +54,7 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
         try {
             for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
                 if (baseTransactionData.getHash() == null) {
-                    BaseTransactionCrypto.getByBaseTransactionClass(baseTransactionData.getClass()).setBaseTransactionHash(baseTransactionData);
+                    BaseTransactionCrypto.getByBaseTransactionClass(baseTransactionData.getClass()).createAndSetBaseTransactionHash(baseTransactionData);
                 }
             }
 

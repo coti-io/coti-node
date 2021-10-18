@@ -8,7 +8,7 @@ public enum UserType {
     DSP_NODE("dspnode"),
     TRUST_SCORE_NODE("trustscorenode");
 
-    private String text;
+    private final String text;
 
     UserType(String text) {
         this.text = text;

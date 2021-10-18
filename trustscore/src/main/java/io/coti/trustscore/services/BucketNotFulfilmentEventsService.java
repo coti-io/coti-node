@@ -60,7 +60,7 @@ public class BucketNotFulfilmentEventsService implements IBucketEventService<Not
         BucketNotFulfilmentEventsCalculator bucketCalculator = new BucketNotFulfilmentEventsCalculator(bucketNotFulfilmentEventsData);
         // Decay on case that this is the first event, or first access to data today
         bucketCalculator.decayScores(bucketNotFulfilmentEventsData);
-        //bucketCalculator.setCurrentScores();
+        //bucketCalculator.setCurrentScores()
 
         return bucketCalculator.getBucketSumScore(bucketNotFulfilmentEventsData);
     }

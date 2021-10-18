@@ -2,20 +2,25 @@ package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
-@Service
+@Slf4j
 public class NodeCryptoHelper {
 
     private static String nodePrivateKey;
     private static String nodePublicKey;
     private static String seed;
 
-    @Value("#{'${global.private.key}'}")
-    private void nodePrivateKey(String privateKey) {
-        nodePrivateKey = privateKey;
-        nodePublicKey = CryptoHelper.getPublicKeyFromPrivateKey(nodePrivateKey);
+    private NodeCryptoHelper() {
+    }
+
+    @SuppressWarnings("unused")
+    private static void nodePrivateKey(String privateKey) {
+        if (nodePrivateKey == null) {
+            nodePrivateKey = privateKey;
+            nodePublicKey = CryptoHelper.getPublicKeyFromPrivateKey(nodePrivateKey);
+            log.info("Node public key is set to {}", nodePublicKey);
+        }
     }
 
     public static SignatureData signMessage(byte[] message) {
@@ -26,11 +31,11 @@ public class NodeCryptoHelper {
         return CryptoHelper.signBytes(message, CryptoHelper.generatePrivateKey(seed, index).toHexString());
     }
 
-    public Hash generateAddress(String seed, Integer index) {
+    public static Hash generateAddress(String seed, Integer index) {
         if (NodeCryptoHelper.seed == null) {
             NodeCryptoHelper.seed = seed;
         }
-        return CryptoHelper.generateAddress(seed, index);
+        return CryptoHelper.generateAddress(NodeCryptoHelper.seed, index);
     }
 
     public static Hash getNodeHash() {

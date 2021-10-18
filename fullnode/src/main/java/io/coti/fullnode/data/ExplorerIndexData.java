@@ -23,5 +23,6 @@ public class ExplorerIndexData implements IEntity {
 
     @Override
     public void setHash(Hash hash) {
+        // no implementation
     }
 }

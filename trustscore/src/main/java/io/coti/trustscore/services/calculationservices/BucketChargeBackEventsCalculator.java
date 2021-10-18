@@ -28,7 +28,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userTypeToBehaviorHighFrequencyEventsScoreMapping = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getBehaviorHighFrequencyEventsScore()));
+                collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getBehaviorHighFrequencyEventsScore()));
     }
 
     @Override
@@ -42,13 +42,14 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
                         .get(HighFrequencyEventScoreType.CHARGE_BACK_NUMBER),
                 createChargeBackNumberFormula());
 
-        ScoreCalculator functionCalculator = new ScoreCalculator(highFrequencyEventScoreToCalculationFormulaMap);
+        ScoreCalculator<HighFrequencyEventScore> functionCalculator = new ScoreCalculator<>(highFrequencyEventScoreToCalculationFormulaMap);
         Map<HighFrequencyEventScore, Double> eventScoresToCalculatedScoreMap = functionCalculator.calculate();
 
-        for (HighFrequencyEventScore highFrequencyEventScore : eventScoresToCalculatedScoreMap.keySet())
-            if (eventScoresToCalculatedScoreMap.get(highFrequencyEventScore).isNaN()) {
-                eventScoresToCalculatedScoreMap.put(highFrequencyEventScore, 0.0);
+        for (Map.Entry<HighFrequencyEventScore, Double> highFrequencyEventScoreEntry : eventScoresToCalculatedScoreMap.entrySet()) {
+            if (highFrequencyEventScoreEntry.getValue().isNaN()) {
+                eventScoresToCalculatedScoreMap.put(highFrequencyEventScoreEntry.getKey(), 0.0);
             }
+        }
         updateBucketScoresByFunction(eventScoresToCalculatedScoreMap);
     }
 
@@ -66,7 +67,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
                     currentDateCountOfChargeBacks
                             + bucketChargeBackEventsData.getOldDateAmountOfChargeBacksContribution());
 
-            Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
+            Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator<>(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
             bucketChargeBackEventsData.setOldDateAmountOfChargeBacksContribution(highFrequencyEventScoreDecayedScores.get(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()
                     .get(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT)));
         }
@@ -83,7 +84,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
                     currentDateCountOfCreditTransactions
                             + bucketChargeBackEventsData.getOldDateAmountOfCreditTransactionsContribution());
 
-            Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
+            Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator<>(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
             bucketChargeBackEventsData.setOldDateAmountOfCreditTransactionsContribution(highFrequencyEventScoreDecayedScores.get(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()
                     .get(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT)));
         }
@@ -100,7 +101,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
                     currentDateNumberOfChargeBacks
                             + bucketChargeBackEventsData.getOldDateNumberOfChargeBacksContribution());
 
-            Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
+            Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator<>(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
             bucketChargeBackEventsData.setOldDateNumberOfChargeBacksContribution(highFrequencyEventScoreDecayedScores.get(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()
                     .get(HighFrequencyEventScoreType.CHARGE_BACK_NUMBER)));
         }
@@ -117,7 +118,7 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
                     currentDateNumberOfCreditTransactions
                             + bucketChargeBackEventsData.getOldDateNumberOfCreditTransactionsContribution());
 
-            Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
+            Map<HighFrequencyEventScore, Double> highFrequencyEventScoreDecayedScores = new DecayCalculator<>(highFrequencyEventScoreToCalculationFormulaMap).calculate(daysDiff);
             bucketChargeBackEventsData.setOldDateNumberOfCreditTransactionsContribution(highFrequencyEventScoreDecayedScores.get(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()
                     .get(HighFrequencyEventScoreType.CHARGE_BACK_NUMBER)));
         }

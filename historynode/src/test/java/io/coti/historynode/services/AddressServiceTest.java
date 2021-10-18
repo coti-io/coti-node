@@ -97,7 +97,7 @@ public class AddressServiceTest {
         getHistoryAddressesRequestFromFullNode = new GetHistoryAddressesRequest(addressHashesFromFullNodeRequest);
         setRequestDummySignerHashAndSignature(getHistoryAddressesRequestFromFullNode);
 
-        addressHashesToStorageHashList = new ArrayList<>(Arrays.asList(hashInStorage));
+        addressHashesToStorageHashList = new ArrayList<>(Collections.singletonList(hashInStorage));
         getHistoryAddressesRequestToStorageNode = new GetHistoryAddressesRequest(addressHashesToStorageHashList);
     }
 
@@ -250,12 +250,12 @@ public class AddressServiceTest {
         while (expectedIterator.hasNext()) {
             Map.Entry<Hash, AddressData> expectedEntry = (Map.Entry<Hash, AddressData>) expectedIterator.next();
             Map.Entry<Hash, AddressData> actualEntry = (Map.Entry<Hash, AddressData>) actualIterator.next();
-            Assert.assertTrue(expectedEntry.getKey().equals(actualEntry.getKey()));
-            Assert.assertTrue(expectedEntry.getKey().equals(actualEntry.getKey()));
+            Assert.assertEquals(expectedEntry.getKey(), actualEntry.getKey());
+            Assert.assertEquals(expectedEntry.getKey(), actualEntry.getKey());
             if (expectedEntry.getValue() == null) {
-                Assert.assertEquals(null, actualEntry.getValue());
+                Assert.assertNull(actualEntry.getValue());
             } else if (actualEntry.getValue() == null) {
-                Assert.assertEquals(expectedEntry.getValue(), null);
+                Assert.assertNull(expectedEntry.getValue());
             } else {
                 Assert.assertEquals(expectedEntry.getValue().getHash(), actualEntry.getValue().getHash());
             }

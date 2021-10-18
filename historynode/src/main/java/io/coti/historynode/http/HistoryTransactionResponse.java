@@ -3,8 +3,10 @@ package io.coti.historynode.http;
 import io.coti.basenode.http.BaseResponse;
 import io.coti.historynode.http.data.HistoryTransactionResponseData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class HistoryTransactionResponse extends BaseResponse {
 
     private HistoryTransactionResponseData historyTransactionResponseData;

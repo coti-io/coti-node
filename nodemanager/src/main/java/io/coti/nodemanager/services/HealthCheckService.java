@@ -1,6 +1,7 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.LockData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.NetworkNodeStatus;
@@ -37,9 +38,8 @@ public class HealthCheckService implements IHealthCheckService {
     private RestTemplate restTemplate;
     @Autowired
     private INetworkService networkService;
-    private Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
-    private Map<Hash, Hash> lockNodeHashMap = new ConcurrentHashMap<>();
-    private final Object lock = new Object();
+    private final Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
+    private final LockData nodeHashLockData = new LockData();
 
     @Override
     public void init() {
@@ -54,7 +54,7 @@ public class HealthCheckService implements IHealthCheckService {
         restTemplate = new RestTemplate(factory);
     }
 
-    public void nodesHealthCheck() {
+    private void nodesHealthCheck() {
         try {
             checkNodesList(networkService.getNetworkNodeDataList());
         } catch (Exception e) {
@@ -118,7 +118,7 @@ public class HealthCheckService implements IHealthCheckService {
     public void initNodeMonitorThreadIfAbsent(ThreadFactory threadFactory, NetworkNodeData networkNodeData) {
         Hash nodeHash = networkNodeData.getNodeHash();
         try {
-            synchronized (addLockToLockMap(nodeHash)) {
+            synchronized (nodeHashLockData.addLockToLockMap(nodeHash)) {
                 Runnable nodeMonitorTask = () -> monitorNode(networkNodeData);
                 Thread thread = hashToThreadMap.get(nodeHash);
                 if (thread != null) {
@@ -136,7 +136,7 @@ public class HealthCheckService implements IHealthCheckService {
             }
 
         } finally {
-            removeLockFromLocksMap(nodeHash);
+            nodeHashLockData.removeLockFromLocksMap(nodeHash);
         }
     }
 
@@ -175,28 +175,11 @@ public class HealthCheckService implements IHealthCheckService {
                 try {
                     thread.join();
                 } catch (InterruptedException e) {
-                    thread.interrupt();
+                    Thread.currentThread().interrupt();
                 }
             });
         } catch (Exception e) {
             log.error("Interrupted shutdown health check service");
         }
     }
-
-    private Hash addLockToLockMap(Hash hash) {
-        synchronized (lock) {
-            lockNodeHashMap.putIfAbsent(hash, hash);
-            return lockNodeHashMap.get(hash);
-        }
-    }
-
-    private void removeLockFromLocksMap(Hash hash) {
-        synchronized (lock) {
-            Hash hashLock = lockNodeHashMap.get(hash);
-            if (hashLock != null) {
-                lockNodeHashMap.remove(hash);
-            }
-        }
-    }
-
 }

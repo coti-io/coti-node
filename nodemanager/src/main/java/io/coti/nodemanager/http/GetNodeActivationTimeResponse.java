@@ -2,10 +2,12 @@ package io.coti.nodemanager.http;
 
 import io.coti.basenode.http.BaseResponse;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class GetNodeActivationTimeResponse extends BaseResponse {
 
     private Instant activationTime;

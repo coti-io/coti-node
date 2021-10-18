@@ -1,13 +1,14 @@
 package io.coti.storagenode.http;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.Request;
+import io.coti.basenode.http.interfaces.IRequest;
 
 import javax.validation.constraints.NotEmpty;
 import java.util.Hashtable;
 import java.util.Map;
 
-public class DeleteEntitiesBulkRequest extends Request {
+public class DeleteEntitiesBulkRequest implements IRequest {
+
     @NotEmpty(message = "hashAndIndexNameMap must not be empty")
     private Map<Hash, String> hashAndIndexNameMap;
 
@@ -15,7 +16,7 @@ public class DeleteEntitiesBulkRequest extends Request {
         hashAndIndexNameMap = new Hashtable<>();
     }
 
-    public DeleteEntitiesBulkRequest(@NotEmpty(message = "hashAndIndexNameMap must not be empty") Map<Hash, String> hashAndIndexNameMap) {
+    public DeleteEntitiesBulkRequest(Map<Hash, String> hashAndIndexNameMap) {
         this.hashAndIndexNameMap = hashAndIndexNameMap;
     }
 }

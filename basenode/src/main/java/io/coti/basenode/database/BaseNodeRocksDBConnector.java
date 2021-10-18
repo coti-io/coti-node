@@ -16,6 +16,8 @@ import org.springframework.util.SerializationUtils;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,11 @@ import java.util.stream.Collectors;
 @Service
 public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
+    private static final boolean CREATE_IF_MISSING = true;
+    private static final boolean CREATE_MISSING_COLUMN_FAMILIES = true;
+    private static final int MAX_TOTAL_WAL_SIZE_IN_BYTES = 536870912;
+    @Value("${data.path:./}")
+    protected String databaseFolder;
     @Value("${database.folder.name}")
     private String databaseFolderName;
     @Value("${application.name}")
@@ -37,12 +44,14 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private RocksDB db;
     protected List<String> columnFamilyClassNames;
     protected List<String> resetColumnFamilyNames = new ArrayList<>();
-    private List<String> resetTransactionColumnFamilyNames;
-    private Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
+    protected List<String> resetTransactionColumnFamilyNames;
+    private final Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
+    private final ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions().optimizeUniversalStyleCompaction();
 
+    @Override
     public void init() {
         setColumnFamily();
-        init(applicationName + databaseFolderName);
+        init(databaseFolder + applicationName + databaseFolderName);
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -176,9 +185,12 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
             List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
             initiateColumnFamilyDescriptors(dbColumnFamilies, columnFamilyDescriptors);
-            dbOptions.setCreateIfMissing(true);
-            dbOptions.setCreateMissingColumnFamilies(true);
+            dbOptions.setCreateIfMissing(CREATE_IF_MISSING);
+            dbOptions.setCreateMissingColumnFamilies(CREATE_MISSING_COLUMN_FAMILIES);
+            dbOptions.setMaxTotalWalSize(MAX_TOTAL_WAL_SIZE_IN_BYTES);
+            log.info("Opening RocksDB");
             db = RocksDB.open(dbOptions, dbPath, columnFamilyDescriptors, columnFamilyHandles);
+            log.info("RocksDB opened");
             populateColumnFamilies(dbColumnFamilies, columnFamilyHandles);
         } catch (Exception e) {
             throw new DataBaseException("Error opening Rocks DB.", e);
@@ -189,7 +201,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private void initColumnFamilyClasses() {
         for (int i = 1; i < columnFamilyClassNames.size(); i++) {
             try {
-                ((Collection) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
+                ((Collection<?>) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
             } catch (Exception e) {
                 throw new DataBaseException("Error at init column family classes.", e);
             }
@@ -206,7 +218,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
     private void initiateColumnFamilyDescriptors(List<String> dbColumnFamilies, List<ColumnFamilyDescriptor> columnFamilyDescriptors) {
         List<String> columnFamilyNamesToInit = Optional.ofNullable(dbColumnFamilies).orElse(columnFamilyClassNames);
-        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes())));
+        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes(), columnFamilyOptions)));
     }
 
     @Override
@@ -229,7 +241,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
              RestoreOptions restoreOpt = new RestoreOptions(false)) {
 
             closeDB();
-            rocksBackupEngine.restoreDbFromLatestBackup(applicationName + databaseFolderName, applicationName + databaseFolderName, restoreOpt);
+            rocksBackupEngine.restoreDbFromLatestBackup(dbPath, dbPath, restoreOpt);
             checkIfBackupHasNotListedColumnFamilies();
             openDB();
             log.info("Finished database restore from {}", backupPath);
@@ -254,22 +266,22 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             return db.get(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key);
         } catch (RocksDBException e) {
             log.error("Error at getting by key from db", e);
-            return null;
+            return new byte[0];
         }
     }
 
     public RocksIterator getIterator(String columnFamilyName) {
-        RocksIterator it = null;
         try (ReadOptions readOptions = new ReadOptions()) {
             ColumnFamilyHandle columnFamilyHandler = classNameToColumnFamilyHandleMapping.get(columnFamilyName);
-            it = db.newIterator(columnFamilyHandler, readOptions);
             if (columnFamilyHandler == null) {
                 log.error("Column family {} iterator wasn't found ", columnFamilyName);
+                return null;
             }
+            return db.newIterator(columnFamilyHandler, readOptions);
         } catch (Exception ex) {
             log.error("Exception while getting iterator of {}", columnFamilyName, ex);
+            return null;
         }
-        return it;
     }
 
     @Override
@@ -370,7 +382,18 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
     }
 
+    @Override
+    public long size(String columnFamilyName) {
+        try {
+            return db.getLongProperty(classNameToColumnFamilyHandleMapping.get(columnFamilyName), "rocksdb.estimate-num-keys");
+        } catch (RocksDBException e) {
+            log.error("Error at getting property: size from db", e);
+            return -1;
+        }
+    }
+
     private void closeDB() {
+        log.info("Closing RocksDB");
         Iterator<ColumnFamilyHandle> iterator = classNameToColumnFamilyHandleMapping.values().iterator();
         while (iterator.hasNext()) {
             ColumnFamilyHandle columnFamilyHandle = iterator.next();
@@ -379,12 +402,36 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         }
         db.close();
         db = null;
+        log.info("RocksDB closed");
     }
 
     @Override
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         closeDB();
+    }
+
+    @Override
+    public boolean compactRange() {
+        try {
+            log.info("PreCompact manifest file size: {}", db.getLiveFiles().manifestFileSize);
+            List<String> preCompactFiles = db.getLiveFiles().files;
+            log.info("PreCompact number of database files: {}", preCompactFiles.size());
+            log.info("PreCompact database files: {}", preCompactFiles);
+            log.info("Compacting entire range...");
+            Instant beforeCompactTime = Instant.now();
+            db.compactRange();
+            Instant afterCompactTime = Instant.now();
+            log.info("Compact took: {} seconds.", (double) Duration.between(beforeCompactTime, afterCompactTime).toMillis() / 1000);
+            log.info("PostCompact manifest file size: {}", db.getLiveFiles().manifestFileSize);
+            List<String> postCompactFiles = db.getLiveFiles().files;
+            log.info("PostCompact number of database files: {}", postCompactFiles.size());
+            log.info("PostCompact database files: {}", postCompactFiles);
+        } catch (RocksDBException e) {
+            log.error("Error at compactRange db", e);
+            return false;
+        }
+        return true;
     }
 
 }

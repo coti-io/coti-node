@@ -7,7 +7,7 @@ public enum HighFrequencyEventScoreType {
     CHARGE_BACK_AMOUNT("ChargeBackAmount"),
     CHARGE_BACK_NUMBER("ChargeBackNumber");
 
-    private String text;
+    private final String text;
 
     HighFrequencyEventScoreType(String text) {
         this.text = text;

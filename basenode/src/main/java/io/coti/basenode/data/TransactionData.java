@@ -55,38 +55,33 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     }
 
     public TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Instant createTime, TransactionType type) {
-        this.transactionDescription = transactionDescription;
-        this.baseTransactions = baseTransactions;
-        this.createTime = createTime;
-        this.type = type;
+        this(baseTransactions, transactionDescription, createTime, type);
         this.senderTrustScore = senderTrustScore;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        for (BaseTransactionData baseTransaction : baseTransactions) {
-            totalAmount = totalAmount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
-        }
-        this.amount = totalAmount;
-        this.initTransactionData();
     }
 
     public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Instant createTime, Hash senderHash, SignatureData senderSignature, TransactionType type) {
+        this(baseTransactions, transactionDescription, createTime, type);
         this.hash = transactionHash;
-        this.transactionDescription = transactionDescription;
-        this.baseTransactions = baseTransactions;
-        this.createTime = createTime;
-        this.type = type;
         this.senderHash = senderHash;
         this.senderSignature = senderSignature;
         this.trustScoreResults = trustScoreResults;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        for (BaseTransactionData baseTransaction : baseTransactions) {
-            totalAmount = totalAmount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
-        }
-        this.amount = totalAmount;
-        this.initTransactionData();
     }
 
     public TransactionData(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Instant createTime, Hash senderHash, TransactionType type) {
         this(baseTransactions, transactionHash, transactionDescription, trustScoreResults, createTime, senderHash, null, type);
+    }
+
+    private TransactionData(List<BaseTransactionData> baseTransactions, String transactionDescription, Instant createTime, TransactionType type) {
+        this.transactionDescription = transactionDescription;
+        this.baseTransactions = baseTransactions;
+        this.createTime = createTime;
+        this.type = type;
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (BaseTransactionData baseTransaction : baseTransactions) {
+            totalAmount = totalAmount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
+        }
+        this.amount = totalAmount;
+        this.initTransactionData();
     }
 
     private void initTransactionData() {
@@ -112,6 +107,10 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         childrenTransactionHashes.add(hash);
     }
 
+    public void removeFromChildrenTransactions(Hash hash) {
+        childrenTransactionHashes.remove(hash);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -129,16 +128,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         return Arrays.hashCode(hash.getBytes());
     }
 
-    @Override
-    public Hash getHash() {
-        return this.hash;
-    }
-
-    @Override
-    public void setHash(Hash hash) {
-        this.hash = hash;
-    }
-
     public boolean hasSources() {
         return getLeftParentHash() != null || getRightParentHash() != null;
     }
@@ -149,12 +138,12 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
 
     @JsonIgnore
     public List<OutputBaseTransactionData> getOutputBaseTransactions() {
-        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof OutputBaseTransactionData).map(OutputBaseTransactionData.class::cast).collect(Collectors.toList());
+        return this.getBaseTransactions().stream().filter(OutputBaseTransactionData.class::isInstance).map(OutputBaseTransactionData.class::cast).collect(Collectors.toList());
     }
 
     @JsonIgnore
     public List<InputBaseTransactionData> getInputBaseTransactions() {
-        return this.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof InputBaseTransactionData).map(InputBaseTransactionData.class::cast).collect(Collectors.toList());
+        return this.getBaseTransactions().stream().filter(InputBaseTransactionData.class::isInstance).map(InputBaseTransactionData.class::cast).collect(Collectors.toList());
     }
 
     @Override

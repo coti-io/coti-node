@@ -3,12 +3,14 @@ package io.coti.basenode.http;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.MerchantRollingReserveAddressData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class GetMerchantRollingReserveAddressResponse extends Response {
+@EqualsAndHashCode(callSuper = true)
+public class GetMerchantRollingReserveAddressResponse extends BaseResponse {
 
     @NotNull
     @Valid
@@ -17,12 +19,7 @@ public class GetMerchantRollingReserveAddressResponse extends Response {
     private GetMerchantRollingReserveAddressResponse() {
     }
 
-    public GetMerchantRollingReserveAddressResponse(String message, String status) {
-        super(message, status);
-    }
-
     public GetMerchantRollingReserveAddressResponse(Hash merchantHash, Hash merchantRollingReserveAddress) {
-        super();
         this.merchantRollingReserveAddressData = new MerchantRollingReserveAddressData(merchantHash, merchantRollingReserveAddress);
     }
 

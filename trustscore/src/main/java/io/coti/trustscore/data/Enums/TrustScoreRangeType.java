@@ -5,7 +5,7 @@ public enum TrustScoreRangeType {
     STANDARD("standard"),
     HIGH("high");
 
-    private String text;
+    private final String text;
 
     TrustScoreRangeType(String text) {
         this.text = text;

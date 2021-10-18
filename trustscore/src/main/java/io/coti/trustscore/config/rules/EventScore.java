@@ -6,8 +6,6 @@ import lombok.Data;
 public abstract class EventScore {
 
     private String name;
-
     private double weight;
-
     private String decay;
 }

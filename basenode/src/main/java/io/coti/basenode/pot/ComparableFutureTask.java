@@ -13,6 +13,23 @@ public class ComparableFutureTask extends FutureTask<Void> implements Comparable
 
     @Override
     public int compareTo(ComparableFutureTask o) {
-        return Integer.valueOf(priority).compareTo(o.priority);
+        return Integer.compare(priority, o.priority);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof ComparableFutureTask)) {
+            return false;
+        }
+        return this.priority == priority;
+    }
+
+    @Override
+    public int hashCode() {
+        return priority;
     }
 }

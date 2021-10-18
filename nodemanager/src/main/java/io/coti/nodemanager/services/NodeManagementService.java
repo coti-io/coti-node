@@ -1,9 +1,7 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.Response;
@@ -13,13 +11,17 @@ import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkNodeRecordValidationException;
 import io.coti.nodemanager.http.AddNodePairEventRequest;
 import io.coti.nodemanager.http.AddNodeSingleEventRequest;
+import io.coti.nodemanager.http.DeleteBlacklistNodeRequest;
+import io.coti.nodemanager.http.GetBlacklistNodesResponse;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.model.NodeDailyActivities;
 import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.model.ReservedHosts;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
+import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
+import io.coti.nodemanager.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.collections4.map.LinkedMap;
@@ -35,11 +37,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -55,6 +54,8 @@ public class NodeManagementService implements INodeManagementService {
     private static final String FULL_NODES_FOR_WALLET_KEY = "FullNodes";
     private static final String TRUST_SCORE_NODES_FOR_WALLET_KEY = "TrustScoreNodes";
     private static final String FINANCIAL_SERVER_FOR_WALLET_KEY = "FinancialServer";
+    private static final int BLACKLIST_INACTIVITY_NUMBER = 4;
+    private static final int BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES = 10;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -70,15 +71,17 @@ public class NodeManagementService implements INodeManagementService {
     @Autowired
     private NodeDailyActivities nodeDailyActivities;
     @Autowired
-    private NetworkHistoryService networkHistoryService;
+    private INetworkHistoryService networkHistoryService;
     @Autowired
     private IHealthCheckService healthCheckService;
+    @Autowired
+    private WebSocketSender webSocketSender;
     @Value("${server.ip}")
     private String nodeManagerIp;
     @Value("${propagation.port}")
     private String propagationPort;
-    private final Object lock = new Object();
-    private Map<Hash, Hash> lockNodeHistoryRecordHashMap = new ConcurrentHashMap<>();
+    private final Set<Hash> blacklistedNodes = new LinkedHashSet<>();
+    private final LockData nodeHashLockData = new LockData();
 
     @Override
     public void init() {
@@ -87,7 +90,8 @@ public class NodeManagementService implements INodeManagementService {
 
     public void propagateNetworkChanges() {
         log.info("Propagating network change");
-        propagationPublisher.propagate(networkService.getNetworkData(), Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
+        NetworkData networkData = networkService.getSignedNetworkData();
+        propagationPublisher.propagate(networkData, Arrays.asList(NodeType.FullNode, NodeType.ZeroSpendServer,
                 NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer));
     }
 
@@ -95,6 +99,7 @@ public class NodeManagementService implements INodeManagementService {
         try {
             networkService.validateNetworkNodeData(networkNodeData);
             validateReservedHostToNode(networkNodeData);
+            verifyNotBlacklisted(networkNodeData);
             networkService.addNode(networkNodeData);
             ActiveNodeData activeNodeData = new ActiveNodeData(networkNodeData.getHash(), networkNodeData);
             activeNodes.put(activeNodeData);
@@ -106,9 +111,13 @@ public class NodeManagementService implements INodeManagementService {
         } catch (CotiRunTimeException e) {
             e.logMessage();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Interrupted exception while adding new node {}", networkNodeData.getNodeHash());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
 
     }
@@ -136,13 +145,22 @@ public class NodeManagementService implements INodeManagementService {
         return new Hash(host.getBytes(StandardCharsets.UTF_8));
     }
 
+    private void verifyNotBlacklisted(NetworkNodeData networkNodeData) {
+        Hash nodeHash = networkNodeData.getNodeHash();
+        if (networkNodeData.getNodeType().equals(NodeType.FullNode) && blacklistedNodes.contains(nodeHash)) {
+            log.error("Blacklisted fullnode {} tried to connect to network", nodeHash);
+            throw new NetworkNodeValidationException(String.format(BLACKLISTED_NODE, nodeHash));
+        }
+    }
+
+    @Override
     public void addNodeHistory(NetworkNodeData networkNodeData, NetworkNodeStatus nodeStatus, Instant currentEventDateTime) {
         if (networkNodeData == null) {
             return;
         }
         Hash nodeHash = networkNodeData.getNodeHash();
         try {
-            synchronized (addLockToLockMap(nodeHash)) {
+            synchronized (nodeHashLockData.addLockToLockMap(nodeHash)) {
                 LocalDate currentEventDate = currentEventDateTime.atZone(ZoneId.of("UTC")).toLocalDate();
                 NodeDailyActivityData nodeDailyActivityData = nodeDailyActivities.getByHash(nodeHash);
                 if (nodeDailyActivityData == null) {
@@ -159,15 +177,41 @@ public class NodeManagementService implements INodeManagementService {
                 if (nodeHistoryData == null) {
                     nodeHistoryData = new NodeHistoryData(nodeHistoryDataHash);
                 }
-                nodeHistoryData.getNodeNetworkDataRecordMap().put(newNodeNetworkDataRecord.getHash(), newNodeNetworkDataRecord);
+                LinkedMap<Hash, NodeNetworkDataRecord> nodeNodeNetworkDataRecordMap = nodeHistoryData.getNodeNetworkDataRecordMap();
+                nodeNodeNetworkDataRecordMap.put(newNodeNetworkDataRecord.getHash(), newNodeNetworkDataRecord);
                 nodeHistory.put(nodeHistoryData);
                 nodeDailyActivityData.getNodeDaySet().add(currentEventDate);
                 nodeDailyActivities.put(nodeDailyActivityData);
+                webSocketSender.notifyNodeDetails(networkNodeData, nodeStatus);
+                addToBlacklistedNodesIfNeeded(newNodeNetworkDataRecord, nodeNodeNetworkDataRecordMap);
             }
         } finally {
-            removeLockFromLocksMap(nodeHash);
+            nodeHashLockData.removeLockFromLocksMap(nodeHash);
         }
 
+    }
+
+    private void addToBlacklistedNodesIfNeeded(NodeNetworkDataRecord newNodeNetworkDataRecord, LinkedMap<Hash, NodeNetworkDataRecord> nodeNodeNetworkDataRecordMap) {
+        NetworkNodeData networkNodeData = newNodeNetworkDataRecord.getNetworkNodeData();
+        Hash nodeHash = networkNodeData.getNodeHash();
+        NodeType nodeType = networkNodeData.getNodeType();
+        if (!nodeType.equals(NodeType.FullNode) ||
+                newNodeNetworkDataRecord.getNodeStatus().equals(NetworkNodeStatus.ACTIVE) ||
+                blacklistedNodes.contains(nodeHash)
+        ) {
+            return;
+        }
+        Instant blacklistInactivityNumberCheckTime = newNodeNetworkDataRecord.getRecordTime().minus(BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES, ChronoUnit.MINUTES);
+        NodeNetworkDataRecord previousInactivityRecord = newNodeNetworkDataRecord;
+        for (int i = 0; i < BLACKLIST_INACTIVITY_NUMBER; i++) {
+            previousInactivityRecord = networkHistoryService.getReferenceNodeNetworkDataRecordByStatus(previousInactivityRecord, nodeNodeNetworkDataRecordMap, NetworkNodeStatus.INACTIVE);
+            if (previousInactivityRecord == null || previousInactivityRecord.getRecordTime().isBefore(blacklistInactivityNumberCheckTime)) {
+                log.info("Node {} was inactive {} times in last {} minutes", nodeHash, i + 1, BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES);
+                return;
+            }
+        }
+        log.info("Blacklist of node {} due to inactivity {} times in last {} minutes", nodeHash, BLACKLIST_INACTIVITY_NUMBER + 1, BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES);
+        blacklistedNodes.add(nodeHash);
     }
 
     private void addReferenceToNodeNetworkDataRecord(NodeDailyActivityData nodeDailyActivityData, Hash nodeHash, NodeNetworkDataRecord nodeNetworkDataRecord) {
@@ -200,7 +244,7 @@ public class NodeManagementService implements INodeManagementService {
         LocalDate localDateForEvent = recordTime.atZone(ZoneId.of("UTC")).toLocalDate();
 
         try {
-            synchronized (addLockToLockMap(nodeHash)) {
+            synchronized (nodeHashLockData.addLockToLockMap(nodeHash)) {
                 Instant nowInstant = Instant.now();
                 NodeNetworkDataRecord lastNodeNetworkDataRecord = networkHistoryService.getLastNodeNetworkDataRecord(request.getNodeHash());
 
@@ -230,7 +274,7 @@ public class NodeManagementService implements INodeManagementService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(e.getMessage(), SERVER_ERROR));
         } finally {
-            removeLockFromLocksMap(nodeHash);
+            nodeHashLockData.removeLockFromLocksMap(nodeHash);
         }
     }
 
@@ -243,7 +287,7 @@ public class NodeManagementService implements INodeManagementService {
         Instant pairRequestEndTime = request.getEndTime();
 
         try {
-            synchronized (addLockToLockMap(nodeHash)) {
+            synchronized (nodeHashLockData.addLockToLockMap(nodeHash)) {
                 Instant nowInstant = Instant.now();
                 NodeNetworkDataRecord networkRecordBeforePair = getPreviousNetworkRecord(request.getNodeHash(), pairRequestStartTime);
                 NodeNetworkDataRecord networkRecordAfterPair;
@@ -280,7 +324,7 @@ public class NodeManagementService implements INodeManagementService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(e.getMessage(), SERVER_ERROR));
         } finally {
-            removeLockFromLocksMap(nodeHash);
+            nodeHashLockData.removeLockFromLocksMap(nodeHash);
         }
     }
 
@@ -543,7 +587,7 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
-        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl());
+        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl(), node.getVersion());
         if (NodeType.FullNode.equals(node.getNodeType())) {
             singleNodeDetailsForWallet.setFeeData(node.getFeeData());
             singleNodeDetailsForWallet.setTrustScore(node.getTrustScore());
@@ -551,17 +595,21 @@ public class NodeManagementService implements INodeManagementService {
         return singleNodeDetailsForWallet;
     }
 
-    private Hash addLockToLockMap(Hash hash) {
-        synchronized (lock) {
-            lockNodeHistoryRecordHashMap.putIfAbsent(hash, hash);
-            return lockNodeHistoryRecordHashMap.get(hash);
-        }
+    @Override
+    public ResponseEntity<IResponse> getBlacklistedNodes() {
+        return ResponseEntity.ok(new GetBlacklistNodesResponse(this.blacklistedNodes));
     }
 
-    private void removeLockFromLocksMap(Hash hash) {
-        synchronized (lock) {
-            lockNodeHistoryRecordHashMap.remove(hash);
+    public ResponseEntity<IResponse> deleteBlacklistNode(DeleteBlacklistNodeRequest request) {
+        Hash nodeHash = request.getNodeHash();
+        try {
+            boolean remove = blacklistedNodes.remove(nodeHash);
+            if (!remove) {
+                return ResponseEntity.badRequest().body(new Response(String.format(NODE_NOT_BLACKLISTED, nodeHash)));
+            }
+            return ResponseEntity.ok(new Response(String.format(BLACKLISTED_NODE_REMOVED, nodeHash)));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(String.format(BLACKLISTED_NODE_REMOVE_ERROR, nodeHash, e.getMessage())));
         }
     }
-
 }

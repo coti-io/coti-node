@@ -36,11 +36,11 @@ public class AddressController {
             if (addressService.addAddress(addAddressRequest.getAddress())) {
                 return ResponseEntity
                         .status(HttpStatus.CREATED)
-                        .body(new AddAddressResponse(addAddressRequest.getAddress().toHexString(), AddressStatus.Created));
+                        .body(new AddAddressResponse(addAddressRequest.getAddress().toHexString(), AddressStatus.CREATED));
             }
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new AddAddressResponse(addAddressRequest.getAddress().toHexString(), AddressStatus.Exists));
+                    .body(new AddAddressResponse(addAddressRequest.getAddress().toHexString(), AddressStatus.EXISTS));
         } else {
             log.error("Address {} had length error. length: {}", addAddressRequest.getAddress(),
                     addAddressRequest.getAddress().getBytes().length);

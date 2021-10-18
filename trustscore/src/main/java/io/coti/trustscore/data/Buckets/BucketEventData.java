@@ -24,7 +24,7 @@ public abstract class BucketEventData<T extends EventData> implements IEntity {
     private Date lastUpdate;
     private EventType eventType;
 
-    public BucketEventData() {
+    protected BucketEventData() {
         eventDataHashToEventDataMap = new HashMap<>();
         startPeriodTime = new Date();
         lastUpdate = new Date();

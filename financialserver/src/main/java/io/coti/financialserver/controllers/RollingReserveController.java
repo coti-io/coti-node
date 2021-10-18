@@ -24,13 +24,13 @@ public class RollingReserveController {
     private RollingReserveService rollingReserveService;
 
     @PostMapping()
-    public ResponseEntity getRollingReserveData(@Valid @RequestBody GetMerchantRollingReserveDataRequest request) {
+    public ResponseEntity<IResponse> getRollingReserveData(@Valid @RequestBody GetMerchantRollingReserveDataRequest request) {
 
         return rollingReserveService.getRollingReserveData(request);
     }
 
     @PostMapping(path = "/recourseClaim")
-    public ResponseEntity recourseClaim(@Valid @RequestBody RecourseClaimRequest request) {
+    public ResponseEntity<IResponse> recourseClaim(@Valid @RequestBody RecourseClaimRequest request) {
 
         return rollingReserveService.recourseClaim(request);
     }

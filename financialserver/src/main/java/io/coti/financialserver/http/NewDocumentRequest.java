@@ -2,7 +2,7 @@ package io.coti.financialserver.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.http.Request;
+import io.coti.basenode.http.interfaces.IRequest;
 import io.coti.financialserver.data.DisputeDocumentData;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
-public class NewDocumentRequest extends Request {
+public class NewDocumentRequest implements IRequest {
 
     @NotNull
     private Hash userHash;

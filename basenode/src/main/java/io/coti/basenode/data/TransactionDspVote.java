@@ -4,10 +4,13 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class TransactionDspVote extends DspVote implements IPropagatable, ISignable, ISignValidatable {
 
+    private static final long serialVersionUID = 4264452456110712450L;
     private Hash transactionHash;
 
     private TransactionDspVote() {

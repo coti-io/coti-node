@@ -4,20 +4,14 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -37,20 +31,23 @@ public class CommunicationService implements ICommunicationService {
     public void initSubscriber(NodeType subscriberNodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> initialPublisherNodeTypeToMessageTypesMap) {
         propagationSubscriber.init();
         propagationSubscriber.setSubscriberNodeType(subscriberNodeType);
-        EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = initialPublisherNodeTypeToMessageTypesMap;
-        publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Arrays.asList(NetworkData.class));
-        publisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class));
-        propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(publisherNodeTypeToMessageTypesMap);
+        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Collections.singletonList(NetworkData.class));
+        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(
+                TransactionData.class,
+                AddressData.class,
+                RejectedTransactionData.class));
+        propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(initialPublisherNodeTypeToMessageTypesMap);
     }
 
     @Override
-    public void initReceiver(String receivingPort, HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping) {
+    public void initReceiver(String receivingPort, HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping) {
         receiver.init(receivingPort, classNameToReceiverHandlerMapping);
+        receiver.startListening();
     }
 
     @Override
-    public void addSender(String receivingServerAddress) {
-        sender.connectToNode(receivingServerAddress);
+    public void addSender(String receivingServerAddress, NodeType nodeType) {
+        sender.connectToNode(receivingServerAddress, nodeType);
     }
 
     @Override

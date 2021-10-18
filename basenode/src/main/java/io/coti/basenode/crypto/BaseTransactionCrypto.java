@@ -179,8 +179,9 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
     protected static final int BASE_TRANSACTION_HASH_SIZE = 32;
     protected static final String GET_MESSAGE_IN_BYTE_ERROR = "Error at getting message in byte";
-    private Class<? extends BaseTransactionData> baseTransactionClass;
+    private final Class<? extends BaseTransactionData> baseTransactionClass;
 
+    @SuppressWarnings("unused")
     <T extends BaseTransactionData> BaseTransactionCrypto(Class<T> baseTransactionClass) {
         this.baseTransactionClass = baseTransactionClass;
     }
@@ -200,7 +201,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     @Override
-    public void setBaseTransactionHash(BaseTransactionData baseTransactionData) {
+    public void createAndSetBaseTransactionHash(BaseTransactionData baseTransactionData) {
         if (!this.baseTransactionClass.isInstance(baseTransactionData)) {
             throw new IllegalArgumentException("");
         }
@@ -234,7 +235,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     }
 
     @Override
-    public <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) throws ClassNotFoundException {
+    public <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) {
 
         List<TrustScoreNodeResultData> trustScoreNodeResult = baseTransactionData.getTrustScoreNodeResult() != null ? baseTransactionData.getTrustScoreNodeResult() : new ArrayList<>();
         trustScoreNodeResultData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));

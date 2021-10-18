@@ -28,11 +28,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
@@ -48,7 +44,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private StorageConnector storageConnector;
+    private StorageConnector<AddEntitiesBulkRequest, AddHistoryEntitiesResponse> storageConnector;
     @Autowired
     private AddressTransactionsByAddresses addressTransactionsByAddresses;
     @Autowired
@@ -151,7 +147,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (addressTransactionsByDate == null || addressTransactionsByDate.getTransactionHashes() == null || addressTransactionsByDate.getTransactionHashes().isEmpty()) {
             return new ArrayList<>();
         }
-        return addressTransactionsByDate.getTransactionHashes().stream().collect(Collectors.toList());
+        return new ArrayList<>(addressTransactionsByDate.getTransactionHashes());
     }
 
     private List<Hash> getTransactionHashesByAddressAndDates(Hash address, LocalDate startDate, LocalDate endDate) {
@@ -164,11 +160,11 @@ public class TransactionService extends BaseNodeTransactionService {
         startDate = (startDate != null) ? startDate : addressTransactionsByAddress.getStartDate();
         endDate = (endDate != null) ? endDate : calculateInstantLocalDate(Instant.now());
 
-        HashMap<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
+        Map<LocalDate, HashSet<Hash>> transactionHashesByDates = addressTransactionsByAddress.getTransactionHashesByDates();
         while (!startDate.isAfter(endDate)) {
             HashSet<Hash> hashesOfDate = transactionHashesByDates.get(startDate);
             if (hashesOfDate != null) {
-                hashesOfDate.forEach(transactionHashes::add);
+                transactionHashes.addAll(hashesOfDate);
             }
             startDate = startDate.plusDays(1);
         }
@@ -198,11 +194,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 transactionsByAddress.setStartDate(attachmentLocalDate);
             }
 
-            HashSet<Hash> transactionsHashesByDate = transactionsByAddress.getTransactionHashesByDates().get(attachmentLocalDate);
-            if (transactionsHashesByDate == null) {
-                transactionsHashesByDate = new HashSet<>();
-                transactionsByAddress.getTransactionHashesByDates().put(attachmentLocalDate, transactionsHashesByDate);
-            }
+            HashSet<Hash> transactionsHashesByDate = transactionsByAddress.getTransactionHashesByDates().computeIfAbsent(attachmentLocalDate, k -> new HashSet<>());
             transactionsHashesByDate.add(transactionData.getHash());
             addressTransactionsByAddresses.put(transactionsByAddress);
         });

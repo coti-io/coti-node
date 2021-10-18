@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
 
     private static Map<UserType, CompensableEventsScore> userTypeToBehaviorEventsScoreMap;
-    private BucketNotFulfilmentEventsData bucketNotFulfilmentEventsData;
-    private CompensableEventScore compensableEventScore;
+    private final BucketNotFulfilmentEventsData bucketNotFulfilmentEventsData;
+    private final CompensableEventScore compensableEventScore;
 
     public BucketNotFulfilmentEventsCalculator(BucketNotFulfilmentEventsData bucketNotFulfilmentEventsData) {
         this.bucketNotFulfilmentEventsData = bucketNotFulfilmentEventsData;
@@ -27,7 +27,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userTypeToBehaviorEventsScoreMap = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getCompensableEventsScore()));
+                collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getCompensableEventsScore()));
     }
 
     @Override
@@ -44,7 +44,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
     }
 
     private void decayedFine(NotFulfilmentToClientContributionData clientNotFulfilmentToClientContributionData, int daysDiff) {
-        ScoreCalculator scoreCalculator = new ScoreCalculator();
+        ScoreCalculator scoreCalculator = new ScoreCalculator<>();
         for (int i = 0; i < daysDiff; i++) {
             String fineDailyChangeFormula = createFineFormula(clientNotFulfilmentToClientContributionData, compensableEventScore.getFineDailyChange());
             clientNotFulfilmentToClientContributionData
@@ -55,7 +55,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
 
     private double calculateFine(NotFulfilmentToClientContributionData notFulfilmentToClientContributionData) {
         String fineFormula = createFineFormula(notFulfilmentToClientContributionData, compensableEventScore.getFine());
-        return (double) (new ScoreCalculator().calculateEntry(new Pair<>(compensableEventScore, fineFormula)).getValue());
+        return new ScoreCalculator<>().calculateEntry(new Pair<>(compensableEventScore, fineFormula)).getValue();
     }
 
     public void setCurrentScoresForSpecificClient(boolean isDebtDecreasing, Hash clientHash) {
@@ -92,7 +92,7 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
 
     @Override
     public void setCurrentScores() {
-
+        // implemented by other sub classes
     }
 }
 

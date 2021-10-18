@@ -42,8 +42,6 @@ public class DistributeTokenService {
     @Autowired
     private TransactionCreationService transactionCreationService;
     @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
-    @Autowired
     private TokenSaleDistributions tokenSaleDistributions;
 
     public ResponseEntity<IResponse> distributeTokens(TokenSaleDistributionRequest request) {
@@ -95,9 +93,9 @@ public class DistributeTokenService {
     private void distributeTokenByEntry(TokenSaleDistributionEntryData entry) {
 
         int tokenSaleIndex = Math.toIntExact(ReservedAddress.TOKEN_SALE.getIndex());
-        Hash fundSourceAddress = nodeCryptoHelper.generateAddress(seed, tokenSaleIndex);
+        Hash fundSourceAddress = NodeCryptoHelper.generateAddress(seed, tokenSaleIndex);
         int targetSaleIndex = Math.toIntExact(entry.getFundName().getReservedAddress().getIndex());
-        Hash fundTargetAddress = nodeCryptoHelper.generateAddress(seed, targetSaleIndex);
+        Hash fundTargetAddress = NodeCryptoHelper.generateAddress(seed, targetSaleIndex);
         Hash transactionHash;
         try {
             transactionHash = transactionCreationService.createInitialTransactionToFund(entry.getAmount(), fundSourceAddress, fundTargetAddress, tokenSaleIndex);

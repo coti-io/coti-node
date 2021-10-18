@@ -6,8 +6,9 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class BenchmarkBatching {
-    private double _median;
-    private double _mean;
+
+    private final double _median;
+    private final double _mean;
 
     public BenchmarkBatching(int sampleSize, byte[] targetDifficulty, int trustScore) {
         Random rand = new Random();

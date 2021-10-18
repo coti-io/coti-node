@@ -5,10 +5,12 @@ import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.services.DisputeItemStatusService;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ArbitratorDisputeResponseData extends GetDisputeResponseData {
 
     public ArbitratorDisputeResponseData(DisputeData disputeData, Hash arbitratorHash) {
@@ -19,7 +21,7 @@ public class ArbitratorDisputeResponseData extends GetDisputeResponseData {
     private void setDisputeItems(List<DisputeItemData> disputeItems, Hash arbitratorHash) {
 
         disputeItems.forEach(disputeItemData -> {
-            if (!DisputeItemStatusService.valueOf(disputeItemData.getStatus().toString()).isPreClaim()) {
+            if (!DisputeItemStatusService.getByDisputeItemStatus(disputeItemData.getStatus()).isPreClaim()) {
                 this.disputeItems.add(new ArbitratorDisputeItemResponseData(disputeItemData, arbitratorHash));
             }
         });

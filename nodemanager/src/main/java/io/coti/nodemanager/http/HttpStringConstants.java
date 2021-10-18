@@ -24,5 +24,14 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String ADDING_PAIR_EVENTS_WITH_EXISTING_EVENTS_INSIDE = "Expected network node pair events time can not have existing event in pair time range for node %s";
     public static final String ADDING_PAIR_EVENTS_ADDED_MANUALLY = "Network node pair events were added manually for node %s";
 
+    public static final String NODE_DAILY_STATS_SERVER_ERROR = "Node daily stats server error: %s";
+    public static final String NODE_EVENTS_SERVER_ERROR = "Node events server error: %s";
+    public static final String NODE_INVALID_HASH = "Invalid node hash %s";
+    public static final String INVALID_DATE_RANGE = "Invalid dates range Start: %s End: %s";
 
+
+    public static final String BLACKLISTED_NODE = "Blacklisted node %s declined to connect. To remove the blacklist, please contact with support@coti.io";
+    public static final String NODE_NOT_BLACKLISTED = "Node %s is not blacklisted";
+    public static final String BLACKLISTED_NODE_REMOVED = "Node %s removed from blacklisted nodes";
+    public static final String BLACKLISTED_NODE_REMOVE_ERROR = "Node %s blacklist remove error: %s";
 }

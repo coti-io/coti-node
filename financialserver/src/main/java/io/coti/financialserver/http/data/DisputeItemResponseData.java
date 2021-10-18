@@ -1,5 +1,6 @@
 package io.coti.financialserver.http.data;
 
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.data.DisputeItemStatus;
 import io.coti.financialserver.data.DisputeReason;
@@ -10,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class DisputeItemResponseData {
+public class DisputeItemResponseData implements IResponseData {
+
     private Long id;
     private BigDecimal price;
     private int quantity;

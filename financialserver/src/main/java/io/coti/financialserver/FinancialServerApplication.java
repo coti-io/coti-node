@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class FinancialServerApplication {
 
     public static void main(String[] args) {
-
+        Thread.currentThread().setName("Financial Server Main");
         SpringApplication.run(FinancialServerApplication.class, args);
         log.info("############################################################");
         log.info("#############    FINANCIAL SERVER IS UP       ##############");

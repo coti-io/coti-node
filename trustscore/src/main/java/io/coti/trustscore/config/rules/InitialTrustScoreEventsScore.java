@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Data
@@ -19,6 +20,7 @@ public class InitialTrustScoreEventsScore {
     }
 
     public InitialTrustScoreEventScore getComponentByType(InitialTrustScoreType initialTrustScoreType) {
-        return initialTrustScoreEventScoreList.stream().filter(e -> e.getName().equals(initialTrustScoreType.name())).findFirst().get();
+        Optional<InitialTrustScoreEventScore> optionalInitialTrustScoreEventScore = initialTrustScoreEventScoreList.stream().filter(e -> e.getName().equals(initialTrustScoreType.name())).findFirst();
+        return optionalInitialTrustScoreEventScore.orElse(null);
     }
 }

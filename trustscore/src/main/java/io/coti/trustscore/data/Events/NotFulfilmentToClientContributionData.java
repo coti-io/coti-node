@@ -3,8 +3,10 @@ package io.coti.trustscore.data.Events;
 import io.coti.basenode.data.Hash;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class NotFulfilmentToClientContributionData {
+public class NotFulfilmentToClientContributionData implements Serializable {
     private Hash clientHash;
     private double currentDebt;
     private double fine;

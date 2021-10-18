@@ -2,7 +2,9 @@ package io.coti.nodemanager.controllers;
 
 
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.nodemanager.http.*;
+import io.coti.nodemanager.http.GetNodeDetailsRequest;
+import io.coti.nodemanager.http.GetNodeStatisticsRequest;
+import io.coti.nodemanager.http.GetNodesActivityPercentageRequest;
 import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,21 +25,18 @@ public class NodeStatisticsController {
     private INetworkHistoryService networkHistoryService;
 
     @PostMapping(path = "/events")
-    public ResponseEntity<GetNodeEventStatisticsResponse> getNodeEvents(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
-        GetNodeEventStatisticsResponse getNodeEventStatisticsResponse = new GetNodeEventStatisticsResponse(networkHistoryService.getNodeEventsResponse(getNodeStatisticsRequest));
-        return ResponseEntity.ok(getNodeEventStatisticsResponse);
+    public ResponseEntity<IResponse> getNodeEvents(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeEventsResponse(getNodeStatisticsRequest);
     }
 
     @PostMapping(path = "/days")
-    public ResponseEntity<GetNodeDailyStatisticsResponse> getNodeDailyStats(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
-        GetNodeDailyStatisticsResponse getNodeDailyStatisticsResponse = new GetNodeDailyStatisticsResponse(networkHistoryService.getNodeDailyStats(getNodeStatisticsRequest));
-        return ResponseEntity.ok(getNodeDailyStatisticsResponse);
+    public ResponseEntity<IResponse> getNodeDailyStats(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeDailyStats(getNodeStatisticsRequest);
     }
 
     @PostMapping(path = "/totals")
-    public ResponseEntity<GetNodeStatisticsResponse> getNodeStatsTotal(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
-        GetNodeStatisticsResponse getNodeStatisticsResponse = new GetNodeStatisticsResponse(networkHistoryService.getNodeStatsTotal(getNodeStatisticsRequest));
-        return ResponseEntity.ok(getNodeStatisticsResponse);
+    public ResponseEntity<IResponse> getNodeStatsTotal(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
+        return networkHistoryService.getNodeStatsTotal(getNodeStatisticsRequest);
     }
 
     @PostMapping(path = "/totalsByPercentage")
@@ -61,8 +60,13 @@ public class NodeStatisticsController {
     }
 
     @PostMapping(path = "/nodeActivationTime")
-    public ResponseEntity<IResponse> getNodeActivationDay(@Valid @RequestBody GetNodeActivationTimeRequest getNodeActivationTimeRequest) {
-        return networkHistoryService.getNodeActivationTime(getNodeActivationTimeRequest);
+    public ResponseEntity<IResponse> getNodeActivationTime(@Valid @RequestBody GetNodeDetailsRequest getNodeDetailsRequest) {
+        return networkHistoryService.getNodeActivationTime(getNodeDetailsRequest);
+    }
+
+    @PostMapping(path = "/nodeLastEvent")
+    public ResponseEntity<IResponse> getNodeLastEvent(@Valid @RequestBody GetNodeDetailsRequest getNodeDetailsRequest) {
+        return networkHistoryService.getNodeLastEvent(getNodeDetailsRequest);
     }
 
 }

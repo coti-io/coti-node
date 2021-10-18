@@ -12,7 +12,7 @@ public enum BehaviorEventsScoreType {
 
     SMART_CONTRACT_EXECUTION_EVADING("SmartContractExecutionEvading");
 
-    private String text;
+    private final String text;
 
     BehaviorEventsScoreType(String text) {
         this.text = text;

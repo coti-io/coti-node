@@ -1,6 +1,6 @@
 package io.coti.financialserver.data;
 
 public enum DisputeReason {
-    ItemNotReceived,
-    NotAsDescribed
+    ITEM_NOT_RECEIVED,
+    NOT_AS_DESCRIBED
 }

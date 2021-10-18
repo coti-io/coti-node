@@ -33,7 +33,7 @@ public class JacksonSerializer implements ISerializer {
             return serializer.writeValueAsBytes(entity);
         } catch (JsonProcessingException e) {
             log.error("Error at jackson byte array serializer", e);
-            return null;
+            return new byte[0];
         }
     }
 
@@ -47,9 +47,9 @@ public class JacksonSerializer implements ISerializer {
         }
     }
 
-    public <T extends IPropagatable> T deserialize(byte[] bytes) {
+    public IPropagatable deserialize(byte[] bytes) {
         try {
-            return (T) serializer.readValue(bytes, IPropagatable.class);
+            return serializer.readValue(bytes, IPropagatable.class);
         } catch (IOException e) {
             return null;
         }

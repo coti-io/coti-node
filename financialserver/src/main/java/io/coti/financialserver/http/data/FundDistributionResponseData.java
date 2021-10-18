@@ -1,5 +1,6 @@
 package io.coti.financialserver.http.data;
 
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import io.coti.financialserver.data.DistributionEntryStatus;
 import io.coti.financialserver.data.Fund;
 import io.coti.financialserver.data.FundDistributionData;
@@ -9,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class FundDistributionResponseData {
+public class FundDistributionResponseData implements IResponseData {
 
     private String hash;
     private String fileName;

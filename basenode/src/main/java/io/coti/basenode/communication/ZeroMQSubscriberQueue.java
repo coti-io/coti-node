@@ -12,9 +12,9 @@ public enum ZeroMQSubscriberQueue {
     HEARTBEAT(new HashSet<>(Collections.singletonList(PublisherHeartBeatData.class))),
     NETWORK(new HashSet<>(Collections.singletonList(NetworkData.class))),
     ADDRESS(new HashSet<>(Collections.singletonList(AddressData.class))),
-    TRANSACTION(new HashSet<>(Arrays.asList(TransactionData.class, DspConsensusResult.class)));
+    TRANSACTION(new HashSet<>(Arrays.asList(RejectedTransactionData.class, TransactionData.class, DspConsensusResult.class)));
 
-    private BlockingQueue<ZeroMQMessageData> queue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<ZeroMQMessageData> queue = new LinkedBlockingQueue<>();
 
     private static class ZeroMQSubscriberQueues {
         private static final Map<Class<? extends IPropagatable>, ZeroMQSubscriberQueue> messageTypeToQueueMap = new HashMap<>();
@@ -33,7 +33,7 @@ public enum ZeroMQSubscriberQueue {
         return getQueueEnum(messageType).queue;
     }
 
-    public static <T extends IPropagatable>  ZeroMQSubscriberQueue getQueueEnum(Class<T> messageType) {
+    public static <T extends IPropagatable> ZeroMQSubscriberQueue getQueueEnum(Class<T> messageType) {
         return ZeroMQSubscriberQueues.messageTypeToQueueMap.get(messageType);
     }
 

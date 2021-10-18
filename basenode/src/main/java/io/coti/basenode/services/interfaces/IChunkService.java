@@ -14,5 +14,5 @@ public interface IChunkService {
 
     void sendChunk(String string, PrintWriter output);
 
-    ResponseExtractor getResponseExtractor(Consumer<IPropagatable> consumer, int maxBufferSize);
+    ResponseExtractor<Void> getResponseExtractor(Consumer<IPropagatable> consumer, int maxBufferSize);
 }

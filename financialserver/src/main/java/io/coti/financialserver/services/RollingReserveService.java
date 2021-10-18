@@ -86,7 +86,7 @@ public class RollingReserveService {
         return lastAddressIndex.incrementAndGet();
     }
 
-    public ResponseEntity getRollingReserveData(GetMerchantRollingReserveDataRequest request) {
+    public ResponseEntity<IResponse> getRollingReserveData(GetMerchantRollingReserveDataRequest request) {
 
         RollingReserveReleaseDateData rollingReserveReleaseDateData;
         RollingReserveReleaseStatus rollingReserveReleaseStatus;
@@ -120,7 +120,7 @@ public class RollingReserveService {
             createRollingReserveDataForMerchant(merchantHash);
             merchantRollingReserveData = merchantRollingReserves.getByHash(merchantHash);
             propagationPublisher.propagate(new MerchantRollingReserveAddressData(merchantRollingReserveData.getHash(), merchantRollingReserveData.getRollingReserveAddress()),
-                    Arrays.asList(NodeType.TrustScoreNode));
+                    Collections.singletonList(NodeType.TrustScoreNode));
         }
         return merchantRollingReserveData;
     }
@@ -135,7 +135,7 @@ public class RollingReserveService {
         return ResponseEntity.status(HttpStatus.OK).body(new GetMerchantRollingReserveAddressResponse(merchantRollingReserveData.getMerchantHash(), merchantRollingReserveData.getRollingReserveAddress()));
     }
 
-    public ResponseEntity recourseClaim(RecourseClaimRequest request) {
+    public ResponseEntity<IResponse> recourseClaim(RecourseClaimRequest request) {
 
         RecourseClaimData recourseClaimData = request.getRecourseClaimData();
         RecourseClaimCrypto recourseClaimCrypto = new RecourseClaimCrypto();
@@ -184,7 +184,7 @@ public class RollingReserveService {
     public void setRollingReserveReleaseDate(TransactionData transactionData, Hash merchantHash) {
 
         try {
-            // TODO: Get number of days from transaction data
+            // Get number of days from transaction data
             Date date = DatesHelper.getDateNumberOfDaysAfterToday(ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD);
 
             Hash dateHash = new Hash(date.getTime());
@@ -277,7 +277,7 @@ public class RollingReserveService {
             recourseClaimData.getDisputeHashes().add(disputeData.getHash());
             recourseClaimData.setAmountToPay(recourseClaimData.getAmountToPay().add(remainingChargebackAmount));
 
-            propagationPublisher.propagate(recourseClaimData, Arrays.asList(NodeType.TrustScoreNode));
+            propagationPublisher.propagate(recourseClaimData, Collections.singletonList(NodeType.TrustScoreNode));
             recourseClaims.put(recourseClaimData);
         }
 
@@ -298,10 +298,10 @@ public class RollingReserveService {
 
     private void addConsumerToRollingReserveReceiver(RollingReserveReleaseStatus rollingReserveReleaseStatus) {
 
-        if (rollingReserveReleaseStatus.getRollingReserveReceiver() == RollingReserveReceiver.Merchant) {
-            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.MerchantAndConsumer);
+        if (rollingReserveReleaseStatus.getRollingReserveReceiver() == RollingReserveReceiver.MERCHANT) {
+            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.MERCHANT_AND_CONSUMER);
         } else {
-            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.Consumer);
+            rollingReserveReleaseStatus.setRollingReserveReceiver(RollingReserveReceiver.CONSUMER);
         }
     }
 

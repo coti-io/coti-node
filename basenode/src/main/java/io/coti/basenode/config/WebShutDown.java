@@ -23,6 +23,7 @@ public class WebShutDown implements TomcatConnectorCustomizer {
 
     @EventListener
     public void shutdown(ContextClosedEvent contextClosedEvent) {
+        Thread.currentThread().setName("WEBSERVER SHUTDOWN");
         this.connector.pause();
         Executor executor = this.connector.getProtocolHandler().getExecutor();
         if (executor instanceof ThreadPoolExecutor) {

@@ -2,8 +2,11 @@ package io.coti.financialserver.http.data;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class TokenSaleDistributionResultData {
+public class TokenSaleDistributionResultData implements Serializable {
+
     private String tokenSale;
     private boolean success;
 

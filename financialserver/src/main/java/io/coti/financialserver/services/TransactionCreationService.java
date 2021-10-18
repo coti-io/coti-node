@@ -5,9 +5,9 @@ import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.services.ClusterService;
-import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.financialserver.crypto.TransactionCryptoCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class TransactionCreationService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    private TransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -62,7 +62,7 @@ public class TransactionCreationService {
 
         clusterService.selectSources(chargebackTransaction);
 
-        //     transactionCryptoCreator.signBaseTransactions(chargebackTransaction);
+        //     transactionCryptoCreator.signBaseTransactions(chargebackTransaction)
         transactionCrypto.signMessage(chargebackTransaction);
 
         DspConsensusResult dspConsensusResult = new DspConsensusResult(chargebackTransaction.getHash());
@@ -84,8 +84,7 @@ public class TransactionCreationService {
         baseTransactions.add(ibt);
         baseTransactions.add(rbt);
 
-        double trustScore = MAX_TRUST_SCORE;
-        TransactionData initialTransactionData = new TransactionData(baseTransactions, TransactionType.Initial.toString(), trustScore, Instant.now(), TransactionType.Initial);
+        TransactionData initialTransactionData = new TransactionData(baseTransactions, TransactionType.Initial.toString(), MAX_TRUST_SCORE, Instant.now(), TransactionType.Initial);
 
         if (!balanceService.checkBalancesAndAddToPreBalance(initialTransactionData.getBaseTransactions())) {
             throw new TransactionValidationException("Balance check failed");

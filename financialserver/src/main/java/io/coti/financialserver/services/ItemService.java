@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.Collections;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
 
@@ -56,7 +56,7 @@ public class ItemService {
 
         for (Long itemId : disputeUpdateItemData.getItemIds()) {
             try {
-                DisputeItemStatusService.valueOf(disputeUpdateItemData.getStatus().toString()).changeStatus(disputeData, itemId, actionSide);
+                DisputeItemStatusService.getByDisputeItemStatus(disputeUpdateItemData.getStatus()).changeStatus(disputeData, itemId, actionSide);
             } catch (Exception e) {
                 log.error("{}: {}", e.getClass().getName(), e.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
@@ -87,7 +87,7 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(UNAUTHORIZED, STATUS_ERROR));
         }
 
-        if (disputeData.getDisputeStatus() != DisputeStatus.Claim) {
+        if (disputeData.getDisputeStatus() != DisputeStatus.CLAIM) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_NOT_IN_CLAIM_STATUS, STATUS_ERROR));
         }
 
@@ -113,6 +113,6 @@ public class ItemService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Arrays.asList(disputeData), ActionSide.Arbitrator, disputeItemVoteData.getArbitratorHash()));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetDisputesResponse(Collections.singletonList(disputeData), ActionSide.ARBITRATOR, disputeItemVoteData.getArbitratorHash()));
     }
 }

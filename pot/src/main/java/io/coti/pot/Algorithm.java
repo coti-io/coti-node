@@ -17,24 +17,26 @@ import java.util.List;
 @Slf4j
 public class Algorithm implements IAlgorithm {
 
-    private AlgorithmTypes hashingAlgorithm;
+    private final AlgorithmType hashingAlgorithm;
     private Digest cryptoHashAlgorithm;
     private MessageDigest messageDigestAlgorithm;
-    private static List<AlgorithmTypes> bouncyCastleAlgorithms;
+    private static List<AlgorithmType> bouncyCastleAlgorithms;
 
     static {
 
         Security.addProvider(new BouncyCastleProvider());
         Security.addProvider(new Sun());
-        Algorithm.bouncyCastleAlgorithms = Arrays.asList(AlgorithmTypes.SHA_512,
-                AlgorithmTypes.BLAKE2B_512, AlgorithmTypes.KECCAK_512, AlgorithmTypes.Skein_512_512, AlgorithmTypes.WHIRLPOOL);
 
         Provider[] providers = Security.getProviders();
-        for (int i = 0; i < providers.length; i++)
-            Security.addProvider(providers[i]);
+        for (Provider provider : providers) {
+            Security.addProvider(provider);
+        }
+
+        Algorithm.bouncyCastleAlgorithms = Arrays.asList(AlgorithmType.SHA_512,
+                AlgorithmType.BLAKE2B_512, AlgorithmType.KECCAK_512, AlgorithmType.SKEIN_512_512, AlgorithmType.WHIRLPOOL);
     }
 
-    public Algorithm(AlgorithmTypes hashingAlgorithm) {
+    public Algorithm(AlgorithmType hashingAlgorithm) {
         this.hashingAlgorithm = hashingAlgorithm;
         try {
             if (bouncyCastleAlgorithms.contains(hashingAlgorithm))
@@ -42,7 +44,7 @@ public class Algorithm implements IAlgorithm {
             else
                 this.cryptoHashAlgorithm = this.getCryptoHash(hashingAlgorithm);
         } catch (Exception e) {
-            log.error("error finding algorithm {} in cryptohash, Exception {}", hashingAlgorithm, e);
+            log.error("Error finding algorithm {} in crypto hash, Exception {}", hashingAlgorithm, e);
         }
     }
 
@@ -53,11 +55,11 @@ public class Algorithm implements IAlgorithm {
         return cryptoHashAlgorithm.digest(input);
     }
 
-    private MessageDigest getBouncyCastle(AlgorithmTypes hashingAlgorithm) throws NoSuchAlgorithmException {
-        return MessageDigest.getInstance(hashingAlgorithm.toString().replace('_', '-'), new BouncyCastleProvider());
+    private MessageDigest getBouncyCastle(AlgorithmType hashingAlgorithm) throws NoSuchAlgorithmException {
+        return MessageDigest.getInstance(hashingAlgorithm.toString(), new BouncyCastleProvider());
     }
 
-    private Digest getCryptoHash(AlgorithmTypes hashingAlgorithm) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    private Digest getCryptoHash(AlgorithmType hashingAlgorithm) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         return (Digest) Class.forName("fr.cryptohash." + hashingAlgorithm.toString()).getDeclaredConstructor().newInstance();
     }
 }

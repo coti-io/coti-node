@@ -33,12 +33,13 @@ public class TransactionResponseData implements ITransactionResponseData {
     private Instant transactionConsensusUpdateTime;
     private Instant createTime;
     private Instant attachmentTime;
+    private String senderHash;
     private double senderTrustScore;
     private List<String> childrenTransactionHashes;
     private Boolean isValid;
     private String transactionDescription;
 
-    private TransactionResponseData() {
+    protected TransactionResponseData() {
     }
 
     public TransactionResponseData(TransactionData transactionData) {
@@ -51,7 +52,7 @@ public class TransactionResponseData implements ITransactionResponseData {
             transactionData.getBaseTransactions().forEach(baseTransactionData ->
             {
                 try {
-                    Class<? extends BaseTransactionResponseData> baseTransactionResponseDataClass = BaseTransactionResponseClass.valueOf(BaseTransactionName.getName(baseTransactionData.getClass()).name()).getBaseTransactionResponseClass();
+                    Class<? extends BaseTransactionResponseData> baseTransactionResponseDataClass = BaseTransactionResponseClass.valueOf(BaseTransactionName.getName(baseTransactionData.getClass()).name()).getResponseClass();
                     Constructor<? extends BaseTransactionResponseData> constructor = baseTransactionResponseDataClass.getConstructor(BaseTransactionData.class);
                     baseTransactions.add(constructor.newInstance(baseTransactionData));
                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
@@ -68,6 +69,9 @@ public class TransactionResponseData implements ITransactionResponseData {
         transactionConsensusUpdateTime = transactionData.getTransactionConsensusUpdateTime();
         createTime = transactionData.getCreateTime();
         attachmentTime = transactionData.getAttachmentTime();
+        if (transactionData.getSenderHash() != null) {
+            senderHash = transactionData.getSenderHash().toString();
+        }
         senderTrustScore = transactionData.getSenderTrustScore();
 
         childrenTransactionHashes = new ArrayList<>();

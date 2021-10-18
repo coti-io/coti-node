@@ -21,5 +21,9 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 RequestedAddressHashes.class.getName(),
                 UnconfirmedReceivedTransactionHashes.class.getName()
         ));
+        resetTransactionColumnFamilyNames.addAll(Arrays.asList(
+                ExplorerIndexes.class.getName(),
+                UnconfirmedReceivedTransactionHashes.class.getName()
+        ));
     }
 }

@@ -24,12 +24,12 @@ public class BucketInitialTrustScoreEventsCalculator extends BucketCalculator {
 
     public static void init(RulesData rulesData) {
         userTypeToInitialTrustEventsScoreMap = rulesData.getUserTypeToUserScoreMap().entrySet().stream().
-                collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getInitialTrustScore()));
+                collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getInitialTrustScore()));
     }
 
     @Override
     public void setCurrentScores() {
-
+        // implemented by other sub classes
     }
 
     @Override
@@ -38,7 +38,7 @@ public class BucketInitialTrustScoreEventsCalculator extends BucketCalculator {
                 : bucketInitialTrustScoreEventsData.getInitialTrustTypeToInitialTrustScoreDataMap().entrySet()) {
             InitialTrustScoreEventScore initialTrustScoreEventScore = getInitialTrustScoreEventScoreByEventScoreType(entry.getKey());
             EventDecay initialTrustScoreEventDecay = new EventDecay(initialTrustScoreEventScore, entry.getValue().getDecayedTrustScore());
-            double decayedScore = (double) new DecayCalculator().calculateEntry(initialTrustScoreEventDecay, daysDiff).getValue();
+            double decayedScore = new DecayCalculator<>().calculateEntry(initialTrustScoreEventDecay, daysDiff).getValue();
             entry.getValue().setDecayedTrustScore(decayedScore);
         }
     }

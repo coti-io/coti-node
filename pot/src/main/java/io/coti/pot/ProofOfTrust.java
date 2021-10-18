@@ -9,20 +9,20 @@ import java.util.List;
 
 public class ProofOfTrust implements IProofOfTrust {
 
-    private static int maxTrustScore = 100;
-    private IAlgorithmOrder hashOrder;
-    private IAlgorithmWorker hashWorker;
+    private static final int MAX_TRUST_SCORE = 100;
+    private final IAlgorithmOrder hashOrder;
+    private final IAlgorithmWorker hashWorker;
 
     public ProofOfTrust(int trustScore) {
 
-        if (trustScore < 0 || trustScore > maxTrustScore) {
+        if (trustScore < 0 || trustScore > MAX_TRUST_SCORE) {
             throw new IllegalArgumentException("trustScore must be between 0 and 100 inclusive");
         }
-        hashOrder = new AlgorithmOrder(trustScore, maxTrustScore);
+        hashOrder = new AlgorithmOrder(trustScore, MAX_TRUST_SCORE);
         hashWorker = new AlgorithmWorker(hashOrder);
     }
 
-    public List<IAlgorithm.AlgorithmTypes> getHashingAlgorithms() {
+    public List<IAlgorithm.AlgorithmType> getHashingAlgorithms() {
         return hashOrder.getHashingAlgorithms();
     }
 

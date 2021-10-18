@@ -2,13 +2,19 @@ package io.coti.fullnode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 import io.coti.basenode.services.BaseNodeTransactionPropagationCheckService;
+import io.coti.fullnode.data.UnconfirmedReceivedTransactionHashFullNodeData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -23,31 +29,94 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     public void init() {
         super.init();
         unconfirmedReceivedTransactionHashesMap = new ConcurrentHashMap<>();
-        updateRecoveredUnconfirmedReceivedTransactions();
+        recoverUnconfirmedReceivedTransactions();
     }
 
     @Override
-    public void addUnconfirmedTransaction(Hash transactionHash) {
-        addUnconfirmedTransaction(transactionHash, NUMBER_OF_RETRIES_FULL_NODE);
+    public void removeConfirmedReceivedTransactions(List<Hash> confirmedReceiptTransactions) {
+        confirmedReceiptTransactions.forEach(confirmedTransactionHash ->
+                unconfirmedReceivedTransactionHashes.deleteByHash(confirmedTransactionHash)
+        );
     }
 
     @Override
-    public void removeTransactionHashFromUnconfirmed(Hash transactionHash) {
-        removeTransactionHashFromUnconfirmedTransaction(transactionHash);
+    public void putNewUnconfirmedTransaction(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
+        putToUnconfirmedReceivedTransactionHashesMap(unconfirmedReceivedTransactionHashData);
+    }
+
+    private void putToUnconfirmedReceivedTransactionHashesMap(UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData) {
+        UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullNodeData =
+                new UnconfirmedReceivedTransactionHashFullNodeData(unconfirmedReceivedTransactionHashData, NUMBER_OF_RETRIES_FULL_NODE);
+        unconfirmedReceivedTransactionHashesMap.put(unconfirmedReceivedTransactionHashData.getTransactionHash(), unconfirmedReceivedTransactionHashFullNodeData);
     }
 
     @Override
-    public void removeTransactionHashFromUnconfirmedOnBackPropagation(Hash transactionHash) {
-        removeTransactionHashFromUnconfirmed(transactionHash);
-    }
-
-    @Scheduled(initialDelay = 60000, fixedDelay = 60000)
-    private void sendUnconfirmedReceivedTransactions() {
-        sendUnconfirmedReceivedTransactions(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE);
+    public void addNewUnconfirmedTransaction(Hash transactionHash) {
+        try {
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
+                UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData = new UnconfirmedReceivedTransactionHashData(transactionHash);
+                putToUnconfirmedReceivedTransactionHashesMap(unconfirmedReceivedTransactionHashData);
+                unconfirmedReceivedTransactionHashes.put(unconfirmedReceivedTransactionHashData);
+            }
+        } finally {
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
+        }
     }
 
     @Override
-    public void sendUnconfirmedReceivedTransactions(TransactionData transactionData) {
+    public void removeConfirmedReceiptTransaction(Hash transactionHash) {
+        try {
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
+                unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
+                unconfirmedReceivedTransactionHashes.deleteByHash(transactionHash);
+            }
+        } finally {
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
+        }
+    }
+
+    @Scheduled(initialDelay = 10000, fixedDelay = 30000)
+    private void sendUnconfirmedReceivedTransactionsFullNode() {
+        if (networkService.isNotConnectedToDspNodes()) {
+            log.error("FullNode is not connected to any DspNode. Failed to send unconfirmed transactions.");
+            return;
+        }
+        unconfirmedReceivedTransactionHashesMap
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().getCreatedTime().plusSeconds(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE).isBefore(Instant.now()))
+                .forEach(this::sendUnconfirmedReceivedTransactionsFullNode);
+        List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
+                .entrySet()
+                .stream()
+                .filter(entry -> ((UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue()).getRetries() <= 0)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
+    }
+
+    private void sendUnconfirmedReceivedTransactionsFullNode(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
+        Hash transactionHash = entry.getKey();
+        UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData = (UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue();
+        try {
+
+            synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
+                TransactionData transactionData = transactions.getByHash(entry.getKey());
+                if (transactionData == null) {
+                    unconfirmedReceivedTransactionHashFullnodeData.setRetries(0);
+                } else {
+                    log.info("Sending unconfirmed transaction {}", transactionData.getHash());
+                    sendUnconfirmedReceivedTransactionsFullNode(transactionData);
+                    unconfirmedReceivedTransactionHashFullnodeData.setRetries(unconfirmedReceivedTransactionHashFullnodeData.getRetries() - 1);
+                }
+            }
+        } finally {
+            transactionHashLockData.removeLockFromLocksMap(transactionHash);
+        }
+    }
+
+    private void sendUnconfirmedReceivedTransactionsFullNode(TransactionData transactionData) {
         networkService.sendDataToConnectedDspNodes(transactionData);
     }
 }

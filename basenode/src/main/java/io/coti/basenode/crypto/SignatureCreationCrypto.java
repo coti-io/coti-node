@@ -1,17 +1,13 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.interfaces.ISignable;
-import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class SignatureCreationCrypto<T extends ISignable> {
+public interface SignatureCreationCrypto<T extends ISignable> {
 
-    @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
+    byte[] getSignatureMessage(T signable);
 
-    public abstract byte[] getSignatureMessage(T signable);
-
-    public void signMessage(T signable) {
-        signable.setSignerHash(nodeCryptoHelper.getNodeHash());
-        signable.setSignature(nodeCryptoHelper.signMessage(this.getSignatureMessage(signable)));
+    default void signMessage(T signable) {
+        signable.setSignerHash(NodeCryptoHelper.getNodeHash());
+        signable.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(signable)));
     }
 }

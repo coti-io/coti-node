@@ -2,35 +2,27 @@ package io.coti.nodemanager.services.interfaces;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.nodemanager.data.NodeActivityData;
-import io.coti.nodemanager.data.NodeDailyActivityData;
-import io.coti.nodemanager.data.NodeHistoryData;
-import io.coti.nodemanager.data.NodeNetworkDataRecord;
-import io.coti.nodemanager.http.GetNodeActivationTimeRequest;
+import io.coti.nodemanager.data.*;
+import io.coti.nodemanager.http.GetNodeDetailsRequest;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.GetNodesActivityPercentageRequest;
-import io.coti.nodemanager.http.data.NodeDailyStatisticsData;
-import io.coti.nodemanager.http.data.NodeNetworkRecordResponseData;
-import io.coti.nodemanager.http.data.NodeStatisticsData;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.LinkedList;
 import java.util.List;
 
 public interface INetworkHistoryService {
 
     List<NodeHistoryData> getNodesHistory();
 
-    LinkedList<NodeNetworkRecordResponseData> getNodeEventsResponse(GetNodeStatisticsRequest getNodeStatisticsRequest);
+    ResponseEntity<IResponse> getNodeEventsResponse(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
-    LinkedList<NodeNetworkDataRecord> getNodeEvents(GetNodeStatisticsRequest getNodeStatisticsRequest);
+    ResponseEntity<IResponse> getNodeDailyStats(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
-    List<NodeDailyStatisticsData> getNodeDailyStats(GetNodeStatisticsRequest getNodeStatisticsRequest);
-
-    NodeStatisticsData getNodeStatsTotal(GetNodeStatisticsRequest getNodeStatisticsRequest);
+    ResponseEntity<IResponse> getNodeStatsTotal(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
     ResponseEntity<IResponse> getNodesActivityPercentage(GetNodesActivityPercentageRequest getNodesActivityPercentageRequest);
 
@@ -42,9 +34,17 @@ public interface INetworkHistoryService {
 
     ResponseEntity<IResponse> getNodeActivityInSecondsByDay(GetNodeStatisticsRequest getNodeStatisticsRequest);
 
-    ResponseEntity<IResponse> getNodeActivationTime(GetNodeActivationTimeRequest getNodeActivationTimeRequest);
+    ResponseEntity<IResponse> getNodeActivationTime(GetNodeDetailsRequest getNodeDetailsRequest);
+
+    NodeNetworkDataRecord getNodeNetworkDataRecordByChainRef(NodeNetworkDataRecord nodeNetworkDataRecord);
+
+    Hash calculateNodeHistoryDataHash(Hash nodeHash, LocalDate localDate);
+
+    NodeNetworkDataRecord getReferenceNodeNetworkDataRecordByStatus(NodeNetworkDataRecord nodeNetworkDataRecord, LinkedMap<Hash, NodeNetworkDataRecord> nodeNetworkDataRecordMap, NetworkNodeStatus networkNodeStatus);
 
     Pair<LocalDate, Hash> getReferenceToRecord(NodeNetworkDataRecord nodeNetworkDataRecord);
+
+    ResponseEntity<IResponse> getNodeLastEvent(GetNodeDetailsRequest getNodeDetailsRequest);
 
     NodeNetworkDataRecord getLastNodeNetworkDataRecord(Hash nodeHash);
 

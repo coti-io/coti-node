@@ -31,10 +31,12 @@ public class BaseNodeAwsService implements IAwsService {
     @Value("${aws.credentials}")
     protected boolean buildS3ClientWithCredentials;
     protected AmazonS3 s3Client;
+    protected TransferManager transferManager;
 
     @Override
     public void init() {
         s3Client = getS3Client();
+        transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
     }
 
     @Override
@@ -52,7 +54,6 @@ public class BaseNodeAwsService implements IAwsService {
 
     @Override
     public void uploadFolderAndContentsToS3(String bucketName, String s3folderPath, File directoryToUpload) {
-        TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
 
         ObjectCannedAclProvider cannedAclProvider = file -> CannedAccessControlList.PublicRead;
         Thread monitorTransferProgress = null;
@@ -81,7 +82,7 @@ public class BaseNodeAwsService implements IAwsService {
 
     @Override
     public void downloadFolderAndContents(String bucketName, String s3folderPath, String directoryToDownload) {
-        TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3Client).build();
+
         Thread monitorTransferProgress = null;
         try {
             MultipleFileDownload multipleFileDownload = transferManager.downloadDirectory(bucketName, s3folderPath, new File(directoryToDownload));
@@ -93,7 +94,7 @@ public class BaseNodeAwsService implements IAwsService {
             if (multipleFileDownload.getProgress().getPercentTransferred() == 100) {
                 log.debug("Finished downloading files");
             }
-            removeExcessFolderStructure(directoryToDownload + "/" + s3folderPath, directoryToDownload);
+            removeExcessFolderStructure(directoryToDownload, s3folderPath, directoryToDownload);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new AwsDataTransferException("Unable to download folder and contents to S3. The thread is interrupted");
@@ -115,13 +116,21 @@ public class BaseNodeAwsService implements IAwsService {
                             .withPrefix(path + "/");
             List<String> keys = new ArrayList<>();
             ObjectListing objects = s3Client.listObjects(listObjectsRequest);
+            getS3ObjectSummaryKeys(keys, objects);
 
-            List<S3ObjectSummary> summaries = objects.getObjectSummaries();
-            summaries.forEach(s -> keys.add(s.getKey()));
+            while (objects.isTruncated()) {
+                objects = s3Client.listNextBatchOfObjects(objects);
+                getS3ObjectSummaryKeys(keys, objects);
+            }
             return keys;
         } catch (Exception e) {
             throw new AwsDataTransferException("List S3 paths error.", e);
         }
+    }
+
+    private void getS3ObjectSummaryKeys(List<String> keys, ObjectListing objects) {
+        List<S3ObjectSummary> summaries = objects.getObjectSummaries();
+        summaries.forEach(s -> keys.add(s.getKey()));
     }
 
     @Override
@@ -160,23 +169,41 @@ public class BaseNodeAwsService implements IAwsService {
 
     @Override
     public void deleteFolderAndContentsFromS3(List<String> remoteBackups, String bucketName) {
-        List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
-        remoteBackups.forEach(backup -> keysToDelete.add(new DeleteObjectsRequest.KeyVersion(backup)));
         try {
-            DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keysToDelete);
-            s3Client.deleteObjects(deleteObjectsRequest);
+            final int chuckSize = 500;
+            int chunkCount = 0;
+            while (chunkCount * chuckSize < remoteBackups.size()) {
+                List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
+                for (int i = chunkCount * chuckSize; i < Math.min(remoteBackups.size(), (chunkCount + 1) * chuckSize); i++) {
+                    keysToDelete.add(new DeleteObjectsRequest.KeyVersion(remoteBackups.get(i)));
+                }
+                DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keysToDelete);
+                s3Client.deleteObjects(deleteObjectsRequest);
+                chunkCount++;
+            }
         } catch (Exception e) {
             throw new AwsDataTransferException("Delete folder and contents from S3 error", e);
         }
     }
 
     @Override
-    public void removeExcessFolderStructure(String source, String destination) {
+    public void removeExcessFolderStructure(String source, String relativeExcessFolderPath, String destination) {
         try {
             String delimiter = "/";
-            FileUtils.copyDirectory(new File(source), new File(destination));
-            String[] folderHierarchyToDelete = source.split(delimiter);
-            FileUtils.deleteDirectory(new File(destination + delimiter + folderHierarchyToDelete[3]));
+            File sourceDirectory = new File(source + delimiter + relativeExcessFolderPath);
+            File[] listOfFiles = sourceDirectory.listFiles();
+            if (listOfFiles == null) {
+                throw new AwsDataTransferException("Error at remove excess folder: source directory file list error");
+            }
+            boolean renamed;
+            for (File file : listOfFiles) {
+                renamed = file.renameTo(new File(destination, file.getName()));
+                if (!renamed) {
+                    throw new AwsDataTransferException("Error at remove excess folder: source directory file name error");
+                }
+            }
+            String[] folderHierarchyToDelete = relativeExcessFolderPath.split(delimiter);
+            FileUtils.deleteDirectory(new File(source + delimiter + folderHierarchyToDelete[0]));
         } catch (IOException e) {
             log.error(e.getMessage());
         }
@@ -224,8 +251,8 @@ public class BaseNodeAwsService implements IAwsService {
         TransferProgress progress = transfer.getProgress();
         long bytesTransferred = progress.getBytesTransferred();
         long total = progress.getTotalBytesToTransfer();
-        Double percentDone = progress.getPercentTransferred();
-        log.info("Transfer progress: {}%", percentDone.intValue());
+        double percentDone = progress.getPercentTransferred();
+        log.info("Transfer progress: {}%", (int) percentDone);
         log.info("{} bytes transferred out of {}", bytesTransferred, total);
         Transfer.TransferState transferState = transfer.getState();
         log.info("Transfer state: " + transferState);

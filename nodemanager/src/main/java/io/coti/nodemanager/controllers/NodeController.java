@@ -36,7 +36,12 @@ public class NodeController {
 
     @GetMapping
     public ResponseEntity<NetworkData> getAllNodes() {
-        return ResponseEntity.ok(networkService.getNetworkData());
+        return ResponseEntity.ok(networkService.getSignedNetworkData());
+    }
+
+    @GetMapping(path = "/blacklist")
+    public ResponseEntity<IResponse> getBlacklistedNodes() {
+        return nodeManagementService.getBlacklistedNodes();
     }
 
     @PutMapping(path = "/stake")

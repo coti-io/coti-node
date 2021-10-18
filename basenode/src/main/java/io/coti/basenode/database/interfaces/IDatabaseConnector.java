@@ -36,4 +36,7 @@ public interface IDatabaseConnector {
 
     void shutdown();
 
+    boolean compactRange();
+
+    long size(String columnFamilyName);
 }

@@ -1,6 +1,6 @@
 package io.coti.financialserver.data;
 
 public enum DisputeItemVoteStatus {
-    AcceptedByArbitrator,
-    RejectedByArbitrator;
+    ACCEPTED_BY_ARBITRATOR,
+    REJECTED_BY_ARBITRATOR;
 }

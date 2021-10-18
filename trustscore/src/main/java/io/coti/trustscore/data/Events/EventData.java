@@ -1,5 +1,6 @@
 package io.coti.trustscore.data.Events;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.IEntity;
@@ -23,11 +24,10 @@ public abstract class EventData implements IEntity, Serializable, ISignValidatab
     private Hash eventSignerHash;
     private SignatureData eventSignature;
 
-    public EventData() {
+    protected EventData() {
     }
 
-
-    public EventData(InsertEventRequest request) {
+    protected EventData(InsertEventRequest request) {
         if (request.getEventType() != EventType.TRANSACTION) {
             this.uniqueIdentifier = request.getUniqueIdentifier();
             this.eventDate = Instant.now();
@@ -36,12 +36,8 @@ public abstract class EventData implements IEntity, Serializable, ISignValidatab
         log.info(String.format("uniqueIdentifier: %s for type: %d", this.uniqueIdentifier.toHexString(), eventType.getValue()));
     }
 
-    public void setSignatureData(SignatureData eventSignature) {
-        this.eventSignature = eventSignature;
-    }
-
-
     @Override
+    @JsonIgnore
     public Hash getHash() {
         return this.uniqueIdentifier;
     }
@@ -52,11 +48,13 @@ public abstract class EventData implements IEntity, Serializable, ISignValidatab
     }
 
     @Override
+    @JsonIgnore
     public SignatureData getSignature() {
         return eventSignature;
     }
 
     @Override
+    @JsonIgnore
     public Hash getSignerHash() {
         return eventSignerHash;
     }

@@ -1,5 +1,6 @@
 package io.coti.dspnode.services;
 
+import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
@@ -33,7 +34,9 @@ public class InitializationService extends BaseNodeInitializationService {
     private AddressService addressService;
     @Autowired
     private ICommunicationService communicationService;
-    private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
+    @Autowired
+    private IReceiver messageReceiver;
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override
@@ -45,7 +48,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.getNetwork();
 
             publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
-            publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Arrays.asList(TransactionData.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
 
             communicationService.initSubscriber(NodeType.DspNode, publisherNodeTypeToMessageTypesMap);
             NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
@@ -55,25 +58,26 @@ public class InitializationService extends BaseNodeInitializationService {
             }
             networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
             communicationService.initPublisher(propagationPort, NodeType.DspNode);
-            HashMap<String, Consumer<Object>> classNameToReceiverHandlerMapping = new HashMap<>();
+
+            HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping = new HashMap<>();
             classNameToReceiverHandlerMapping.put(TransactionData.class.getName(), data ->
                     transactionService.handleNewTransactionFromFullNode((TransactionData) data));
-
             classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                     addressService.handleNewAddressFromFullNode((AddressData) data));
-
             communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
-            communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress());
+
+            communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress(), NodeType.ZeroSpendServer);
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             List<NetworkNodeData> dspNetworkNodeDataList = networkService.getMapFromFactory(NodeType.DspNode).values().stream()
                     .filter(dspNode -> !dspNode.equals(networkService.getNetworkNodeData()))
                     .collect(Collectors.toList());
             networkService.addListToSubscription(dspNetworkNodeDataList);
             if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
-                networkService.addListToSubscription(new ArrayList<>(Arrays.asList(networkService.getSingleNodeData(NodeType.FinancialServer))));
+                networkService.addListToSubscription(new ArrayList<>(Collections.singletonList(networkService.getSingleNodeData(NodeType.FinancialServer))));
             }
 
             super.initServices();
+            messageReceiver.initReceiverHandler();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();
@@ -87,7 +91,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
         return networkNodeData;

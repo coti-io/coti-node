@@ -7,7 +7,6 @@ import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -38,8 +37,8 @@ public class BaseNodeBalanceService implements IBalanceService {
 
             BigDecimal amount = baseTransactionData.getAmount();
             Hash addressHash = baseTransactionData.getAddressHash();
-            balanceInChangeMap.putIfAbsent(addressHash, balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO);
-            preBalanceInChangeMap.putIfAbsent(addressHash, preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO);
+            balanceInChangeMap.putIfAbsent(addressHash, balanceMap.getOrDefault(addressHash, BigDecimal.ZERO));
+            preBalanceInChangeMap.putIfAbsent(addressHash, preBalanceMap.getOrDefault(addressHash, BigDecimal.ZERO));
             if (amount.add(balanceInChangeMap.get(addressHash)).signum() < 0) {
                 log.error("Error in Balance check. Address {}  amount {} current Balance {} ", addressHash,
                         amount, balanceInChangeMap.get(addressHash));
@@ -69,12 +68,12 @@ public class BaseNodeBalanceService implements IBalanceService {
         GetBalancesResponse getBalancesResponse = new GetBalancesResponse();
         BigDecimal balance;
         BigDecimal preBalance;
-        for (Hash hash : getBalancesRequest.getAddresses()) {
-            balance = balanceMap.containsKey(hash) ? balanceMap.get(hash) : new BigDecimal(0);
-            preBalance = preBalanceMap.containsKey(hash) ? preBalanceMap.get(hash) : new BigDecimal(0);
-            getBalancesResponse.addAddressBalanceToResponse(hash, balance, preBalance);
+        for (Hash address : getBalancesRequest.getAddresses()) {
+            balance = getBalanceByAddress(address);
+            preBalance = getPreBalanceByAddress(address);
+            getBalancesResponse.addAddressBalanceToResponse(address, balance, preBalance);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(getBalancesResponse);
+        return ResponseEntity.ok(getBalancesResponse);
     }
 
     @Override
@@ -86,14 +85,14 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public void validateBalances() {
-        preBalanceMap.forEach((hash, bigDecimal) -> {
-            if (bigDecimal.signum() == -1) {
+        preBalanceMap.forEach((hash, preBalance) -> {
+            if (preBalance.signum() == -1) {
                 log.error("PreBalance Validation failed!");
                 throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
         });
-        balanceMap.forEach((hash, bigDecimal) -> {
-            if (bigDecimal.signum() == -1) {
+        balanceMap.forEach((hash, balance) -> {
+            if (balance.signum() == -1) {
                 log.error("Balance Validation failed!");
                 throw new IllegalArgumentException("ClusterStamp or database are corrupted.");
             }
@@ -132,12 +131,12 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public BigDecimal getBalanceByAddress(Hash addressHash) {
-        return balanceMap.containsKey(addressHash) ? balanceMap.get(addressHash) : BigDecimal.ZERO;
+        return balanceMap.getOrDefault(addressHash, BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getPreBalanceByAddress(Hash addressHash) {
-        return preBalanceMap.containsKey(addressHash) ? preBalanceMap.get(addressHash) : BigDecimal.ZERO;
+        return preBalanceMap.getOrDefault(addressHash, BigDecimal.ZERO);
     }
 
 }

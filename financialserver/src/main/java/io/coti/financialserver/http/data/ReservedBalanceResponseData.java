@@ -1,12 +1,13 @@
 package io.coti.financialserver.http.data;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
-public class ReservedBalanceResponseData {
+public class ReservedBalanceResponseData implements IResponseData {
 
     private String address;
     private BigDecimal lockupBalance;

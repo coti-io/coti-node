@@ -10,8 +10,8 @@ public enum Fund {
     ADVISORS(ReservedAddress.ADVISORS, "Advisers");
 
 
-    private ReservedAddress reservedAddress;
-    private String text;
+    private final ReservedAddress reservedAddress;
+    private final String text;
     private Hash fundHash;
 
     Fund(ReservedAddress reservedAddress, String text) {

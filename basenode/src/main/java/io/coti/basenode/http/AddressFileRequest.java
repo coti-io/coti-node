@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class AddressFileRequest extends Request {
+public class AddressFileRequest {
 
     @NotNull
     private MultipartFile file;

@@ -1,9 +1,12 @@
 package io.coti.basenode.http;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class GetUserTrustScoreResponse extends BaseResponse {
+
     private String userHash;
     private double trustScore;
     private String userType;

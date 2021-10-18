@@ -6,11 +6,13 @@ import io.coti.trustscore.data.Enums.InitialTrustScoreType;
 import io.coti.trustscore.data.Events.InitialTrustScoreData;
 import io.coti.trustscore.data.Events.InitialTrustScoreEventsData;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class BucketInitialTrustScoreEventsData extends BucketEventData<InitialTrustScoreEventsData> implements IEntity {
 
     private static final long serialVersionUID = -7097339472590357742L;

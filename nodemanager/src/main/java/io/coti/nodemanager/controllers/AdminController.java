@@ -3,6 +3,7 @@ package io.coti.nodemanager.controllers;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.http.AddNodePairEventRequest;
 import io.coti.nodemanager.http.AddNodeSingleEventRequest;
+import io.coti.nodemanager.http.DeleteBlacklistNodeRequest;
 import io.coti.nodemanager.http.SetNodeStakeAdminRequest;
 import io.coti.nodemanager.services.NodeManagementService;
 import io.coti.nodemanager.services.StakingService;
@@ -40,5 +41,9 @@ public class AdminController {
     public ResponseEntity<IResponse> addPairNodeEvent(@Valid @RequestBody AddNodePairEventRequest request) {
         return nodeManagementService.addPairNodeEvent(request);
     }
-}
 
+    @DeleteMapping(path = "/node/blacklist")
+    public ResponseEntity<IResponse> deleteBlacklistNode(@Valid @RequestBody DeleteBlacklistNodeRequest request) {
+        return nodeManagementService.deleteBlacklistNode(request);
+    }
+}

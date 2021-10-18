@@ -13,7 +13,7 @@ public class NodeDailyStatisticsData implements Serializable {
     private long nodeRestarts;
     private long nodeDownTimes;
 
-    public NodeDailyStatisticsData() {
+    private NodeDailyStatisticsData() {
     }
 
     public NodeDailyStatisticsData(LocalDate recordDate, long nodeUpSecond, int nodeRestarts, int nodeDownTimes) {
