@@ -18,4 +18,5 @@ public interface ITransactionPropagationCheckService {
     void sendUnconfirmedReceivedTransactions(long period);
 
     void sendUnconfirmedReceivedTransactions(TransactionData transactionData);
+
 }

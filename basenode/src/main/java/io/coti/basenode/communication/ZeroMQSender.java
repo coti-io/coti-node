@@ -26,14 +26,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ZeroMQSender implements ISender {
 
     private static final String INTERRUPTED_MESSAGE = "Interrupted {}";
+    private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
+    private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();
     private ZMQ.Context zeroMQContext;
     private SocketType socketType;
     private Map<String, SenderSocketData> receivingAddressToSenderSocketMapping;
     @Autowired
     private ISerializer serializer;
-    private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
     private Thread monitorReconnectThread;
-    private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();
 
     @PostConstruct
     private void init() {

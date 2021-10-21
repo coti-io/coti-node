@@ -19,6 +19,12 @@ public enum SubscriberMessageType implements ISubscriberMessageType {
             return transactionData -> transactionService.handlePropagatedTransaction((TransactionData) transactionData);
         }
     },
+    REJECTED_TRANSACTION_DATA(RejectedTransactionData.class) {
+        @Override
+        public Consumer<Object> getHandler(NodeType publisherNodeType) {
+            return rejectedTransactionData -> transactionService.handlePropagatedRejectedTransaction((RejectedTransactionData) rejectedTransactionData);
+        }
+    },
     ADDRESS_DATA(AddressData.class) {
         @Override
         public Consumer<Object> getHandler(NodeType publisherNodeType) {

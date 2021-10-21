@@ -70,10 +70,10 @@ public class ClusterService implements IClusterService {
 
     private void updateParentsByMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
         if (transactionData.getLeftParentHash() != null && trustChainUnconfirmedExistingTransactionHashes.contains(transactionData.getLeftParentHash())) {
-            updateSingleParent(transactionData, transactionData.getLeftParentHash());
+            addChildHashToParent(transactionData, transactionData.getLeftParentHash());
         }
         if (transactionData.getRightParentHash() != null && trustChainUnconfirmedExistingTransactionHashes.contains(transactionData.getRightParentHash())) {
-            updateSingleParent(transactionData, transactionData.getRightParentHash());
+            addChildHashToParent(transactionData, transactionData.getRightParentHash());
         }
         removeTransactionParentsFromSources(transactionData);
     }
@@ -107,15 +107,61 @@ public class ClusterService implements IClusterService {
         addTransactionToTrustChainConfirmationCluster(transactionData);
     }
 
-    private void updateParents(TransactionData transactionData) {
+    @Override
+    public void detachFromCluster(TransactionData transactionData) {
+        updateParentsToDetachChild(transactionData);
 
-        updateSingleParent(transactionData, transactionData.getLeftParentHash());
-        updateSingleParent(transactionData, transactionData.getRightParentHash());
+        removeTransactionFromTrustChainConfirmationCluster(transactionData);
+    }
+
+    private void updateParentsToDetachChild(TransactionData transactionData) {
+        removeChildHashFromParent(transactionData, transactionData.getLeftParentHash());
+        removeChildHashFromParent(transactionData, transactionData.getRightParentHash());
+
+        restoreTransactionParentsToSources(transactionData);
+
+    }
+
+    private void removeChildHashFromParent(TransactionData transactionData, Hash parentHash) {
+        if (parentHash != null) {
+            transactions.lockAndGetByHash(parentHash, parentTransactionData -> {
+                if (parentTransactionData != null && parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash())) {
+                    parentTransactionData.removeFromChildrenTransactions(transactionData.getHash());
+                    if (trustChainConfirmationCluster.containsKey(parentTransactionData.getHash())) {
+                        trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
+                    }
+                    transactions.put(parentTransactionData);
+                }
+            });
+        }
+    }
+
+    private void restoreTransactionParentsToSources(TransactionData transactionData) {
+        if (transactionData.getLeftParentHash() != null) {
+            restoreTransactionToSources(transactionData.getLeftParentHash());
+        }
+        if (transactionData.getRightParentHash() != null) {
+            restoreTransactionToSources(transactionData.getRightParentHash());
+        }
+    }
+
+    private void restoreTransactionToSources(Hash transactionHash) {
+        TransactionData transactionData = transactions.getByHash(transactionHash);
+        if (transactionData != null) {
+            addTransactionToSources(transactionData);
+        } else {
+            log.error("Failed to find parent Transaction with hash:{}", transactionHash);
+        }
+    }
+
+    private void updateParents(TransactionData transactionData) {
+        addChildHashToParent(transactionData, transactionData.getLeftParentHash());
+        addChildHashToParent(transactionData, transactionData.getRightParentHash());
         removeTransactionParentsFromSources(transactionData);
 
     }
 
-    private void updateSingleParent(TransactionData transactionData, Hash parentHash) {
+    private void addChildHashToParent(TransactionData transactionData, Hash parentHash) {
         if (parentHash != null) {
             transactions.lockAndGetByHash(parentHash, parentTransactionData -> {
                 if (parentTransactionData != null && !parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash())) {
@@ -155,17 +201,21 @@ public class ClusterService implements IClusterService {
         Hash transactionHash = transactionData.getHash();
         trustChainConfirmationCluster.put(transactionHash, transactionData);
 
+        addTransactionToSources(transactionData);
+
+        log.debug("Added New Transaction with hash:{}", transactionHash);
+    }
+
+    private void addTransactionToSources(TransactionData transactionData) {
         try {
             readWriteLock.writeLock().lock();
-            if (transactionData.isSource() && sourceMap.put(transactionHash, transactionData) == null) {
-                sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionHash);
+            if (transactionData.isSource() && sourceMap.put(transactionData.getHash(), transactionData) == null) {
+                sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).add(transactionData.getHash());
                 totalSources.incrementAndGet();
             }
         } finally {
             readWriteLock.writeLock().unlock();
         }
-
-        log.debug("Added New Transaction with hash:{}", transactionHash);
     }
 
     private void removeTransactionFromTrustChainConfirmationCluster(TransactionData transactionData) {

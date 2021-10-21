@@ -45,6 +45,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
@@ -84,6 +85,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
     @Value("${java.process.memory.limit:95}")
     private int javaProcessMemoryLimit;
+    private final ReentrantReadWriteLock rejectTransactionReadWriteLock = new ReentrantReadWriteLock();
+    private boolean isHandlingRejectedTransaction = false;
 
     @Override
     public void init() {
@@ -117,8 +120,18 @@ public class TransactionService extends BaseNodeTransactionService {
                         request.getSenderHash(),
                         request.getSenderSignature(),
                         request.getType());
+
+        log.debug("New transaction request is being processed. Transaction Hash = {}", transactionData.getHash());
+        if (isHandlingRejectedTransaction) {
+            log.debug("Received transaction: {} while processing a rejected transaction", transactionData.getHash());
+
+            return ResponseEntity
+                    .status(HttpStatus.METHOD_NOT_ALLOWED)
+                    .body(new Response(
+                            TRANSACTION_HANDLING_REJECTED_TRANSACTION, STATUS_ERROR));
+        }
+        rejectTransactionReadWriteLock.readLock().lock();
         try {
-            log.debug("New transaction request is being processed. Transaction Hash = {}", transactionData.getHash());
             currentlyAddTransaction.incrementAndGet();
             if (transactionHelper.isTransactionExists(transactionData)) {
                 log.debug("Received existing transaction: {}", transactionData.getHash());
@@ -197,6 +210,7 @@ public class TransactionService extends BaseNodeTransactionService {
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
             currentlyAddTransaction.decrementAndGet();
+            rejectTransactionReadWriteLock.readLock().unlock();
         }
     }
 
@@ -560,6 +574,20 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Override
+    public void removeDataFromMemory(TransactionData transactionData) {
+        try {
+            ExplorerTransactionData explorerTransactionData = new ExplorerTransactionData(transactionData);
+            explorerTransactionData.setRevert(true);
+            explorerIndexQueue.put(explorerTransactionData);
+            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+                removeAddressTransactionsByAttachment(transactionData);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
         addDataToMemory(transactionData);
@@ -570,7 +598,11 @@ public class TransactionService extends BaseNodeTransactionService {
 
             try {
                 ExplorerTransactionData explorerTransactionData = explorerIndexQueue.take();
-                explorerIndexedTransactionSet.add(explorerTransactionData);
+                if (explorerTransactionData.isRevert()) {
+                    explorerIndexedTransactionSet.remove(explorerTransactionData);
+                } else {
+                    explorerIndexedTransactionSet.add(explorerTransactionData);
+                }
                 webSocketSender.notifyTotalTransactionsChange(explorerIndexedTransactionSet.size());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -603,4 +635,40 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    private void removeAddressTransactionsByAttachment(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            NavigableMap<Instant, Set<Hash>> transactionHashesByAttachmentMap = addressToTransactionsByAttachmentMap.getOrDefault(baseTransactionData.getAddressHash(), new ConcurrentSkipListMap<>());
+            Set<Hash> transactionHashSet = transactionHashesByAttachmentMap.getOrDefault(transactionData.getAttachmentTime(), Sets.newConcurrentHashSet());
+            transactionHashSet.remove(transactionData.getHash());
+            transactionHashesByAttachmentMap.put(transactionData.getAttachmentTime(), transactionHashSet);
+            addressToTransactionsByAttachmentMap.put(baseTransactionData.getAddressHash(), transactionHashesByAttachmentMap);
+        });
+    }
+
+    @Override
+    public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+        Hash transactionHash = rejectedTransactionData.getHash();
+        TransactionData transactionData = transactions.getByHash(transactionHash);
+        if (transactionHelper.isTransactionHashExists(transactionHash)) {
+            isHandlingRejectedTransaction = true;
+            rejectTransactionReadWriteLock.writeLock().lock();
+            try {
+                super.handlePropagatedRejectedTransaction(rejectedTransactionData);
+            } finally {
+                if (rejectTransactionReadWriteLock.isWriteLockedByCurrentThread()) {
+                    rejectTransactionReadWriteLock.writeLock().unlock();
+                } else {
+                    log.error("Attempt to unlock write lock for transaction: {} failed", transactionHash);
+                }
+                isHandlingRejectedTransaction = false;
+            }
+            if (!transactionHelper.isTransactionHashExists(transactionHash)) {
+                webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.REJECTED_TRANSACTION);
+            } else {
+                log.error("Attempt to reject transaction: {} failed! transaction still exists!", transactionHash);
+            }
+        } else {
+            log.error("The request to reject transaction failed! transaction: {} does not exist!", transactionHash);
+        }
+    }
 }

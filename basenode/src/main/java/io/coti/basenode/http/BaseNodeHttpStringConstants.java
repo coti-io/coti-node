@@ -22,6 +22,11 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE = "Transaction requested to resend is not available in the database";
     public static final String TRANSACTION_RESENT_NOT_ALLOWED_MESSAGE = "Transaction is requested to resend not by the transaction sender";
 
+    public static final String SERVER_ERROR_WHILE_GETTING_REJECTED_TRANSACTIONS = "Server error while getting rejected transactions";
+    public static final String TRANSACTION_POSTPONED_SERVER_ERROR = "Server error while getting postponed transactions";
+
+    public static final String TRANSACTION_HANDLING_REJECTED_TRANSACTION = "New transaction was rejected as server is dedicated exclusively to the handling of an identified existing rejected transaction";
+
     public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
     public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
     public static final String ILLEGAL_BASE_TRANSACTIONS_AMOUNT = "Illegal transaction - sum of base transactions must be 0!";
@@ -63,5 +68,7 @@ public class BaseNodeHttpStringConstants {
 
     public static final String DB_MANUAL_BACKUP_SUCCESS = "Successful manual DB backup";
     public static final String DB_MANUAL_BACKUP_NOT_ALLOWED = "Manual DB backup not allowed";
+
+    public static final String METHOD_NOT_ALLOWED = "This method is not in use";
 
 }

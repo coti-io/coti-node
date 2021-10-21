@@ -38,8 +38,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     public void lastState() {
         if (allowTransactionMonitoring) {
             log.info("Transactions = {}, TccConfirmed = {}, DspConfirmed = {}, Confirmed = {}, LastIndex = {}, Sources = {}, PostponedTransactions = {}, " +
-                            "PropagationQueue = {}, WebSocketMessagesQueueLength = {}, waitingDspConsensus = {}, confirmationQueueSize = {}, " +
-                            "percentageUsedHeapMemory = {}, percentageUsedMemory = {}",
+                            "PropagationQueue = {}, WebSocketMessagesQueueLength = {}, waitingDspConsensus = {}, confirmationQueueSize = {} " +
+                            "percentageUsedHeapMemory = {}, percentageUsedMemory = {}, rejectedTransactions = {}",
                     transactionHelper.getTotalTransactions(),
                     confirmationService.getTrustChainConfirmed(),
                     confirmationService.getDspConfirmed(),
@@ -52,7 +52,8 @@ public class BaseNodeMonitorService implements IMonitorService {
                     confirmationService.getWaitingDspConsensusResultsMapSize(),
                     confirmationService.getQueueSize(),
                     MemoryUtils.getPercentageUsedHeapFormatted(),
-                    MemoryUtils.getPercentageUsedFormatted());
+                    MemoryUtils.getPercentageUsedFormatted(),
+                    transactionService.getRejectedTransactionsSize());
         }
     }
 }

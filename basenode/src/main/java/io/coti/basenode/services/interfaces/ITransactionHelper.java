@@ -18,6 +18,8 @@ public interface ITransactionHelper {
 
     void updateAddressTransactionHistory(TransactionData transactionData);
 
+    void removeAddressTransactionHistory(TransactionData transactionData);
+
     void updateAddressTransactionHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap, TransactionData transactionData);
 
     boolean validateTransactionCrypto(TransactionData transactionData);
@@ -29,6 +31,8 @@ public interface ITransactionHelper {
     void startHandleTransaction(TransactionData transactionData);
 
     void endHandleTransaction(TransactionData transactionData);
+
+    void endHandleRejectedTransaction(Hash rejectedTransactionDataHash);
 
     boolean isTransactionFinished(TransactionData transactionData);
 

@@ -2,11 +2,15 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.FluxSink;
 
@@ -18,6 +22,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.METHOD_NOT_ALLOWED;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 @Slf4j
 @Service
@@ -43,6 +50,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
+
     protected Map<TransactionData, Boolean> postponedTransactions = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
 
     @Override
@@ -168,6 +176,51 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
     }
 
+    @Override
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(new Response(
+                        METHOD_NOT_ALLOWED,
+                        STATUS_ERROR));
+    }
+
+    public boolean deleteRejectedTransactionSubDAG(Hash rejectedTransactionDataHash) {
+        if (rejectedTransactionDataHash == null)
+            return false;
+        TransactionData transactionData = transactions.getByHash(rejectedTransactionDataHash);
+        if (transactionData == null)
+            return false;
+        transactionData.getChildrenTransactionHashes().forEach(this::deleteRejectedTransactionSubDAG);
+
+        log.debug("Starting to remove the rejected transaction {}", transactionData.getHash());
+        removeDataFromMemory(transactionData);
+        transactionHelper.endHandleRejectedTransaction(rejectedTransactionDataHash);
+        return true;
+    }
+
+    @Override
+    public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+        Hash rejectedTransactionHash = rejectedTransactionData.getHash();
+        if (!transactionHelper.isTransactionHashExists(rejectedTransactionHash)) {
+            log.error("The request to reject transaction failed! transaction: {} does not exist!", rejectedTransactionHash);
+            return;
+        }
+        if (!validationService.validatePropagatedRejectedTransactionDataIntegrity(rejectedTransactionData)) {
+            log.error("Data Integrity validation failed for rejected transaction: {}", rejectedTransactionHash);
+            return;
+        }
+
+        try {
+            boolean deletedSuccessfully = deleteRejectedTransactionSubDAG(rejectedTransactionHash);
+            if (!deletedSuccessfully) {
+                log.error("Error encountered during the handling of rejected transaction: {}", rejectedTransactionHash);
+            }
+        } catch (Exception e) {
+            log.error("Encountered error", e);
+        }
+    }
+
     protected void processPostponedTransactions(TransactionData transactionData) {
         DspConsensusResult postponedDspConsensusResult = dspVoteService.getPostponedDspConsensusResult(transactionData.getHash());
         if (postponedDspConsensusResult != null) {
@@ -246,6 +299,10 @@ public class BaseNodeTransactionService implements ITransactionService {
                 (transactionData.getRightParentHash() != null && transactionHelper.isTransactionHashProcessing(transactionData.getRightParentHash()));
     }
 
+    public void removeDataFromMemory(TransactionData transactionData) {
+        log.debug("Removing the transaction {} from explorer indexes by base node", transactionData.getHash());
+    }
+
     protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 (transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null);
@@ -254,4 +311,11 @@ public class BaseNodeTransactionService implements ITransactionService {
     public int totalPostponedTransactions() {
         return postponedTransactions.size();
     }
+
+    @Override
+    public long getRejectedTransactionsSize() {
+        // implemented by DSP node
+        return 0;
+    }
+
 }

@@ -1,9 +1,8 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.ExecutorData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.InitializationTransactionHandlerType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
+import io.coti.basenode.http.interfaces.IResponse;
+import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.FluxSink;
 
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +18,11 @@ public interface ITransactionService {
 
     void getTransactionBatch(long startingIndex, FluxSink sink);
 
+    ResponseEntity<IResponse> getRejectedTransactions();
+
     void handlePropagatedTransaction(TransactionData transactionData);
+
+    void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData);
 
     void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap);
 
@@ -27,5 +30,9 @@ public interface ITransactionService {
 
     int totalPostponedTransactions();
 
+    long getRejectedTransactionsSize();
+
     void addDataToMemory(TransactionData transactionData);
+
+    void removeDataFromMemory(TransactionData transactionData);
 }
