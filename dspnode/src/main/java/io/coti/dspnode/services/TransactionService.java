@@ -25,8 +25,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.SERVER_ERROR_WHILE_GETTING_REJECTED_TRANSACTIONS;
@@ -143,7 +141,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    @Scheduled(cron = "${rejected.transactions.cleanup:* * 24 * * *}", zone = "UTC")
+    @Scheduled(cron = "${rejected.transactions.cleanup: 0 0 0 * * *}", zone = "UTC")
     private void clearRejectedTransactions() {
         log.info("Searching for rejected transactions to clean...");
         rejectedTransactions.forEach(rejectedTransaction -> {
