@@ -111,6 +111,8 @@ public class ZeroMQReceiver implements IReceiver {
             if (classNameToHandlerMapping.containsKey(classType)) {
                 byte[] message = receiver.recv();
                 messageQueue.put(new ZeroMQMessageData(classType, message));
+            } else {
+                log.error("Error on addToMessageQueue, expecting class that is mapped to handler instead of: {}", classType);
             }
         } catch (InterruptedException e) {
             log.info("ZMQ receiver interrupted");
@@ -131,6 +133,8 @@ public class ZeroMQReceiver implements IReceiver {
                 Consumer<IPropagatable> consumer = classNameToHandlerMapping.get(zeroMQMessageData.getChannel());
                 if (consumer != null) {
                     consumer.accept(serializer.deserialize(zeroMQMessageData.getMessage()));
+                } else {
+                    log.error("Error on handleMessagesQueueTask, expecting class that is mapped to handler instead of: {}", zeroMQMessageData.getChannel());
                 }
             } catch (InterruptedException e) {
                 log.info("ZMQ receiver message handler interrupted");
