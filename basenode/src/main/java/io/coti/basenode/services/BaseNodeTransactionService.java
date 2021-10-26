@@ -10,7 +10,6 @@ import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -167,7 +166,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     public ResponseEntity<IResponse> getPostponedTransactions() {
         try {
             ConcurrentHashMap<Hash, TransactionData> postponedTransactionCluster = new ConcurrentHashMap<>();
-            postponedTransactionCluster.putAll(postponedTransactionMap.keySet().stream().collect(Collectors.toMap(TransactionData::getHash, transactionData -> transactionData)));            LinkedList<TransactionData> topologicalOrderedPostponedTransactions = new LinkedList<>();
+            postponedTransactionCluster.putAll(postponedTransactionMap.keySet().stream().collect(Collectors.toMap(TransactionData::getHash, transactionData -> transactionData)));
+            LinkedList<TransactionData> topologicalOrderedPostponedTransactions = new LinkedList<>();
             clusterHelper.sortByTopologicalOrder(postponedTransactionCluster, topologicalOrderedPostponedTransactions);
             return ResponseEntity.ok(new GetExtendedTransactionsResponse(topologicalOrderedPostponedTransactions));
         } catch (Exception e) {
