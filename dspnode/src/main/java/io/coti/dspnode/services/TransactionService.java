@@ -93,6 +93,11 @@ public class TransactionService extends BaseNodeTransactionService {
                 notifyNodesOnRejectedTransaction(rejectedTransactions.getByHash(transactionData.getHash()));
                 return;
             }
+            if (isParentRejected(transactionData)) {
+                log.debug("Transaction parent is rejected, handling it as invalid: {}", transactionData.getHash());
+                handleRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.REJECTED_PARENT);
+                return;
+            }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
                 handleRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.DATA_INTEGRITY);
@@ -106,7 +111,7 @@ public class TransactionService extends BaseNodeTransactionService {
             }
             if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
                 log.error("Balance check failed: {}", transactionData.getHash());
-                handleRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.DATA_INTEGRITY);
+                handleRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.BALANCE);
                 return;
             }
             transactionHelper.attachTransactionToCluster(transactionData);
@@ -124,13 +129,8 @@ public class TransactionService extends BaseNodeTransactionService {
         } catch (Exception ex) {
             log.error("Exception while handling transaction {}", transactionData, ex);
         } finally {
-            boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
             transactionHelper.endHandleTransaction(transactionData);
-            if (isTransactionFinished) {
-                processPostponedTransactions(transactionData);
-            } else {
-                processPostponedRejectedTransactions();
-            }
+            processPostponedTransactions(transactionData);
         }
     }
 
@@ -143,12 +143,12 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-
-    @Scheduled(initialDelay = 1000, fixedDelay = NUMBER_OF_SECONDS_IN_DAY * 1000)
+    @Scheduled(cron = "${rejected.transactions.cleanup:* * 24 * * *}", zone = "UTC")
     private void clearRejectedTransactions() {
+        log.info("Searching for rejected transactions to clean...");
         rejectedTransactions.forEach(rejectedTransaction -> {
                     if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > NUMBER_OF_SECONDS_IN_DAY)) {
-                        log.info("removing transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
+                        log.info("Removing transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
                                 rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReason());
                         rejectedTransactions.delete(rejectedTransaction);
                     }
@@ -156,31 +156,12 @@ public class TransactionService extends BaseNodeTransactionService {
         );
     }
 
-    private void processPostponedRejectedTransactions() {
-        if (postponedTransactions.size() > 0) {
-            final AtomicBoolean[] foundNewInvalid = {new AtomicBoolean()};
-            do {
-                foundNewInvalid[0].set(false);
-                rejectedTransactions.forEach(rejectedTransaction -> {
-                            Map<TransactionData, Boolean> postponedParentTransactionMap = postponedTransactions.entrySet().stream().filter(
-                                    postponedTransactionMapEntry ->
-                                            (postponedTransactionMapEntry.getKey().getRightParentHash() != null
-                                                    && postponedTransactionMapEntry.getKey().getRightParentHash().equals(rejectedTransaction.getHash()))
-                                                    || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
-                                                    && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(rejectedTransaction.getHash())))
-                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-                            for (Map.Entry<TransactionData, Boolean> entry : postponedParentTransactionMap.entrySet()) {
-                                if (entry.getValue().equals(true)) {
-                                    handleRejectedTransactionToFullNode(entry.getKey(), RejectedTransactionDataReason.REJECTED_PARENT);
-                                    postponedTransactions.remove(entry.getKey());
-                                    foundNewInvalid[0].set(true);
-                                }
-                            }
-                        }
-                );
-            } while (foundNewInvalid[0].get());
-        }
+    private boolean isParentRejected(TransactionData transactionData) {
+        boolean isParentRejected = (transactionData.getRightParentHash() != null
+                && rejectedTransactions.getByHash(transactionData.getRightParentHash()) != null)
+                || (transactionData.getLeftParentHash() != null
+                && rejectedTransactions.getByHash(transactionData.getLeftParentHash()) != null);
+        return isParentRejected;
     }
 
     @Override
