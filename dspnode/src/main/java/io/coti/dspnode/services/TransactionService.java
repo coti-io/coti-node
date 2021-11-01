@@ -26,8 +26,8 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.SERVER_ERROR_WHILE_GETTING_REJECTED_TRANSACTIONS;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 
 @Slf4j
@@ -35,7 +35,6 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.SERVER_ERROR_WHI
 public class TransactionService extends BaseNodeTransactionService {
 
     public static final int NUMBER_OF_SECONDS_IN_DAY = 24 * 60 * 60;
-
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -52,7 +51,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private RejectedTransactions rejectedTransactions;
     @Autowired
     private RejectedTransactionCrypto rejectedTransactionCrypto;
-
     private BlockingQueue<TransactionData> transactionsToValidate;
     private Thread transactionValidationThread;
 
@@ -65,12 +63,12 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     private void notifyNodesOnRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
-        propagationPublisher.propagate(rejectedTransactionData, Arrays.asList(
+        propagationPublisher.propagate(rejectedTransactionData, Collections.singletonList(
                 NodeType.FullNode));
     }
 
     private void handleRejectedTransactionToFullNode(TransactionData transactionData, RejectedTransactionDataReason rejectedTransactionDataReason) {
-        log.debug("informing full node that transaction is rejected");
+        log.debug("Informing full node that transaction is rejected");
         RejectedTransactionData rejectedTransactionData = new RejectedTransactionData(transactionData);
         rejectedTransactionData.setRejectionReason(rejectedTransactionDataReason);
         rejectedTransactionCrypto.signMessage(rejectedTransactionData);
@@ -86,9 +84,10 @@ public class TransactionService extends BaseNodeTransactionService {
         }
         try {
             transactionHelper.startHandleTransaction(transactionData);
-            if (rejectedTransactions.getByHash(transactionData.getHash()) != null) {
+            RejectedTransactionData rejectedTransactionData = rejectedTransactions.getByHash(transactionData.getHash());
+            if (rejectedTransactionData != null) {
                 log.debug("Transaction already rejected as invalid: {}", transactionData.getHash());
-                notifyNodesOnRejectedTransaction(rejectedTransactions.getByHash(transactionData.getHash()));
+                notifyNodesOnRejectedTransaction(rejectedTransactionData);
                 return;
             }
             if (isParentRejected(transactionData)) {
@@ -128,7 +127,9 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error("Exception while handling transaction {}", transactionData, ex);
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
-            processPostponedTransactions(transactionData);
+            if (!postponedTransactions.containsKey(transactionData)) {
+                processPostponedTransactions(transactionData);
+            }
         }
     }
 
@@ -155,11 +156,10 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     private boolean isParentRejected(TransactionData transactionData) {
-        boolean isParentRejected = (transactionData.getRightParentHash() != null
+        return (transactionData.getRightParentHash() != null
                 && rejectedTransactions.getByHash(transactionData.getRightParentHash()) != null)
                 || (transactionData.getLeftParentHash() != null
                 && rejectedTransactions.getByHash(transactionData.getLeftParentHash()) != null);
-        return isParentRejected;
     }
 
     @Override
