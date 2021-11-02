@@ -49,7 +49,7 @@ Find out more about COTI in our [Medium](https://medium.com/cotinetwork).
 
 #### Software requirements:
 
-* java jdk version: ^1.8
+* java jdk version: ^1.11
 * mvn version: ^3.5.3
 
 #### Node requirements:
