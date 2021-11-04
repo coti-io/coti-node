@@ -176,6 +176,7 @@ public abstract class BaseNodeInitializationService {
             }
             if (executorServicesInitiated.get()) {
                 existingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
+                handleExistingExecutorService.get().shutdown();
             }
             confirmationService.setLastDspConfirmationIndex(indexToTransactionMap);
             indexToTransactionMap.clear();

@@ -16,9 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Data
 public class ExecutorData {
 
-    private ExecutorService executorService;
-    private List<Future<?>> futures;
-    private InitializationTransactionHandlerType initializationTransactionHandlerType;
+    private final ExecutorService executorService;
+    private final List<Future<?>> futures;
+    private final InitializationTransactionHandlerType initializationTransactionHandlerType;
 
     public ExecutorData(InitializationTransactionHandlerType initializationTransactionHandlerType) {
         executorService = Executors.newFixedThreadPool(1);
@@ -44,6 +44,7 @@ public class ExecutorData {
                 log.error(e.getMessage());
             }
         }
+        executorService.shutdown();
         monitorCompletionThread.interrupt();
         try {
             monitorCompletionThread.join();
