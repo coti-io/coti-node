@@ -75,10 +75,11 @@ public class FundDistributionService {
     private Map<Hash, ReservedBalanceData> addressToReservedBalanceMap;
 
     public void initReservedBalance() {
+        NodeCryptoHelper.setSeed(seed);
         fundReservedBalanceMap = new ConcurrentHashMap<>();
         addressToReservedBalanceMap = new ConcurrentHashMap<>();
         for (Fund fund : Fund.values()) {
-            Hash fundAddress = (fund.getFundHash() == null) ? getFundAddressHash(fund) : fund.getFundHash();
+            Hash fundAddress = fund.getFundHash();
             FundDistributionReservedBalanceData fundDistributionReservedBalanceData = new FundDistributionReservedBalanceData(fund, BigDecimal.ZERO);
             fundReservedBalanceMap.put(fundAddress, fundDistributionReservedBalanceData);
         }
@@ -89,9 +90,7 @@ public class FundDistributionService {
         dailyFundDistributions.forEach(dailyFundDistributionData ->
                 dailyFundDistributionData.getFundDistributionEntries().values().forEach(fundDistributionData -> {
                     if (fundDistributionData.isLockingAmount()) {
-                        Hash fundAddress = (fundDistributionData.getDistributionPoolFund().getFundHash() == null) ?
-                                getFundAddressHash(fundDistributionData.getDistributionPoolFund()) :
-                                fundDistributionData.getDistributionPoolFund().getFundHash();
+                        Hash fundAddress = fundDistributionData.getDistributionPoolFund().getFundHash();
                         FundDistributionReservedBalanceData fundDistributionReservedBalanceData = fundReservedBalanceMap.get(fundAddress);
                         BigDecimal updatedFundLockedAmount = fundDistributionReservedBalanceData.getReservedAmount().add(fundDistributionData.getAmount());
                         fundDistributionReservedBalanceData.setReservedAmount(updatedFundLockedAmount);
@@ -110,20 +109,10 @@ public class FundDistributionService {
         addressToReservedBalanceMap.putIfAbsent(receiverAddress, new ReservedBalanceData(distributionAmount));
     }
 
-    private Hash getFundAddressHash(Fund fund) {
-        Hash fundAddress = fund.getFundHash();
-        if (fundAddress == null) {
-            fundAddress = NodeCryptoHelper.generateAddress(seed, Math.toIntExact(fund.getReservedAddress().getIndex()));
-            fund.setFundHash(fundAddress);
-        }
-        return fundAddress;
-    }
-
     public ResponseEntity<IResponse> getFundBalances() {
         List<FundDistributionBalanceResultData> fundDistributionBalanceResultDataList = new ArrayList<>();
         fundReservedBalanceMap.values().forEach(fundDistributionReservedBalanceData -> {
-            Hash fundAddress = (fundDistributionReservedBalanceData.getFund().getFundHash() == null) ?
-                    getFundAddressHash(fundDistributionReservedBalanceData.getFund()) : fundDistributionReservedBalanceData.getFund().getFundHash();
+            Hash fundAddress = fundDistributionReservedBalanceData.getFund().getFundHash();
             fundDistributionBalanceResultDataList.add(
                     new FundDistributionBalanceResultData(fundDistributionReservedBalanceData.getFund().getText(),
                             baseNodeBalanceService.getBalanceByAddress(fundAddress),

@@ -17,7 +17,7 @@ public class BaseNodeWebSocketMessageService implements IWebSocketMessageService
 
     private final SimpMessagingTemplate messagingSender;
     private static final BlockingQueue<WebSocketData> queue = new LinkedBlockingQueue<>();
-    private static Thread senderQueueThread;
+    private final Thread senderQueueThread;
 
     @Autowired
     public BaseNodeWebSocketMessageService(SimpMessagingTemplate messagingSender) {

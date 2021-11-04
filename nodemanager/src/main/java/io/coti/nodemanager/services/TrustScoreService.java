@@ -13,7 +13,6 @@ import io.coti.nodemanager.crypto.NodeTrustScoreRequestCrypto;
 import io.coti.nodemanager.services.interfaces.ITrustScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -32,8 +31,6 @@ public class TrustScoreService implements ITrustScoreService {
     private static final int NUM_OF_TRUSTSCORE_NODES = 3;
     public static final String TRUSTSCORE_DATA_ENDPOINT = "/trustscore_data";
     public static final String TRUSTSCORE_AGGREGATION_DATA_ENDPOINT = "/trustscore_aggregation_data";
-    @Value("${global.private.key}")
-    private String globalPrivateKey;
     private final RestTemplate httpRequest;
     private final NodeTrustScoreRequestCrypto trustScoreRequestCrypto;
 

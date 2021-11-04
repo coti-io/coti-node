@@ -1,5 +1,6 @@
 package io.coti.financialserver.data;
 
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 
 public enum Fund {
@@ -12,12 +13,12 @@ public enum Fund {
 
     private final ReservedAddress reservedAddress;
     private final String text;
-    private Hash fundHash;
+    private final Hash fundHash;
 
     Fund(ReservedAddress reservedAddress, String text) {
         this.reservedAddress = reservedAddress;
         this.text = text;
-        this.fundHash = null;
+        this.fundHash = NodeCryptoHelper.generateAddress(Math.toIntExact(this.reservedAddress.getIndex()));
     }
 
     public ReservedAddress getReservedAddress() {
@@ -30,10 +31,6 @@ public enum Fund {
 
     public Hash getFundHash() {
         return fundHash;
-    }
-
-    public void setFundHash(Hash fundHash) {
-        this.fundHash = fundHash;
     }
 
     public static Fund getTokenSaleRelatedFundNameByText(String text) {
