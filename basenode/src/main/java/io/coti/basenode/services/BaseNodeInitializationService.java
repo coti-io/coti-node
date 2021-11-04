@@ -34,8 +34,11 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -152,17 +155,19 @@ public abstract class BaseNodeInitializationService {
             AtomicLong completedExistedTransactionNumber = new AtomicLong(0);
             Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null, "Db Txs Monitor");
             final AtomicBoolean executorServicesInitiated = new AtomicBoolean(false);
+            final AtomicReference<ExecutorService> handleExistingExecutorService = new AtomicReference<>();
             transactions.forEach(transactionData -> {
                 if (!executorServicesInitiated.get()) {
                     existingTransactionExecutorMap = new EnumMap<>(InitializationTransactionHandlerType.class);
                     EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> existingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData(initializationTransactionHandlerType)));
+                    handleExistingExecutorService.set(Executors.newFixedThreadPool(10));
                     executorServicesInitiated.set(true);
                 }
 
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingTransaction(transactionData);
+                handleExistingExecutorService.get().submit(() -> handleExistingTransaction(transactionData));
                 completedExistedTransactionNumber.incrementAndGet();
             });
             if (monitorExistingTransactions.isAlive()) {

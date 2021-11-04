@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -21,7 +22,7 @@ public class ExecutorData {
 
     public ExecutorData(InitializationTransactionHandlerType initializationTransactionHandlerType) {
         executorService = Executors.newFixedThreadPool(1);
-        futures = new ArrayList<>();
+        futures = Collections.synchronizedList(new ArrayList<>());
         this.initializationTransactionHandlerType = initializationTransactionHandlerType;
     }
 
