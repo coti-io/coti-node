@@ -7,6 +7,7 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.BaseNodeBalanceService;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
@@ -66,6 +67,8 @@ public class FundDistributionService {
     private ICurrencyService currencyService;
     @Autowired
     private AwsService awsService;
+    @Autowired
+    private IBalanceService balanceService;
     @Autowired
     private FundDistributionFileCrypto fundDistributionFileCrypto;
     @Autowired

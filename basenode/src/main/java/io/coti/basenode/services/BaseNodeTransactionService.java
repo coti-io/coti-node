@@ -298,7 +298,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         if (!transactionExists) {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> {
                 addDataToMemory(transactionData);
-                propagateMissingTransaction(transactionData);
+                //propagateMissingTransaction(transactionData);
             });
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
             transactionHelper.incrementTotalTransactions();
