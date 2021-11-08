@@ -167,7 +167,7 @@ public abstract class BaseNodeInitializationService {
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingExecutorService.get().submit(() -> handleExistingTransaction(transactionData));
+                handleExistingExecutorService.get().execute(() -> handleExistingTransaction(transactionData));
                 completedExistedTransactionNumber.incrementAndGet();
             });
             if (monitorExistingTransactions.isAlive()) {
