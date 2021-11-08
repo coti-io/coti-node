@@ -30,12 +30,11 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -156,23 +155,34 @@ public abstract class BaseNodeInitializationService {
             Thread monitorExistingTransactions = transactionService.monitorTransactionThread("existing", completedExistedTransactionNumber, null, "Db Txs Monitor");
             final AtomicBoolean executorServicesInitiated = new AtomicBoolean(false);
             final AtomicReference<ExecutorService> handleExistingExecutorService = new AtomicReference<>();
+            final BlockingQueue<TransactionData> executeExistingTransactionsQueue = new LinkedBlockingQueue<>();
+            final Thread executeExistingTransactionsThread = getExecuteExistingTransactionsThread(executeExistingTransactionsQueue, handleExistingExecutorService);
             transactions.forEach(transactionData -> {
                 if (!executorServicesInitiated.get()) {
                     existingTransactionExecutorMap = new EnumMap<>(InitializationTransactionHandlerType.class);
                     EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> existingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData(initializationTransactionHandlerType)));
                     handleExistingExecutorService.set(Executors.newFixedThreadPool(10));
+                    executeExistingTransactionsThread.start();
                     executorServicesInitiated.set(true);
                 }
 
                 if (!monitorExistingTransactions.isAlive()) {
                     monitorExistingTransactions.start();
                 }
-                handleExistingExecutorService.get().execute(() -> handleExistingTransaction(transactionData));
+                try {
+                    executeExistingTransactionsQueue.put(transactionData);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
                 completedExistedTransactionNumber.incrementAndGet();
             });
             if (monitorExistingTransactions.isAlive()) {
                 monitorExistingTransactions.interrupt();
                 monitorExistingTransactions.join();
+            }
+            if (executeExistingTransactionsThread.isAlive()) {
+                executeExistingTransactionsThread.interrupt();
+                executeExistingTransactionsThread.join();
             }
             if (executorServicesInitiated.get()) {
                 existingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
@@ -196,6 +206,26 @@ public abstract class BaseNodeInitializationService {
         } catch (Exception e) {
             throw new TransactionSyncException("Error at sync transactions.", e);
         }
+    }
+
+    private Thread getExecuteExistingTransactionsThread(BlockingQueue<TransactionData> executeExistingTransactionsQueue,
+                                                        AtomicReference<ExecutorService> handleExistingExecutorService) {
+        return new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    TransactionData transactionData = executeExistingTransactionsQueue.take();
+                    handleExistingExecutorService.get().execute(() -> handleExistingTransaction(transactionData));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            LinkedList<TransactionData> remainingExistingTransactions = new LinkedList<>();
+            executeExistingTransactionsQueue.drainTo(remainingExistingTransactions);
+            if (!remainingExistingTransactions.isEmpty()) {
+                log.info("Please wait to execute {} remaining existing transactions", remainingExistingTransactions.size());
+                remainingExistingTransactions.forEach(transactionData -> handleExistingExecutorService.get().execute(() -> handleExistingTransaction(transactionData)));
+            }
+        });
     }
 
     private void initCommunication() {
