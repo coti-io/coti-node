@@ -33,4 +33,8 @@ public interface IConfirmationService {
     int getWaitingMissingTransactionIndexesSize();
 
     int getQueueSize();
+
+    void revertTrustScoreBasedOnAlienatedChildTransaction(TransactionData transactionData);
+
+    boolean revertTransactionTrustChainConsensus(TransactionData transactionData);
 }

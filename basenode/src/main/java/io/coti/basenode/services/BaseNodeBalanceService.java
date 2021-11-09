@@ -78,9 +78,16 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public void rollbackBaseTransactions(TransactionData transactionData) {
+    public void rollbackBaseTransactionsPreBalance(TransactionData transactionData) {
         transactionData.getBaseTransactions().forEach(baseTransactionData ->
                 preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (addressHash, amount) -> amount.add(baseTransactionData.getAmount().negate()))
+        );
+    }
+
+    @Override
+    public void rollbackBaseTransactionsBalance(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData ->
+                balanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (addressHash, amount) -> amount.add(baseTransactionData.getAmount().negate()))
         );
     }
 

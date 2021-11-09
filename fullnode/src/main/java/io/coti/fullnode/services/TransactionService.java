@@ -21,6 +21,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.IDAGLockHelper;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.utilities.MemoryUtils;
@@ -45,7 +46,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
@@ -76,6 +76,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private IChunkService chunkService;
     @Autowired
     private PotService potService;
+    @Autowired
+    private IDAGLockHelper dagLockHelper;
     private BlockingQueue<ExplorerTransactionData> explorerIndexQueue;
     private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
     private BlockingQueue<TransactionData> addressTransactionsByAttachmentQueue;
@@ -85,7 +87,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
     @Value("${java.process.memory.limit:95}")
     private int javaProcessMemoryLimit;
-    private final ReentrantReadWriteLock rejectTransactionReadWriteLock = new ReentrantReadWriteLock();
     private boolean isHandlingRejectedTransaction = false;
 
     @Override
@@ -130,7 +131,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     .body(new Response(
                             TRANSACTION_HANDLING_REJECTED_TRANSACTION, STATUS_ERROR));
         }
-        rejectTransactionReadWriteLock.readLock().lock();
+        dagLockHelper.lockForRead();
         try {
             currentlyAddTransaction.incrementAndGet();
             if (transactionHelper.isTransactionExists(transactionData)) {
@@ -210,7 +211,7 @@ public class TransactionService extends BaseNodeTransactionService {
         } finally {
             transactionHelper.endHandleTransaction(transactionData);
             currentlyAddTransaction.decrementAndGet();
-            rejectTransactionReadWriteLock.readLock().unlock();
+            dagLockHelper.unlockForRead();
         }
     }
 
@@ -651,12 +652,12 @@ public class TransactionService extends BaseNodeTransactionService {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (transactionHelper.isTransactionHashExists(transactionHash)) {
             isHandlingRejectedTransaction = true;
-            rejectTransactionReadWriteLock.writeLock().lock();
+            dagLockHelper.lockForWrite();
             try {
                 super.handlePropagatedRejectedTransaction(rejectedTransactionData);
             } finally {
-                if (rejectTransactionReadWriteLock.isWriteLockedByCurrentThread()) {
-                    rejectTransactionReadWriteLock.writeLock().unlock();
+                if (dagLockHelper.isWriteLockedByCurrentThread()) {
+                    dagLockHelper.unlockForWrite();
                 } else {
                     log.error("Attempt to unlock write lock for transaction: {} failed", transactionHash);
                 }

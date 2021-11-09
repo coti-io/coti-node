@@ -7,6 +7,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
+import io.coti.basenode.services.interfaces.IDAGLockHelper;
 import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
@@ -35,6 +36,8 @@ public class ClusterService implements IClusterService {
     private ISourceSelector sourceSelector;
     @Autowired
     private TrustChainConfirmationService trustChainConfirmationService;
+    @Autowired
+    private IDAGLockHelper dagLockHelper;
     private boolean isStarted;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private final AtomicLong totalSources = new AtomicLong(0);
@@ -86,18 +89,28 @@ public class ClusterService implements IClusterService {
 
     @Scheduled(fixedDelay = 3000, initialDelay = 1000)
     public void checkForTrustChainConfirmedTransaction() {
-        if (!isStarted) {
-            return;
+        try {
+            dagLockHelper.lockForRead();
+            if (!isStarted) {
+                return;
+            }
+
+            sortTrustChainConfirmationClusterByTopologicalOrder();
+            List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
+
+            transactionConsensusConfirmed.forEach(tccInfo -> {
+                trustChainConfirmationCluster.remove(tccInfo.getHash());
+                confirmationService.setTccToTrue(tccInfo);
+                log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
+            });
+        } finally {
+            dagLockHelper.unlockForRead();
         }
+    }
 
+    @Override
+    public void sortTrustChainConfirmationClusterByTopologicalOrder() {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
-        List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
-
-        transactionConsensusConfirmed.forEach(tccInfo -> {
-            trustChainConfirmationCluster.remove(tccInfo.getHash());
-            confirmationService.setTccToTrue(tccInfo);
-            log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
-        });
     }
 
     @Override
@@ -275,6 +288,11 @@ public class ClusterService implements IClusterService {
     @Override
     public ArrayList<HashSet<Hash>> getSourceSetsByTrustScore() {
         return SerializationUtils.clone(sourceSetsByTrustScore);
+    }
+
+    @Override
+    public TransactionData updateTrustChainConfirmationCluster(TransactionData transactionData) {
+        return trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
     }
 
 }

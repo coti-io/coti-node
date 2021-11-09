@@ -20,7 +20,9 @@ public interface IBalanceService {
 
     void continueHandleBalanceChanges(Hash addressHash);
 
-    void rollbackBaseTransactions(TransactionData transactionData);
+    void rollbackBaseTransactionsPreBalance(TransactionData transactionData);
+
+    void rollbackBaseTransactionsBalance(TransactionData transactionData);
 
     void validateBalances();
 

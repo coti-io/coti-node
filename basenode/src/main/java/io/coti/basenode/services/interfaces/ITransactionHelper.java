@@ -77,4 +77,8 @@ public interface ITransactionHelper {
     void removeNoneIndexedTransaction(TransactionData transactionData);
 
     Set<Hash> getNoneIndexedTransactionHashes();
+
+    boolean isAlienated(TransactionData transactionData);
+
+    boolean isDirectChildOfParent(TransactionData transactionData, Hash parentHash);
 }

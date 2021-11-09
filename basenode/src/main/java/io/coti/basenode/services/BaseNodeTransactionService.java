@@ -185,17 +185,23 @@ public class BaseNodeTransactionService implements ITransactionService {
                         STATUS_ERROR));
     }
 
-    public boolean deleteRejectedTransactionSubDAG(Hash rejectedTransactionDataHash) {
+    public boolean deleteRejectedTransactionSubDAGRecursion(Hash rejectedTransactionDataHash, boolean isRootRejected) {
         if (rejectedTransactionDataHash == null)
             return false;
         TransactionData transactionData = transactions.getByHash(rejectedTransactionDataHash);
         if (transactionData == null)
             return false;
-        transactionData.getChildrenTransactionHashes().forEach(this::deleteRejectedTransactionSubDAG);
+        if (confirmationService.revertTransactionTrustChainConsensus(transactionData))
+            log.debug("Rejected Transaction {} TCC consensus was reverted successfully ", transactionData.getHash());
+        transactionData.getChildrenTransactionHashes().forEach(rejectedChildTransactionDataHash -> deleteRejectedTransactionSubDAGRecursion(rejectedChildTransactionDataHash, false));
 
         log.debug("Starting to remove the rejected transaction {}", transactionData.getHash());
         removeDataFromMemory(transactionData);
         transactionHelper.endHandleRejectedTransaction(rejectedTransactionDataHash);
+
+        if (isRootRejected) {
+            confirmationService.revertTrustScoreBasedOnAlienatedChildTransaction(transactionData);
+        }
         return true;
     }
 
@@ -212,7 +218,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
 
         try {
-            boolean deletedSuccessfully = deleteRejectedTransactionSubDAG(rejectedTransactionHash);
+            boolean deletedSuccessfully = deleteRejectedTransactionSubDAGRecursion(rejectedTransactionHash, true);
             if (!deletedSuccessfully) {
                 log.error("Error encountered during the handling of rejected transaction: {}", rejectedTransactionHash);
             }

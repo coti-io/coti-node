@@ -7,8 +7,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public interface IClusterService {
+
+    void sortTrustChainConfirmationClusterByTopologicalOrder();
 
     void attachToCluster(TransactionData transactionData);
 
@@ -29,4 +32,6 @@ public interface IClusterService {
     ConcurrentHashMap<Hash, TransactionData> getCopyTrustChainConfirmationCluster();
 
     ArrayList<HashSet<Hash>> getSourceSetsByTrustScore();
+
+    TransactionData updateTrustChainConfirmationCluster(TransactionData transactionData);
 }

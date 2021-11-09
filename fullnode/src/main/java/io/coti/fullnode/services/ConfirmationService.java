@@ -17,4 +17,9 @@ public class ConfirmationService extends BaseNodeConfirmationService {
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.CONFIRMED);
     }
+
+    @Override
+    protected void continueHandleAddressHistoryRollbackChanges(TransactionData transactionData) {
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
+    }
 }

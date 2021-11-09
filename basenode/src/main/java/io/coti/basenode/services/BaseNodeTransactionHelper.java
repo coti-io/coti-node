@@ -323,7 +323,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     private void revertPreBalance(TransactionData transactionData) {
         log.error("Reverting pre balance: {}", transactionData.getHash());
-        balanceService.rollbackBaseTransactions(transactionData);
+        balanceService.rollbackBaseTransactionsPreBalance(transactionData);
     }
 
     public boolean checkBalancesAndAddToPreBalance(TransactionData transactionData) {
@@ -447,5 +447,27 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     @Override
     public Set<Hash> getNoneIndexedTransactionHashes() {
         return new HashSet<>(noneIndexedTransactionHashes);
+    }
+
+    @Override
+    public boolean isAlienated(TransactionData transactionData) {
+        if (transactionData.getLeftParentHash() == null && transactionData.getRightParentHash() == null) {
+            log.error("Alienated transaction {} with no parents defined", transactionData.getHash());
+            return false;
+        }
+        return !isDirectChildOfParent(transactionData, transactionData.getLeftParentHash()) && !isDirectChildOfParent(transactionData, transactionData.getRightParentHash());
+    }
+
+    @Override
+    public boolean isDirectChildOfParent(TransactionData transactionData, Hash parentHash) {
+        if (parentHash != null) {
+            TransactionData parentTransactionData = transactions.getByHash(parentHash);
+            if (parentTransactionData != null) {
+                return parentTransactionData.getChildrenTransactionHashes().contains(transactionData.getHash());
+            } else {
+                throw new NoSuchElementException(String.format("Transaction expected parent %s is missing in DB", parentHash));
+            }
+        }
+        return false;
     }
 }

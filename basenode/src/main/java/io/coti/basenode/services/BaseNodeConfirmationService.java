@@ -4,7 +4,9 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IBalanceService;
+import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
+import io.coti.basenode.services.interfaces.IDAGLockHelper;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private TransactionIndexes transactionIndexes;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private TrustChainConfirmationService trustChainConfirmationService;
+    @Autowired
+    private IClusterService clusterService;
+    @Autowired
+    private IDAGLockHelper dagLockHelper;
     private BlockingQueue<ConfirmationData> confirmationQueue;
     private final Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
@@ -92,9 +100,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ConfirmationData confirmationData = confirmationQueue.take();
+                dagLockHelper.lockForRead();
                 updateConfirmedTransactionHandler(confirmationData);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            } finally {
+                dagLockHelper.unlockForRead();
             }
         }
         LinkedList<ConfirmationData> remainingConfirmedTransactions = new LinkedList<>();
@@ -171,6 +182,10 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
+        // implemented by the sub classes
+    }
+
+    protected void continueHandleAddressHistoryRollbackChanges(TransactionData transactionData) {
         // implemented by the sub classes
     }
 
@@ -307,6 +322,85 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     @Override
     public int getQueueSize() {
         return confirmationQueue.size();
+    }
+
+
+    private void updateTransactionParentsTrustScoresRecursive(TransactionData transactionData) {
+        if (transactionData.getLeftParentHash() != null) {
+            restoreTransactionTrustScoreRecursive(transactionData.getLeftParentHash());
+        }
+        if (transactionData.getRightParentHash() != null) {
+            restoreTransactionTrustScoreRecursive(transactionData.getRightParentHash());
+        }
+    }
+
+    private void restoreTransactionTrustScoreRecursive(Hash transactionHash) {
+        TransactionData transactionData = transactions.getByHash(transactionHash);
+        if (transactionData != null) {
+            int threshold = trustChainConfirmationService.getThreshold();
+            boolean previousTrustChainConsensus = transactionData.isTrustChainConsensus();
+            double previousTrustChainTrustScore = transactionData.getTrustChainTrustScore();
+            double maxSonTotalTrustScore = trustChainConfirmationService.getMaxSonTotalTrustScore(transactionData);
+            double updatedTrustScore = transactionData.getSenderTrustScore() + maxSonTotalTrustScore;
+            boolean passedThreshold = updatedTrustScore >= threshold;
+
+            if (previousTrustChainConsensus && !passedThreshold && revertTransactionTrustChainConsensus(transactionData) ) {
+                log.debug("Transaction {} TCC consensus was reverted successfully ", transactionData.getHash());
+            }
+            transactionData.setTrustChainTrustScore(updatedTrustScore);
+            log.debug("Transaction with hash:{} totalTrustScore was updated from: {} to:{} ", transactionData.getHash(), previousTrustChainTrustScore, transactionData.getTrustChainTrustScore());
+            trustChainConfirmationService.updateTrustChainConfirmationCluster(transactionData);
+            if (!previousTrustChainConsensus || !passedThreshold) {
+                clusterService.updateTrustChainConfirmationCluster(transactionData);
+            }
+
+            if (!passedThreshold) {
+                updateTransactionParentsTrustScoresRecursive(transactionData);
+            }
+        } else {
+            throw new IllegalArgumentException(String.format("Transaction %s for trust score related revert expected parent", transactionHash));
+        }
+    }
+
+    @Override
+    public boolean revertTransactionTrustChainConsensus(TransactionData transactionData) {
+        if (transactionData == null) {
+            throw new IllegalArgumentException("Transaction to revert trust score consensus is null");
+        }
+        if (!transactionData.isTrustChainConsensus()) {
+            log.debug("Transaction {} TCC was already false ", transactionData.getHash());
+            return false;
+        }
+        transactionData.setTrustChainConsensus(false);
+        transactionData.setTrustChainTrustScore(0);
+        Instant dspConsensusTime = transactionData.getDspConsensusResult() != null ? transactionData.getDspConsensusResult().getIndexingTime() : null;
+        transactionData.setTransactionConsensusUpdateTime(dspConsensusTime);
+        transactionData.setTrustChainConsensusTime(null);
+        trustChainConfirmed.decrementAndGet();
+        log.debug("Transaction {} TCC reverted back to unconfirmed ", transactionData.getHash());
+
+        if (transactionData.getDspConsensusResult() != null && transactionData.getDspConsensusResult().isDspConsensus()) {
+            totalConfirmed.decrementAndGet();
+            balanceService.rollbackBaseTransactionsBalance(transactionData);
+            continueHandleAddressHistoryRollbackChanges(transactionData);
+            log.debug("Transaction {} reverted to unconfirmed successfully ", transactionData.getHash());
+        }
+        transactions.put(transactionData);
+        return true;
+    }
+
+    @Override
+    public void revertTrustScoreBasedOnAlienatedChildTransaction(TransactionData transactionData) {
+        if (transactionData == null) {
+            throw new IllegalArgumentException("Transaction for trust score related revert passed as null");
+        }
+        if (transactionHelper.isAlienated(transactionData)) {
+            clusterService.sortTrustChainConfirmationClusterByTopologicalOrder();
+            trustChainConfirmationService.updateTrustChainClusterTransactions();
+            updateTransactionParentsTrustScoresRecursive(transactionData);
+        } else {
+            throw new IllegalArgumentException(String.format("Transaction %s for trust score related revert expected parents alienated", transactionData.getHash()));
+        }
     }
 
 }
