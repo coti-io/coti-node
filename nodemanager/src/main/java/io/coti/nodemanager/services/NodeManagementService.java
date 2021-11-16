@@ -4,15 +4,13 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
+import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkNodeRecordValidationException;
-import io.coti.nodemanager.http.AddNodePairEventRequest;
-import io.coti.nodemanager.http.AddNodeSingleEventRequest;
-import io.coti.nodemanager.http.DeleteBlacklistNodeRequest;
-import io.coti.nodemanager.http.GetBlacklistNodesResponse;
+import io.coti.nodemanager.http.*;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.model.NodeDailyActivities;
@@ -598,6 +596,30 @@ public class NodeManagementService implements INodeManagementService {
     @Override
     public ResponseEntity<IResponse> getBlacklistedNodes() {
         return ResponseEntity.ok(new GetBlacklistNodesResponse(this.blacklistedNodes));
+    }
+
+    @Override
+    public ResponseEntity<IResponse> updateNode(ReplaceNodeRequest request) {
+        try{
+            String host = networkService.getHost(request.getWebServerUrl());
+
+            Hash domainHash = calculateHostHash(host);
+            ReservedHostData reservedHostData = reservedHosts.getByHash(domainHash);
+            if (reservedHostData == null)  {
+                log.error("Invalid existing host. The specified host {} was not found by server url", host);
+                throw new NetworkNodeValidationException(String.format(INVALID_NODE_DOES_NOT_EXISTS, request.getWebServerUrl()));
+            }
+            if (!reservedHostData.getNodeHash().equals(request.getExistingNodeHash())) {
+                log.error("Invalid existing host. The specified host {} was not found with existing node hash parameter", host);
+                throw new NetworkNodeValidationException(String.format(INVALID_NODE_NOT_FOUND, request.getWebServerUrl()));
+            }
+            reservedHosts.put(new ReservedHostData(domainHash, request.getUpdatedNodeHash()));
+            return ResponseEntity.ok(new Response(String.format(NODE_UPDATED_IN_NETWORK, request.getWebServerUrl())));
+        }
+        catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), BaseNodeHttpStringConstants.STATUS_ERROR));
+        }
     }
 
     public ResponseEntity<IResponse> deleteBlacklistNode(DeleteBlacklistNodeRequest request) {
