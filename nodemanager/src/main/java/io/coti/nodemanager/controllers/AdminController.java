@@ -1,10 +1,7 @@
 package io.coti.nodemanager.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.nodemanager.http.AddNodePairEventRequest;
-import io.coti.nodemanager.http.AddNodeSingleEventRequest;
-import io.coti.nodemanager.http.DeleteBlacklistNodeRequest;
-import io.coti.nodemanager.http.SetNodeStakeAdminRequest;
+import io.coti.nodemanager.http.*;
 import io.coti.nodemanager.services.NodeManagementService;
 import io.coti.nodemanager.services.StakingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,5 +42,10 @@ public class AdminController {
     @DeleteMapping(path = "/node/blacklist")
     public ResponseEntity<IResponse> deleteBlacklistNode(@Valid @RequestBody DeleteBlacklistNodeRequest request) {
         return nodeManagementService.deleteBlacklistNode(request);
+    }
+
+    @PutMapping(path = "/node/update")
+    public ResponseEntity<IResponse> updateNode(@Valid @RequestBody ReplaceNodeRequest request) {
+        return nodeManagementService.updateNode(request);
     }
 }

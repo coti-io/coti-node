@@ -5,6 +5,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.http.AddNodePairEventRequest;
 import io.coti.nodemanager.http.AddNodeSingleEventRequest;
+import io.coti.nodemanager.http.ReplaceNodeRequest;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import org.springframework.http.ResponseEntity;
 
@@ -31,4 +32,6 @@ public interface INodeManagementService {
     ResponseEntity<IResponse> addPairNodeEvent(AddNodePairEventRequest request);
 
     ResponseEntity<IResponse> getBlacklistedNodes();
+
+    ResponseEntity<IResponse> updateNode(ReplaceNodeRequest request);
 }
