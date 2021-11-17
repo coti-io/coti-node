@@ -35,7 +35,9 @@ public abstract class Collection<T extends IEntity> {
         if (entity == null) {
             throw new DataBaseWriteException("Null entity to write to database");
         }
-        databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
+
+        Map<String, Object> json = entity.getJson();
+        databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity), json);
     }
 
     public void put(WriteOptions writeOptions, IEntity entity) {

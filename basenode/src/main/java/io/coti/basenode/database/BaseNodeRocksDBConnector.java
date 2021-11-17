@@ -1,5 +1,7 @@
 package io.coti.basenode.database;
 
+import com.rockset.client.model.AddDocumentsRequest;
+import com.rockset.client.model.AddDocumentsResponse;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
@@ -20,7 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-
+import com.rockset.client.RocksetClient;
 @Slf4j
 @Service
 public class BaseNodeRocksDBConnector implements IDatabaseConnector {
@@ -47,12 +49,15 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     protected List<String> resetTransactionColumnFamilyNames;
     private final Map<String, ColumnFamilyHandle> classNameToColumnFamilyHandleMapping = new LinkedHashMap<>();
     private final ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions().optimizeUniversalStyleCompaction();
+    RocksetClient client;
+
 
     @Override
     public void init() {
         setColumnFamily();
         init(databaseFolder + applicationName + databaseFolderName);
         log.info("{} is up", this.getClass().getSimpleName());
+        client = new RocksetClient("hKlCXHZhME172NGf9ptIRrFVRiJdP3TVPohRKCdaw6cxlBaXrnDj7QQYbV6E27fb", "api.rs2.usw2.rockset.com");
     }
 
     @Override
@@ -292,8 +297,16 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     }
 
     @Override
-    public boolean put(String columnFamilyName, byte[] key, byte[] value) {
+    public boolean put(String columnFamilyName, byte[] key, byte[] value, Map<String, Object> json ) {
         try {
+            if (json != null) {
+                LinkedList<Object> list = new LinkedList<>();
+                list.add(json);
+                AddDocumentsRequest documentsRequest =
+                        new AddDocumentsRequest().data(list);
+                AddDocumentsResponse documentsResponse =
+                        client.addDocuments("commons", "transactions", documentsRequest);
+            }
             db.put(classNameToColumnFamilyHandleMapping.get(columnFamilyName), key, value);
             return true;
         } catch (Exception e) {

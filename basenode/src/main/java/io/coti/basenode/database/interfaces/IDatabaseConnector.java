@@ -6,6 +6,8 @@ import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.util.Map;
+
 public interface IDatabaseConnector {
 
     void init();
@@ -16,7 +18,7 @@ public interface IDatabaseConnector {
 
     String getDBPath();
 
-    boolean put(String columnFamilyName, byte[] key, byte[] value);
+    boolean put(String columnFamilyName, byte[] key, byte[] value, Map<String, Object> json);
 
     boolean put(String columnFamilyName, WriteOptions writeOptions, byte[] key, byte[] value);
 

@@ -1,6 +1,10 @@
 package io.coti.basenode.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
@@ -8,9 +12,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Data
@@ -172,5 +174,27 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
     @Override
     public String toString() {
         return this.hash.toString();
+    }
+
+    public String toJson(){
+        String json = null;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            json = mapper.writeValueAsString(this);
+            System.out.println("ResultingJSONstring = " + json);
+            //System.out.println(json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return json;
+    }
+
+    @Override
+    public Map<String, Object> getJson() {
+        String json = new Gson().toJson(this);
+        Map<String, Object> retMap = new Gson().fromJson(
+                json, new TypeToken<HashMap<String, Object>>() {}.getType()
+        );
+        return retMap;
     }
 }
