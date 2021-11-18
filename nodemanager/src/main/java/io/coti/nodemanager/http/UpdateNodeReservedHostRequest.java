@@ -7,7 +7,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class ReplaceNodeRequest {
+public class UpdateNodeReservedHostRequest {
 
     @NotNull
     @Valid
