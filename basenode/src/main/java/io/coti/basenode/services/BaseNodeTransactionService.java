@@ -2,9 +2,14 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.GetExtendedTransactionsResponse;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.ExtendedTransactionResponseData;
+import io.coti.basenode.http.data.ReducedTransactionResponseData;
+import io.coti.basenode.http.data.TransactionResponseData;
+import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
@@ -18,6 +23,7 @@ import reactor.core.publisher.FluxSink;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,10 +58,44 @@ public class BaseNodeTransactionService implements ITransactionService {
     private TransactionIndexes transactionIndexes;
     protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
+    @Autowired
+    protected IChunkService chunkService;
 
     @Override
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response) {
+        if ((startingIndex < 0) || (startingIndex > endingIndex && endingIndex != -1) || (startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex())
+                || (transactionIndexService.getLastTransactionIndexData().getIndex()) < endingIndex) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(
+                            TRANSACTION_INDEX_INVALID,
+                            STATUS_ERROR));
+        }
+        try {
+            PrintWriter output = response.getWriter();
+            AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+
+            chunkService.startOfChunk(output);
+            long limit = (endingIndex == -1) ? transactionIndexService.getLastTransactionIndexData().getIndex() : endingIndex;
+            for (long i = startingIndex; i <= limit; i++) {
+                sendTransactionResponse(transactionIndexes.getByHash(new Hash(i)).getTransactionHash(), firstTransactionSent, output);
+            }
+            chunkService.endOfChunk(output);
+
+            return ResponseEntity.status(HttpStatus.OK).body(new Response(STATUS_SUCCESS, STATUS_SUCCESS));
+        } catch (Exception e) {
+            log.error(e.toString());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            ADDRESS_TRANSACTIONS_SERVER_ERROR,
+                            STATUS_ERROR));
+        }
     }
 
     @Override
@@ -312,6 +352,26 @@ public class BaseNodeTransactionService implements ITransactionService {
         log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
     }
 
+    @Override
+    public ResponseEntity<IResponse> getMissingTransactionBatch() {
+
+        try {
+            List<TransactionData> transactionsDataList = new ArrayList<>();
+            for (Hash hash : transactionHelper.getNoneIndexedTransactionHashes()) {
+                transactionsDataList.add(transactions.getByHash(transactionIndexes.getByHash(hash).getTransactionHash()));
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionsResponse(transactionsDataList) {
+            });
+        } catch (Exception e) {
+            log.error(e.toString());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            ADDRESS_TRANSACTIONS_SERVER_ERROR,
+                            STATUS_ERROR));
+        }
+    }
+
     protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 (transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null);
@@ -319,6 +379,33 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactionMap.size();
+    }
+
+    protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output) {
+        sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false, false);
+    }
+
+    protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output, Hash addressHash, boolean reduced, boolean extended) {
+        try {
+            TransactionData transactionData = transactions.getByHash(transactionHash);
+            if (transactionData != null) {
+                ITransactionResponseData transactionResponseData;
+                if (reduced) {
+                    transactionResponseData = new ReducedTransactionResponseData(transactionData, addressHash);
+                } else {
+                    transactionResponseData = extended ? new ExtendedTransactionResponseData(transactionData) : new TransactionResponseData(transactionData);
+                }
+                if (firstTransactionSent.get()) {
+                    chunkService.sendChunk(",", output);
+                } else {
+                    firstTransactionSent.set(true);
+                }
+                chunkService.sendChunk(new CustomGson().getInstance().toJson(transactionResponseData), output);
+            }
+        } catch (Exception e) {
+            log.error("Error at transaction response data for {}", transactionHash.toString());
+            log.error(e.getMessage());
+        }
     }
 
 }

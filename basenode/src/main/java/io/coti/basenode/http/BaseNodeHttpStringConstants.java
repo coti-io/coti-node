@@ -10,6 +10,7 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_ADDRESS = "Address %s  is invalid";
     public static final String ADDRESS_TRANSACTIONS_SERVER_ERROR = "Address transactions server error";
 
+    public static final String TRANSACTION_INDEX_INVALID = "Invalid transaction index!";
     public static final String TRANSACTION_ALREADY_EXIST_MESSAGE = "Transaction already exists!";
     public static final String TRANSACTION_CREATED_MESSAGE = "Transaction created";
     public static final String TRANSACTION_DETAILS_SERVER_ERROR = "Transaction details server error";

@@ -38,6 +38,7 @@ public class TransactionResponseData implements ITransactionResponseData {
     private List<String> childrenTransactionHashes;
     private Boolean isValid;
     private String transactionDescription;
+    private long index;
 
     protected TransactionResponseData() {
     }
@@ -78,6 +79,7 @@ public class TransactionResponseData implements ITransactionResponseData {
         transactionData.getChildrenTransactionHashes().forEach(childrenTransactionHash -> childrenTransactionHashes.add(childrenTransactionHash.toHexString()));
         transactionDescription = transactionData.getTransactionDescription();
         isValid = transactionData.isValid();
+        index = transactionData.getDspConsensusResult() != null ? transactionData.getDspConsensusResult().getIndex() : 0;
     }
 
 

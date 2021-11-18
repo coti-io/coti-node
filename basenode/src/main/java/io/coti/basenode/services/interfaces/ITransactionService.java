@@ -17,6 +17,8 @@ public interface ITransactionService {
 
     void init();
 
+    ResponseEntity<IResponse> getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response);
+
     void getTransactionBatch(long startingIndex, HttpServletResponse response);
 
     void getTransactionBatch(long startingIndex, FluxSink<byte[]> sink);
@@ -34,4 +36,6 @@ public interface ITransactionService {
     int totalPostponedTransactions();
 
     void addDataToMemory(TransactionData transactionData);
+
+    ResponseEntity<IResponse> getMissingTransactionBatch();
 }

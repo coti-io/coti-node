@@ -71,8 +71,6 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private INetworkService networkService;
     @Autowired
-    private IChunkService chunkService;
-    @Autowired
     private PotService potService;
     @Autowired
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
@@ -489,33 +487,6 @@ public class TransactionService extends BaseNodeTransactionService {
             getAddressTransactionBatchByTimestamp(new GetAddressTransactionBatchByTimestampRequest(addressHashSet, startTime, endTime, limit, order), response, reduced);
         } catch (Exception e) {
             log.error("Error sending date range address transaction batch by date");
-            log.error(e.getMessage());
-        }
-    }
-
-    private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output) {
-        sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false, false);
-    }
-
-    private void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output, Hash addressHash, boolean reduced, boolean extended) {
-        try {
-            TransactionData transactionData = transactions.getByHash(transactionHash);
-            if (transactionData != null) {
-                ITransactionResponseData transactionResponseData;
-                if (reduced) {
-                    transactionResponseData = new ReducedTransactionResponseData(transactionData, addressHash);
-                } else {
-                    transactionResponseData = extended ? new ExtendedTransactionResponseData(transactionData) : new TransactionResponseData(transactionData);
-                }
-                if (firstTransactionSent.get()) {
-                    chunkService.sendChunk(",", output);
-                } else {
-                    firstTransactionSent.set(true);
-                }
-                chunkService.sendChunk(new CustomGson().getInstance().toJson(transactionResponseData), output);
-            }
-        } catch (Exception e) {
-            log.error("Error at transaction response data for {}", transactionHash.toString());
             log.error(e.getMessage());
         }
     }
