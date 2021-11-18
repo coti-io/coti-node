@@ -47,8 +47,8 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_SERVER_URL_UNKNOWN_HOST = "Invalid node server URL %s: unknown host. Dns record not found";
     public static final String INVALID_NODE_SERVER_URL_EMPTY_HOST = "Invalid node server URL %s: empty host";
     public static final String INVALID_NODE_SERVER_URL_HOST_RESERVED = "Invalid node server URL %s: host %s reserved to another user";
-    public static final String INVALID_NODE_NOT_FOUND = "Invalid existing host. The specified host %s was not found with existing node hash parameter";
-    public static final String INVALID_NODE_DOES_NOT_EXISTS = "Invalid existing host. The specified host %s was not found by server url";
+    public static final String INVALID_NODE_RESERVED_HOST_WRONG_EXISTING_NODE = "Invalid existing host. The specified host %s was not found with existing node hash parameter";
+    public static final String INVALID_NODE_RESERVED_HOST_NOT_FOUND = "Invalid existing host. The specified host %s was not found by server url";
     public static final String INVALID_NODE_SERVER_URL_SSL_REQUIRED = "Invalid node server URL %s: SSL required";
     public static final String INVALID_NODE_SERVER_URL_SSL_CONNECTION_NOT_OPENED = "Invalid node server URL %s: SSL connection failed to be opened";
     public static final String INVALID_NODE_SERVER_URL_SSL_CERTIFICATE_NOT_FOUND = "Invalid node server URL %s: SSL certificate not found";

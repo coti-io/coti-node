@@ -44,8 +44,8 @@ public class AdminController {
         return nodeManagementService.deleteBlacklistNode(request);
     }
 
-    @PutMapping(path = "/node/update")
-    public ResponseEntity<IResponse> updateNode(@Valid @RequestBody ReplaceNodeRequest request) {
-        return nodeManagementService.updateNode(request);
+    @PutMapping(path = "/node/reservedHost/update")
+    public ResponseEntity<IResponse> updateNodeReservedHost(@Valid @RequestBody UpdateNodeReservedHostRequest request) {
+        return nodeManagementService.updateNodeReservedHost(request);
     }
 }

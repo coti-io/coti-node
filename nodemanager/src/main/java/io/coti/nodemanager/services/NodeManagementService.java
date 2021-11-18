@@ -599,24 +599,23 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     @Override
-    public ResponseEntity<IResponse> updateNode(ReplaceNodeRequest request) {
-        try{
+    public ResponseEntity<IResponse> updateNodeReservedHost(UpdateNodeReservedHostRequest request) {
+        try {
             String host = networkService.getHost(request.getWebServerUrl());
 
             Hash domainHash = calculateHostHash(host);
             ReservedHostData reservedHostData = reservedHosts.getByHash(domainHash);
-            if (reservedHostData == null)  {
+            if (reservedHostData == null) {
                 log.error("Invalid existing host. The specified host {} was not found by server url", host);
-                throw new NetworkNodeValidationException(String.format(INVALID_NODE_DOES_NOT_EXISTS, request.getWebServerUrl()));
+                throw new NetworkNodeValidationException(String.format(INVALID_NODE_RESERVED_HOST_NOT_FOUND, request.getWebServerUrl()));
             }
             if (!reservedHostData.getNodeHash().equals(request.getExistingNodeHash())) {
                 log.error("Invalid existing host. The specified host {} was not found with existing node hash parameter", host);
-                throw new NetworkNodeValidationException(String.format(INVALID_NODE_NOT_FOUND, request.getWebServerUrl()));
+                throw new NetworkNodeValidationException(String.format(INVALID_NODE_RESERVED_HOST_WRONG_EXISTING_NODE, request.getWebServerUrl()));
             }
             reservedHosts.put(new ReservedHostData(domainHash, request.getUpdatedNodeHash()));
-            return ResponseEntity.ok(new Response(String.format(NODE_UPDATED_IN_NETWORK, request.getWebServerUrl())));
-        }
-        catch (Exception e) {
+            return ResponseEntity.ok(new Response(String.format(NODE_RESERVED_HOST_UPDATED, request.getWebServerUrl())));
+        } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), BaseNodeHttpStringConstants.STATUS_ERROR));
         }
