@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.LogicType;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.interfaces.IClusterHelper;
@@ -24,24 +25,34 @@ public class TrustChainConfirmationService {
 
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
+    private long enforceDSPCForTCCTransactionIndex;
     private ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster;
     private LinkedList<TransactionData> topologicalOrderedGraph;
     @Autowired
     private IClusterHelper clusterHelper;
+    @Autowired
+    private TransactionIndexService transactionIndexService;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
         topologicalOrderedGraph = new LinkedList<>();
         clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
+        enforceDSPCForTCCTransactionIndex = LogicType.FORCE_DSPC_FOR_TCC.getTransactionIndex();
+    }
+
+    private boolean isForceDSPCForTCC() {
+        return transactionIndexService.getLastTransactionIndexData().getIndex() >= enforceDSPCForTCCTransactionIndex;
     }
 
     private void setTotalTrustScore(TransactionData parent) {
-        double maxChildrenTotalTrustScore = 0;
+        if (isForceDSPCForTCC() && !parent.isDspConsensus())
+            return;
 
+        double maxChildrenTotalTrustScore = 0;
         for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
             try {
                 TransactionData child = trustChainConfirmationCluster.get(transactionHash);
-                if (child != null && child.getTrustChainTrustScore()
+                if (child != null && (!isForceDSPCForTCC() || child.isDspConsensus()) && child.getTrustChainTrustScore()
                         > maxChildrenTotalTrustScore) {
                     maxChildrenTotalTrustScore = child.getTrustChainTrustScore();
                 }
@@ -55,7 +66,6 @@ public class TrustChainConfirmationService {
         if (parent.getTrustChainTrustScore() < parent.getSenderTrustScore() + maxChildrenTotalTrustScore) {
             parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxChildrenTotalTrustScore);
         }
-
     }
 
     public List<TccInfo> getTrustChainConfirmedTransactions() {
