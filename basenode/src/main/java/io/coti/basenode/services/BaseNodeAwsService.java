@@ -85,6 +85,9 @@ public class BaseNodeAwsService implements IAwsService {
 
         Thread monitorTransferProgress = null;
         try {
+            log.debug("bucketName:" + bucketName);
+            log.debug("s3folderPath:" + s3folderPath);
+            log.debug("directoryToDownload:" + directoryToDownload);
             MultipleFileDownload multipleFileDownload = transferManager.downloadDirectory(bucketName, s3folderPath, new File(directoryToDownload));
             monitorTransferProgress = monitorTransferProgress(multipleFileDownload);
             monitorTransferProgress.start();
@@ -96,9 +99,11 @@ public class BaseNodeAwsService implements IAwsService {
             }
             removeExcessFolderStructure(directoryToDownload, s3folderPath, directoryToDownload);
         } catch (InterruptedException e) {
+            log.debug(String.valueOf(e));
             Thread.currentThread().interrupt();
             throw new AwsDataTransferException("Unable to download folder and contents to S3. The thread is interrupted");
         } catch (Exception e) {
+            log.debug(String.valueOf(e));
             throw new AwsDataTransferException("Unable to download folder and contents to S3.", e);
         } finally {
             if (monitorTransferProgress != null && monitorTransferProgress.isAlive()) {
