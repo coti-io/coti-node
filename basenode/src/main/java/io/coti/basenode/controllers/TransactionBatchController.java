@@ -27,11 +27,6 @@ public class TransactionBatchController {
         return transactionService.getTransactionBatch(transactionByIndexRequest.getStartingIndex(), transactionByIndexRequest.getEndingIndex(), response);
     }
 
-    @GetMapping(value="/missing")
-    public ResponseEntity<IResponse> getMissingTransactionBatch()  {
-        return transactionService.getMissingTransactionBatch();
-    }
-
     @GetMapping()
     public void getTransactionBatch(@RequestParam(name = "starting_index") @Valid @NotNull Long startingIndex, HttpServletResponse response) {
         transactionService.getTransactionBatch(startingIndex, response);

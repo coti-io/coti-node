@@ -25,6 +25,8 @@ public interface ITransactionService {
 
     ResponseEntity<IResponse> getNoneIndexedTransactions();
 
+    void getNoneIndexedTransactionBatch(HttpServletResponse response);
+
     ResponseEntity<IResponse> getPostponedTransactions();
 
     void handlePropagatedTransaction(TransactionData transactionData);
@@ -36,6 +38,4 @@ public interface ITransactionService {
     int totalPostponedTransactions();
 
     void addDataToMemory(TransactionData transactionData);
-
-    ResponseEntity<IResponse> getMissingTransactionBatch();
 }

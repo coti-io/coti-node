@@ -1,6 +1,7 @@
 package io.coti.basenode.http;
 
 import lombok.Data;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
+
 @Slf4j
 @RestController
 @RequestMapping("/transaction")
@@ -20,6 +22,11 @@ public class BaseNodeTransactionController {
     @GetMapping(path = "/none-indexed")
     public ResponseEntity<IResponse> getNoneIndexedTransactions() {
         return transactionService.getNoneIndexedTransactions();
+    }
+
+    @GetMapping(path = "/none-indexed/batch")
+    public void getNoneIndexedTransactionBatch(HttpServletResponse response) {
+        transactionService.getNoneIndexedTransactionBatch(response);
     }
 
     @GetMapping(path = "/postponed")

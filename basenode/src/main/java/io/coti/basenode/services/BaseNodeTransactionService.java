@@ -203,6 +203,24 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
+    public void getNoneIndexedTransactionBatch(HttpServletResponse response) {
+        try {
+            Set<Hash> noneIndexedTransactionHashes = transactionHelper.getNoneIndexedTransactionHashes();
+            PrintWriter output = response.getWriter();
+            chunkService.startOfChunk(output);
+            AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+
+            noneIndexedTransactionHashes.forEach(transactionHash -> {
+                sendTransactionResponse(transactionHash, firstTransactionSent, output);
+            });
+            chunkService.endOfChunk(output);
+        } catch (Exception e) {
+            log.error("Error sending none-indexed transaction batch");
+            log.error(e.getMessage());
+        }
+    }
+
+    @Override
     public ResponseEntity<IResponse> getPostponedTransactions() {
         try {
             ConcurrentHashMap<Hash, TransactionData> postponedTransactionCluster = new ConcurrentHashMap<>();
@@ -350,26 +368,6 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public void addDataToMemory(TransactionData transactionData) {
         log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
-    }
-
-    @Override
-    public ResponseEntity<IResponse> getMissingTransactionBatch() {
-
-        try {
-            List<TransactionData> transactionsDataList = new ArrayList<>();
-            for (Hash hash : transactionHelper.getNoneIndexedTransactionHashes()) {
-                transactionsDataList.add(transactions.getByHash(transactionIndexes.getByHash(hash).getTransactionHash()));
-            }
-            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionsResponse(transactionsDataList) {
-            });
-        } catch (Exception e) {
-            log.error(e.toString());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            ADDRESS_TRANSACTIONS_SERVER_ERROR,
-                            STATUS_ERROR));
-        }
     }
 
     protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
