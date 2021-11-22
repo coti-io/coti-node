@@ -68,8 +68,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response) {
         CustomHttpServletResponse customResponse = new CustomHttpServletResponse(response);
-
-        try (PrintWriter output = customResponse.getWriter()) {
+        PrintWriter output;
+        try {
             if ((startingIndex < 0) || (startingIndex > endingIndex && endingIndex != -1) || (startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex())
                     || (transactionIndexService.getLastTransactionIndexData().getIndex()) < endingIndex) {
                 customResponse.printResponse(new Response(
@@ -77,9 +77,17 @@ public class BaseNodeTransactionService implements ITransactionService {
                         STATUS_ERROR), HttpStatus.BAD_REQUEST.value());
                 return;
             }
-            AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+            output = customResponse.getWriter();
+        } catch (IOException ioException) {
+            log.error(ioException.getMessage());
+            return;
+        }
 
+        AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+        boolean isChunkStarted = false;
+        try {
             chunkService.startOfChunk(output);
+            isChunkStarted = true;
             long limit = (endingIndex == -1) ? transactionIndexService.getLastTransactionIndexData().getIndex() : endingIndex;
             for (long i = startingIndex; i <= limit; i++) {
                 sendTransactionResponse(transactionIndexes.getByHash(new Hash(i)).getTransactionHash(), firstTransactionSent, output);
@@ -89,13 +97,18 @@ public class BaseNodeTransactionService implements ITransactionService {
         } catch (Exception e) {
             log.error(e.toString());
             try {
+                if (firstTransactionSent.get()) {
+                    chunkService.sendChunk(",", output);
+                }
                 customResponse.printResponse(new Response(
                         TRANSACTION_RESPONSE_ERROR,
                         STATUS_ERROR), HttpStatus.INTERNAL_SERVER_ERROR.value());
+                if (isChunkStarted) {
+                    chunkService.endOfChunk(output);
+                }
             } catch (IOException ioException) {
                 log.error(ioException.getMessage());
             }
-
         }
     }
 
