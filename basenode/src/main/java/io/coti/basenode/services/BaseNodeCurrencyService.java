@@ -170,7 +170,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         } else {
             CurrencyTypeData nativeCurrencyTypeData = nativeCurrency.getCurrencyTypeData();
             CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency.getSymbol(), nativeCurrencyTypeData);
-            if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
+            boolean y = currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData);
+            if (!y) {
                 throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrency.getCurrencyTypeData().getCurrencyType().getText());
             }
         }

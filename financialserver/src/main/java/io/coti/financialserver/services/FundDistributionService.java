@@ -57,18 +57,18 @@ public class FundDistributionService {
     private boolean distributionCronEnabled;
     @Autowired
     private TransactionCreationService transactionCreationService;
+//    @Autowired
+//    private NodeCryptoHelper nodeCryptoHelper;
     @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
-    @Autowired
-    private BaseNodeBalanceService baseNodeBalanceService;
+    private IBalanceService balanceService;
     @Autowired
     protected INetworkService networkService;
     @Autowired
     private ICurrencyService currencyService;
     @Autowired
     private AwsService awsService;
-    @Autowired
-    private IBalanceService balanceService;
+//    @Autowired
+//    private IBalanceService balanceService;
     @Autowired
     private FundDistributionFileCrypto fundDistributionFileCrypto;
     @Autowired

@@ -31,8 +31,8 @@ public class NetworkFeeResponseData implements IResponseData {
         this.originalAmount = networkFeeData.getOriginalAmount().toPlainString();
         this.reducedAmount = networkFeeData.getReducedAmount() == null ? null : networkFeeData.getReducedAmount().toPlainString();
         this.addressHash = networkFeeData.getAddressHash().toString();
-        this.currencyHash = networkFeeData.getCurrencyHash().toString();
-        this.originalCurrencyHash = networkFeeData.getOriginalCurrencyHash().toString();
+        this.currencyHash = networkFeeData.getCurrencyHash() != null ? networkFeeData.getCurrencyHash().toString() : null;
+        this.originalCurrencyHash = networkFeeData.getOriginalCurrencyHash() != null ? networkFeeData.getOriginalCurrencyHash().toString() : null;
         this.createTime = networkFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(NetworkFeeData.class).name();
         this.networkFeeTrustScoreNodeResult = new ArrayList<>();

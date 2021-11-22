@@ -16,8 +16,6 @@ public class GetMintingHistoryRequest extends Request implements ISignValidatabl
     @NotNull
     private @Valid Hash userHash;
     @NotNull
-    private Instant creationTime;
-    @NotNull
     private @Valid SignatureData signature;
 
     @Override

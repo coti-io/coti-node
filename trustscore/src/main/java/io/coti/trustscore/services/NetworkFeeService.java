@@ -104,8 +104,16 @@ public class NetworkFeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE,
                         fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
             }
-
-            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, nativeCurrencyHash, fee, fullNodeFeeData.getOriginalCurrencyHash(), originalAmount, reducedAmount, Instant.now());
+            CurrencyData currencyData = currencies.getByHash(nativeCurrencyHash);
+            if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.NATIVE_COIN) {
+                nativeCurrencyHash = null;
+            }
+            Hash originalCurrencyHash = fullNodeFeeData.getOriginalCurrencyHash();
+            currencyData = currencies.getByHash(originalCurrencyHash);
+            if (currencyData != null && currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.NATIVE_COIN) {
+                originalCurrencyHash = null;
+            }
+            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, nativeCurrencyHash, fee, originalCurrencyHash, originalAmount, reducedAmount, Instant.now());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);

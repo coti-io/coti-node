@@ -48,7 +48,8 @@ public class CurrencyService extends BaseNodeCurrencyService {
             currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
             validateCurrencyUniqueness(currencyHash, currencyName);
             CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(originatorCurrencyData.getSymbol(), currencyTypeData);
-            if (!originatorCurrencyCrypto.verifySignature(originatorCurrencyData) || !currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
+            boolean x = currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData);
+            if (!originatorCurrencyCrypto.verifySignature(originatorCurrencyData) || !x) {
                 throw new CurrencyValidationException(TOKEN_GENERATION_REQUEST_INVALID_SIGNATURE);
             }
         } catch (CurrencyValidationException e) {

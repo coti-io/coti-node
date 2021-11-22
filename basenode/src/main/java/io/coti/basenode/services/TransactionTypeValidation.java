@@ -184,9 +184,11 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 if (!originalAmount.equals(BigDecimal.ZERO) && originalAmount.compareTo(outputBaseTransactionData.getOriginalAmount()) != 0) {
                     return false;
                 }
-                if (originalCurrencyHash != null &&
-                        !originalCurrencyHash.equals(Optional.ofNullable(outputBaseTransactionData.getOriginalCurrencyHash()).orElse(nativeCurrencyHash))) {
-                    return false;
+                if (outputBaseTransactionData.getOriginalCurrencyHash() != null) {
+                    if (originalCurrencyHash != null &&
+                            !originalCurrencyHash.equals(Optional.ofNullable(outputBaseTransactionData.getOriginalCurrencyHash()).orElse(nativeCurrencyHash))) {
+                        return false;
+                    }
                 }
 
                 originalAmount = outputBaseTransactionData.getOriginalAmount();

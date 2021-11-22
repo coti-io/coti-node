@@ -1,5 +1,6 @@
 package io.coti.basenode.data;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -12,7 +13,7 @@ public enum CurrencyType {
     GLOBAL_PAYMENT_CMD_TOKEN("Global Payment CMD Token");
 
     private final String text;
-    private static final Map<String, CurrencyType> textToTypeMap = new HashMap<>();
+    private static Map<String, CurrencyType> textToTypeMap ;//= new HashMap<>();
 
     CurrencyType(String text) {
         this.text = text;
@@ -20,6 +21,10 @@ public enum CurrencyType {
     }
 
     private void setToTextToTypeMap(String text) {
+        if (textToTypeMap == null)
+        {
+            textToTypeMap = new HashMap<>();
+        }
         textToTypeMap.put(text, this);
     }
 

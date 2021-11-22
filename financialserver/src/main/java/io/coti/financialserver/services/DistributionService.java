@@ -31,8 +31,8 @@ public class DistributionService {
     private TransactionCreationService transactionCreationService;
     @Autowired
     private ICurrencyService currencyService;
-    @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
+//    @Autowired
+//    private NodeCryptoHelper nodeCryptoHelper;
 
     public void distributeToInitialFunds() {
         Hash cotiGenesisAddress = NodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);

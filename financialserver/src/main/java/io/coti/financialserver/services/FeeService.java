@@ -39,8 +39,8 @@ public class FeeService {
     @Value("${regular.token.minting.fee}")
     private BigDecimal regularTokenMintingFee;
 
-    @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
+//    @Autowired
+//    private NodeCryptoHelper nodeCryptoHelper;
     @Autowired
     private ICurrencyService currencyService;
     @Autowired
@@ -75,7 +75,7 @@ public class FeeService {
     }
 
     protected Hash networkFeeAddress() {
-        return nodeCryptoHelper.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
+        return NodeCryptoHelper.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
     }
 
     protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
