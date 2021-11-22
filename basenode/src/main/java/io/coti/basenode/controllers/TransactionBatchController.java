@@ -1,12 +1,10 @@
 package io.coti.basenode.controllers;
 
 import io.coti.basenode.http.GetTransactionByIndexRequest;
-import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -23,8 +21,8 @@ public class TransactionBatchController {
     private ITransactionService transactionService;
 
     @PostMapping()
-    public ResponseEntity<IResponse> getTransactionBatchByStartAndEnd(@RequestBody @Valid GetTransactionByIndexRequest transactionByIndexRequest, HttpServletResponse response) {
-        return transactionService.getTransactionBatch(transactionByIndexRequest.getStartingIndex(), transactionByIndexRequest.getEndingIndex(), response);
+    public void getTransactionBatchByStartAndEnd(@RequestBody @Valid GetTransactionByIndexRequest transactionByIndexRequest, HttpServletResponse response) {
+        transactionService.getTransactionBatch(transactionByIndexRequest.getStartingIndex(), transactionByIndexRequest.getEndingIndex(), response);
     }
 
     @GetMapping()

@@ -17,7 +17,7 @@ public interface ITransactionService {
 
     void init();
 
-    ResponseEntity<IResponse> getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response);
+    void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response);
 
     void getTransactionBatch(long startingIndex, HttpServletResponse response);
 

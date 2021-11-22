@@ -38,6 +38,9 @@ public class BaseNodeChunkService implements IChunkService {
         } catch (Exception e) {
             throw new ChunkException(e.getMessage());
         }
+        if (output.checkError()) {
+            throw new ChunkException("Error while sending chunk");
+        }
     }
 
     @Override
