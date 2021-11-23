@@ -4,10 +4,13 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionIndexData;
+import io.coti.basenode.http.GetLastTransactionIndexResponse;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
@@ -54,6 +57,10 @@ public class TransactionIndexService {
 
     public void setLastTransactionIndexData(TransactionIndexData transactionIndexData) {
         lastTransactionIndexData = transactionIndexData;
+    }
+
+    public ResponseEntity<IResponse> getLastTransactionIndex() {
+        return ResponseEntity.ok(new GetLastTransactionIndexResponse(lastTransactionIndexData.getIndex()));
     }
 
     public TransactionIndexData getNextIndexData(TransactionIndexData currentLastTransactionIndexData, TransactionData newTransactionData) {

@@ -1,6 +1,7 @@
 package io.coti.basenode.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.TransactionIndexService;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ public class BaseNodeTransactionController {
 
     @Autowired
     private ITransactionService transactionService;
+    @Autowired
+    private TransactionIndexService transactionIndexService;
 
     @GetMapping(path = "/none-indexed")
     public ResponseEntity<IResponse> getNoneIndexedTransactions() {
@@ -32,5 +35,10 @@ public class BaseNodeTransactionController {
     @GetMapping(path = "/postponed")
     public ResponseEntity<IResponse> getPostponedTransactions() {
         return transactionService.getPostponedTransactions();
+    }
+
+    @GetMapping(path = "/lastIndex")
+    public ResponseEntity<IResponse> getLastTransactionIndex() {
+        return transactionIndexService.getLastTransactionIndex();
     }
 }
