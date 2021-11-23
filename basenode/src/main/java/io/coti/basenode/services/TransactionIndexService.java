@@ -52,6 +52,10 @@ public class TransactionIndexService {
         return lastTransactionIndexData;
     }
 
+    public Long getLastTransactionIndex() {
+        return lastTransactionIndexData.getIndex();
+    }
+
     public void setLastTransactionIndexData(TransactionIndexData transactionIndexData) {
         lastTransactionIndexData = transactionIndexData;
     }

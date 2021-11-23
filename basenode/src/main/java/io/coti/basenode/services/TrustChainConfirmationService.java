@@ -28,6 +28,8 @@ public class TrustChainConfirmationService {
     private LinkedList<TransactionData> topologicalOrderedGraph;
     @Autowired
     private IClusterHelper clusterHelper;
+    @Autowired
+    private TransactionIndexService transactionIndexService;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
@@ -35,13 +37,23 @@ public class TrustChainConfirmationService {
         clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
     }
 
+    private boolean isForceDSPCForTCC() {
+        boolean isRuleActive =  RulesConditionsService.FORCE_DSPC_FOR_TCC.isTransactionRuleApplicable(transactionIndexService);
+        if (isRuleActive)
+            log.debug("Rule FORCE_DSPC_FOR_TCC is enforced");
+        return isRuleActive;
+    }
+
     private void setTotalTrustScore(TransactionData parent) {
         double maxChildrenTotalTrustScore = 0;
-
+        if (isForceDSPCForTCC() && !parent.isDspConsensus()) {
+            parent.setTrustChainTrustScore(parent.getSenderTrustScore());
+            return;
+        }
         for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
             try {
                 TransactionData child = trustChainConfirmationCluster.get(transactionHash);
-                if (child != null && child.getTrustChainTrustScore()
+                if (child != null && (!isForceDSPCForTCC() || child.isDspConsensus()) && child.getTrustChainTrustScore()
                         > maxChildrenTotalTrustScore) {
                     maxChildrenTotalTrustScore = child.getTrustChainTrustScore();
                 }
@@ -55,7 +67,6 @@ public class TrustChainConfirmationService {
         if (parent.getTrustChainTrustScore() < parent.getSenderTrustScore() + maxChildrenTotalTrustScore) {
             parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxChildrenTotalTrustScore);
         }
-
     }
 
     public List<TccInfo> getTrustChainConfirmedTransactions() {
@@ -69,7 +80,6 @@ public class TrustChainConfirmationService {
                 log.debug("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transactionData.getHash(), transactionData.getSenderTrustScore(), transactionData.getTrustChainTrustScore());
             }
         }
-
         return trustChainConfirmations;
     }
 

@@ -132,6 +132,8 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         return valid;
     }
 
+    public boolean isDspConsensus() { return dspConsensusResult != null && dspConsensusResult.isDspConsensus();}
+
     @JsonIgnore
     public List<OutputBaseTransactionData> getOutputBaseTransactions() {
         return this.getBaseTransactions().stream().filter(OutputBaseTransactionData.class::isInstance).map(OutputBaseTransactionData.class::cast).collect(Collectors.toList());
