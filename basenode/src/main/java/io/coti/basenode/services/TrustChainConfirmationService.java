@@ -47,7 +47,7 @@ public class TrustChainConfirmationService {
     private void setTotalTrustScore(TransactionData parent) {
         double maxChildrenTotalTrustScore = 0;
         if (isForceDSPCForTCC() && !parent.isDspConsensus()) {
-            parent.setTrustChainTrustScore(parent.getSenderTrustScore());
+            parent.setTrustChainTrustScore(0);
             return;
         }
         for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
