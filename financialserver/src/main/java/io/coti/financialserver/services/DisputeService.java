@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.*;
 
@@ -293,9 +294,10 @@ public class DisputeService {
 
         List<String> arbitratorUserHashList = new ArrayList<>(this.arbitratorUserHashes);
         int arbitratorsCount = 0;
+        Random randomGenerator = new SecureRandom();
         while (arbitratorsCount < COUNT_ARBITRATORS_PER_DISPUTE) {
 
-            random = new Random().nextInt(arbitratorUserHashList.size());
+            random = randomGenerator.nextInt(arbitratorUserHashList.size());
 
             Hash arbitratorHash = new Hash(arbitratorUserHashList.get(random));
             disputeData.getArbitratorHashes().add(arbitratorHash);
