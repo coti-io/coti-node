@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.NetworkType;
 import io.coti.basenode.exceptions.RuleConditionValidationException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -8,7 +9,10 @@ import java.lang.reflect.Method;
 
 @Slf4j
 public enum RulesConditionsService {
-    FORCE_DSPC_FOR_TCC(TransactionIndexService.class, "getLastTransactionIndex", ">", Long.valueOf(700000));
+    NETWORK_TYPE_MAINNET(BaseNodeInitializationService.class, "getNetworkType", "eq", NetworkType.MainNet),
+    NETWORK_TYPE_TESTNET(BaseNodeInitializationService.class, "getNetworkType", "eq", NetworkType.TestNet),
+    FORCE_DSPC_FOR_TCC_MAINNET(TransactionIndexService.class, "getLastTransactionIndex", ">", Long.valueOf(700000)),
+    FORCE_DSPC_FOR_TCC_TESTNET(TransactionIndexService.class, "getLastTransactionIndex", ">", Long.valueOf(100000));
 
     private final Class<? extends Object> serviceClass;
     private final String methodName;
@@ -47,6 +51,8 @@ public enum RulesConditionsService {
         Class<? extends Object> classToConvertTo = this.threshold.getClass();
         if (retVal != null) {
             switch (this.condition) {
+                case "eq":
+                    return classToConvertTo.cast(retVal).equals(this.threshold);
                 case ">":
                     return (Long) classToConvertTo.cast(retVal) > (Long) this.threshold;
                 case "<":

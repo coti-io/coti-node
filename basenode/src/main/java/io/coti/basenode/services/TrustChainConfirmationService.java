@@ -30,6 +30,8 @@ public class TrustChainConfirmationService {
     private IClusterHelper clusterHelper;
     @Autowired
     private TransactionIndexService transactionIndexService;
+    @Autowired
+    private BaseNodeInitializationService initializationService;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
@@ -38,7 +40,8 @@ public class TrustChainConfirmationService {
     }
 
     private boolean isForceDSPCForTCC() {
-        boolean isRuleActive =  RulesConditionsService.FORCE_DSPC_FOR_TCC.isTransactionRuleApplicable(transactionIndexService);
+        boolean isRuleActive =  RulesConditionsService.NETWORK_TYPE_MAINNET.isTransactionRuleApplicable(initializationService)
+                && RulesConditionsService.FORCE_DSPC_FOR_TCC_MAINNET.isTransactionRuleApplicable(transactionIndexService);
         if (isRuleActive)
             log.debug("Rule FORCE_DSPC_FOR_TCC is enforced");
         return isRuleActive;
