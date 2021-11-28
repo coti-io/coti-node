@@ -230,10 +230,6 @@ public abstract class BaseNodeInitializationService {
         networkService.setNetworkData(getNetworkDetailsFromNodeManager());
     }
 
-    protected NetworkType getNetworkType() {
-        return networkType;
-    }
-
     private NetworkData getNetworkDetailsFromNodeManager() {
         NetworkData networkData;
         try {

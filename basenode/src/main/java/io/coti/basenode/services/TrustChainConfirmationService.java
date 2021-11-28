@@ -24,14 +24,14 @@ public class TrustChainConfirmationService {
 
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
+    @Value("${force.dspc.for.tcc.transaction.index: 700000}")
+    protected long forceDSPCForTCCThreshold;
     private ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster;
     private LinkedList<TransactionData> topologicalOrderedGraph;
     @Autowired
     private IClusterHelper clusterHelper;
     @Autowired
     private TransactionIndexService transactionIndexService;
-    @Autowired
-    private BaseNodeInitializationService initializationService;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
@@ -40,8 +40,7 @@ public class TrustChainConfirmationService {
     }
 
     private boolean isForceDSPCForTCC() {
-        boolean isRuleActive =  RulesConditionsService.NETWORK_TYPE_MAINNET.isTransactionRuleApplicable(initializationService)
-                && RulesConditionsService.FORCE_DSPC_FOR_TCC_MAINNET.isTransactionRuleApplicable(transactionIndexService);
+        boolean isRuleActive =  RulesConditionsService.FORCE_DSPC_FOR_TCC.isRuleApplicable(transactionIndexService, Long.valueOf(forceDSPCForTCCThreshold));
         if (isRuleActive)
             log.debug("Rule FORCE_DSPC_FOR_TCC is enforced");
         return isRuleActive;

@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.data.NetworkType;
 import io.coti.basenode.exceptions.RuleConditionValidationException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,24 +8,24 @@ import java.lang.reflect.Method;
 
 @Slf4j
 public enum RulesConditionsService {
-    NETWORK_TYPE_MAINNET(BaseNodeInitializationService.class, "getNetworkType", "eq", NetworkType.MainNet),
-    NETWORK_TYPE_TESTNET(BaseNodeInitializationService.class, "getNetworkType", "eq", NetworkType.TestNet),
-    FORCE_DSPC_FOR_TCC_MAINNET(TransactionIndexService.class, "getLastTransactionIndex", ">", Long.valueOf(700000)),
-    FORCE_DSPC_FOR_TCC_TESTNET(TransactionIndexService.class, "getLastTransactionIndex", ">", Long.valueOf(100000));
+    FORCE_DSPC_FOR_TCC(TransactionIndexService.class, "getLastTransactionIndex", ">Long") {
+        @Override
+        public boolean isRuleApplicable(Object service, Object threshold) {
+            return isTransactionRuleApplicable(service, (Long)threshold);
+        }
+    };
 
     private final Class<? extends Object> serviceClass;
     private final String methodName;
     private final String condition;
-    private final Object threshold;
 
-    RulesConditionsService(Class<? extends Object> serviceClass, String methodName, String condition, Object threshold) {
+    RulesConditionsService(Class<? extends Object> serviceClass, String methodName, String condition) {
         this.serviceClass = serviceClass;
         this.methodName = methodName;
         this.condition = condition;
-        this.threshold = threshold;
     }
 
-    public boolean isTransactionRuleApplicable(Object service) {
+    public boolean isTransactionRuleApplicable(Object service, Object threshold) {
         if (service.getClass().equals(this.serviceClass)) {
             Object retVal = new Object();
             Method[] declaredMethods = service.getClass().getDeclaredMethods();
@@ -42,21 +41,21 @@ public enum RulesConditionsService {
                     }
                 }
             }
-            return isConditionMet(retVal);
+            return isConditionMet(retVal, threshold);
         } else
             return false;
     }
 
-    public boolean isConditionMet(Object retVal) {
-        Class<? extends Object> classToConvertTo = this.threshold.getClass();
+    public boolean isConditionMet(Object retVal, Object threshold) {
+        Class<? extends Object> classToConvertTo = threshold.getClass();
         if (retVal != null) {
             switch (this.condition) {
                 case "eq":
-                    return classToConvertTo.cast(retVal).equals(this.threshold);
-                case ">":
-                    return (Long) classToConvertTo.cast(retVal) > (Long) this.threshold;
-                case "<":
-                    return (Long) classToConvertTo.cast(retVal) < (Long) this.threshold;
+                    return classToConvertTo.cast(retVal).equals(threshold);
+                case ">Long":
+                    return (Long) classToConvertTo.cast(retVal) > (Long) threshold;
+                case "<Long":
+                    return (Long) classToConvertTo.cast(retVal) < (Long) threshold;
                 default:
                     return false;
             }
@@ -64,4 +63,5 @@ public enum RulesConditionsService {
         return false;
     }
 
+    public abstract boolean isRuleApplicable(Object service, Object threshold);
 }
