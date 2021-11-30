@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IClusterHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class TrustChainConfirmationService {
     @Autowired
     private IClusterHelper clusterHelper;
     @Autowired
+    private Transactions transactions;
+    @Autowired
     private TransactionIndexService transactionIndexService;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
@@ -46,16 +49,31 @@ public class TrustChainConfirmationService {
         return isRuleActive;
     }
 
+    public boolean isDspConsensus(TransactionData transactionData, boolean checkInDB) {
+        boolean retValue = false;
+        if (transactionData.isDspConsensus())
+            retValue = true;
+        if (!retValue && checkInDB) {
+            TransactionData transactionsByHash = transactions.getByHash(transactionData.getHash());
+            if (transactionsByHash != null && transactionsByHash.getDspConsensusResult() != null) {
+                retValue =  transactionsByHash.getDspConsensusResult().isDspConsensus();
+            } else {
+                retValue = transactionData.isDspConsensus();
+            }
+        }
+        return retValue;
+    }
+
     private void setTotalTrustScore(TransactionData parent) {
         double maxChildrenTotalTrustScore = 0;
-        if (isForceDSPCForTCC() && !parent.isDspConsensus()) {
+        if (isForceDSPCForTCC() && !isDspConsensus(parent,true)) {
             parent.setTrustChainTrustScore(0);
             return;
         }
         for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
             try {
                 TransactionData child = trustChainConfirmationCluster.get(transactionHash);
-                if (child != null && (!isForceDSPCForTCC() || child.isDspConsensus()) && child.getTrustChainTrustScore()
+                if (child != null && (!isForceDSPCForTCC() || isDspConsensus(child, true)) && child.getTrustChainTrustScore()
                         > maxChildrenTotalTrustScore) {
                     maxChildrenTotalTrustScore = child.getTrustChainTrustScore();
                 }
