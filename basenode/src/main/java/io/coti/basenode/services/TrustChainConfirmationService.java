@@ -42,11 +42,18 @@ public class TrustChainConfirmationService {
         clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
     }
 
-    private boolean isForceDSPCForTCC() {
-        boolean isRuleActive =  RulesConditionsService.FORCE_DSPC_FOR_TCC.isRuleApplicable(transactionIndexService, Long.valueOf(forceDSPCForTCCThreshold));
+    private double getSenderTrustScore(TransactionData transactionData) {
+        if (isForceDSPCForTCC(transactionData)) {
+            return transactionData.getSenderTrustScore();
+        }
+        return 0;
+    }
+
+    private boolean isForceDSPCForTCC(TransactionData transactionData) {
+        boolean isRuleActive =  RulesConditionsService.ADDAX_FORK.isRuleApplicable(transactionIndexService, Long.valueOf(forceDSPCForTCCThreshold));
         if (isRuleActive)
-            log.debug("Rule FORCE_DSPC_FOR_TCC is enforced");
-        return isRuleActive;
+            log.debug("Rule for ADDAX_FORK on");
+        return !isRuleActive || isDspConsensus(transactionData, true);
     }
 
     public boolean isDspConsensus(TransactionData transactionData, boolean checkInDB) {
@@ -66,14 +73,10 @@ public class TrustChainConfirmationService {
 
     private void setTotalTrustScore(TransactionData parent) {
         double maxChildrenTotalTrustScore = 0;
-        if (isForceDSPCForTCC() && !isDspConsensus(parent,true)) {
-            parent.setTrustChainTrustScore(0);
-            return;
-        }
         for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
             try {
                 TransactionData child = trustChainConfirmationCluster.get(transactionHash);
-                if (child != null && (!isForceDSPCForTCC() || isDspConsensus(child, true)) && child.getTrustChainTrustScore()
+                if (child != null && child.getTrustChainTrustScore()
                         > maxChildrenTotalTrustScore) {
                     maxChildrenTotalTrustScore = child.getTrustChainTrustScore();
                 }
@@ -83,9 +86,8 @@ public class TrustChainConfirmationService {
             }
         }
 
-        // updating parent trustChainTrustScore
-        if (parent.getTrustChainTrustScore() < parent.getSenderTrustScore() + maxChildrenTotalTrustScore) {
-            parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxChildrenTotalTrustScore);
+        if (parent.getTrustChainTrustScore() < getSenderTrustScore(parent) + maxChildrenTotalTrustScore) {
+            parent.setTrustChainTrustScore(getSenderTrustScore(parent) + maxChildrenTotalTrustScore);
         }
     }
 
@@ -93,7 +95,7 @@ public class TrustChainConfirmationService {
         LinkedList<TccInfo> trustChainConfirmations = new LinkedList<>();
         for (TransactionData transactionData : topologicalOrderedGraph) {
             setTotalTrustScore(transactionData);
-            if (transactionData.getTrustChainTrustScore() >= threshold && !transactionData.isTrustChainConsensus()) {
+            if (isForceDSPCForTCC(transactionData) && transactionData.getTrustChainTrustScore() >= threshold && !transactionData.isTrustChainConsensus()) {
                 Instant trustScoreConsensusTime = Optional.ofNullable(transactionData.getTrustChainConsensusTime()).orElse(Instant.now());
                 TccInfo tccInfo = new TccInfo(transactionData.getHash(), transactionData.getTrustChainTrustScore(), trustScoreConsensusTime);
                 trustChainConfirmations.addFirst(tccInfo);

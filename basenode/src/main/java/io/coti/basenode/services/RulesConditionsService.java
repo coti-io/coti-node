@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 
 @Slf4j
 public enum RulesConditionsService {
-    FORCE_DSPC_FOR_TCC(TransactionIndexService.class, "getLastTransactionIndex", ">Long") {
+    ADDAX_FORK(TransactionIndexService.class, "getLastTransactionIndex", ">Long") {
         @Override
         public boolean isRuleApplicable(Object service, Object threshold) {
             return isTransactionRuleApplicable(service, (Long)threshold);
