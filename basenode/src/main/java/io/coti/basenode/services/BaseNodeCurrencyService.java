@@ -216,9 +216,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     private void handleTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
-            TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData;
             Optional<BaseTransactionData> firstBaseTransactionData = transactionData.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof TokenGenerationFeeBaseTransactionData).findFirst();
             if (firstBaseTransactionData.isPresent()) {
+                TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData;
                 tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) firstBaseTransactionData.get();
                 TokenGenerationData tokenGenerationData = tokenGenerationFeeBaseTransactionData.getServiceData();
                 OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
@@ -404,7 +404,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
-    private boolean isCurrencyNameUnique(Hash currencyHash, String currencyName) {
+    private boolean  isCurrencyNameUnique(Hash currencyHash, String currencyName) {
         return currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) == null;
     }
 
