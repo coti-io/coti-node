@@ -5,6 +5,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DbRestoreSource;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.data.NodeType;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.DataBaseBackupException;
@@ -283,7 +284,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             return backupBucket;
         }
         NetworkNodeData networkNodeData = networkService.getNetworkNodeData();
-        if (networkNodeData.getNodeType().equals("ZeroSpend"))
+        if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType()))
         {
             return restoreBucket;
         }
