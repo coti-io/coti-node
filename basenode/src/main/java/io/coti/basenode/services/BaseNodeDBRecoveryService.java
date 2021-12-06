@@ -53,6 +53,8 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private boolean backup;
     @Value("${db.backup.manual:false}")
     private boolean manualBackup;
+    @Value("${db.restore.bucket:}")
+    private String restoreBucket;
     @Value("${db.backup.bucket}")
     private String backupBucket;
     @Value("${db.restore.backup.local}")
@@ -281,6 +283,10 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             return backupBucket;
         }
         NetworkNodeData networkNodeData = networkService.getNetworkNodeData();
+        if (networkNodeData.getNodeType().equals("ZeroSpend"))
+        {
+            return restoreBucket;
+        }
         Map<Hash, NetworkNodeData> networkNodeDataMap = networkService.getMapFromFactory(networkNodeData.getNodeType());
         if (networkNodeDataMap.isEmpty() || networkNodeDataMap.get(restoreNodeHash) == null) {
             throw new DataBaseRestoreException("Restore node is either not existing or not active in Coti Network.");
