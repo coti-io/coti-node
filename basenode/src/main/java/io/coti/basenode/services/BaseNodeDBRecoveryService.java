@@ -55,7 +55,9 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     @Value("${db.backup.manual:false}")
     private boolean manualBackup;
     @Value("${db.restore.bucket:}")
-    private String restoreBucket;
+    private String dbRestoreBucket;
+    @Value("${db.restore.network:}")
+    private String dbRestoreNetwork;
     @Value("${db.backup.bucket}")
     private String backupBucket;
     @Value("${db.restore.backup.local}")
@@ -286,7 +288,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         NetworkNodeData networkNodeData = networkService.getNetworkNodeData();
         if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType()))
         {
-            return restoreBucket;
+            return dbRestoreBucket;
         }
         Map<Hash, NetworkNodeData> networkNodeDataMap = networkService.getMapFromFactory(networkNodeData.getNodeType());
         if (networkNodeDataMap.isEmpty() || networkNodeDataMap.get(restoreNodeHash) == null) {
@@ -329,12 +331,21 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
     private void initBackupNodeHashS3Path() {
         String folderDelimiter = "/";
-        StringBuilder sb = new StringBuilder(network);
-        sb.append(folderDelimiter).append(applicationName).append(folderDelimiter);
+
         if (backup) {
+            StringBuilder sb = new StringBuilder(network);
+            sb.append(folderDelimiter).append(applicationName).append(folderDelimiter);
             backupS3Path = sb.toString() + NodeCryptoHelper.getNodeHash();
         }
         if (restore) {
+            StringBuilder sb = new StringBuilder();
+            if (!dbRestoreNetwork.isEmpty()) {
+                sb.append(dbRestoreNetwork);
+            }
+            else {
+                sb.append(network);
+            }
+            sb.append(folderDelimiter).append(applicationName).append(folderDelimiter);
             restoreS3Path = sb.toString() + restoreNodeHash.toString();
         }
     }
