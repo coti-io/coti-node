@@ -286,7 +286,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             return backupBucket;
         }
         NetworkNodeData networkNodeData = networkService.getNetworkNodeData();
-        if (NodeType.ZeroSpendServer.equals(networkNodeData.getNodeType()))
+        if (dbRestoreBucket != null && ! dbRestoreBucket.equals(""))
         {
             return dbRestoreBucket;
         }
