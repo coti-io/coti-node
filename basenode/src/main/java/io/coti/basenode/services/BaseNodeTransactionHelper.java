@@ -64,7 +64,10 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     public boolean validateBaseTransactionAmounts(List<BaseTransactionData> baseTransactions) {
         Map<Hash, BigDecimal> transactionTotals = new HashMap<>();
         for (BaseTransactionData baseTransactionData : baseTransactions) {
-            Hash currencyHash = baseTransactionData.getCurrencyHash().toString().equals("") ? currencyService.getNativeCurrency().getHash() : baseTransactionData.getCurrencyHash();
+            Hash currencyHash = currencyService.getNativeCurrency().getHash();
+            if (baseTransactionData.getCurrencyHash() != null && ! baseTransactionData.getCurrencyHash().toString().equals("")) {
+                currencyHash = baseTransactionData.getCurrencyHash();
+            }
             transactionTotals.put(currencyHash,
                     transactionTotals.getOrDefault(currencyHash, BigDecimal.ZERO).add(baseTransactionData.getAmount()));
         }
