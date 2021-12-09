@@ -22,7 +22,7 @@ public abstract class OutputBaseTransactionData extends BaseTransactionData {
 
     protected OutputBaseTransactionData(Hash addressHash, Hash currencyHash, BigDecimal amount, Hash originalCurrencyHash, BigDecimal originalAmount, Instant createTime) {
         super(addressHash, currencyHash, amount, createTime);
-        this.originalCurrencyHash = originalCurrencyHash; // TODO put null here if the currency hash is native -->
+        this.originalCurrencyHash = originalCurrencyHash;
         this.setOriginalAmount(originalAmount);
     }
 

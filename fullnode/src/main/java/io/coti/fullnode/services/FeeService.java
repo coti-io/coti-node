@@ -71,7 +71,9 @@ public class FeeService {
             if (zeroFeeUserHashes.contains(fullNodeFeeRequest.getUserHash().toString())) {
                 amount = new BigDecimal(0);
             } else {
-                if (fullNodeFeeRequest.getOriginalCurrencyHash() == null || fullNodeFeeRequest.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+                if (fullNodeFeeRequest.getOriginalCurrencyHash() == null ||
+                        "".equals(fullNodeFeeRequest.getOriginalCurrencyHash().toString())
+                        || fullNodeFeeRequest.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
                     BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
                     if (fee.compareTo(minimumFee) <= 0) {
                         amount = minimumFee;
@@ -83,7 +85,7 @@ public class FeeService {
                     originalCurrencyHash = nativeCurrencyHash;
                 } else {
                     CurrencyData currencyData = currencies.getByHash(fullNodeFeeRequest.getOriginalCurrencyHash());
-                    if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
+                    if (currencyData != null && currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                         amount = regularTokenFullnodeFee;
                         originalCurrencyHash = currencyData.getHash();
                     } else {
@@ -100,14 +102,6 @@ public class FeeService {
             }
             if (feeIncluded && originalAmount.compareTo(amount) <= 0) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
-            }
-            CurrencyData currencyData = currencies.getByHash(nativeCurrencyHash);
-            if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.NATIVE_COIN) {
-                nativeCurrencyHash = null;
-            }
-            currencyData = currencies.getByHash(originalCurrencyHash);
-            if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.NATIVE_COIN) {
-                originalCurrencyHash = null;
             }
             FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, nativeCurrencyHash, amount, originalCurrencyHash, originalAmount, Instant.now());
             setFullNodeFeeHash(fullNodeFeeData);
