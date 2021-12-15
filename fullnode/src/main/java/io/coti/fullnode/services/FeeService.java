@@ -103,6 +103,9 @@ public class FeeService {
             if (feeIncluded && originalAmount.compareTo(amount) <= 0) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
             }
+            if (fullNodeFeeRequest.getOriginalCurrencyHash() == null || "".equals(fullNodeFeeRequest.getOriginalCurrencyHash())) {
+                nativeCurrencyHash = null;
+            }
             FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, nativeCurrencyHash, amount, originalCurrencyHash, originalAmount, Instant.now());
             setFullNodeFeeHash(fullNodeFeeData);
             signFullNodeFee(fullNodeFeeData);
