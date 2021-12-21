@@ -95,7 +95,6 @@ public class NetworkFeeService {
                 if (currencyData != null && currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                     fee = regularTokenNetworkFee;
                 } else {
-                    // change it together with validateNetworkFee
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(UNDEFINED_TOKEN_TYPE_FEE, fullNodeFeeData.getCurrencyHash()), STATUS_ERROR));
                 }
             }
@@ -174,7 +173,7 @@ public class NetworkFeeService {
             if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                 calculatedNetworkFee = regularTokenNetworkFee;
             } else {
-                return false;   // change it together with createNetworkFee
+                return false;
             }
         }
 
