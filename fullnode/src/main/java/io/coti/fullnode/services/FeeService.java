@@ -83,7 +83,7 @@ public class FeeService {
                     originalCurrencyHash = nativeCurrencyHash;
                 } else {
                     CurrencyData currencyData = currencies.getByHash(fullNodeFeeRequest.getOriginalCurrencyHash());
-                    if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
+                    if (currencyData != null && currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                         amount = regularTokenFullnodeFee;
                         originalCurrencyHash = currencyData.getHash();
                     } else {
@@ -101,8 +101,11 @@ public class FeeService {
             if (feeIncluded && originalAmount.compareTo(amount) <= 0) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
             }
-
-            FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, nativeCurrencyHash, amount, originalCurrencyHash, originalAmount, Instant.now());
+            Hash feeDataCurrencyHash = new Hash(nativeCurrencyHash.toString());
+            if (fullNodeFeeRequest.getOriginalCurrencyHash() == null || "".equals(fullNodeFeeRequest.getOriginalCurrencyHash().toString())) {
+                feeDataCurrencyHash.setBytes("".getBytes());
+            }
+            FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, feeDataCurrencyHash, amount, originalCurrencyHash, originalAmount, Instant.now());
             setFullNodeFeeHash(fullNodeFeeData);
             signFullNodeFee(fullNodeFeeData);
             FullNodeFeeResponseData fullNodeFeeResponseData = new FullNodeFeeResponseData(fullNodeFeeData);

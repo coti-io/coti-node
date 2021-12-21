@@ -82,7 +82,7 @@ public class NetworkFeeService {
             }
 
             BigDecimal fee;
-            if (fullNodeFeeData.getOriginalCurrencyHash() == null || fullNodeFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+            if (fullNodeFeeData.getOriginalCurrencyHash() == null ||  "".equals(fullNodeFeeData.getOriginalCurrencyHash().toString()) || fullNodeFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
                 TrustScoreData trustScoreData = trustScores.getByHash(networkFeeRequest.getUserHash());
                 if (trustScoreData == null) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(TRUST_SCORE_NOT_EXIST, networkFeeRequest.getUserHash()), STATUS_ERROR));
@@ -92,7 +92,7 @@ public class NetworkFeeService {
                 fee = calculateNetworkFeeAmount(getUserNetworkFeeByTrustScoreRange(userTrustScore), originalAmount);
             } else {
                 CurrencyData currencyData = currencies.getByHash(fullNodeFeeData.getOriginalCurrencyHash());
-                if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
+                if (currencyData != null && currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                     fee = regularTokenNetworkFee;
                 } else {
                     // change it together with validateNetworkFee
@@ -104,8 +104,11 @@ public class NetworkFeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE,
                         fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
             }
-
-            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, nativeCurrencyHash, fee, fullNodeFeeData.getOriginalCurrencyHash(), originalAmount, reducedAmount, Instant.now());
+            Hash feeDataCurrencyHash = new Hash(nativeCurrencyHash.toString());
+            if (networkFeeRequest.getFullNodeFeeData().getCurrencyHash() == null || "".equals(networkFeeRequest.getFullNodeFeeData().getCurrencyHash().toString())) {
+                feeDataCurrencyHash.setBytes("".getBytes());
+            }
+            NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, feeDataCurrencyHash, fee, fullNodeFeeData.getOriginalCurrencyHash(), originalAmount, reducedAmount, Instant.now());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);
