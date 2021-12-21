@@ -12,7 +12,9 @@ public enum CurrencyType {
     GLOBAL_PAYMENT_CMD_TOKEN("Global Payment CMD Token");
 
     private final String text;
-    private static final Map<String, CurrencyType> textToTypeMap = new HashMap<>();
+    private static class CurrencyTypes {
+        private static final Map<String, CurrencyType> textToCurrencyTypeMap = new HashMap<>();
+    }
 
     CurrencyType(String text) {
         this.text = text;
@@ -20,7 +22,7 @@ public enum CurrencyType {
     }
 
     private void setToTextToTypeMap(String text) {
-        textToTypeMap.put(text, this);
+        CurrencyTypes.textToCurrencyTypeMap.put(text, this);
     }
 
     public String getText() {
@@ -28,7 +30,7 @@ public enum CurrencyType {
     }
 
     public static CurrencyType getByText(String text) {
-        return Optional.ofNullable(textToTypeMap.get(text))
+        return Optional.ofNullable(CurrencyTypes.textToCurrencyTypeMap.get(text))
                 .orElseThrow(() -> new IllegalArgumentException("No currency type exists for the giving text"));
     }
 
