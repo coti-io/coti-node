@@ -40,8 +40,6 @@ public class FeeService {
     private BigDecimal regularTokenMintingFee;
 
     @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
-    @Autowired
     private ICurrencyService currencyService;
     @Autowired
     private CurrencyRateService currencyRateService;
@@ -75,7 +73,7 @@ public class FeeService {
     }
 
     protected Hash networkFeeAddress() {
-        return nodeCryptoHelper.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
+        return NodeCryptoHelper.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
     }
 
     protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {

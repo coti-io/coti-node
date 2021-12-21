@@ -43,8 +43,6 @@ public class DistributeTokenService {
     @Autowired
     private TransactionCreationService transactionCreationService;
     @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
-    @Autowired
     private ICurrencyService currencyService;
     @Autowired
     private TokenSaleDistributions tokenSaleDistributions;

@@ -41,8 +41,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private DistributionService distributionService;
     @Autowired
     private FundDistributionService fundDistributionService;
-    @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
 
     @PostConstruct
     @Override
@@ -60,7 +58,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
             if (zerospendNetworkNodeData == null) {
-                log.info("Please generate Native token at ZeroSpend with following genesis address: {}", nodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX));
+                log.info("Please generate Native token at ZeroSpend with following genesis address: {}", NodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX));
                 log.error("No zerospend server exists in the network got from the node manager. Exiting from the application");
                 System.exit(SpringApplication.exit(applicationContext));
             }
