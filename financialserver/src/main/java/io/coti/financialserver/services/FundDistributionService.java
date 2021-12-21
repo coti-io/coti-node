@@ -57,9 +57,7 @@ public class FundDistributionService {
     @Autowired
     private TransactionCreationService transactionCreationService;
     @Autowired
-    private NodeCryptoHelper nodeCryptoHelper;
-    @Autowired
-    private BaseNodeBalanceService baseNodeBalanceService;
+    private IBalanceService balanceService;
     @Autowired
     protected INetworkService networkService;
     @Autowired

@@ -14,10 +14,10 @@ import io.coti.basenode.model.CurrencyNameIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import io.coti.basenode.services.BaseNodeCurrencyService;
-import io.coti.basenode.services.TransactionHelper;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IChunkService;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;
 import io.coti.financialserver.model.UserTokenGenerations;
@@ -91,7 +91,7 @@ public class CurrencyServiceTests {
     @MockBean
     private IBalanceService balanceService;
     @MockBean
-    private TransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelper;
 
     //
     private static Hash userHash;
