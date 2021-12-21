@@ -1,8 +1,8 @@
 package io.coti.fullnode.database;
 
+import io.coti.basenode.data.CurrencyType;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
-import io.coti.basenode.model.RequestedAddressHashes;
-import io.coti.basenode.model.UnconfirmedReceivedTransactionHashes;
+import io.coti.basenode.model.*;
 import io.coti.fullnode.model.ExplorerIndexes;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,10 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
         ));
         resetTransactionColumnFamilyNames.addAll(Arrays.asList(
                 ExplorerIndexes.class.getName(),
-                UnconfirmedReceivedTransactionHashes.class.getName()
+                UnconfirmedReceivedTransactionHashes.class.getName(),
+                Currencies.class.getName(),
+                CurrencyNameIndexes.class.getName(),
+                UserCurrencyIndexes.class.getName()
         ));
     }
 }
