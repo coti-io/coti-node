@@ -11,7 +11,7 @@ public class CurrencyNameIndexData implements IEntity {
     private Hash currencyHash;
 
     public CurrencyNameIndexData(String currencyName, Hash currencyHash) {
-        this.hash = CryptoHelper.cryptoHash(currencyName.getBytes());
+        this.hash = CryptoHelper.cryptoHash(currencyName.toLowerCase().getBytes());
         this.currencyHash = currencyHash;
     }
 }
