@@ -14,13 +14,10 @@ import io.coti.financialserver.crypto.GetMintingHistoryRequestCrypto;
 import io.coti.financialserver.crypto.GetTokenMintingFeeQuoteRequestCrypto;
 import io.coti.financialserver.crypto.MintingFeeQuoteCrypto;
 import io.coti.financialserver.data.MintingFeeQuoteData;
-import io.coti.financialserver.data.MintingHistoryData;
-import io.coti.financialserver.data.MintingRecordData;
 import io.coti.financialserver.http.*;
 import io.coti.financialserver.http.data.MintingFeeQuoteResponseData;
 import io.coti.financialserver.http.data.TokenMintingFeeResponseData;
 import io.coti.financialserver.model.MintingRecords;
-import io.coti.financialserver.model.UserTokenGenerations;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,8 +43,6 @@ public class MintingService extends BaseNodeMintingService {
     private String seed;
     @Autowired
     private TokenMintingCrypto tokenMintingCrypto;
-    @Autowired
-    private UserTokenGenerations userTokenGenerations;
     @Autowired
     private FeeService feeService;
     @Autowired
@@ -135,52 +130,6 @@ public class MintingService extends BaseNodeMintingService {
 
     private boolean isAddressValid(Hash address) {
         return CryptoHelper.isAddressValid(address);
-    }
-
-    private HashSet<Hash> getUserTokenHashes(Hash userHash) {
-        HashSet<Hash> userTokenHashes = new HashSet<>();
-        UserTokenGenerationData userTokenGenerationData = userTokenGenerations.getByHash(userHash);
-        if (userTokenGenerationData != null) {
-            Collection<Hash> currencyHashes = userTokenGenerationData.getTransactionHashToCurrencyMap().values();
-            currencyHashes.forEach(currencyHash -> fillUserTokenHashes(userTokenHashes, currencyHash));
-        }
-        return userTokenHashes;
-    }
-
-    private void fillUserTokenHashes(HashSet<Hash> userTokenHashes, Hash currencyHash) {
-        if (currencyHash != null) {
-            CurrencyData currencyData = currencies.getByHash(currencyHash);
-            if (currencyData != null) {
-                userTokenHashes.add(currencyData.getHash());
-            }
-        }
-    }
-
-    public ResponseEntity<IResponse> getTokenMintingHistory(GetMintingHistoryRequest getMintingHistoryRequest) {
-        try {
-            if (!getMintingHistoryRequestCrypto.verifySignature(getMintingHistoryRequest)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
-            }
-            HashSet<Hash> userTokenHashes = getUserTokenHashes(getMintingHistoryRequest.getUserHash());
-
-            Map<Hash, Map<Instant, MintingHistoryData>> mintingHistory = new HashMap<>();
-            if (userTokenHashes.isEmpty()) {
-                return ResponseEntity.ok(new GetMintingHistoryResponse(mintingHistory));
-            }
-            userTokenHashes.forEach(currencyHash -> fillMintingHistory(currencyHash, mintingHistory));
-            return ResponseEntity.ok(new GetMintingHistoryResponse(mintingHistory));
-        } catch (Exception e) {
-            log.error("Error at getting user minting history: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
-        }
-    }
-
-    private void fillMintingHistory(Hash currencyHash, Map<Hash, Map<Instant, MintingHistoryData>> mintingHistory) {
-        MintingRecordData mintingRecordData = mintingRecords.getByHash(currencyHash);
-        if (mintingRecordData != null) {
-            Map<Instant, MintingHistoryData> mintingTokenHistory = mintingRecordData.getMintingHistory();
-            mintingHistory.put(currencyHash, mintingTokenHistory);
-        }
     }
 
     public ResponseEntity<IResponse> getTokenMintingFeeQuote(GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {

@@ -35,7 +35,6 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
                 DailyFundDistributions.class.getName(),
                 FailedFundDistributions.class.getName(),
                 DailyFundDistributionFiles.class.getName(),
-                UserTokenGenerations.class.getName(),
                 MintingRecords.class.getName()
         ));
     }
