@@ -98,10 +98,6 @@ public class BaseNodeMintingService implements IMintingService {
         TokenMintingData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
         BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
         Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
-//        MintingRecordData mintingRecordData = mintingRecords.getByHash(tokenHash);
-//        if (mintingRecordData == null) {
-//            mintingRecordData = new MintingRecordData(tokenHash);
-//        }  todo
 
         CurrencyData currencyData = currencies.getByHash(tokenHash);
         if (currencyData == null) {
