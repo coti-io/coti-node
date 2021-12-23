@@ -20,6 +20,8 @@ public class GetTokenSymbolDetailsRequest extends Request implements ISignValida
     @NotEmpty
     private String symbol;
     @NotNull
+    private Instant createTime;
+    @NotNull
     private @Valid SignatureData signature;
 
     @Override

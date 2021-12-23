@@ -19,6 +19,8 @@ public class GetTokenDetailsRequest extends Request implements ISignValidatable 
     @NotNull
     private @Valid Hash currencyHash;
     @NotNull
+    private Instant createTime;
+    @NotNull
     private @Valid SignatureData signature;
 
     @Override
