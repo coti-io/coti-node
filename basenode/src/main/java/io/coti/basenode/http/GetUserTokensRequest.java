@@ -17,6 +17,8 @@ public class GetUserTokensRequest extends Request implements ISignValidatable {
     @NotNull
     private @Valid Hash userHash;
     @NotNull
+    private Instant createTime;
+    @NotNull
     private @Valid SignatureData signature;
 
     @Override

@@ -14,8 +14,8 @@ public class GetTokenDetailsRequestCrypto extends SignatureValidationCrypto<GetT
         byte[] userHashInBytes = getTokenDetailsRequest.getUserHash().getBytes();
         byte[] currencyHashInBytes = getTokenDetailsRequest.getCurrencyHash().getBytes();
 
-        ByteBuffer getTokenDetailsRequestBuffer = ByteBuffer.allocate(userHashInBytes.length + currencyHashInBytes.length)
-                .put(userHashInBytes).put(currencyHashInBytes);
+        ByteBuffer getTokenDetailsRequestBuffer = ByteBuffer.allocate(userHashInBytes.length + currencyHashInBytes.length + Long.BYTES)
+                .put(userHashInBytes).put(currencyHashInBytes).putLong(getTokenDetailsRequest.getCreateTime().toEpochMilli());
         return CryptoHelper.cryptoHash(getTokenDetailsRequestBuffer.array()).getBytes();
     }
 }
