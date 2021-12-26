@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 
 import javax.validation.Valid;
@@ -17,15 +18,15 @@ import java.math.BigDecimal;
 public class OriginatorCurrencyData implements ISignable, ISignValidatable, Serializable {
 
     private static final long serialVersionUID = 6995268770045990662L;
-    @NotEmpty
+    @Length(min = 1, max = 64)
     protected String name;
-    @NotEmpty
+    @Length(min = 2, max = 6)
     protected String symbol;
-    @NotEmpty
+    @Length(min = 5, max = 255)
     private String description;
-    @DecimalMin(value = "0")
+    @Range(min = 1000000L, max = 100000000000L)
     protected BigDecimal totalSupply;
-    @Range(min = 0, max = 12)
+    @Range(min = 8, max = 8)
     protected int scale;
     @NotNull
     protected @Valid Hash originatorHash;
