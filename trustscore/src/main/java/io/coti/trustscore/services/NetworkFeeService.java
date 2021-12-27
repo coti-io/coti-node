@@ -6,8 +6,8 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.ICurrencyService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.config.rules.UserNetworkFeeByTrustScoreRange;
 import io.coti.trustscore.data.Enums.TrustScoreRangeType;
@@ -82,7 +82,7 @@ public class NetworkFeeService {
             }
 
             BigDecimal fee;
-            if (fullNodeFeeData.getOriginalCurrencyHash() == null ||  "".equals(fullNodeFeeData.getOriginalCurrencyHash().toString()) || fullNodeFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+            if (fullNodeFeeData.getOriginalCurrencyHash() == null || "".equals(fullNodeFeeData.getOriginalCurrencyHash().toString()) || fullNodeFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
                 TrustScoreData trustScoreData = trustScores.getByHash(networkFeeRequest.getUserHash());
                 if (trustScoreData == null) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(TRUST_SCORE_NOT_EXIST, networkFeeRequest.getUserHash()), STATUS_ERROR));

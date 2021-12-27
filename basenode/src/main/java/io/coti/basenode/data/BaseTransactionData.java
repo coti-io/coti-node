@@ -33,7 +33,7 @@ public abstract class BaseTransactionData implements Serializable {
 
     }
 
-    public BaseTransactionData(Hash addressHash, Hash currencyHash, BigDecimal amount, Instant createTime) {
+    protected BaseTransactionData(Hash addressHash, Hash currencyHash, BigDecimal amount, Instant createTime) {
         this.addressHash = addressHash;
         this.currencyHash = currencyHash;
         this.createTime = createTime;

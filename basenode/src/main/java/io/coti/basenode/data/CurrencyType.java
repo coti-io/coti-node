@@ -12,6 +12,7 @@ public enum CurrencyType {
     GLOBAL_PAYMENT_CMD_TOKEN("Global Payment CMD Token");
 
     private final String text;
+
     private static class CurrencyTypes {
         private static final Map<String, CurrencyType> textToCurrencyTypeMap = new HashMap<>();
     }

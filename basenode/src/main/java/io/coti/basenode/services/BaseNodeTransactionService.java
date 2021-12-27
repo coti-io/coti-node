@@ -2,16 +2,13 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.ChunkException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;
 import io.coti.basenode.http.data.ReducedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.http.GetExtendedTransactionsResponse;
-import io.coti.basenode.http.GetTransactionsResponse;
-import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
@@ -344,11 +341,11 @@ public class BaseNodeTransactionService implements ITransactionService {
             dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
         }
         Map<TransactionData, Boolean> postponedParentTransactionMap = postponedTransactionMap.entrySet().stream().filter(
-                postponedTransactionMapEntry ->
-                        (postponedTransactionMapEntry.getKey().getRightParentHash() != null
-                                && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
-                                || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
-                                && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
+                        postponedTransactionMapEntry ->
+                                (postponedTransactionMapEntry.getKey().getRightParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
+                                        || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         postponedParentTransactionMap.forEach((postponedTransaction, isTransactionFromFullNode) -> {
             log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());

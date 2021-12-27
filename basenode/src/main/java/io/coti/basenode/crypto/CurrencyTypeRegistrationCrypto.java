@@ -19,7 +19,7 @@ public class CurrencyTypeRegistrationCrypto extends SignatureCrypto<CurrencyType
         byte[] createTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(currencyTypeRegistrationData.getCreateTime().toEpochMilli()).array();
 
         ByteBuffer currencyTypeRegistrationBuffer = ByteBuffer.allocate(symbolInBytes.length + currencyTypeInBytes.length
-                + bytesOfCurrencyRateSourceType.length + bytesOfRateSource.length + bytesOfProtectionModel.length + createTimeInBytes.length)
+                        + bytesOfCurrencyRateSourceType.length + bytesOfRateSource.length + bytesOfProtectionModel.length + createTimeInBytes.length)
                 .put(symbolInBytes).put(currencyTypeInBytes).put(bytesOfCurrencyRateSourceType).put(bytesOfRateSource).put(bytesOfProtectionModel).put(createTimeInBytes);
         return CryptoHelper.cryptoHash(currencyTypeRegistrationBuffer.array()).getBytes();
     }

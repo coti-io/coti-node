@@ -20,7 +20,7 @@ public class MintingRequestCrypto extends SignatureCrypto<MintingRequestData> {
         byte[] receiverAddressInBytes = mintingRequestData.getReceiverAddress().toString().getBytes();
 
         ByteBuffer mintingRequestBuffer = ByteBuffer.allocate(hashInBytes.length + warrantHashInBytes.length + mintingRequestTimeInBytes.length +
-                amountInBytes.length + receiverAddressInBytes.length)
+                        amountInBytes.length + receiverAddressInBytes.length)
                 .put(hashInBytes).put(warrantHashInBytes).put(mintingRequestTimeInBytes).put(amountInBytes).put(receiverAddressInBytes);
 
         return CryptoHelper.cryptoHash(mintingRequestBuffer.array()).getBytes();

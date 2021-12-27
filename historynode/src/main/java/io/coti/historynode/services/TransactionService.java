@@ -52,8 +52,6 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private GetTransactionsByAddressRequestCrypto getTransactionsByAddressRequestCrypto;
     @Autowired
-    private ChunkService chunkService;
-    @Autowired
     private HttpJacksonSerializer jacksonSerializer;
 
     @Override
@@ -114,7 +112,7 @@ public class TransactionService extends BaseNodeTransactionService {
         transactionHashes.forEach(transactionHash -> {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             if (transactionData != null) {
-                chunkService.transactionHandler(transactionData, output);
+                ((ChunkService) chunkService).transactionHandler(transactionData, output);
             } else {
                 transactionsHashesToRetrieveFromElasticSearch.add(transactionHash);
             }
@@ -124,7 +122,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private void getTransactionFromElasticSearch(List<Hash> transactionsHashes, PrintWriter output) {
         RestTemplate restTemplate = new RestTemplate();
         CustomRequestCallBack requestCallBack = new CustomRequestCallBack(jacksonSerializer, new GetHistoryTransactionsRequest(transactionsHashes));
-        chunkService.transactionHandler(responseExtractor ->
+        ((ChunkService) chunkService).transactionHandler(responseExtractor ->
                         restTemplate.execute(storageServerAddress + END_POINT_RETRIEVE, HttpMethod.POST, requestCallBack, responseExtractor)
                 , output);
 

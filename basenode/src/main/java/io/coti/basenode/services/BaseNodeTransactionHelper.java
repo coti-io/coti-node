@@ -404,7 +404,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         return (TokenGenerationFeeBaseTransactionData) tokenGenerationTransaction
                 .getBaseTransactions()
                 .stream()
-                .filter(t -> t instanceof TokenGenerationFeeBaseTransactionData)
+                .filter(TokenGenerationFeeBaseTransactionData.class::isInstance)
                 .findFirst().orElse(null);
     }
 
@@ -413,7 +413,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         return (TokenMintingFeeBaseTransactionData) tokenMintingTransaction
                 .getBaseTransactions()
                 .stream()
-                .filter(t -> t instanceof TokenMintingFeeBaseTransactionData)
+                .filter(TokenMintingFeeBaseTransactionData.class::isInstance)
                 .findFirst().orElse(null);
     }
 

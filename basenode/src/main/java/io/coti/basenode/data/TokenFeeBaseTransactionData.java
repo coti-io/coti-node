@@ -17,7 +17,7 @@ public abstract class TokenFeeBaseTransactionData extends OutputBaseTransactionD
         super();
     }
 
-    public TokenFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime) {
+    protected TokenFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime) {
         super(addressHash, currencyHash, amount, currencyHash, amount, createTime);
         this.signerHash = signerHash;
     }

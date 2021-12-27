@@ -1,6 +1,5 @@
 package io.coti.fullnode.database;
 
-import io.coti.basenode.data.CurrencyType;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.model.*;
 import io.coti.fullnode.model.ExplorerIndexes;

@@ -121,7 +121,7 @@ public class BaseNodeMintingService implements IMintingService {
         return (TokenMintingFeeBaseTransactionData) tokenMintingTransaction
                 .getBaseTransactions()
                 .stream()
-                .filter(t -> t instanceof TokenMintingFeeBaseTransactionData)
+                .filter(TokenMintingFeeBaseTransactionData.class::isInstance)
                 .findFirst().orElse(null);
     }
 
