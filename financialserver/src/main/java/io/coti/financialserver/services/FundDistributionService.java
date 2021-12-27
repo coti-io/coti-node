@@ -252,8 +252,9 @@ public class FundDistributionService {
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty())
+                if (line.isEmpty()) {
                     break;
+                }
                 String[] distributionDetails;
                 distributionDetails = line.split(COMMA_SEPARATOR);
                 if (distributionDetails.length != NUMBER_OF_DISTRIBUTION_LINE_DETAILS) {
@@ -450,7 +451,7 @@ public class FundDistributionService {
             return;
         }
         DailyFundDistributionData dailyFundDistributionData = dailyFundDistributions.getByHash(hashOfYesterday);
-        LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries = dailyFundDistributionData.getFundDistributionEntries();
+        Map<Hash, FundDistributionData> fundDistributionEntries = dailyFundDistributionData.getFundDistributionEntries();
         for (FundDistributionData fundDistributionData : fundDistributionEntries.values()) {
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException("Pending non failed transaction thread is interrupted");
@@ -618,8 +619,8 @@ public class FundDistributionService {
 
     private String getEntryResultAsCommaDelimitedLine(FundDistributionFileEntryResultData entryResult) {
         return entryResult.getId() + COMMA_SEPARATOR + entryResult.getDistributionPool() + COMMA_SEPARATOR +
-                entryResult.getSource() + COMMA_SEPARATOR + getEntryResultSourceFundAddress(entryResult).toString() + COMMA_SEPARATOR +
-                entryResult.getReceiverAddress() + COMMA_SEPARATOR + ((Boolean) entryResult.isAccepted()).toString() + COMMA_SEPARATOR +
+                entryResult.getSource() + COMMA_SEPARATOR + getEntryResultSourceFundAddress(entryResult) + COMMA_SEPARATOR +
+                entryResult.getReceiverAddress() + COMMA_SEPARATOR + entryResult.isAccepted() + COMMA_SEPARATOR +
                 entryResult.getStatus() + COMMA_SEPARATOR + entryResult.getTransactionHash() + "\n";
     }
 
@@ -677,7 +678,7 @@ public class FundDistributionService {
         DailyFundDistributionData dailyFundDistributionData = dailyFundDistributions.getByHash(hashOfDistributionDate);
 
         if (dailyFundDistributionData != null) {
-            LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries = dailyFundDistributionData.getFundDistributionEntries();
+            Map<Hash, FundDistributionData> fundDistributionEntries = dailyFundDistributionData.getFundDistributionEntries();
             Hash distributionHash = getDistributionsByDateRequest.getDistributionHash();
             if (distributionHash.getBytes().length != 0) {
                 FundDistributionData fundDistributionData = fundDistributionEntries.get(distributionHash);
@@ -701,7 +702,7 @@ public class FundDistributionService {
             return ResponseEntity.badRequest().body(new Response(DISTRIBUTION_DATE_ERROR, STATUS_ERROR));
         }
 
-        LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries = dailyFundDistributionData.getFundDistributionEntries();
+        Map<Hash, FundDistributionData> fundDistributionEntries = dailyFundDistributionData.getFundDistributionEntries();
         if (fundDistributionEntries == null || fundDistributionEntries.isEmpty()) {
             return ResponseEntity.badRequest().body(new Response(DISTRIBUTION_DATE_EMPTY_ENTRIES_ERROR, STATUS_ERROR));
         }

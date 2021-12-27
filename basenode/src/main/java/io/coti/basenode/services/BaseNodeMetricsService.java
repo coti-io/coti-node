@@ -124,8 +124,9 @@ public class BaseNodeMetricsService implements IMetricsService {
                 addBackup(backupMetric, backupName, value);
             }
         }
-        if (backupLog.size() > 0)
+        if (backupLog.size() > 0) {
             dbRecoveryService.clearBackupLog();
+        }
     }
 
     public void getMetricsSample() {

@@ -28,6 +28,7 @@ public class TransactionStorageService extends EntityStorageService {
 
     private static final int BLOCK_SIZE = 100;
     private static final int POOL_MAX_SIZE = 20;
+    private static final String EXCEPTION_MESSAGE = "{}: {}";
     @Autowired
     private BaseNodeValidationService validationService;
 
@@ -54,7 +55,7 @@ public class TransactionStorageService extends EntityStorageService {
         try {
             getHistoryTransactionsRequest.getTransactionHashes().forEach(transactionHash -> sink.next(retrieveHashToObjectFromStorage(transactionHash)));
         } catch (Exception e) {
-            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            log.error(EXCEPTION_MESSAGE, e.getClass().getName(), e.getMessage());
         } finally {
             sink.complete();
         }
@@ -85,7 +86,7 @@ public class TransactionStorageService extends EntityStorageService {
             executorPool.shutdown();
             awaitTerminationForExecutorPool(executorPool);
         } catch (Exception e) {
-            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            log.error(EXCEPTION_MESSAGE, e.getClass().getName(), e.getMessage());
         }
 
     }
@@ -146,7 +147,7 @@ public class TransactionStorageService extends EntityStorageService {
 
                 queueTransactionsDataBlock(transactionsMap, retrievedTransactionQueue);
             } catch (Exception e) {
-                log.error("{}: {}", e.getClass().getName(), e.getMessage());
+                log.error(EXCEPTION_MESSAGE, e.getClass().getName(), e.getMessage());
             }
 
         }

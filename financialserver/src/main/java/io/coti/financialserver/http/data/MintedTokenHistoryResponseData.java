@@ -1,5 +1,6 @@
 package io.coti.financialserver.http.data;
 
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import io.coti.financialserver.data.MintingHistoryData;
 import lombok.Data;
 
@@ -8,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Data
-public class MintedTokenHistoryResponseData {
+public class MintedTokenHistoryResponseData implements IResponseData {
 
     private Map<Instant, MintedTokenResponseData> mintedTokenHistory;
 
@@ -18,8 +19,6 @@ public class MintedTokenHistoryResponseData {
 
     public MintedTokenHistoryResponseData(Map<Instant, MintingHistoryData> mintedTokenHistoryMap) {
         this.mintedTokenHistory = new HashMap<>();
-        mintedTokenHistoryMap.entrySet().forEach(instantMintedTokenDataEntry -> {
-            mintedTokenHistory.put(instantMintedTokenDataEntry.getKey(), new MintedTokenResponseData(instantMintedTokenDataEntry.getValue()));
-        });
+        mintedTokenHistoryMap.forEach((key, value) -> mintedTokenHistory.put(key, new MintedTokenResponseData(value)));
     }
 }

@@ -353,8 +353,9 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             String[] backupPathArray = remoteBackup.split(folderDelimiter);
             if (backupPathArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_PATH) {
                 String[] folderNameArray = backupPathArray[INDEX_OF_BACKUP_TIMESTAMP_IN_PATH].split(folderNameDelimiter);
-                if (folderNameArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME)
+                if (folderNameArray.length > INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME) {
                     s3Backups.add(Long.parseLong(folderNameArray[INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME]));
+                }
             }
         });
         return s3Backups;

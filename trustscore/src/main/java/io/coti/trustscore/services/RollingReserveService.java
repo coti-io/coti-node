@@ -191,7 +191,7 @@ public class RollingReserveService {
     }
 
     private BigDecimal calculateRollingReserveAmount(BigDecimal reducedAmount, double trustScore) {
-        double reserveRate = (trustScore == 0) ? MAX_ROLLING_RESERVE_RATE : Math.min(MAX_ROLLING_RESERVE_RATE / trustScore, MAX_ROLLING_RESERVE_RATE);
+        double reserveRate = (BigDecimal.valueOf(trustScore).compareTo(BigDecimal.ZERO) == 0) ? MAX_ROLLING_RESERVE_RATE : Math.min(MAX_ROLLING_RESERVE_RATE / trustScore, MAX_ROLLING_RESERVE_RATE);
         BigDecimal rollingReserveAmount = reducedAmount.multiply(BigDecimal.valueOf(reserveRate / 100));
         if (rollingReserveAmount.scale() > CURRENCY_SCALE) {
             rollingReserveAmount = rollingReserveAmount.setScale(CURRENCY_SCALE, RoundingMode.DOWN);

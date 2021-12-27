@@ -35,8 +35,9 @@ public enum Fund {
 
     public static Fund getTokenSaleRelatedFundNameByText(String text) {
         for (Fund fund : values()) {
-            if (fund.text.contentEquals(text) && fund.isTokenSaleRelatedFund())
+            if (fund.text.contentEquals(text) && fund.isTokenSaleRelatedFund()) {
                 return fund;
+            }
         }
         throw new IllegalArgumentException("Invalid fund name");
     }
@@ -47,8 +48,9 @@ public enum Fund {
 
     public static Fund getFundByText(String text) {
         for (Fund fund : values()) {
-            if (fund.text.contentEquals(text) && fund.isSecondaryFundDistribution())
+            if (fund.text.contentEquals(text) && fund.isSecondaryFundDistribution()) {
                 return fund;
+            }
         }
         throw new IllegalArgumentException("Invalid fund name");
     }

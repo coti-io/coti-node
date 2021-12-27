@@ -61,7 +61,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
             if (!fromColdStorage) {
                 try {
                     log.debug("In the future, the object will be deleted from cold storage");
-                    //    objectService.deleteObjectByHash(objectHash, true, objectType);
+                    //    objectService.deleteObjectByHash(objectHash, true, objectType)
                 } catch (Exception e) {
                     log.error("{}: {}", e.getClass().getName(), e.getMessage());
                 }

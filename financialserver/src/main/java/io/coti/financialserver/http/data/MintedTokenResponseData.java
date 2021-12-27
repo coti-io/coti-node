@@ -1,5 +1,6 @@
 package io.coti.financialserver.http.data;
 
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import io.coti.financialserver.data.MintingHistoryData;
 import lombok.Data;
 
@@ -7,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class MintedTokenResponseData {
+public class MintedTokenResponseData implements IResponseData {
 
     private String hash;
     private Instant mintingTime;

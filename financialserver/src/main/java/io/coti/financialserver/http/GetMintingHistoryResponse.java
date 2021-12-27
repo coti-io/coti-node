@@ -22,8 +22,6 @@ public class GetMintingHistoryResponse extends BaseResponse {
     public GetMintingHistoryResponse(Map<Hash, Map<Instant, MintingHistoryData>> mintingHistory) {
 
         this.mintingHistory = new HashMap<>();
-        mintingHistory.entrySet().forEach(entry ->
-                this.mintingHistory.put(entry.getKey().toString(), new MintedTokenHistoryResponseData(entry.getValue()))
-        );
+        mintingHistory.forEach((key, value) -> this.mintingHistory.put(key.toString(), new MintedTokenHistoryResponseData(value)));
     }
 }

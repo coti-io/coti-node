@@ -69,7 +69,7 @@ public class FeeService {
     public BigDecimal calculateTokenMintingFee(BigDecimal amount, Instant creationTime, CurrencyData currencyData) {
         return regularTokenMintingFee;
 //        return tokenMintingFeeFactor.divide(new BigDecimal(100)).multiply(amount)
-//                .multiply(new BigDecimal(currencyRateService.getTokenRateToNativeCoin(currencyData))).add(tokenMintingMinimumFee);
+//                .multiply(new BigDecimal(currencyRateService.getTokenRateToNativeCoin(currencyData))).add(tokenMintingMinimumFee)
     }
 
     protected Hash networkFeeAddress() {

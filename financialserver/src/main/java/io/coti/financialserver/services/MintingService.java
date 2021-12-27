@@ -13,7 +13,6 @@ import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeMintingService;
-import io.coti.financialserver.crypto.GetMintingHistoryRequestCrypto;
 import io.coti.financialserver.crypto.GetTokenMintingFeeQuoteRequestCrypto;
 import io.coti.financialserver.crypto.MintingFeeQuoteCrypto;
 import io.coti.financialserver.data.MintingFeeQuoteData;
@@ -23,10 +22,8 @@ import io.coti.financialserver.http.TokenMintingFeeRequest;
 import io.coti.financialserver.http.TokenMintingFeeResponse;
 import io.coti.financialserver.http.data.MintingFeeQuoteResponseData;
 import io.coti.financialserver.http.data.TokenMintingFeeResponseData;
-import io.coti.financialserver.model.MintingRecords;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -45,16 +42,11 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 public class MintingService extends BaseNodeMintingService {
 
     private static final int MINTING_FEE_QUOTE_EXPIRATION_MINUTES = 60;
-    @Value("${financialserver.seed}")
-    private String seed;
+    private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
     @Autowired
     private TokenMintingCrypto tokenMintingCrypto;
     @Autowired
     private FeeService feeService;
-    @Autowired
-    private MintingRecords mintingRecords;
-    @Autowired
-    private GetMintingHistoryRequestCrypto getMintingHistoryRequestCrypto;
     @Autowired
     private GetTokenMintingFeeQuoteRequestCrypto getTokenMintingFeeQuoteRequestCrypto;
     @Autowired
@@ -66,17 +58,19 @@ public class MintingService extends BaseNodeMintingService {
             CurrencyData currencyData = currencies.getByHash(tokenMintingData.getMintingCurrencyHash());
 
             ResponseEntity<IResponse> badRequestResponse = validateTokenMintingFeeRequest(tokenMintingFeeRequest, currencyData);
-            if (badRequestResponse != null) return badRequestResponse;
+            if (badRequestResponse != null) {
+                return badRequestResponse;
+            }
 
             return createTokenMintingFee(tokenMintingData, currencyData, tokenMintingFeeRequest.getMintingFeeQuoteData());
         } catch (CurrencyValidationException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FAILURE, e.getMessageAndCause());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_MINTING_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
         } catch (CotiRunTimeException e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FAILURE, e.getMessageAndCause());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_MINTING_FAILURE, e.getMessageAndCause());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         } catch (Exception e) {
-            String error = String.format("%s. Exception: %s", TOKEN_MINTING_FAILURE, e.getMessage());
+            String error = String.format(EXCEPTION_MESSAGE, TOKEN_MINTING_FAILURE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(error, STATUS_ERROR));
         }
     }

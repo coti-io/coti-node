@@ -6,7 +6,7 @@ public enum CompensableEventScoreType {
     LATE_FULFILLMENT("LateFulfillment"),
     NON_FULFILMENT("NonFulfillment");
 
-    private String text;
+    private final String text;
 
     CompensableEventScoreType(String text) {
         this.text = text;

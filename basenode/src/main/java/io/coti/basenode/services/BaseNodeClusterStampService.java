@@ -100,10 +100,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         if (relevantLineNumber.get() < NUMBER_OF_GENESIS_ADDRESSES_MIN_LINES) {
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
         } else {
-            if (!finishedBalances.get())
+            if (!finishedBalances.get()) {
                 finishedBalances.set(true);
-            else
+            } else {
                 throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
+            }
         }
     }
 
@@ -112,10 +113,11 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             fillBalanceFromLine(clusterStampData, line);
         } else {
             if (!reachedSignatureSection.get()) {
-                if (!line.contentEquals(SIGNATURE_LINE_TOKEN))
+                if (!line.contentEquals(SIGNATURE_LINE_TOKEN)) {
                     throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);
-                else
+                } else {
                     reachedSignatureSection.set(true);
+                }
             } else {
                 signatureRelevantLines.incrementAndGet();
                 fillSignatureDataFromLine(clusterStampData, line, signatureRelevantLines);
@@ -167,8 +169,9 @@ public class BaseNodeClusterStampService implements IClusterStampService {
             SignatureData signature = new SignatureData();
             clusterStampData.setSignature(signature);
             clusterStampData.getSignature().setR(signatureDetails[1]);
-        } else
+        } else {
             clusterStampData.getSignature().setS(signatureDetails[1]);
+        }
     }
 
     protected void handleClusterStampWithoutSignature(ClusterStampData clusterStampData) {

@@ -10,7 +10,7 @@ import javax.validation.constraints.NotEmpty;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Data
 public class DailyFundDistributionData implements IEntity {
@@ -19,9 +19,9 @@ public class DailyFundDistributionData implements IEntity {
     private Hash hash;
     @NotEmpty
     private Instant date;
-    private LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries;
+    private Map<Hash, FundDistributionData> fundDistributionEntries;
 
-    public DailyFundDistributionData(Instant date, LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries) {
+    public DailyFundDistributionData(Instant date, Map<Hash, FundDistributionData> fundDistributionEntries) {
         this.date = date;
         this.fundDistributionEntries = fundDistributionEntries;
         initHashByDate();

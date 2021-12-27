@@ -31,8 +31,12 @@ public class TokenSaleDistributionEntryData implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         TokenSaleDistributionEntryData that = (TokenSaleDistributionEntryData) o;
         return Objects.equals(fundName, that.fundName) &&
                 Objects.equals(amount, that.amount) &&

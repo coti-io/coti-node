@@ -545,8 +545,9 @@ public class TransactionService extends BaseNodeTransactionService {
     public ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash, boolean extended) {
         try {
             TransactionData transactionData = transactions.getByHash(transactionHash);
-            if (transactionData == null)
+            if (transactionData == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TRANSACTION_DOESNT_EXIST_MESSAGE, STATUS_ERROR));
+            }
             TransactionResponseData transactionResponseData = extended ? new ExtendedTransactionResponseData(transactionData) : new TransactionResponseData(transactionData);
             GetTransactionResponse getTransactionResponse = extended ? new GetExtendedTransactionResponse((ExtendedTransactionResponseData) transactionResponseData) : new GetTransactionResponse(transactionResponseData);
             return ResponseEntity.status(HttpStatus.OK)

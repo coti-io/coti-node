@@ -200,8 +200,9 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     protected Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
-        if (currencyHash == null || currencyHash.toString().equals(""))
+        if (currencyHash == null || currencyHash.toString().equals("")) {
             return currencyService.getNativeCurrencyHash();
+        }
         return currencyHash;
     }
 

@@ -45,27 +45,25 @@ public class BucketTransactionService implements IBucketEventService<Transaction
 
 
         bucketTransactionEventsData.addEventToBucket(transactionEventData);
-        {
-            // Add dailyEvents to calculations
-            double transactionAmount = transactionEventData.getAmount().doubleValue();
-            bucketTransactionEventsData.increaseCurrentDateNumberOfTransactionsByOne();
-            bucketTransactionEventsData.setCurrentDateTurnOver(bucketTransactionEventsData.getCurrentDateTurnOver() + Math.abs(transactionAmount));
+        // Add dailyEvents to calculations
+        double transactionAmount = transactionEventData.getAmount().doubleValue();
+        bucketTransactionEventsData.increaseCurrentDateNumberOfTransactionsByOne();
+        bucketTransactionEventsData.setCurrentDateTurnOver(bucketTransactionEventsData.getCurrentDateTurnOver() + Math.abs(transactionAmount));
 
-            // Add monthlyEvents to calculations
-            Map<Date, BalanceCountAndContribution> currentMonthBalanceMap
-                    = bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution();
-            Date beginningOfToday = DatesCalculation.setDateOnBeginningOfDay(new Date());
-            if (currentMonthBalanceMap.containsKey(beginningOfToday)) {
-                currentMonthBalanceMap.put(beginningOfToday,
-                        new BalanceCountAndContribution(currentMonthBalanceMap.get(beginningOfToday).getCount() + transactionAmount, 0));
-            } else {
-                double previousBalance = 0;
-                if (!currentMonthBalanceMap.isEmpty()) {
-                    Date lastDayWithChangeInBalance = Collections.max(currentMonthBalanceMap.keySet());
-                    previousBalance = currentMonthBalanceMap.get(lastDayWithChangeInBalance).getCount();
-                }
-                currentMonthBalanceMap.put(beginningOfToday, new BalanceCountAndContribution(transactionAmount + previousBalance, 0));
+        // Add monthlyEvents to calculations
+        Map<Date, BalanceCountAndContribution> currentMonthBalanceMap
+                = bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution();
+        Date beginningOfToday = DatesCalculation.setDateOnBeginningOfDay(new Date());
+        if (currentMonthBalanceMap.containsKey(beginningOfToday)) {
+            currentMonthBalanceMap.put(beginningOfToday,
+                    new BalanceCountAndContribution(currentMonthBalanceMap.get(beginningOfToday).getCount() + transactionAmount, 0));
+        } else {
+            double previousBalance = 0;
+            if (!currentMonthBalanceMap.isEmpty()) {
+                Date lastDayWithChangeInBalance = Collections.max(currentMonthBalanceMap.keySet());
+                previousBalance = currentMonthBalanceMap.get(lastDayWithChangeInBalance).getCount();
             }
+            currentMonthBalanceMap.put(beginningOfToday, new BalanceCountAndContribution(transactionAmount + previousBalance, 0));
         }
     }
 

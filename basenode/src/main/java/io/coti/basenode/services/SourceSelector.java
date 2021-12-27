@@ -117,7 +117,7 @@ public class SourceSelector implements ISourceSelector {
 
             TransactionData randomSource = olderSources.get(randomIndex);
 
-            if (randomWeightedSources.isEmpty() || (randomWeightedSources.size() == 1 && randomSource != randomWeightedSources.iterator().next())) {
+            if (randomWeightedSources.isEmpty() || (randomWeightedSources.size() == 1 && !randomSource.equals(randomWeightedSources.iterator().next()))) {
                 randomWeightedSources.add(randomSource);
             }
         }
