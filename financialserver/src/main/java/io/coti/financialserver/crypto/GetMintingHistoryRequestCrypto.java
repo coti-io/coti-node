@@ -14,8 +14,10 @@ public class GetMintingHistoryRequestCrypto extends SignatureValidationCrypto<Ge
     public byte[] getSignatureMessage(GetMintingHistoryRequest getMintingHistoryRequest) {
 
         byte[] userHashInBytes = getMintingHistoryRequest.getUserHash().getBytes();
+        byte[] createTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(getMintingHistoryRequest.getCreateTime().toEpochMilli()).array();
+
         ByteBuffer getMintingHistoryRequestBuffer = ByteBuffer.allocate(userHashInBytes.length + Long.BYTES)
-                .put(userHashInBytes).putLong(getMintingHistoryRequest.getCreationTime().toEpochMilli());
+                .put(userHashInBytes).put(createTimeInBytes);
         return CryptoHelper.cryptoHash(getMintingHistoryRequestBuffer.array()).getBytes();
     }
 }

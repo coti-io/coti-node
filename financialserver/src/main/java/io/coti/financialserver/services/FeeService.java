@@ -34,15 +34,10 @@ public class FeeService {
     private BigDecimal tokenGenerationFee;
     @Value("${financialserver.seed}")
     private String seed;
-    @Value("${global.private.key}")
-    private String privateKey;
     @Value("${regular.token.minting.fee}")
     private BigDecimal regularTokenMintingFee;
-
     @Autowired
     private ICurrencyService currencyService;
-    @Autowired
-    private CurrencyRateService currencyRateService;
 
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         try {

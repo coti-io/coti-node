@@ -13,7 +13,8 @@ public class TokenMintingFeeBaseTransactionData extends TokenFeeBaseTransactionD
     private static final long serialVersionUID = 7641308128208586733L;
     private TokenMintingData serviceData;
 
-    public TokenMintingFeeBaseTransactionData() {
+    private TokenMintingFeeBaseTransactionData() {
+        super();
     }
 
     public TokenMintingFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenMintingData tokenMintingData) {

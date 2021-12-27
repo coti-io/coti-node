@@ -16,7 +16,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData inputBaseTransactionData) {
             if (!(inputBaseTransactionData instanceof InputBaseTransactionData)) {
-                throw new IllegalArgumentException("");
+                throw new IllegalArgumentException("BaseTransaction is not instance of InputBaseTransactionData");
             }
             return getBaseMessageInBytes(inputBaseTransactionData);
         }
@@ -30,7 +30,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof PaymentInputBaseTransactionData)) {
-                throw new IllegalArgumentException("");
+                throw new IllegalArgumentException("BaseTransaction is not instance of PaymentInputBaseTransactionData");
             }
             PaymentInputBaseTransactionData paymentInputBaseTransactionData = (PaymentInputBaseTransactionData) baseTransactionData;
             byte[] inputMessageInBytes = BaseTransactionCrypto.INPUT_BASE_TRANSACTION_DATA.getMessageInBytes(baseTransactionData);
@@ -63,7 +63,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof FullNodeFeeData)) {
-                throw new IllegalArgumentException("");
+                throw new IllegalArgumentException("BaseTransaction is not instance of FullNodeFeeData");
             }
 
             try {
@@ -84,7 +84,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof NetworkFeeData)) {
-                throw new IllegalArgumentException("");
+                throw new IllegalArgumentException("BaseTransaction is not instance of NetworkFeeData");
             }
 
             try {
@@ -108,7 +108,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof TokenGenerationFeeBaseTransactionData)) {
-                throw new IllegalArgumentException("");
+                throw new IllegalArgumentException("BaseTransaction is not instance of TokenGenerationFeeBaseTransactionData");
             }
 
             try {
@@ -133,7 +133,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof TokenMintingFeeBaseTransactionData)) {
-                throw new IllegalArgumentException("");
+                throw new IllegalArgumentException("BaseTransaction is not instance of TokenMintingFeeBaseTransactionData");
             }
 
             try {
@@ -158,7 +158,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof RollingReserveData)) {
-                throw new IllegalArgumentException("");
+                throw new IllegalArgumentException("BaseTransaction is not instance of RollingReserveData");
             }
 
             try {
@@ -181,7 +181,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
             if (!(baseTransactionData instanceof ReceiverBaseTransactionData)) {
-                throw new IllegalArgumentException("");
+                throw new IllegalArgumentException("BaseTransaction is not instance of ReceiverBaseTransactionData");
             }
 
             try {
@@ -372,7 +372,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
     protected <T extends OutputBaseTransactionData> byte[] getOutputMessageInBytes(T outputBaseTransactionData) {
         if (!OutputBaseTransactionData.class.isAssignableFrom(this.baseTransactionClass)) {
-            throw new IllegalArgumentException("");
+            throw new IllegalArgumentException("BaseTransaction is not subclass of OutputBaseTransactionData");
         }
         byte[] baseMessageInBytes = getBaseMessageInBytes(outputBaseTransactionData);
 

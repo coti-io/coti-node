@@ -30,9 +30,9 @@ public class ClusterStampService extends BaseNodeClusterStampService {
             clusterStampBufferedWriter.newLine();
             clusterStampBufferedWriter.append("# Signature");
             clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("r," + signature.getR());
+            clusterStampBufferedWriter.append("r,").append(signature.getR());
             clusterStampBufferedWriter.newLine();
-            clusterStampBufferedWriter.append("s," + signature.getS());
+            clusterStampBufferedWriter.append("s,").append(signature.getS());
         } catch (IOException e) {
             log.error("Exception at clusterstamp signing");
             throw new ClusterStampValidationException(BAD_CSV_FILE_FORMAT);

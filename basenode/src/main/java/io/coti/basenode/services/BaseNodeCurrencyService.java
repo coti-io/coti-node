@@ -216,9 +216,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private void handleTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData;
-            Optional<BaseTransactionData> firstBaseTransactionData = transactionData.getBaseTransactions().stream().filter(TokenGenerationFeeBaseTransactionData.class::isInstance).findFirst();
-            if (firstBaseTransactionData.isPresent()) {
-                tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) firstBaseTransactionData.get();
+            Optional<BaseTransactionData> optionalTokenGenerationFeeBaseTransactionData = transactionData.getBaseTransactions().stream().filter(TokenGenerationFeeBaseTransactionData.class::isInstance).findFirst();
+            if (optionalTokenGenerationFeeBaseTransactionData.isPresent()) {
+                tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) optionalTokenGenerationFeeBaseTransactionData.get();
                 TokenGenerationData tokenGenerationData = tokenGenerationFeeBaseTransactionData.getServiceData();
                 OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
                 boolean transactionConfirmed = transactionHelper.isConfirmed(transactionData);

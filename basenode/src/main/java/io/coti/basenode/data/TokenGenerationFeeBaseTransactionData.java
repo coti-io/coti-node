@@ -14,6 +14,7 @@ public class TokenGenerationFeeBaseTransactionData extends TokenFeeBaseTransacti
     private TokenGenerationData serviceData;
 
     private TokenGenerationFeeBaseTransactionData() {
+        super();
     }
 
     public TokenGenerationFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenGenerationData tokenGenerationData) {

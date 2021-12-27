@@ -11,6 +11,7 @@ import java.time.Instant;
 @EqualsAndHashCode(callSuper = true)
 public abstract class TokenFeeBaseTransactionData extends OutputBaseTransactionData {
 
+    private static final long serialVersionUID = -605143759679046209L;
     private Hash signerHash;
 
     protected TokenFeeBaseTransactionData() {
