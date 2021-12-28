@@ -4,15 +4,16 @@ import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.Hash;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
 public class NetworkFeeRequest {
 
     @NotNull
-    private Hash userHash;
+    private @Valid Hash userHash;
     @NotNull
-    private FullNodeFeeData fullNodeFeeData;
+    private @Valid FullNodeFeeData fullNodeFeeData;
     private boolean feeIncluded;
 
 }

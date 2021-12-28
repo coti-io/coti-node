@@ -119,7 +119,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
     };
 
     protected static final String INVALID_TRANSACTION_TYPE = "Invalid transaction type";
-    protected TransactionType type;
+    protected final TransactionType type;
     protected OriginatorCurrencyCrypto originatorCurrencyCrypto;
     protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
     protected TokenMintingCrypto tokenMintingCrypto;

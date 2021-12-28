@@ -82,7 +82,7 @@ public class NetworkFeeService {
             }
 
             BigDecimal fee;
-            if (fullNodeFeeData.getOriginalCurrencyHash() == null || "".equals(fullNodeFeeData.getOriginalCurrencyHash().toString()) || fullNodeFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+            if (fullNodeFeeData.getOriginalCurrencyHash() == null || fullNodeFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
                 TrustScoreData trustScoreData = trustScores.getByHash(networkFeeRequest.getUserHash());
                 if (trustScoreData == null) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(TRUST_SCORE_NOT_EXIST, networkFeeRequest.getUserHash()), STATUS_ERROR));
@@ -103,10 +103,7 @@ public class NetworkFeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE,
                         fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
             }
-            Hash feeDataCurrencyHash = new Hash(nativeCurrencyHash.toString());
-            if (networkFeeRequest.getFullNodeFeeData().getCurrencyHash() == null || "".equals(networkFeeRequest.getFullNodeFeeData().getCurrencyHash().toString())) {
-                feeDataCurrencyHash.setBytes("".getBytes());
-            }
+            Hash feeDataCurrencyHash = fullNodeFeeData.getOriginalCurrencyHash() == null ? null : new Hash(nativeCurrencyHash.toString());
             NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, feeDataCurrencyHash, fee, fullNodeFeeData.getOriginalCurrencyHash(), originalAmount, reducedAmount, Instant.now());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
@@ -152,6 +149,8 @@ public class NetworkFeeService {
         BigDecimal reducedAmount = networkFeeData.getOriginalAmount().subtract(fullNodeFeeData.getAmount());
         return validationService.validateAmountField(networkFeeData.getAmount())
                 && networkFeeData.getOriginalAmount().equals(fullNodeFeeData.getOriginalAmount())
+                && (networkFeeData.getOriginalCurrencyHash() != null ? networkFeeData.getOriginalCurrencyHash().equals(fullNodeFeeData.getOriginalCurrencyHash()) :
+                fullNodeFeeData.getOriginalCurrencyHash() == null)
                 && (!feeIncluded || (validationService.validateAmountField(networkFeeData.getReducedAmount())
                 && networkFeeData.getReducedAmount().equals(reducedAmount.scale() > 0 ? reducedAmount.stripTrailingZeros() : reducedAmount)
                 && networkFeeData.getReducedAmount().compareTo(networkFeeData.getAmount()) > 0))

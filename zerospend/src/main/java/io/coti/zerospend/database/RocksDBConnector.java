@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 @Primary
 @Service
@@ -18,7 +18,7 @@ public class RocksDBConnector extends BaseNodeRocksDBConnector {
     @Override
     protected void populateResetColumnFamilyNames() {
         if (resetCurrencies) {
-            resetColumnFamilyNames.addAll(Arrays.asList(
+            resetColumnFamilyNames.addAll(Collections.singletonList(
                     Currencies.class.getName()
             ));
         }
