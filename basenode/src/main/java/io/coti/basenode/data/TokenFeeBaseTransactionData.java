@@ -4,6 +4,8 @@ import io.coti.basenode.data.interfaces.ITokenServiceData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -12,7 +14,8 @@ import java.time.Instant;
 public abstract class TokenFeeBaseTransactionData extends OutputBaseTransactionData {
 
     private static final long serialVersionUID = -605143759679046209L;
-    private Hash signerHash;
+    @NotNull
+    private @Valid Hash signerHash;
 
     protected TokenFeeBaseTransactionData() {
         super();

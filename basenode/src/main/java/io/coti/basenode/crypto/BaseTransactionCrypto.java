@@ -252,7 +252,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public void createAndSetBaseTransactionHash(BaseTransactionData baseTransactionData) {
         if (!this.baseTransactionClass.isInstance(baseTransactionData)) {
-            throw new IllegalArgumentException("");
+            throw new IllegalArgumentException("BaseTransaction is not instance of " + this.baseTransactionClass.getSimpleName());
         }
         baseTransactionData.setHash(createBaseTransactionHashFromData(baseTransactionData));
 
@@ -379,8 +379,10 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         String decimalOriginalAmountRepresentation = outputBaseTransactionData.getOriginalAmount().stripTrailingZeros().toPlainString();
         byte[] bytesOfOriginalAmount = decimalOriginalAmountRepresentation.getBytes(StandardCharsets.UTF_8);
 
-        ByteBuffer outputBaseTransactionBuffer = ByteBuffer.allocate(baseMessageInBytes.length + bytesOfOriginalAmount.length).
-                put(baseMessageInBytes).put(bytesOfOriginalAmount);
+        byte[] originalCurrencyHashInBytes = outputBaseTransactionData.getOriginalCurrencyHash() != null ? outputBaseTransactionData.getOriginalCurrencyHash().getBytes() : new byte[0];
+
+        ByteBuffer outputBaseTransactionBuffer = ByteBuffer.allocate(baseMessageInBytes.length + bytesOfOriginalAmount.length + originalCurrencyHashInBytes.length).
+                put(baseMessageInBytes).put(bytesOfOriginalAmount).put(originalCurrencyHashInBytes);
 
         return outputBaseTransactionBuffer.array();
     }

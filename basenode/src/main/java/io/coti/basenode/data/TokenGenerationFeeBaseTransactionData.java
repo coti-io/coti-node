@@ -3,6 +3,8 @@ package io.coti.basenode.data;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -11,7 +13,8 @@ import java.time.Instant;
 public class TokenGenerationFeeBaseTransactionData extends TokenFeeBaseTransactionData {
 
     private static final long serialVersionUID = -7466306830924153999L;
-    private TokenGenerationData serviceData;
+    @NotNull
+    private @Valid TokenGenerationData serviceData;
 
     private TokenGenerationFeeBaseTransactionData() {
         super();

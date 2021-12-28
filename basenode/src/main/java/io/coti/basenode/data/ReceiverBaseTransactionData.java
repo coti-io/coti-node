@@ -3,6 +3,7 @@ package io.coti.basenode.data;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -11,7 +12,7 @@ import java.time.Instant;
 public class ReceiverBaseTransactionData extends OutputBaseTransactionData {
 
     private static final long serialVersionUID = 3401427617037616873L;
-    private Hash receiverDescription;
+    private @Valid Hash receiverDescription;
 
     private ReceiverBaseTransactionData() {
         super();

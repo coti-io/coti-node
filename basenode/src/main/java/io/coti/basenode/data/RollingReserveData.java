@@ -4,6 +4,7 @@ import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -15,7 +16,7 @@ public class RollingReserveData extends OutputBaseTransactionData implements ITr
 
     private static final long serialVersionUID = -8006331684448356440L;
     @NotNull
-    private List<TrustScoreNodeResultData> rollingReserveTrustScoreNodeResult;
+    private List<@Valid TrustScoreNodeResultData> rollingReserveTrustScoreNodeResult;
     private BigDecimal reducedAmount;
 
     private RollingReserveData() {

@@ -71,7 +71,7 @@ public class FeeService {
             if (zeroFeeUserHashes.contains(fullNodeFeeRequest.getUserHash().toString())) {
                 amount = new BigDecimal(0);
             } else {
-                if (fullNodeFeeRequest.getOriginalCurrencyHash() == null || fullNodeFeeRequest.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+                if (originalCurrencyHash == null || originalCurrencyHash.equals(nativeCurrencyHash)) {
                     BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
                     if (fee.compareTo(minimumFee) <= 0) {
                         amount = minimumFee;
@@ -84,7 +84,6 @@ public class FeeService {
                     CurrencyData currencyData = currencies.getByHash(fullNodeFeeRequest.getOriginalCurrencyHash());
                     if (currencyData != null && currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
                         amount = regularTokenFullnodeFee;
-                        originalCurrencyHash = currencyData.getHash();
                     } else {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(UNDEFINED_TOKEN_TYPE_FEE, fullNodeFeeRequest.getOriginalCurrencyHash()), STATUS_ERROR));
                     }
@@ -100,7 +99,7 @@ public class FeeService {
             if (feeIncluded && originalAmount.compareTo(amount) <= 0) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
             }
-            Hash feeDataCurrencyHash = fullNodeFeeRequest.getOriginalCurrencyHash() == null ? null : new Hash(nativeCurrencyHash.toString());
+            Hash feeDataCurrencyHash = originalCurrencyHash == null ? null : new Hash(nativeCurrencyHash.toString());
             FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, feeDataCurrencyHash, amount, originalCurrencyHash, originalAmount, Instant.now());
             setFullNodeFeeHash(fullNodeFeeData);
             signFullNodeFee(fullNodeFeeData);

@@ -19,10 +19,10 @@ public abstract class BaseTransactionData implements Serializable {
 
     private static final long serialVersionUID = 4812274089984863159L;
     @NotNull
-    protected Hash hash;
+    protected @Valid Hash hash;
     @NotNull
-    protected Hash addressHash;
-    protected Hash currencyHash;
+    protected @Valid Hash addressHash;
+    protected @Valid Hash currencyHash;
     @NotNull
     protected BigDecimal amount;
     @NotNull
