@@ -10,6 +10,7 @@ import io.coti.basenode.http.data.TokenGenerationResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.CurrencyNameIndexes;
+import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.UserCurrencyIndexes;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -73,7 +74,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private Map<Hash, BigDecimal> currencyHashToMintableAmountMap;
     private Map<Hash, Set<TransactionData>> postponedTokenMintingTransactionsMap;
     private Map<Hash, Boolean> mintingTransactionToConfirmationMap;
-
+    @Autowired
+    private TransactionIndexes transactionIndexes;
     public void init() {
         currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
         postponedTokenMintingTransactionsMap = new ConcurrentHashMap<>();
@@ -215,6 +217,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     private void handleTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
+
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData;
             Optional<BaseTransactionData> firstBaseTransactionData = transactionData.getBaseTransactions().stream().filter(baseTransactionData -> baseTransactionData instanceof TokenGenerationFeeBaseTransactionData).findFirst();
             if (firstBaseTransactionData.isPresent()) {
@@ -223,46 +226,119 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 OriginatorCurrencyData originatorCurrencyData = tokenGenerationData.getOriginatorCurrencyData();
                 boolean transactionConfirmed = transactionHelper.isConfirmed(transactionData);
                 CurrencyData currencyData = getCurrencyDataFromDB(originatorCurrencyData);
+                try {
+//                    if (OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()).toString().startsWith("cd5"))
+//                    {
+//                        log.info("guy: cd5 gene start" );
+//                        if (currencyData != null)
+//                            log.info("guy: cd5 confirmed: " +  currencyData.isConfirmed());
+//                        else
+//                            log.info("guy: cd5 confirmed: no cause carrencyData is null");
+//                    }
+//                    if (OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()).toString().startsWith("366"))
+//                    {
+//                        log.info("guy: 366 gene start" );
+//                        if (currencyData != null)
+//                            log.info("guy: 366 confirmed: " +  currencyData.isConfirmed());
+//                        else
+//                            log.info("guy: 366 confirmed: no cause carrencyData is null");
+//                    }
+                    synchronized (currencyLockData.addLockToLockMap(OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()))) {
+                        if (currencyData == null) {
+                            Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
+                            currencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
+                            if (OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()).toString().startsWith("cd5")) {
+                                if (currencyData != null) {
+                                    log.info("guy: cd5 confirmed2: " + currencyData.isConfirmed());
+                                    TransactionIndexData td = transactionIndexes.getByHash(new Hash(transactionData.getDspConsensusResult().getIndex()));
+                                    while (td == null)
+                                    {
+                                        log.info("cd5 td: null");
+                                        td = transactionIndexes.getByHash(new Hash(transactionData.getDspConsensusResult().getIndex()));
 
-                if (currencyData == null) {
-                    Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
-                    currencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
-                    if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
-                        CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
-                        Hash previousCurrencyHash = previousCurrencyNameIndexData.getCurrencyHash();
-                        removeUserCurrencyIndexByCurrencyHash(previousCurrencyHash);
-                        currencies.deleteByHash(previousCurrencyHash);
-                    }
-                    if (isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
-                        currencies.put(currencyData);
-                        currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
-                        addToUserCurrencyIndexes(currencyData.getOriginatorHash(), currencyData.getHash());
-                        if (currencyData.isConfirmed()) {
+                                    }
+                                    currencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
+
+                                }
+                                else
+                                    log.info("guy: cd5 confirmed2: no cause carrencyData is null");
+                            }
+                            if (OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()).toString().startsWith("366")) {
+                                if (currencyData != null) {
+                                    log.info("guy: 366 confirmed2: " + currencyData.isConfirmed());
+                                    TransactionIndexData td = transactionIndexes.getByHash(new Hash(transactionData.getDspConsensusResult().getIndex()));
+                                    while (td == null)
+                                    {
+                                        log.info("366 td: null");
+                                        td = transactionIndexes.getByHash(new Hash(transactionData.getDspConsensusResult().getIndex()));
+
+                                    }
+                                    currencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
+                                }
+                                else
+                                    log.info("guy: 366 confirmed2: no cause carrencyData is null");
+                            }
+//                            if (OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()).toString().startsWith("366")) {
+//                                if (currencyData != null)
+//                                    log.info("guy: 366 confirmed2: " + currencyData.isConfirmed());
+//                                else
+//                                    log.info("guy: 366 confirmed2: no cause carrencyData is null");
+//                            }
+                            if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
+                                CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+                                Hash previousCurrencyHash = previousCurrencyNameIndexData.getCurrencyHash();
+                                removeUserCurrencyIndexByCurrencyHash(previousCurrencyHash);
+                                currencies.deleteByHash(previousCurrencyHash);
+                            }
+                            if (isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
+                                currencies.put(currencyData);
+                                currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
+                                addToUserCurrencyIndexes(currencyData.getOriginatorHash(), currencyData.getHash());
+                                if (currencyData.isConfirmed()) {
+                                    initializeMintableAmountEntry(transactionData);
+                                }
+                            }
+                        } else if (currencyData.getCurrencyGeneratingTransactionHash().equals(transactionData.getHash())) {
+                            if (transactionConfirmed && !currencyData.isConfirmed()) {
+                                currencyData.setConfirmed(true);
+                                currencies.put(currencyData);
+                            }
+                            if (currencyData.isConfirmed()) {
+                                initializeMintableAmountEntry(transactionData);
+                            }
+                        } else if (transactionConfirmed) {
+                            Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
+                            CurrencyData newCurrencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
+                            currencies.put(newCurrencyData);
+                            if (!newCurrencyData.getName().equals(currencyData.getName())) {
+                                currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+                                currencyNameIndexes.put(new CurrencyNameIndexData(newCurrencyData.getName(), newCurrencyData.getHash()));
+                            }
+                            if (!currencyData.getOriginatorHash().equals(newCurrencyData.getOriginatorHash())) {
+                                removeUserCurrencyIndexByCurrencyHash(currencyData.getHash());
+                                addToUserCurrencyIndexes(newCurrencyData.getOriginatorHash(), newCurrencyData.getHash());
+                            }
                             initializeMintableAmountEntry(transactionData);
                         }
                     }
-                } else if (currencyData.getCurrencyGeneratingTransactionHash().equals(transactionData.getHash())) {
-                    if (transactionConfirmed && !currencyData.isConfirmed()) {
-                        currencyData.setConfirmed(true);
-                        currencies.put(currencyData);
-                    }
-                    if (currencyData.isConfirmed()) {
-                        initializeMintableAmountEntry(transactionData);
-                    }
-                } else if (transactionConfirmed) {
-                    Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
-                    CurrencyData newCurrencyData = getCurrencyDataInstance(tokenGenerationData, createTime, originatorCurrencyData, transactionData);
-                    currencies.put(newCurrencyData);
-                    if (!newCurrencyData.getName().equals(currencyData.getName())) {
-                        currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
-                        currencyNameIndexes.put(new CurrencyNameIndexData(newCurrencyData.getName(), newCurrencyData.getHash()));
-                    }
-                    if (!currencyData.getOriginatorHash().equals(newCurrencyData.getOriginatorHash())) {
-                        removeUserCurrencyIndexByCurrencyHash(currencyData.getHash());
-                        addToUserCurrencyIndexes(newCurrencyData.getOriginatorHash(), newCurrencyData.getHash());
-                    }
-                    initializeMintableAmountEntry(transactionData);
                 }
+                catch(Exception e)
+                {
+                    log.error("guy:" + e.toString());
+                }
+                finally {
+                    currencyLockData.removeLockFromLocksMap(OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()));
+//                    if (OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()).toString().startsWith("cd5"))
+//                    {
+//                        log.info("guy: cd5 gene end" );
+//                    }
+//                    if (OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol()).toString().startsWith("366"))
+//                    {
+//                        log.info("guy: 366 gene end" );
+//                    }
+                }
+
+
             }
         }
     }
@@ -333,29 +409,84 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     public void updateMintableAmountMapAndBalance(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeData != null) {
-            Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
-            BigDecimal mintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
-            Hash receiverAddress = tokenMintingFeeData.getServiceData().getReceiverAddress();
-            BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
-            boolean confirmed = transactionHelper.isConfirmed(transactionData);
-            if (mintableAmount != null) {
-                Boolean previousMintingTransactionConfirmed = mintingTransactionToConfirmationMap.get(transactionData.getHash());
-                if (previousMintingTransactionConfirmed == null) {
-                    putToMintableAmountMap(tokenHash, mintableAmount.subtract(mintingRequestedAmount));
-                }
-                if (previousMintingTransactionConfirmed == null && confirmed || previousMintingTransactionConfirmed != null && !previousMintingTransactionConfirmed.equals(confirmed)) {
-                    balanceService.updateBalance(receiverAddress, tokenHash, mintingRequestedAmount);
-                    balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
-                }
-                mintingTransactionToConfirmationMap.put(transactionData.getHash(), confirmed);
 
-            } else {
-                postponedTokenMintingTransactionsMap.computeIfPresent(tokenHash, (hash, transactionSet) -> {
-                    transactionSet.add(transactionData);
-                    return transactionSet;
-                });
-                postponedTokenMintingTransactionsMap.putIfAbsent(tokenHash, new HashSet<>(Collections.singletonList(transactionData)));
+            Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
+            try{
+                if (tokenHash.toString().startsWith("cd5"))
+                {
+                    log.info("guy: cd5 mint start" );
+                }
+                if (tokenHash.toString().startsWith("366"))
+                {
+                    log.info("guy: 366 mint start" );
+                }
+            synchronized (currencyLockData.addLockToLockMap(tokenHash)) {
+                BigDecimal mintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
+                Hash receiverAddress = tokenMintingFeeData.getServiceData().getReceiverAddress();
+                BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
+                boolean confirmed = transactionHelper.isConfirmed(transactionData);
+
+                if (((TokenMintingFeeBaseTransactionData)transactionData.getBaseTransactions().get(2)).getServiceData().getMintingCurrencyHash().toString().startsWith("cd5"))
+                {
+                    log.info("cd5 minting func, confirmed: " + confirmed + " mintable not null: " + (mintableAmount!=null));
+                    if (mintableAmount==null)
+                    {
+                        log.info("if u see this means that no mintable table created so token is not confirmed - check generation");
+                    }
+                }
+                if (((TokenMintingFeeBaseTransactionData)transactionData.getBaseTransactions().get(2)).getServiceData().getMintingCurrencyHash().toString().startsWith("366"))
+                {
+                    log.info("366 minting func, confirmed: " + confirmed + " mintable not null: " + (mintableAmount!=null));
+                    if (mintableAmount==null)
+                    {
+                        log.info("if u see this means that no mintable table created so token is not confirmed - check generation");
+                    }
+                }
+
+                if (mintableAmount != null) {
+                    Boolean previousMintingTransactionConfirmed = mintingTransactionToConfirmationMap.get(transactionData.getHash());
+                    if (((TokenMintingFeeBaseTransactionData)transactionData.getBaseTransactions().get(2)).getServiceData().getMintingCurrencyHash().toString().startsWith("cd5"))
+                    {
+                        log.info("cd5 minting func, previousMintingTransactionConfirmed is null: " + (previousMintingTransactionConfirmed==null));
+                    }
+                    if (((TokenMintingFeeBaseTransactionData)transactionData.getBaseTransactions().get(2)).getServiceData().getMintingCurrencyHash().toString().startsWith("366"))
+                    {
+                        log.info("366 minting func, previousMintingTransactionConfirmed is null: " + (previousMintingTransactionConfirmed==null));
+                    }
+                    if (previousMintingTransactionConfirmed == null) {
+                        putToMintableAmountMap(tokenHash, mintableAmount.subtract(mintingRequestedAmount));
+                    }
+                    if (previousMintingTransactionConfirmed == null && confirmed || previousMintingTransactionConfirmed != null && !previousMintingTransactionConfirmed.equals(confirmed)) {
+                        balanceService.updateBalance(receiverAddress, tokenHash, mintingRequestedAmount);
+                        balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
+                    }
+                    else
+                    {
+                        log.info("balance not updated for currency:" + tokenHash);
+                    }
+                    mintingTransactionToConfirmationMap.put(transactionData.getHash(), confirmed);
+
+                } else {
+                    postponedTokenMintingTransactionsMap.computeIfPresent(tokenHash, (hash, transactionSet) -> {
+                        transactionSet.add(transactionData);
+                        return transactionSet;
+                    });
+                    postponedTokenMintingTransactionsMap.putIfAbsent(tokenHash, new HashSet<>(Collections.singletonList(transactionData)));
+                }
+            }}
+            finally
+            {
+                currencyLockData.removeLockFromLocksMap(tokenHash);
+                if (tokenHash.toString().startsWith("cd5"))
+                {
+                    log.info("guy: cd5 mint end" );
+                }
+                if (tokenHash.toString().startsWith("366"))
+                {
+                    log.info("guy: 366 mint end" );
+                }
             }
+
         }
     }
 

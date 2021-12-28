@@ -1,22 +1,22 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
+import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.ChunkException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;
 import io.coti.basenode.http.data.ReducedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.http.GetExtendedTransactionsResponse;
-import io.coti.basenode.http.GetTransactionsResponse;
-import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
+import org.rocksdb.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +39,10 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @Service
 public class BaseNodeTransactionService implements ITransactionService {
 
+    private final LockData transactionLockData = new LockData();
+    protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
+    @Autowired
+    protected IChunkService chunkService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -67,10 +71,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     private ICurrencyService currencyService;
     @Autowired
     private IMintingService mintingService;
-    protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
-    private final LockData transactionLockData = new LockData();
-    @Autowired
-    protected IChunkService chunkService;
 
     @Override
     public void init() {
@@ -344,11 +344,11 @@ public class BaseNodeTransactionService implements ITransactionService {
             dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
         }
         Map<TransactionData, Boolean> postponedParentTransactionMap = postponedTransactionMap.entrySet().stream().filter(
-                postponedTransactionMapEntry ->
-                        (postponedTransactionMapEntry.getKey().getRightParentHash() != null
-                                && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
-                                || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
-                                && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
+                        postponedTransactionMapEntry ->
+                                (postponedTransactionMapEntry.getKey().getRightParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
+                                        || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         postponedParentTransactionMap.forEach((postponedTransaction, isTransactionFromFullNode) -> {
             log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
@@ -373,18 +373,51 @@ public class BaseNodeTransactionService implements ITransactionService {
                                                  transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap) {
         boolean transactionExists = transactionHelper.isTransactionExists(transactionData);
         transactions.put(transactionData);
+        if (transactionData.getType().equals(TransactionType.TokenGeneration) || transactionData.getType().equals(TransactionType.TokenMinting) )
+        {
+            if (transactionData.getType().equals(TransactionType.TokenGeneration) )
+            {
+                if (OriginatorCurrencyCrypto.calculateHash(((TokenGenerationFeeBaseTransactionData)transactionData.getBaseTransactions().get(2)).getServiceData().getOriginatorCurrencyData().getSymbol()) .toString().startsWith("cd5"))
+                {
+                    log.info("cd5 genera");
+                }
+
+                if (OriginatorCurrencyCrypto.calculateHash(((TokenGenerationFeeBaseTransactionData)transactionData.getBaseTransactions().get(2)).getServiceData().getOriginatorCurrencyData().getSymbol()) .toString().startsWith("366"))
+                {
+                    log.info("366 genera");
+                }
+            }
+            if (transactionData.getType().equals(TransactionType.TokenMinting))
+            {
+                if (((TokenMintingFeeBaseTransactionData)transactionData.getBaseTransactions().get(2)).getServiceData().getMintingCurrencyHash().toString().startsWith("cd5"))
+                {
+                    log.info("cd5 mintinh");
+                }
+                if (((TokenMintingFeeBaseTransactionData)transactionData.getBaseTransactions().get(2)).getServiceData().getMintingCurrencyHash().toString().startsWith("366"))
+                {
+                    log.info("366 minting");
+                }
+            }
+        }
         if (!transactionExists) {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> {
                 addDataToMemory(transactionData);
                 continueHandleMissingTransaction(transactionData);
             });
-            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() ->
+            {
+                confirmationService.insertMissingTransaction(transactionData);
+                mintingService.handleMissingTransaction(transactionData);
+            });
             transactionHelper.incrementTotalTransactions();
         } else {
-            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes));
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() ->
+            {
+                confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+                mintingService.handleMissingTransaction(transactionData);
+            });
         }
         currencyService.handleMissingTransaction(transactionData);
-        mintingService.handleMissingTransaction(transactionData);
         missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes));
 
     }
