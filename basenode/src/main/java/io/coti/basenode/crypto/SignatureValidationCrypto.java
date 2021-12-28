@@ -17,7 +17,7 @@ public abstract class SignatureValidationCrypto<T extends ISignValidatable> {
         try {
             return CryptoHelper.verifyByPublicKey(this.getSignatureMessage(signValidatable), this.getSignature(signValidatable).getR(), this.getSignature(signValidatable).getS(), this.getSignerHash(signValidatable).toHexString());
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            log.error("Verify signature error", e);
+            log.error("Verify signature error: {} {}", e.getClass(), e.getMessage());
             return false;
         }
     }
