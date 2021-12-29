@@ -26,12 +26,8 @@ public class FullNodeFeeResponseData implements IResponseData {
         this.amount = fullNodeFeeData.getAmount().toPlainString();
         this.originalAmount = fullNodeFeeData.getOriginalAmount().toPlainString();
         this.addressHash = fullNodeFeeData.getAddressHash().toString();
-        if (fullNodeFeeData.getCurrencyHash() != null) {
-            this.currencyHash = fullNodeFeeData.getCurrencyHash().toString();
-        }
-        if (fullNodeFeeData.getOriginalCurrencyHash() != null) {
-            this.originalCurrencyHash = fullNodeFeeData.getOriginalCurrencyHash().toString();
-        }
+        this.currencyHash = fullNodeFeeData.getCurrencyHash() != null ? fullNodeFeeData.getCurrencyHash().toString() : null;
+        this.originalCurrencyHash = fullNodeFeeData.getOriginalCurrencyHash() != null ? fullNodeFeeData.getOriginalCurrencyHash().toString() : null;
         this.createTime = fullNodeFeeData.getCreateTime();
         this.name = BaseTransactionName.getName(FullNodeFeeData.class).name();
         this.signatureData = fullNodeFeeData.getSignatureData();

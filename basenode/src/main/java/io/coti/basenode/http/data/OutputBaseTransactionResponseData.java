@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 public abstract class OutputBaseTransactionResponseData extends BaseTransactionResponseData {
 
     protected BigDecimal originalAmount;
+    protected String originalCurrencyHash;
 
     protected OutputBaseTransactionResponseData() {
         super();
@@ -19,8 +20,9 @@ public abstract class OutputBaseTransactionResponseData extends BaseTransactionR
 
     protected OutputBaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
-
-        this.originalAmount = ((OutputBaseTransactionData) baseTransactionData).getOriginalAmount();
+        OutputBaseTransactionData outputBaseTransactionData = (OutputBaseTransactionData) baseTransactionData;
+        this.originalAmount = outputBaseTransactionData.getOriginalAmount();
+        this.originalCurrencyHash = outputBaseTransactionData.getOriginalCurrencyHash() != null ? outputBaseTransactionData.getOriginalCurrencyHash().toString() : null;
     }
 
 }
