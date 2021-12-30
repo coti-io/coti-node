@@ -1,20 +1,21 @@
 package io.coti.financialserver.http.data;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class TokenGenerationFeeResponseData implements IResponse {
+public class TokenGenerationFeeResponseData implements IResponseData {
 
     private String hash;
     private BigDecimal amount;
-    private BigDecimal originalAmount;
-    private String addressHash;
     private String currencyHash;
+    private String addressHash;
+    private BigDecimal originalAmount;
+    private String originalCurrencyHash;
     private TokenGenerationResponseData serviceData;
     private String signerHash;
     private Instant createTime;
@@ -24,9 +25,10 @@ public class TokenGenerationFeeResponseData implements IResponse {
     public TokenGenerationFeeResponseData(TokenFeeBaseTransactionData tokenFeeBaseTransactionData) {
         this.hash = tokenFeeBaseTransactionData.getHash().toString();
         this.amount = tokenFeeBaseTransactionData.getAmount();
-        this.originalAmount = tokenFeeBaseTransactionData.getOriginalAmount();
+        this.currencyHash = tokenFeeBaseTransactionData.getCurrencyHash() != null ? tokenFeeBaseTransactionData.getCurrencyHash().toString() : null;
         this.addressHash = tokenFeeBaseTransactionData.getAddressHash().toString();
-        this.currencyHash = tokenFeeBaseTransactionData.getCurrencyHash().toString();
+        this.originalAmount = tokenFeeBaseTransactionData.getOriginalAmount();
+        this.originalCurrencyHash = tokenFeeBaseTransactionData.getOriginalCurrencyHash() != null ? tokenFeeBaseTransactionData.getOriginalCurrencyHash().toString() : null;
         this.serviceData = new TokenGenerationResponseData((TokenGenerationData) tokenFeeBaseTransactionData.getServiceData());
         this.signerHash = tokenFeeBaseTransactionData.getSignerHash().toString();
         this.createTime = tokenFeeBaseTransactionData.getCreateTime();
