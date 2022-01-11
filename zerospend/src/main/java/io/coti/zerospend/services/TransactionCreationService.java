@@ -125,7 +125,7 @@ public class TransactionCreationService {
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
         Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now());
-        return createTransaction(baseTransactionData, description.name(), trustScore, TransactionType.EventHardFork, addressHash);
+        return createTransaction(baseTransactionData, description.name(), trustScore, TransactionType.ZeroSpend, addressHash);
     }
 
 
