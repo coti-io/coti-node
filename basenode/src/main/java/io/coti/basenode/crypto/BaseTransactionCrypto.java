@@ -59,6 +59,33 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             return transactionData.getHash().getBytes();
         }
     },
+    EVENT_TRANSACTION_DATA(EventInputBaseTransactionData.class) {
+        @Override
+        public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
+            if (!(baseTransactionData instanceof EventInputBaseTransactionData)) {
+                throw new IllegalArgumentException("BaseTransaction is not instance of EventInputBaseTransactionData");
+            }
+            byte[] inputMessageInBytes = getBaseMessageInBytes(baseTransactionData);
+            byte[] eventInBytes = ((EventInputBaseTransactionData) baseTransactionData).getEvent().getBytes();
+            byte isHardForkByte = (byte) (((EventInputBaseTransactionData) baseTransactionData).isHardFork() ? 1 : 0);
+
+            ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(inputMessageInBytes.length + eventInBytes.length + 1).
+                    put(inputMessageInBytes).put(eventInBytes).put(isHardForkByte);
+
+            return baseTransactionBuffer.array();
+        }
+
+        @Override
+        public byte[] getSignatureMessage(TransactionData transactionData) {
+            return transactionData.getHash().getBytes();
+        }
+
+        @Override
+        public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) {
+            baseTransactionData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
+
+        }
+    },
     FULL_NODE_FEE_DATA(FullNodeFeeData.class) {
         @Override
         public byte[] getMessageInBytes(BaseTransactionData baseTransactionData) {
@@ -200,7 +227,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public boolean verifySignature(TransactionData transactionData, BaseTransactionData baseTransactionData) {
-            if (EnumSet.of(TransactionType.Transfer, TransactionType.Initial).contains(transactionData.getType())) {
+            if (EnumSet.of(TransactionType.Transfer, TransactionType.Initial, TransactionType.EventHardFork).contains(transactionData.getType())) {
                 return true;
             }
             try {

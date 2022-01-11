@@ -74,7 +74,7 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateTransactionSenderSignature(TransactionData transactionData) {
-        return EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType()) || transactionSenderCrypto.verifySignature(transactionData);
+        return EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial, TransactionType.EventHardFork).contains(transactionData.getType()) || transactionSenderCrypto.verifySignature(transactionData);
     }
 
     @Override
@@ -98,6 +98,11 @@ public class BaseNodeValidationService implements IValidationService {
     }
 
     @Override
+    public boolean validateEventHardFork(TransactionData transactionData) {
+        return transactionHelper.checkEventHardForkAndAddToEvents(transactionData);
+    }
+
+    @Override
     public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
         return transactionHelper.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData);
     }
@@ -115,7 +120,7 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validatePot(TransactionData transactionData) {
-        return EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType()) || potService.validatePot(transactionData);
+        return EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial, TransactionType.EventHardFork).contains(transactionData.getType()) || potService.validatePot(transactionData);
     }
 
     @Override

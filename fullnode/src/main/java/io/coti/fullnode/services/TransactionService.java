@@ -330,6 +330,13 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error("Minting balance check failed: {}", transactionData.getHash());
             throw new TransactionValidationException(INSUFFICIENT_MINTING_FUNDS_MESSAGE);
         }
+
+        if (transactionData.getType().equals(TransactionType.EventHardFork)
+                && !validationService.validateEventHardFork(transactionData)) {
+            log.error("Hard Fork Event check failed: {}", transactionData.getHash());
+            throw new TransactionValidationException(EVENT_HARD_FORK_ERROR);
+        }
+
     }
 
     public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {

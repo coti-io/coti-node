@@ -71,6 +71,22 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
         }
 
     },
+    EVENT_HARD_FORK(TransactionType.EventHardFork) {
+        @Override
+        public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {
+            return validateBaseTransactions(transactionData, true, nativeCurrencyHash);
+        }
+
+        @Override
+        public boolean validateInputBaseTransactions(TransactionData transactionData) {
+            if (!type.equals(transactionData.getType())) {
+                throw new IllegalArgumentException(INVALID_TRANSACTION_TYPE);
+            }
+            List<InputBaseTransactionData> inputBaseTransactions = transactionData.getInputBaseTransactions();
+            return inputBaseTransactions.size() == 1;
+        }
+
+    },
     TOKEN_GENERATION(TransactionType.TokenGeneration) {
         @Override
         public boolean validateBaseTransactions(TransactionData transactionData, Hash nativeCurrencyHash) {

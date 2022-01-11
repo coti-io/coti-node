@@ -145,7 +145,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
         propagationPublisher.propagate(transactionData, Collections.singletonList(NodeType.FullNode));
-        if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType())) {
+        if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial, TransactionType.EventHardFork).contains(transactionData.getType())) {
             transactionsToValidate.add(transactionData);
             transactionPropagationCheckService.addPropagatedUnconfirmedTransaction(transactionData.getHash());
         }

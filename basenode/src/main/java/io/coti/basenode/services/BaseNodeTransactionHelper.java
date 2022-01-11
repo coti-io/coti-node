@@ -48,6 +48,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     private BaseNodeCurrencyService currencyService;
     @Autowired
     private IMintingService mintingService;
+    @Autowired
+    private IEventService eventService;
 
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private final AtomicLong totalTransactions = new AtomicLong(0);
@@ -316,6 +318,15 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     }
 
     @Override
+    public boolean checkEventHardForkAndAddToEvents(TransactionData transactionData) {
+        if (!eventService.checkEventAndUpdateEventsTable(transactionData)) {
+            return false;
+        }
+        transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);
+        return true;
+    }
+
+    @Override
     public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
         if (!currencyService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
             return false;
@@ -442,5 +453,14 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     @Override
     public Set<Hash> getNoneIndexedTransactionHashes() {
         return new HashSet<>(noneIndexedTransactionHashes);
+    }
+
+    @Override
+    public EventInputBaseTransactionData getEventInputBaseTransactionData(TransactionData eventTransactionData) {
+        return (EventInputBaseTransactionData) eventTransactionData
+                .getBaseTransactions()
+                .stream()
+                .filter(EventInputBaseTransactionData.class::isInstance)
+                .findFirst().orElse(null);
     }
 }
