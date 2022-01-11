@@ -33,6 +33,7 @@ public class BaseNodeHttpStringConstants {
     public static final String NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION = "Not unique token generation attempt!";
     public static final String ILLEGAL_BASE_TRANSACTIONS_AMOUNT = "Illegal transaction - sum of base transactions must be 0!";
     public static final String INVALID_TRUST_SCORE_MESSAGE = "Invalid sender trust score!";
+    public static final String EVENT_HARD_FORK_ERROR = "Error with Hard Fork Event";
 
     public static final String API_CLIENT_ERROR = "Api Client Error";
     public static final String API_SERVER_ERROR = "Api Server Error";

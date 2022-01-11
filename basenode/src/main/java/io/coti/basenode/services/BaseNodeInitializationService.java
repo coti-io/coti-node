@@ -124,6 +124,8 @@ public abstract class BaseNodeInitializationService {
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
     @Autowired
     protected IMetricsService metricsService;
+    @Autowired
+    protected IEventService eventService;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -145,6 +147,7 @@ public abstract class BaseNodeInitializationService {
         transactionPropagationCheckService.init();
         potService.init();
         initCommunication();
+        eventService.init();
         log.info("The communication initialization is done");
         initTransactionSync();
         log.info("The transaction sync initialization is done");
@@ -221,6 +224,7 @@ public abstract class BaseNodeInitializationService {
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addDataToMemory(transactionData));
         currencyService.handleExistingTransaction(transactionData);
         mintingService.handleExistingTransaction(transactionData);
+        eventService.handleExistingTransaction(transactionData);
         transactionHelper.incrementTotalTransactions();
     }
 
