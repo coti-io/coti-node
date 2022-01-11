@@ -29,6 +29,7 @@ import static io.coti.zerospend.data.ZeroSpendTransactionType.STARVATION;
 @Service
 public class TransactionCreationService {
 
+    public static final int MAX_TRUST_SCORE = 100;
     private static final int ZERO_SPEND_ADDRESS_INDEX = 0;
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -133,7 +134,7 @@ public class TransactionCreationService {
         Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         EventInputBaseTransactionData ebt = new EventInputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now(),
                 event, hardFork);
-        return createTransaction(ebt, description, 10, TransactionType.EventHardFork, addressHash);
+        return createTransaction(ebt, description, MAX_TRUST_SCORE, TransactionType.EventHardFork, addressHash);
     }
 
     private TransactionData createTransaction(BaseTransactionData baseTransactionData, String description, double trustScore, TransactionType transactionType,
