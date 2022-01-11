@@ -7,5 +7,6 @@ public enum TransactionType {
     ZeroSpend,
     Chargeback,
     TokenGeneration,
-    TokenMinting
+    TokenMinting,
+    EventHardFork
 }

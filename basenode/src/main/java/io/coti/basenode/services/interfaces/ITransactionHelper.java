@@ -81,4 +81,8 @@ public interface ITransactionHelper {
     Set<Hash> getNoneIndexedTransactionHashes();
 
     boolean checkTokenMintingAndAddToAllocatedAmount(TransactionData transactionData);
+
+    boolean checkEventHardForkAndAddToEvents(TransactionData transactionData);
+
+    EventInputBaseTransactionData getEventInputBaseTransactionData(TransactionData eventTransactionData);
 }

@@ -8,8 +8,8 @@ public enum BaseTransactionName {
     TGBT(TokenGenerationFeeBaseTransactionData.class),
     TMBT(TokenMintingFeeBaseTransactionData.class),
     RRBT(RollingReserveData.class),
-    RBT(ReceiverBaseTransactionData.class);
-
+    RBT(ReceiverBaseTransactionData.class),
+    EVT(EventInputBaseTransactionData.class);
 
     private final Class<? extends BaseTransactionData> baseTransactionClass;
 

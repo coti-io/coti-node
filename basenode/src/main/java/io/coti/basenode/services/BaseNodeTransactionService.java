@@ -63,6 +63,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     private final LockData transactionLockData = new LockData();
     @Autowired
     protected IChunkService chunkService;
+    @Autowired
+    protected IEventService eventService;
 
     @Override
     public void init() {
@@ -321,6 +323,10 @@ public class BaseNodeTransactionService implements ITransactionService {
             log.error("Minting balance check failed: {}", transactionData.getHash());
             return false;
         }
+        if (transactionData.getType().equals(TransactionType.EventHardFork) && !validationService.validateEventHardFork(transactionData)) {
+            log.error("EVENT HARD FORK validation failed for transaction: {}", transactionData.getHash());
+            return false;
+        }
         transactionHelper.attachTransactionToCluster(transactionData);
         transactionHelper.setTransactionStateToSaved(transactionData);
         return true;
@@ -385,6 +391,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 mintingService.handleMissingTransaction(transactionData);
             });
         }
+        eventService.handleMissingTransaction(transactionData);
         missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes));
     }
 
