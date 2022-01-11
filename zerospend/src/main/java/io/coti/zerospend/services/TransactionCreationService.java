@@ -122,50 +122,29 @@ public class TransactionCreationService {
     }
 
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
-        Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
-        List<BaseTransactionData> baseTransactions = new ArrayList<>();
         Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now());
-        addressHashToAddressIndexMap.put(addressHash, ZERO_SPEND_ADDRESS_INDEX);
-        baseTransactions.add(baseTransactionData);
-        TransactionData transactionData = new TransactionData(baseTransactions, description.name(), trustScore, Instant.now(), TransactionType.ZeroSpend);
-        transactionData.setAttachmentTime(Instant.now());
-
-        transactionCryptoCreator.signBaseTransactions(transactionData, addressHashToAddressIndexMap);
-        transactionCrypto.signMessage(transactionData);
-        return transactionData;
+        return createTransaction(baseTransactionData, description.name(), trustScore, TransactionType.EventHardFork, addressHash);
     }
 
-    //todo maybe merge code of createZeroSpendTransactionData and below togehter?
+
     private TransactionData createEventTransactionData(String description, String event,
-                                                       boolean hardFork)
-    {
-        Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
-        List<BaseTransactionData> baseTransactions = new ArrayList<>();
+                                                       boolean hardFork) {
         Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         EventInputBaseTransactionData ebt = new EventInputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now(),
                 event, hardFork);
-        baseTransactions.add(ebt);
-        addressHashToAddressIndexMap.put(addressHash, ZERO_SPEND_ADDRESS_INDEX);
-        //TODO what should be trust score? 10 or more?
-        TransactionData transactionData = new TransactionData(baseTransactions, description, 10, Instant.now(), TransactionType.EventHardFork);
-        transactionData.setAttachmentTime(Instant.now());
-
-        transactionCryptoCreator.signBaseTransactions(transactionData, addressHashToAddressIndexMap);
-        transactionCrypto.signMessage(transactionData);
-        return transactionData;
+        return createTransaction(ebt, description, 10, TransactionType.EventHardFork, addressHash);
     }
 
-    private TransactionData createTransaction(BaseTransactionData baseTransactionData, String description, double trustScore, TransactionType transactionType) {
+    private TransactionData createTransaction(BaseTransactionData baseTransactionData, String description, double trustScore, TransactionType transactionType,
+                                              Hash addressHash) {
 
         Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
-        Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         addressHashToAddressIndexMap.put(addressHash, ZERO_SPEND_ADDRESS_INDEX);
         baseTransactions.add(baseTransactionData);
-        TransactionData transactionData = new TransactionData(baseTransactions, description, trustScore, Instant.now(), TransactionType.ZeroSpend);
+        TransactionData transactionData = new TransactionData(baseTransactions, description, trustScore, Instant.now(), transactionType);
         transactionData.setAttachmentTime(Instant.now());
-
         transactionCryptoCreator.signBaseTransactions(transactionData, addressHashToAddressIndexMap);
         transactionCrypto.signMessage(transactionData);
         return transactionData;
