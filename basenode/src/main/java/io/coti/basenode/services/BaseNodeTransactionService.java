@@ -375,15 +375,22 @@ public class BaseNodeTransactionService implements ITransactionService {
                 addDataToMemory(transactionData);
                 continueHandleMissingTransaction(transactionData);
             });
-            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingTransaction(transactionData));
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() ->
+            {
+                confirmationService.insertMissingTransaction(transactionData);
+                currencyService.handleMissingTransaction(transactionData);
+                mintingService.handleMissingTransaction(transactionData);
+            });
             transactionHelper.incrementTotalTransactions();
         } else {
-            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes));
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() ->
+            {
+                confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
+                currencyService.handleMissingTransaction(transactionData);
+                mintingService.handleMissingTransaction(transactionData);
+            });
         }
-        currencyService.handleMissingTransaction(transactionData);
-        mintingService.handleMissingTransaction(transactionData);
         missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes));
-
     }
 
     protected void continueHandleMissingTransaction(TransactionData transactionData) {
