@@ -46,6 +46,10 @@ public class BaseNodeMetricsService implements IMetricsService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
+    BaseNodeMonitorService baseNodeMonitorService;
+    @Autowired
+    TrustChainConfirmationService trustChainConfirmationService;
+    @Autowired
     private IClusterService clusterService;
     @Autowired
     private ITransactionService transactionService;
@@ -59,6 +63,8 @@ public class BaseNodeMetricsService implements IMetricsService {
     private IDatabaseConnector databaseConnector;
     @Value("${metrics.sample.milisec.interval:0}")
     private int metricsSampleInterval;
+    @Value("${detailed.logs:false}")
+    private boolean metricsDetailed;
 
     public void init() {
         if (metricsSampleInterval == 0) {
@@ -155,15 +161,23 @@ public class BaseNodeMetricsService implements IMetricsService {
 
                 addQueue("Confirmations", confirmationService.getQueueSize());
                 addQueue("WebSocketMessages", webSocketMessageService.getMessageQueueSize());
-                addTransaction("Total", transactionHelper.getTotalTransactions());
+
+                if (metricsDetailed) {
+                    addTransaction("Total", transactionHelper.getTotalTransactions());
+                    addTransaction("TrustChainConfirmed", confirmationService.getTrustChainConfirmed());
+                    addTransaction("DspConfirmed", confirmationService.getDspConfirmed());
+                    addTransaction("TotalConfirmed", confirmationService.getTotalConfirmed());
+                    addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
+                }
                 addTransaction("WaitingDspConsensusResultsConfirmed", confirmationService.getWaitingDspConsensusResultsMapSize());
                 addTransaction("WaitingMissingTransactionIndexes", confirmationService.getWaitingMissingTransactionIndexesSize());
-                addTransaction("TrustChainConfirmed", confirmationService.getTrustChainConfirmed());
-                addTransaction("DspConfirmed", confirmationService.getDspConfirmed());
-                addTransaction("TotalConfirmed", confirmationService.getTotalConfirmed());
-                addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
                 addTransaction("Sources", clusterService.getTotalSources());
                 addTransaction("TotalPostponedTransactions", transactionService.totalPostponedTransactions());
+                addTransaction("DSPHealthState", baseNodeMonitorService.getDspConfirmedState().ordinal());
+                addTransaction("DSPOutsideNormalCounter", baseNodeMonitorService.getDspOutsideNormalCounter());
+                addTransaction("TCCHealthState", baseNodeMonitorService.getTccConfirmedState().ordinal());
+                addTransaction("TCCWaitingConfirmation", trustChainConfirmationService.getTccWaitingConfirmation());
+                addTransaction("TCCOutsideNormalCounter", trustChainConfirmationService.getTccOutsideNormalCounter());
 
                 addDatabase("liveFiles", databaseConnector.getLiveFilesNames().size());
                 addBackups();

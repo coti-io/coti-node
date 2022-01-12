@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentMap;
 @Service
 public class ClusterHelper implements IClusterHelper {
 
+    private static final long MINIMUM_WAIT_TIME_IN_SECONDS = 10;
+    private static final long WAIT_REDUCTION_FACTOR = 4;
     @Autowired
     private Transactions transactions;
 
@@ -62,5 +64,10 @@ public class ClusterHelper implements IClusterHelper {
 
         //pushing to the stack as departing
         topologicalOrderedGraph.addLast(parentTransactionData);
+    }
+
+    @Override
+    public long getMinimumWaitTimeInMilliseconds(TransactionData transactionData) {
+        return (long) ((100 - transactionData.getSenderTrustScore()) / WAIT_REDUCTION_FACTOR + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
     }
 }
