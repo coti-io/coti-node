@@ -32,7 +32,7 @@ public class TrustChainConfirmationService {
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
         topologicalOrderedGraph = new LinkedList<>();
-        clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
+        clusterHelper.sortByTopologicalOrder(this.trustChainConfirmationCluster, topologicalOrderedGraph);
     }
 
     private void setTotalTrustScore(TransactionData parent) {
@@ -40,7 +40,7 @@ public class TrustChainConfirmationService {
 
         for (Hash transactionHash : parent.getChildrenTransactionHashes()) {
             try {
-                TransactionData child = trustChainConfirmationCluster.get(transactionHash);
+                TransactionData child = this.trustChainConfirmationCluster.get(transactionHash);
                 if (child != null && child.getTrustChainTrustScore()
                         > maxChildrenTotalTrustScore) {
                     maxChildrenTotalTrustScore = child.getTrustChainTrustScore();
