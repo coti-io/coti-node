@@ -3,7 +3,9 @@ package io.coti.financialserver.controllers;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.AddFundDistributionsRequest;
 import io.coti.financialserver.http.GetDistributionsByDateRequest;
+import io.coti.financialserver.http.GetNonLockedDistributionEntryRequest;
 import io.coti.financialserver.http.UpdateDistributionAmountRequest;
+import io.coti.financialserver.http.UpdateNonLockedDistributionEntryRequest;
 import io.coti.financialserver.services.FundDistributionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,5 +46,15 @@ public class AdminController {
     @PostMapping(path = "distribution/fund/amount")
     public ResponseEntity<IResponse> updateFundDistributionAmount(@Valid @RequestBody UpdateDistributionAmountRequest updateDistributionAmountRequest) {
         return fundDistributionService.updateFundDistributionAmount(updateDistributionAmountRequest);
+    }
+
+    @GetMapping(path = "/distribution/funds/state")
+    public ResponseEntity<IResponse> getNonLockedDistributionEntries(@Valid @RequestBody GetNonLockedDistributionEntryRequest getNonLockedDistributionEntryRequest) {
+        return fundDistributionService.getNonLockedDistributionEntries(getNonLockedDistributionEntryRequest);
+    }
+
+    @PostMapping(path = "/distribution/funds/update")
+    public ResponseEntity<IResponse> updateNonLockedDistributionEntry(@Valid @RequestBody UpdateNonLockedDistributionEntryRequest updateNonLockedDistributionEntryRequest) {
+        return fundDistributionService.updateNonLockedDistributionEntry(updateNonLockedDistributionEntryRequest);
     }
 }

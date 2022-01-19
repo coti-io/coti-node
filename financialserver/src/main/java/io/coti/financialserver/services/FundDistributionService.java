@@ -493,7 +493,7 @@ public class FundDistributionService {
         Hash receiverAddress = fundDistributionData.getReceiverAddress();
         ReservedBalanceData reservedBalanceData = addressToReservedBalanceMap.get(receiverAddress);
         if (reservedBalanceData == null) {
-            log.error("Receiver reserved balance doesn't exist");
+            log.error("Receiver reserved balance doesn't exist for address {}", receiverAddress);
             return;
         }
         BigDecimal updatedReservedAmount = reservedBalanceData.getReservedAmount().subtract(fundDistributionData.getAmount());
@@ -717,5 +717,53 @@ public class FundDistributionService {
         dailyFundDistributions.put(dailyFundDistributionData);
 
         return ResponseEntity.ok().body(new UpdateDistributionAmountResponse(fundDistributionData.getHash(), oldAmount, fundDistributionData.getAmount()));
+    }
+
+    public ResponseEntity<IResponse> getNonLockedDistributionEntries(GetNonLockedDistributionEntryRequest getNonLockedDistributionEntryRequest) {
+        List<FundDistributionResponseStateData> fundDistributions = new ArrayList<>();
+        List<String> excludedStates = getNonLockedDistributionEntryRequest.getExcludedState();
+
+        dailyFundDistributions.forEach(dailyFundDistributionData ->
+                dailyFundDistributionData.getFundDistributionEntries().values().forEach(fundDistributionData -> {
+                    if (excludedStates.contains(fundDistributionData.getStatus().name()) || isLockupDateValid(fundDistributionData)) {
+                        return;
+                    }
+                    fundDistributions.add(new FundDistributionResponseStateData(fundDistributionData));
+                })
+        );
+
+        return ResponseEntity.ok().body(new GetNonLockedDistributionEntriesResponse(fundDistributions));
+    }
+
+    public ResponseEntity<IResponse> updateNonLockedDistributionEntry(UpdateNonLockedDistributionEntryRequest updateNonLockedDistributionEntryRequest) {
+        DailyFundDistributionData dailyFundDistributionData = dailyFundDistributions.getByHash(updateNonLockedDistributionEntryRequest.getHashByDate());
+        if (dailyFundDistributionData == null) {
+            return ResponseEntity.badRequest().body(new Response(DISTRIBUTION_DATE_ERROR, STATUS_ERROR));
+        }
+
+        LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries = dailyFundDistributionData.getFundDistributionEntries();
+        if (fundDistributionEntries == null || fundDistributionEntries.isEmpty()) {
+            return ResponseEntity.badRequest().body(new Response(DISTRIBUTION_DATE_EMPTY_ENTRIES_ERROR, STATUS_ERROR));
+        }
+
+        FundDistributionData fundDistributionData = fundDistributionEntries.get(updateNonLockedDistributionEntryRequest.getHash());
+        if (fundDistributionData == null) {
+            return ResponseEntity.badRequest().body(new Response(DISTRIBUTION_HASH_DOESNT_EXIST, STATUS_ERROR));
+        }
+
+        if (isLockupDateValid(fundDistributionData)) {
+            return ResponseEntity.badRequest().body(new Response(DISTRIBUTION_DATE_NOT_PASSED_ERROR, STATUS_ERROR));
+        }
+
+        if (DistributionEntryStatus.CREATED == fundDistributionData.getStatus()) {
+            return ResponseEntity.badRequest().body(new Response(DISTRIBUTION_STATE_ALREADY_CREATED, STATUS_ERROR));
+        }
+
+        fundDistributionData.setStatus(DistributionEntryStatus.CREATED);
+        subtractDistributionFromReservedBalanceMaps(fundDistributionData);
+
+        dailyFundDistributions.put(dailyFundDistributionData);
+
+        return ResponseEntity.ok().body(new UpdateNonLockedDistributionEntryResponse(new FundDistributionResponseStateData(fundDistributionData)));
     }
 }

@@ -56,8 +56,10 @@ public class HttpStringConstants extends BaseNodeHttpStringConstants {
     public static final String PARSED_WITH_ERROR = "Parsing file encountered error.";
     public static final String DISTRIBUTION_FILE_ALREADY_PROCESSED = "Distribution file already processed today";
     public static final String DISTRIBUTION_DATE_ERROR = "No distribution on specified date";
+    public static final String DISTRIBUTION_DATE_NOT_PASSED_ERROR = "Distribution date still not passed";
     public static final String DISTRIBUTION_DATE_EMPTY_ENTRIES_ERROR = "Empty distribution entries on specified date";
     public static final String DISTRIBUTION_HASH_DOESNT_EXIST = "Distribution hash doesn't exist";
+    public static final String DISTRIBUTION_STATE_ALREADY_CREATED = "Distribution state is already CREATED";
     public static final String DISTRIBUTION_INITIATED_OR_CANCELLED = "Distribution is either initiated or cancelled";
     public static final String INVALID_UPDATED_DISTRIBUTION_AMOUNT = "Invalid updated distribution amount";
 
