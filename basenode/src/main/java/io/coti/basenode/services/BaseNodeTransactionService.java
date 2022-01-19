@@ -2,7 +2,6 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.ChunkException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;
@@ -56,10 +55,6 @@ public class BaseNodeTransactionService implements ITransactionService {
     private JacksonSerializer jacksonSerializer;
     @Autowired
     private TransactionIndexes transactionIndexes;
-    @Autowired
-    private IDatabaseConnector databaseConnector;
-    @Autowired
-    private INetworkService networkService;
     @Autowired
     private ICurrencyService currencyService;
     @Autowired

@@ -219,10 +219,11 @@ public abstract class BaseNodeInitializationService {
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addExistingTransactionOnInit(transactionData));
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> {
             confirmationService.insertSavedTransaction(transactionData, indexToTransactionMap);
+            currencyService.handleExistingTransaction(transactionData);
             mintingService.handleExistingTransaction(transactionData);
         });
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addDataToMemory(transactionData));
-        currencyService.handleExistingTransaction(transactionData);
+
         transactionHelper.incrementTotalTransactions();
     }
 
