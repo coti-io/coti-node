@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -36,7 +37,6 @@ public class BaseNodeMintingService implements IMintingService {
     public boolean checkMintingAmountAndUpdateMintableAmount(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
-        BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
         try {
             synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
 
@@ -49,18 +49,23 @@ public class BaseNodeMintingService implements IMintingService {
                     log.error("Error in Minting check. Token {} is Native currency", tokenHash);
                     return false;
                 }
-                BigDecimal restAfterMinting = Optional.ofNullable(currencyService.getTokenMintableAmount(tokenHash)).orElse(BigDecimal.ZERO).subtract(tokenAmount);
-                if (restAfterMinting.signum() < 0) {
-                    log.error("Error in Minting check. Token {} amount {} is too much", tokenHash, tokenAmount);
-                    return false;
+                BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
+                BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
+                if (mintableAmount != null) {
+                    BigDecimal restAfterMinting = Optional.ofNullable(currencyService.getTokenMintableAmount(tokenHash)).orElse(BigDecimal.ZERO).subtract(tokenAmount);
+                    if (restAfterMinting.signum() < 0) {
+                        log.error("Error in Minting check. Token {} amount {} is too much", tokenHash, tokenAmount);
+                        return false;
+                    }
+                } else {
+                    BigDecimal expectedTotalAmount = currencyData.getTotalSupply();
+                    BigDecimal postponedMintingAmount = currencyService.getPostponedMintingAmount(tokenHash);
+                    if (expectedTotalAmount.subtract(postponedMintingAmount).subtract(tokenAmount).signum() < 0) {
+                        log.error("Error in postponed Minting check. Token {} postponed amount {} is too much", tokenHash, postponedMintingAmount.add(tokenAmount));
+                        return false;
+                    }
                 }
-                Hash receiverAddress = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
-                if (!CryptoHelper.isAddressValid(receiverAddress)) {
-                    log.error("Error in Minting check. Token {} receiver address {} is invalid", tokenHash, receiverAddress);
-                    return false;
-                }
-
-                currencyService.putToMintableAmountMap(tokenHash, restAfterMinting);
+                currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
             }
         } finally {
             tokenHashLockData.removeLockFromLocksMap(tokenHash);
@@ -91,38 +96,16 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public void doTokenMinting(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
-        if (tokenMintingFeeBaseTransactionData == null) {
-            log.error("TokenMinting transaction {} without TMBT", transactionData.getHash());
-            return;
-        }
         TokenMintingData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
-        BigDecimal tokenAmount = tokenMintingFeeBaseTransactionData.getServiceData().getMintingAmount();
         Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
 
         CurrencyData currencyData = currencies.getByHash(tokenHash);
-        if (currencyData == null) {
-            log.error("Error in Minting check. Token {} is invalid", tokenHash);
-            return;
-        }
         if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
             log.error("Error in Minting check. Token {} is Native currency", tokenHash);
             return;
         }
-        Hash receiverAddress = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
-        if (!CryptoHelper.isAddressValid(receiverAddress)) {
-            log.error("Error in Minting check. Token {} receiver address {} is invalid", tokenHash, receiverAddress);
-            return;
-        }
-        balanceService.updateBalance(receiverAddress, tokenHash, tokenAmount);
-        balanceService.updatePreBalance(receiverAddress, tokenHash, tokenAmount);
-    }
 
-    protected TokenMintingFeeBaseTransactionData getTokenMintingFeeData(TransactionData tokenMintingTransaction) {
-        return (TokenMintingFeeBaseTransactionData) tokenMintingTransaction
-                .getBaseTransactions()
-                .stream()
-                .filter(TokenMintingFeeBaseTransactionData.class::isInstance)
-                .findFirst().orElse(null);
+        currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
     }
 
     @Override
@@ -137,7 +120,7 @@ public class BaseNodeMintingService implements IMintingService {
 
     private void handleTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenMinting)) {
-            currencyService.updateMintableAmountMapAndBalance(transactionData);
+            currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
         }
     }
 

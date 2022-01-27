@@ -24,7 +24,11 @@ public interface ICurrencyService {
 
     CurrencyData getCurrencyDataFromDB(OriginatorCurrencyData originatorCurrencyData);
 
+    BigDecimal getPostponedMintingAmount(Hash tokenHash);
+
     void updateMintableAmountMapAndBalance(TransactionData transactionData);
+
+    void synchronizedUpdateMintableAmountMapAndBalance(TransactionData transactionData);
 
     void putCurrencyData(CurrencyData currencyData);
 

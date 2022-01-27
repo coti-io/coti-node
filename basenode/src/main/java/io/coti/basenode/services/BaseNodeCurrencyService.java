@@ -70,6 +70,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private final LockData currencyLockData = new LockData();
     private final LockData currencyNameLockData = new LockData();
     private final LockData originatorHashLockData = new LockData();
+    private final LockData mintingTokenHashLockData = new LockData();
     private Map<Hash, BigDecimal> currencyHashToMintableAmountMap;
     private Map<Hash, Set<TransactionData>> postponedTokenMintingTransactionsMap;
     private Map<Hash, Boolean> mintingTransactionToConfirmationMap;
@@ -318,15 +319,30 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
             if (mintableAmount == null) {
                 putToMintableAmountMap(tokenHash, totalSupply);
-                Set<TransactionData> setTransactionData = postponedTokenMintingTransactionsMap.get(tokenHash);
-                if (setTransactionData != null) {
-                    setTransactionData.forEach(this::updateMintableAmountMapAndBalance);
-                    postponedTokenMintingTransactionsMap.remove(tokenHash);
-                }
+                processPostponedMintingTransactions(tokenHash);
             } else {
                 throw new CurrencyException(String.format("Attempting to generate existing token %s", tokenHash));
             }
         }
+    }
+
+    @Override
+    public BigDecimal getPostponedMintingAmount(Hash tokenHash) {
+        BigDecimal pendingMintingAmount = BigDecimal.ZERO;
+        Set<TransactionData> setTransactionData = postponedTokenMintingTransactionsMap.get(tokenHash);
+        if (setTransactionData != null) {
+            return setTransactionData.stream().map(
+                    transactionData -> {
+                        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
+                        if (tokenMintingFeeData != null) {
+                            return tokenMintingFeeData.getServiceData().getMintingAmount();
+                        } else {
+                            return BigDecimal.ZERO;
+                        }
+                    }
+            ).reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        return pendingMintingAmount;
     }
 
     @Override
@@ -348,13 +364,27 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
                 }
                 mintingTransactionToConfirmationMap.put(transactionData.getHash(), confirmed);
-
             } else {
                 postponedTokenMintingTransactionsMap.computeIfPresent(tokenHash, (hash, transactionSet) -> {
                     transactionSet.add(transactionData);
                     return transactionSet;
                 });
                 postponedTokenMintingTransactionsMap.putIfAbsent(tokenHash, new HashSet<>(Collections.singletonList(transactionData)));
+            }
+        }
+    }
+
+    @Override
+    public void synchronizedUpdateMintableAmountMapAndBalance(TransactionData transactionData) {
+        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
+        if (tokenMintingFeeData != null) {
+            Hash currencyHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
+            try {
+                synchronized (mintingTokenHashLockData.addLockToLockMap(currencyHash)) {
+                    updateMintableAmountMapAndBalance(transactionData);
+                }
+            } finally{
+                mintingTokenHashLockData.removeLockFromLocksMap(currencyHash);
             }
         }
     }
@@ -455,6 +485,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 }
                 currencies.put(currencyData);
                 putToMintableAmountMap(currencyHash, originatorCurrencyData.getTotalSupply());
+                processPostponedMintingTransactions(currencyHash);
                 try {
                     synchronized (originatorHashLockData.addLockToLockMap(originatorHash)) {
                         addToUserCurrencyIndexes(originatorHash, currencyHash);
@@ -465,6 +496,20 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             }
         } finally {
             currencyLockData.removeLockFromLocksMap(currencyHash);
+        }
+    }
+
+    private void processPostponedMintingTransactions(Hash currencyHash) {
+        try {
+            synchronized (mintingTokenHashLockData.addLockToLockMap(currencyHash)) {
+                Set<TransactionData> setTransactionData = postponedTokenMintingTransactionsMap.get(currencyHash);
+                if (setTransactionData != null) {
+                    setTransactionData.forEach(this::updateMintableAmountMapAndBalance);
+                    postponedTokenMintingTransactionsMap.remove(currencyHash);
+                }
+            }
+        } finally {
+            mintingTokenHashLockData.removeLockFromLocksMap(currencyHash);
         }
     }
 
