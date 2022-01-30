@@ -75,7 +75,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
         List<GetCurrencyResponseData> tokenDetails = new ArrayList<>();
         getCurrenciesRequest.getTokenHashes().forEach(tokenHash -> {
-            if (!tokenHash.equals(nativeCurrencyData.getHash())) {
+            if (!tokenHash.equals(getNativeCurrencyHash())) {
                 CurrencyData tokenData = currencies.getByHash(tokenHash);
                 if (tokenData != null) {
                     tokenDetails.add(new GetCurrencyResponseData(tokenData));
@@ -83,7 +83,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
             }
         });
         tokenDetails.sort(Comparator.comparing(GetCurrencyResponseData::getName));
-        return ResponseEntity.status(HttpStatus.OK).body(new GetCurrenciesResponse(new GetCurrencyResponseData(nativeCurrencyData), tokenDetails));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetCurrenciesResponse(new GetCurrencyResponseData(nativeCurrencyName, nativeCurrencySymbol), tokenDetails));
     }
 
 }

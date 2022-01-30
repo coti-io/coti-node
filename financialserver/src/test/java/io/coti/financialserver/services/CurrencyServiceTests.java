@@ -96,8 +96,7 @@ public class CurrencyServiceTests {
     private static Hash transactionHash;
     private static CurrencyData currencyData;
     private static CurrencyData currencyData2;
-    private static CurrencyData nativeCurrencyData;
-    public static final String RECOVER_NATIVE_CURRENCY_PATH = "null/currencies/native";
+//    private static CurrencyData nativeCurrencyData;
 
 
     @BeforeClass
@@ -131,18 +130,18 @@ public class CurrencyServiceTests {
         currencyData2.setScale(8);
         currencyData2.setCreateTime(Instant.now());
 
-        Hash nativeCurrencyHash = new Hash(7777);
-        nativeCurrencyData = new CurrencyData();
-        nativeCurrencyData.setHash(nativeCurrencyHash);
-        nativeCurrencyData.setName("Coti");
-        nativeCurrencyData.setSymbol("COTI");
-        currencyService.validateName(nativeCurrencyData);
-        currencyService.validateSymbol(nativeCurrencyData);
-        nativeCurrencyData.setCurrencyTypeData(new CurrencyTypeData(CurrencyType.NATIVE_COIN, Instant.now()));
-        nativeCurrencyData.setDescription("native description");
-        nativeCurrencyData.setTotalSupply(new BigDecimal(20000));
-        nativeCurrencyData.setScale(8);
-        nativeCurrencyData.setCreateTime(Instant.now());
+//        Hash nativeCurrencyHash = new Hash(7777);
+//        nativeCurrencyData = new CurrencyData();
+//        nativeCurrencyData.setHash(nativeCurrencyHash);
+//        nativeCurrencyData.setName("Coti");
+//        nativeCurrencyData.setSymbol("COTI");
+//        currencyService.validateName(nativeCurrencyData);
+//        currencyService.validateSymbol(nativeCurrencyData);
+//        nativeCurrencyData.setCurrencyTypeData(new CurrencyTypeData(CurrencyType.NATIVE_COIN, Instant.now()));
+//        nativeCurrencyData.setDescription("native description");
+//        nativeCurrencyData.setTotalSupply(new BigDecimal(20000));
+//        nativeCurrencyData.setScale(8);
+//        nativeCurrencyData.setCreateTime(Instant.now());
     }
 
     @Test
@@ -231,7 +230,7 @@ public class CurrencyServiceTests {
 
     protected void currencyServiceInit() {
         when(currencies.isEmpty()).thenReturn(Boolean.TRUE);
-        when(restTemplate.getForObject(RECOVER_NATIVE_CURRENCY_PATH, CurrencyData.class)).thenReturn(nativeCurrencyData);
+//        when(restTemplate.getForObject(RECOVER_NATIVE_CURRENCY_PATH, CurrencyData.class)).thenReturn(nativeCurrencyData);
         currencyService.init();
     }
 

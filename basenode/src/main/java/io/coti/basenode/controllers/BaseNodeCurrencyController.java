@@ -35,9 +35,4 @@ public class BaseNodeCurrencyController {
         return currencyService.getTokenSymbolDetails(getTokenSymbolDetailsRequest);
     }
 
-    @GetMapping(path = "/recoverNative")
-    public ResponseEntity<IResponse> getRecoveredNativeCurrency() {
-        return currencyService.getNativeCurrencyResponse();
-    }
-
 }

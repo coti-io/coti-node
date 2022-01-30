@@ -58,6 +58,10 @@ public class MintingService extends BaseNodeMintingService {
                 return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             TokenMintingData tokenMintingData = tokenMintingFeeRequest.getTokenMintingData();
+            if (currencyService.getNativeCurrencyHash().equals(tokenMintingData.getMintingCurrencyHash())) {
+                throw new CurrencyValidationException(TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_NATIVE_CURRENCY);
+            }
+
             CurrencyData currencyData = currencies.getByHash(tokenMintingData.getMintingCurrencyHash());
 
             ResponseEntity<IResponse> badRequestResponse = validateTokenMintingFeeRequest(tokenMintingFeeRequest, currencyData);
@@ -144,6 +148,9 @@ public class MintingService extends BaseNodeMintingService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Hash currencyHash = getTokenMintingFeeQuoteRequest.getCurrencyHash();
+            if (currencyService.getNativeCurrencyHash().equals(currencyHash)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_NATIVE_CURRENCY, STATUS_ERROR));
+            }
 
             CurrencyData currencyData = currencies.getByHash(currencyHash);
             if (currencyData == null) {

@@ -16,10 +16,6 @@ public interface ICurrencyService {
 
     void init();
 
-    void updateCurrencies();
-
-    CurrencyData getNativeCurrency();
-
     Hash getNativeCurrencyHash();
 
     boolean isCurrencyHashAllowed(Hash currencyHash);
@@ -31,10 +27,6 @@ public interface ICurrencyService {
     void updateMintableAmountMapAndBalance(TransactionData transactionData);
 
     void synchronizedUpdateMintableAmountMapAndBalance(TransactionData transactionData);
-
-    void putCurrencyData(CurrencyData currencyData);
-
-    void generateNativeCurrency();
 
     void handleMissingTransaction(TransactionData transactionData);
 
@@ -57,6 +49,4 @@ public interface ICurrencyService {
     ResponseEntity<IResponse> getTokenSymbolDetails(GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest);
 
     void handleExistingTransaction(TransactionData transactionData);
-
-    ResponseEntity<IResponse> getNativeCurrencyResponse();
 }

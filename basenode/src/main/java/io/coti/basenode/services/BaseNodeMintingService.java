@@ -39,14 +39,13 @@ public class BaseNodeMintingService implements IMintingService {
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
         try {
             synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
-
+                if (currencyService.getNativeCurrencyHash().equals(tokenHash)) {
+                    log.error("Error in Minting check. Token {} is Native currency", tokenHash);
+                    return false;
+                }
                 CurrencyData currencyData = currencies.getByHash(tokenHash);
                 if (currencyData == null) {
                     log.error("Error in Minting check. Token {} is invalid", tokenHash);
-                    return false;
-                }
-                if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-                    log.error("Error in Minting check. Token {} is Native currency", tokenHash);
                     return false;
                 }
                 BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
@@ -99,12 +98,10 @@ public class BaseNodeMintingService implements IMintingService {
         TokenMintingData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
         Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
 
-        CurrencyData currencyData = currencies.getByHash(tokenHash);
-        if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
+        if (currencyService.getNativeCurrencyHash().equals(tokenHash)) {
             log.error("Error in Minting check. Token {} is Native currency", tokenHash);
             return;
         }
-
         currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
     }
 

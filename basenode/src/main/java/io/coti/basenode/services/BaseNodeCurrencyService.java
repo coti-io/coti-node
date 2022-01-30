@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import com.google.gson.Gson;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
@@ -16,13 +15,13 @@ import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -40,8 +39,11 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.MULTI_CURRENCY_I
 public class BaseNodeCurrencyService implements ICurrencyService {
 
     public static final String ERROR_AT_GETTING_USER_TOKENS = "Error at getting user tokens: ";
-    private static final String RECOVERY_NODE_GET_NATIVE_CURRENCY_ENDPOINT = "/currencies/recoverNative";
-    protected CurrencyData nativeCurrencyData;
+    @Value("${native.currency.name}")
+    protected String nativeCurrencyName;
+    @Value("${native.currency.symbol}")
+    protected String nativeCurrencySymbol;
+    private Hash nativeCurrencyHash;
     @Autowired
     protected Currencies currencies;
     @Autowired
@@ -54,8 +56,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     protected ApplicationContext applicationContext;
     @Autowired
     protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
-    @Autowired
-    private OriginatorCurrencyCrypto originatorCurrencyCrypto;
     @Autowired
     private GetUserTokensRequestCrypto getUserTokensRequestCrypto;
     @Autowired
@@ -82,10 +82,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
         postponedTokenMintingTransactionsMap = new ConcurrentHashMap<>();
         mintingTransactionToConfirmationMap = new ConcurrentHashMap<>();
-        updateCurrencies();
         try {
-            nativeCurrencyData = null;
-            setNativeCurrencyFromExistingCurrencies();
+            setNativeCurrencyHashFromSymbol();
             log.info("{} is up", this.getClass().getSimpleName());
         } catch (CurrencyException e) {
             throw new CurrencyException("Error at currency service init.\n" + e.getMessage(), e);
@@ -94,27 +92,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
-    private void setNativeCurrencyDataFromRecoveryServer() {
-        if (networkService.getRecoveryServerAddress() != null) {
-            try {
-                GetNativeCurrencyResponse getNativeCurrencyResponse = restTemplate.getForObject(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_NATIVE_CURRENCY_ENDPOINT, GetNativeCurrencyResponse.class);
-                if (getNativeCurrencyResponse != null) {
-                    CurrencyData recoveredNativeCurrency = getNativeCurrencyResponse.getNativeCurrency();
-                    if (recoveredNativeCurrency != null && recoveredNativeCurrency.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-                        currencies.put(recoveredNativeCurrency);
-                    }
-                }
-            } catch (HttpClientErrorException | HttpServerErrorException e) {
-                throw new CurrencyException(String.format("Get native currency from restore node error. Recovery node response: %s", new Gson().fromJson(e.getResponseBodyAsString(), Response.class).getMessage()), e);
-            } catch (Exception e) {
-                throw new CurrencyException("Attempted to override existing native currency", e);
-            }
+    private void setNativeCurrencyHashFromSymbol() {
+        if (StringUtils.isEmpty(nativeCurrencySymbol)) {
+            throw new CurrencyException("Native currency Symbol is missing.");
         }
-    }
-
-    @Override
-    public void updateCurrencies() {
-        setNativeCurrencyDataFromRecoveryServer();
+        nativeCurrencyHash = OriginatorCurrencyCrypto.calculateHash(nativeCurrencySymbol);
     }
 
     @Override
@@ -130,34 +112,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         currencyHashToMintableAmountMap.put(tokenHash, amount);
     }
 
-    private void setNativeCurrencyFromExistingCurrencies() {
-        if (!currencies.isEmpty()) {
-            currencies.forEach(currencyData -> {
-                if (currencyData.getCurrencyTypeData().getCurrencyType().equals(CurrencyType.NATIVE_COIN)) {
-                    verifyNativeCurrency(currencyData);
-                }
-            });
-        }
-    }
-
-    protected void setNativeCurrencyData(CurrencyData currencyData) {
-        if (this.nativeCurrencyData != null) {
-            throw new CurrencyException("Attempted to override existing native currency");
-        }
-        this.nativeCurrencyData = currencyData;
-    }
-
-    @Override
-    public CurrencyData getNativeCurrency() {
-        return this.nativeCurrencyData;
-    }
-
     @Override
     public Hash getNativeCurrencyHash() {
-        if (nativeCurrencyData == null) {
+        if (nativeCurrencyHash == null) {
             throw new CurrencyException("Native currency is missing.");
         }
-        return nativeCurrencyData.getHash();
+        return nativeCurrencyHash;
     }
 
     @Override
@@ -167,46 +127,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void generateNativeCurrency() {
-        throw new CurrencyException("Attempted to generate Native currency.");
-    }
-
-    private void verifyNativeCurrency(CurrencyData nativeCurrency) {
-        if (nativeCurrency == null) {
-            throw new CurrencyException("Failed to verify native currency data exists");
-        }
-        if (!originatorCurrencyCrypto.verifySignature(nativeCurrency)) {
-            throw new CurrencyException("Failed to verify native currency data of " + nativeCurrency.getHash());
-        } else {
-            CurrencyTypeData nativeCurrencyTypeData = nativeCurrency.getCurrencyTypeData();
-            CurrencyTypeRegistrationData currencyTypeRegistrationData = new CurrencyTypeRegistrationData(nativeCurrency.getSymbol(), nativeCurrencyTypeData);
-            if (!currencyTypeRegistrationCrypto.verifySignature(currencyTypeRegistrationData)) {
-                throw new CurrencyException("Failed to verify native currency data type of " + nativeCurrency.getCurrencyTypeData().getCurrencyType().getText());
-            }
-        }
-        if (currencies.getByHash(nativeCurrency.getHash()) == null) {
-            currencies.put(nativeCurrency);
-        }
-        if (this.nativeCurrencyData == null) {
-            setNativeCurrencyData(nativeCurrency);
-        }
-    }
-
-    @Override
     public void handleExistingTransaction(TransactionData transactionData) {
         handleTransaction(transactionData);
-    }
-
-    @Override
-    public ResponseEntity<IResponse> getNativeCurrencyResponse() {
-        CurrencyData nativeCurrency = getNativeCurrency();
-        GetNativeCurrencyResponse getNativeCurrencyResponse = new GetNativeCurrencyResponse();
-
-        if (nativeCurrency != null) {
-            getNativeCurrencyResponse.setNativeCurrency(nativeCurrency);
-            return ResponseEntity.ok(getNativeCurrencyResponse);
-        }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response("Native currency not found", STATUS_ERROR));
     }
 
     @Override
@@ -399,19 +321,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
-    public void putCurrencyData(CurrencyData currencyData) {
-        if (currencyData == null) {
-            throw new CurrencyException("Failed to add an empty currency");
-        }
-        currencies.put(currencyData);
-        updateCurrencyNameIndex(currencyData);
-    }
-
-    private void updateCurrencyNameIndex(CurrencyData currencyData) {
-        currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
-    }
-
-    @Override
     public void validateName(OriginatorCurrencyData originatorCurrencyData) {
         String name = originatorCurrencyData.getName();
         if (name.length() != name.trim().length()) {
@@ -443,11 +352,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     private boolean isCurrencyNameUnique(Hash currencyHash, String currencyName) {
-        return currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) == null;
+        return !currencyName.equalsIgnoreCase(nativeCurrencyName) &&
+                currencyNameIndexes.getByHash(new CurrencyNameIndexData(currencyName, currencyHash).getHash()) == null;
     }
 
     private boolean isCurrencySymbolUnique(Hash currencyHash) {
-        return currencies.getByHash(currencyHash) == null;
+        return !currencyHash.equals(nativeCurrencyHash) && currencies.getByHash(currencyHash) == null;
     }
 
     @Override
