@@ -39,6 +39,8 @@ public class ClusterService implements IClusterService {
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private final AtomicLong totalSources = new AtomicLong(0);
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private Thread trustChainConfirmedTransactionsThread;
+    private int tccConfirmationInterval = 3000;
 
     @PostConstruct
     public void init() {
@@ -48,6 +50,11 @@ public class ClusterService implements IClusterService {
         for (int i = 0; i <= 100; i++) {
             sourceSetsByTrustScore.add(Sets.newHashSet());
         }
+
+        trustChainConfirmedTransactionsThread = new Thread(this::checkForTrustChainConfirmedTransaction, "CLUSTER-SERVICE TCC CHECK");
+        trustChainConfirmedTransactionsThread.start();
+        log.info("{} is up", this.getClass().getSimpleName());
+
     }
 
     @Override
@@ -80,28 +87,30 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void finalizeInit() {
-        isStarted = true;
-        log.info("{} is up", this.getClass().getSimpleName());
+//        isStarted = true;
+//        log.info("{} is up", this.getClass().getSimpleName());
     }
 
-    @Scheduled(fixedDelay = 3000, initialDelay = 1000)
-    public void checkForTrustChainConfirmedTransactionCron() {
-        if (!isStarted) {
-            return;
-        }
-
-        checkForTrustChainConfirmedTransaction();
-    }
-
+    //@Scheduled(fixedDelay = 3000, initialDelay = 1000)
     public void checkForTrustChainConfirmedTransaction() {
-        trustChainConfirmationService.init(trustChainConfirmationCluster);
-        List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
+        while (!Thread.currentThread().isInterrupted()) {
+            trustChainConfirmationService.init(trustChainConfirmationCluster);
+            List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        transactionConsensusConfirmed.forEach(tccInfo -> {
-            trustChainConfirmationCluster.remove(tccInfo.getHash());
-            confirmationService.setTccToTrue(tccInfo);
-            log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
-        });
+            transactionConsensusConfirmed.forEach(tccInfo -> {
+                trustChainConfirmationCluster.remove(tccInfo.getHash());
+                confirmationService.setTccToTrue(tccInfo);
+                log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
+            });
+            try {
+                Thread.sleep(tccConfirmationInterval);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+//        if (!isStarted) {
+//            return;
+//        }
     }
 
     @Override
