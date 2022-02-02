@@ -85,11 +85,15 @@ public class ClusterService implements IClusterService {
     }
 
     @Scheduled(fixedDelay = 3000, initialDelay = 1000)
-    public void checkForTrustChainConfirmedTransaction() {
+    public void checkForTrustChainConfirmedTransactionCron() {
         if (!isStarted) {
             return;
         }
 
+        checkForTrustChainConfirmedTransaction();
+    }
+
+    public void checkForTrustChainConfirmedTransaction() {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
