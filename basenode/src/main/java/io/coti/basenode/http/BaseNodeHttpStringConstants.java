@@ -87,6 +87,8 @@ public class BaseNodeHttpStringConstants {
 
     public static final String CLUSTERSTAMP_MAJOR_NOT_FOUND = "Major cluster stamp not found";
 
+    public static final String MULTI_CURRENCY_IS_NOT_SUPPORTED = "The system is not supporting multi currency.";
+
     protected BaseNodeHttpStringConstants() {
 
     }

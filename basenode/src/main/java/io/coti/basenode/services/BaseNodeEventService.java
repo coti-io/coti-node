@@ -73,6 +73,10 @@ public class BaseNodeEventService implements IEventService {
         return eventTransactionData;
     }
 
+    public boolean eventHappened(Event event) {
+        return getConfirmedEventTransactionData(event) != null;
+    }
+
     public TransactionData getConfirmedEventTransactionData(Event event) {
         TransactionData eventTransactionData = getEventTransactionData(event);
         if (eventTransactionData != null && transactionHelper.isConfirmed(eventTransactionData)) {

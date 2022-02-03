@@ -19,6 +19,7 @@ import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.ITransactionPropagationCheckService;
@@ -73,6 +74,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private INetworkService networkService;
     @Autowired
     private PotService potService;
+    @Autowired
+    private ICurrencyService currencyService;
     @Autowired
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
     private BlockingQueue<ExplorerTransactionData> explorerIndexQueue;
@@ -206,6 +209,15 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    private boolean validateMultiCurrency(TransactionData transactionData) {
+        for (BaseTransactionData transaction : transactionData.getBaseTransactions()) {
+            if (!currencyService.isCurrencyHashAllowed(transaction.getCurrencyHash())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void potAction(TransactionData transactionData) {
         try {
             potService.potAction(transactionData);
@@ -295,6 +307,10 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     private void validateTransaction(TransactionData transactionData) {
+        if (!validateMultiCurrency(transactionData)) {
+            log.error("Multi Currency validation failed for transaction {}", transactionData.getHash());
+            throw new TransactionValidationException(MULTI_CURRENCY_IS_NOT_SUPPORTED);
+        }
 
         if (!validationService.validateTransactionDataIntegrity(transactionData)) {
             log.error("Data Integrity validation failed for transaction {}", transactionData.getHash());

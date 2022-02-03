@@ -7,6 +7,7 @@ import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeCurrencyService;
+import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.financialserver.http.GenerateTokenFeeRequest;
 import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;
@@ -37,6 +38,9 @@ public class CurrencyService extends BaseNodeCurrencyService {
     public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         Hash currencyHash;
         try {
+            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
+                throw new CurrencyValidationException(MULTI_CURRENCY_IS_NOT_SUPPORTED);
+            }
             OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
             validateName(originatorCurrencyData);
             validateSymbol(originatorCurrencyData);
@@ -66,6 +70,9 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     public ResponseEntity<IResponse> getCurrenciesForWallet(GetCurrenciesRequest getCurrenciesRequest) {
+        if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
+            return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+        }
         List<GetCurrencyResponseData> tokenDetails = new ArrayList<>();
         getCurrenciesRequest.getTokenHashes().forEach(tokenHash -> {
             if (!tokenHash.equals(nativeCurrencyData.getHash())) {

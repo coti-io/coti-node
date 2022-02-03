@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetTokenBalancesRequest;
 import io.coti.basenode.http.GetTokenBalancesResponse;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -62,12 +63,12 @@ public class BaseNodeBalanceServiceTest {
         currencyHashToAmountMap2.put(tokenHash2, BigDecimal.ONE);
         balanceService.preBalanceMap.put(addressHash2, currencyHashToAmountMap2);
         balanceService.preBalanceMap.put(addressHash1, currencyHashToAmountMap1);
-        ResponseEntity<GetTokenBalancesResponse> currencyBalances = balanceService.getTokenBalances(getCurrencyBalanceRequest);
+        ResponseEntity<IResponse> currencyBalances = balanceService.getTokenBalances(getCurrencyBalanceRequest);
 
         Assert.assertEquals(HttpStatus.OK, currencyBalances.getStatusCode());
-        Assert.assertTrue(currencyBalances.getBody().getTokenBalances().containsKey(tokenHash1));
-        Assert.assertTrue(currencyBalances.getBody().getTokenBalances().containsKey(tokenHash2));
-        Assert.assertEquals(BigDecimal.TEN, currencyBalances.getBody().getTokenBalances().get(tokenHash1).get(addressHash1).getAddressBalance());
+        Assert.assertTrue(((GetTokenBalancesResponse)currencyBalances.getBody()).getTokenBalances().containsKey(tokenHash1));
+        Assert.assertTrue(((GetTokenBalancesResponse)currencyBalances.getBody()).getTokenBalances().containsKey(tokenHash2));
+        Assert.assertEquals(BigDecimal.TEN, ((GetTokenBalancesResponse)currencyBalances.getBody()).getTokenBalances().get(tokenHash1).get(addressHash1).getAddressBalance());
     }
 
 }

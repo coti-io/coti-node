@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.MULTI_CURRENCY_IS_NOT_SUPPORTED;
 
 @Slf4j
 @Service
@@ -65,6 +66,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     protected IBalanceService balanceService;
     @Autowired
     private UserCurrencyIndexes userCurrencyIndexes;
+    @Autowired
+    protected BaseNodeEventService baseNodeEventService;
     @Autowired
     private ITransactionHelper transactionHelper;
     private final LockData currencyLockData = new LockData();
@@ -155,6 +158,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             throw new CurrencyException("Native currency is missing.");
         }
         return nativeCurrencyData.getHash();
+    }
+
+    @Override
+    public boolean isCurrencyHashAllowed(Hash currencyHash) {
+        return baseNodeEventService.eventHappened(Event.MULTI_CURRENCY) ||
+                currencyHash == null;
     }
 
     @Override
@@ -515,6 +524,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
         try {
+            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            }
             if (!getUserTokensRequestCrypto.verifySignature(getUserTokensRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
@@ -537,6 +549,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest) {
         try {
+            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            }
             if (!getTokenDetailsRequestCrypto.verifySignature(getTokenDetailsRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
@@ -550,6 +565,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenSymbolDetails(GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest) {
         try {
+            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            }
             if (!getTokenSymbolDetailsRequestCrypto.verifySignature(getTokenSymbolDetailsRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }

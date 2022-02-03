@@ -4,14 +4,12 @@ import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.TokenMintingCrypto;
-import io.coti.basenode.data.CurrencyData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TokenMintingData;
-import io.coti.basenode.data.TokenMintingFeeBaseTransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.basenode.services.BaseNodeMintingService;
 import io.coti.financialserver.crypto.GetTokenMintingFeeQuoteRequestCrypto;
 import io.coti.financialserver.crypto.MintingFeeQuoteCrypto;
@@ -51,9 +49,14 @@ public class MintingService extends BaseNodeMintingService {
     private GetTokenMintingFeeQuoteRequestCrypto getTokenMintingFeeQuoteRequestCrypto;
     @Autowired
     private MintingFeeQuoteCrypto mintingFeeQuoteCrypto;
+    @Autowired
+    BaseNodeEventService baseNodeEventService;
 
     public ResponseEntity<IResponse> getTokenMintingFee(TokenMintingFeeRequest tokenMintingFeeRequest) {
         try {
+            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            }
             TokenMintingData tokenMintingData = tokenMintingFeeRequest.getTokenMintingData();
             CurrencyData currencyData = currencies.getByHash(tokenMintingData.getMintingCurrencyHash());
 
@@ -134,6 +137,9 @@ public class MintingService extends BaseNodeMintingService {
 
     public ResponseEntity<IResponse> getTokenMintingFeeQuote(GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {
         try {
+            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            }
             if (!getTokenMintingFeeQuoteRequestCrypto.verifySignature(getTokenMintingFeeQuoteRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }

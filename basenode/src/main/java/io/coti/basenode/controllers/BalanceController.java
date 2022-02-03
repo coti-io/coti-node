@@ -3,7 +3,7 @@ package io.coti.basenode.controllers;
 import io.coti.basenode.http.GetBalancesRequest;
 import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.http.GetTokenBalancesRequest;
-import io.coti.basenode.http.GetTokenBalancesResponse;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,7 @@ public class BalanceController {
     }
 
     @PostMapping(value = "/tokens")
-    public ResponseEntity<GetTokenBalancesResponse> getTokenBalances(@Valid @RequestBody GetTokenBalancesRequest getTokenBalancesRequest) {
+    public ResponseEntity<IResponse> getTokenBalances(@Valid @RequestBody GetTokenBalancesRequest getTokenBalancesRequest) {
         return balanceService.getTokenBalances(getTokenBalancesRequest);
     }
 }

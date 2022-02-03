@@ -22,6 +22,8 @@ public interface ICurrencyService {
 
     Hash getNativeCurrencyHash();
 
+    boolean isCurrencyHashAllowed(Hash currencyHash);
+
     CurrencyData getCurrencyDataFromDB(OriginatorCurrencyData originatorCurrencyData);
 
     BigDecimal getPostponedMintingAmount(Hash tokenHash);

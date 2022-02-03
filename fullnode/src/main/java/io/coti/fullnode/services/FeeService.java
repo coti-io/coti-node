@@ -56,6 +56,9 @@ public class FeeService {
 
     public ResponseEntity<IResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         try {
+            if (!currencyService.isCurrencyHashAllowed(fullNodeFeeRequest.getOriginalCurrencyHash())) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            }
             Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
             if (!fullNodeFeeRequestCrypto.verifySignature(fullNodeFeeRequest)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));

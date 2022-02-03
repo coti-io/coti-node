@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.BaseTransactionData;
+import io.coti.basenode.data.Event;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.BalanceException;
@@ -9,6 +10,8 @@ import io.coti.basenode.http.GetBalancesResponse;
 import io.coti.basenode.http.GetTokenBalancesRequest;
 import io.coti.basenode.http.GetTokenBalancesResponse;
 import io.coti.basenode.http.data.AddressBalance;
+import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.http.Response;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +27,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.MULTI_CURRENCY_IS_NOT_SUPPORTED;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+
 @Slf4j
 @Service
 public class BaseNodeBalanceService implements IBalanceService {
@@ -32,6 +38,8 @@ public class BaseNodeBalanceService implements IBalanceService {
     protected Map<Hash, Map<Hash, BigDecimal>> preBalanceMap;
     @Autowired
     protected ICurrencyService currencyService;
+    @Autowired
+    private BaseNodeEventService baseNodeEventService;
 
     public void init() {
         balanceMap = new ConcurrentHashMap<>();
@@ -95,7 +103,10 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     @Override
-    public ResponseEntity<GetTokenBalancesResponse> getTokenBalances(GetTokenBalancesRequest getTokenBalancesRequest) {
+    public ResponseEntity<IResponse> getTokenBalances(GetTokenBalancesRequest getTokenBalancesRequest) {
+        if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
+            return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+        }
         Map<Hash, Map<Hash, AddressBalance>> tokenToAddressesBalance = new HashMap<>();
 
         getTokenBalancesRequest.getAddresses().forEach(address -> {

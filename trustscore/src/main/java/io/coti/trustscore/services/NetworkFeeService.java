@@ -3,6 +3,7 @@ package io.coti.trustscore.services;
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
@@ -63,12 +64,7 @@ public class NetworkFeeService {
             Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
             FullNodeFeeData fullNodeFeeData = networkFeeRequest.getFullNodeFeeData();
             boolean feeIncluded = networkFeeRequest.isFeeIncluded();
-            if (!validateFullNodeFee(fullNodeFeeData, feeIncluded)) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(new Response(FULL_NODE_FEE_VALIDATION_ERROR,
-                                STATUS_ERROR));
-            }
+            validateFullNodeFeeData(fullNodeFeeData, feeIncluded);
 
             BigDecimal originalAmount = fullNodeFeeData.getOriginalAmount();
             BigDecimal reducedAmount = null;
@@ -110,7 +106,12 @@ public class NetworkFeeService {
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new NetworkFeeResponse(networkFeeResponseData));
-        } catch (Exception e) {
+        }catch (TransactionValidationException e) {
+            log.error("FullNodeFeeData validation failed: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(e.getMessage(), STATUS_ERROR));
+        }catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }
@@ -120,12 +121,7 @@ public class NetworkFeeService {
         try {
             FullNodeFeeData fullNodeFeeData = networkFeeValidateRequest.getFullNodeFeeData();
             boolean feeIncluded = networkFeeValidateRequest.isFeeIncluded();
-
-            if (!validateFullNodeFee(fullNodeFeeData, feeIncluded)) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(new Response(FULL_NODE_FEE_VALIDATION_ERROR, STATUS_ERROR));
-            }
+            validateFullNodeFeeData(fullNodeFeeData, feeIncluded);
 
             NetworkFeeData networkFeeData = networkFeeValidateRequest.getNetworkFeeData();
             boolean isValid = isNetworkFeeValid(networkFeeData, fullNodeFeeData, networkFeeValidateRequest.getUserHash(), feeIncluded);
@@ -134,6 +130,16 @@ public class NetworkFeeService {
                     .body(new NetworkFeeResponse(new NetworkFeeResponseData(networkFeeData)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
+        }
+    }
+
+    private void validateFullNodeFeeData(FullNodeFeeData fullNodeFeeData, boolean feeIncluded) {
+        if (!currencyService.isCurrencyHashAllowed(fullNodeFeeData.getCurrencyHash())) {
+            throw new TransactionValidationException(MULTI_CURRENCY_IS_NOT_SUPPORTED);
+        }
+
+        if (!validateFullNodeFee(fullNodeFeeData, feeIncluded)) {
+            throw new TransactionValidationException(FULL_NODE_FEE_VALIDATION_ERROR);
         }
     }
 
