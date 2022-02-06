@@ -18,7 +18,7 @@ public interface IClusterService {
 
     void addMissingTransactionOnInit(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes);
 
-    void finalizeInit();
+    void startToCheckTrustChainConfirmation();
 
     long getTotalSources();
 

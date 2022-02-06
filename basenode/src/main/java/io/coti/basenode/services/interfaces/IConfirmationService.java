@@ -4,6 +4,7 @@ import io.coti.basenode.data.*;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public interface IConfirmationService {
 
@@ -34,4 +35,10 @@ public interface IConfirmationService {
     int getWaitingMissingTransactionIndexesSize();
 
     int getQueueSize();
+
+    Object getInitialConfirmationLock();
+
+    AtomicBoolean getInitialConfirmationStarted();
+
+    AtomicBoolean getInitialConfirmationFinished();
 }
