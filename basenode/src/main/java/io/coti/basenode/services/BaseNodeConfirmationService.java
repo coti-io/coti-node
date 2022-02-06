@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -38,6 +39,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private final AtomicLong trustChainConfirmed = new AtomicLong(0);
     private final AtomicLong dspConfirmed = new AtomicLong(0);
     private Thread confirmedTransactionsThread;
+    private final Object initialConfirmationLock = new Object();
+    private final AtomicBoolean initialConfirmationStarted = new AtomicBoolean(false);
+    private final AtomicBoolean initialConfirmationFinished = new AtomicBoolean(false);
 
     public void init() {
         confirmationQueue = new LinkedBlockingQueue<>();
@@ -90,6 +94,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             try {
                 ConfirmationData confirmationData = confirmationQueue.take();
                 updateConfirmedTransactionHandler(confirmationData);
+                if (initialConfirmationStarted.get() && confirmationQueue.isEmpty() && !initialConfirmationFinished.get()) {
+                    synchronized (initialConfirmationLock) {
+                        initialConfirmationFinished.set(true);
+                        initialConfirmationLock.notifyAll();
+                    }
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -308,4 +318,18 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         return confirmationQueue.size();
     }
 
+    @Override
+    public Object getInitialConfirmationLock() {
+        return initialConfirmationLock;
+    }
+
+    @Override
+    public AtomicBoolean getInitialConfirmationStarted() {
+        return initialConfirmationStarted;
+    }
+
+    @Override
+    public AtomicBoolean getInitialConfirmationFinished() {
+        return initialConfirmationFinished;
+    }
 }

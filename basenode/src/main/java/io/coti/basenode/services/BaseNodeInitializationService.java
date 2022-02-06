@@ -120,6 +120,7 @@ public abstract class BaseNodeInitializationService {
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
     @Autowired
     protected IMetricsService metricsService;
+    private Object initialConfirmationLock;
 
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
@@ -185,10 +186,16 @@ public abstract class BaseNodeInitializationService {
             if (networkService.getRecoveryServerAddress() != null) {
                 transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
             }
-            //clusterService.checkForTrustChainConfirmedTransaction();
+            clusterService.startToCheckTrustChainConfirmation();
+            initialConfirmationLock = confirmationService.getInitialConfirmationLock();
+            synchronized (initialConfirmationLock) {
+                while (!confirmationService.getInitialConfirmationFinished().get()) {
+                    initialConfirmationLock.wait(100);
+                }
+            }
             balanceService.validateBalances();
             log.info("Transactions Load completed");
-            //clusterService.finalizeInit();
+
         } catch (TransactionSyncException e) {
             throw new TransactionSyncException("Error at sync transactions.\n" + e.getMessage(), e);
         } catch (InterruptedException e) {
