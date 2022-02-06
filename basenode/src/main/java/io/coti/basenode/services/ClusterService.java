@@ -11,7 +11,6 @@ import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -35,15 +34,17 @@ public class ClusterService implements IClusterService {
     private ISourceSelector sourceSelector;
     @Autowired
     private TrustChainConfirmationService trustChainConfirmationService;
-    private boolean isStarted;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private final AtomicLong totalSources = new AtomicLong(0);
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private Thread trustChainConfirmedTransactionsThread;
-    private int tccConfirmationInterval = 3000;
+    private final int tccConfirmationInterval = 3000;
+    private boolean initialConfirmation = true;
+    private Object initialConfirmationLock;
 
     @PostConstruct
     public void init() {
+        initialConfirmationLock = confirmationService.getInitialConfirmationLock();
         trustChainConfirmationCluster = new ConcurrentHashMap<>();
         sourceSetsByTrustScore = new ArrayList<>();
         sourceMap = new HashMap<>();
@@ -52,9 +53,7 @@ public class ClusterService implements IClusterService {
         }
 
         trustChainConfirmedTransactionsThread = new Thread(this::checkForTrustChainConfirmedTransaction, "CLUSTER-SERVICE TCC CHECK");
-        trustChainConfirmedTransactionsThread.start();
         log.info("{} is up", this.getClass().getSimpleName());
-
     }
 
     @Override
@@ -86,31 +85,36 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
-    public void finalizeInit() {
-//        isStarted = true;
-//        log.info("{} is up", this.getClass().getSimpleName());
+    public void startToCheckTrustChainConfirmation() {
+        trustChainConfirmedTransactionsThread.start();
     }
 
-    //@Scheduled(fixedDelay = 3000, initialDelay = 1000)
     public void checkForTrustChainConfirmedTransaction() {
         while (!Thread.currentThread().isInterrupted()) {
             trustChainConfirmationService.init(trustChainConfirmationCluster);
             List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
-
+            if (initialConfirmation) {
+                if (transactionConsensusConfirmed.isEmpty()) {
+                    synchronized (initialConfirmationLock) {
+                        confirmationService.getInitialConfirmationFinished().set(true);
+                        initialConfirmationLock.notifyAll();
+                    }
+                } else {
+                    confirmationService.getInitialConfirmationStarted().set(true);
+                }
+            }
             transactionConsensusConfirmed.forEach(tccInfo -> {
                 trustChainConfirmationCluster.remove(tccInfo.getHash());
                 confirmationService.setTccToTrue(tccInfo);
                 log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
             });
+            initialConfirmation = false;
             try {
                 Thread.sleep(tccConfirmationInterval);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-//        if (!isStarted) {
-//            return;
-//        }
     }
 
     @Override
