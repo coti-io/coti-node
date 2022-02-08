@@ -1,7 +1,7 @@
 package io.coti.basenode.controllers;
 
+import io.coti.basenode.data.Event;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.basenode.services.interfaces.IEventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +19,12 @@ public class BaseNodeEventController {
     IEventService eventService;
 
     @GetMapping(path = "/multi-currency/confirmed")
-    public ResponseEntity<IResponse> getMultiCurrencyEvent() {
-        return eventService.getConfirmedEventTransactionDataResponse(BaseNodeEventService.EVENTS.MULTI_CURRENCY);
+    public ResponseEntity<IResponse> getConfirmedMultiCurrencyEvent() {
+        return eventService.getConfirmedEventTransactionDataResponse(Event.MULTI_CURRENCY);
     }
 
     @GetMapping(path = "/multi-currency")
     public ResponseEntity<IResponse> getMultiCurrencyEventTransactionData() {
-        return eventService.getEventTransactionDataResponse(BaseNodeEventService.EVENTS.MULTI_CURRENCY);
+        return eventService.getEventTransactionDataResponse(Event.MULTI_CURRENCY);
     }
 }

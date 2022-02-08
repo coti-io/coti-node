@@ -1,8 +1,7 @@
 package io.coti.zerospend.controllers;
 
+import io.coti.basenode.data.Event;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.BaseNodeEventService;
-import io.coti.basenode.services.interfaces.IEventService;
 import io.coti.zerospend.http.SetIndexesRequest;
 import io.coti.zerospend.services.TransactionCreationService;
 import io.coti.zerospend.services.TransactionService;
@@ -20,8 +19,6 @@ public class AdminController {
     private TransactionService transactionService;
     @Autowired
     private TransactionCreationService transactionCreationService;
-    @Autowired
-    private IEventService eventService;
 
     @PutMapping(path = "/transaction/index")
     public ResponseEntity<IResponse> setIndexToTransactions(@RequestBody SetIndexesRequest setIndexesRequest) {
@@ -30,8 +27,8 @@ public class AdminController {
 
     @PostMapping(path = "/event/multi-currency")
     public ResponseEntity<IResponse> eventMultiCurrency() {
-        return transactionCreationService.createEventTransaction("Multi Currencies Support via DAG", BaseNodeEventService.EVENTS.MULTI_CURRENCY,
-                true);
+        return transactionCreationService.createEventTransaction("Multi Currencies Support via DAG", Event.MULTI_CURRENCY
+        );
     }
 
 }

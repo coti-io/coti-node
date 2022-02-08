@@ -8,6 +8,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.PotException;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.exceptions.TransactionValidationException;
+import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;

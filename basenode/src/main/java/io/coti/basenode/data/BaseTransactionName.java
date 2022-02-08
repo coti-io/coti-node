@@ -3,13 +3,13 @@ package io.coti.basenode.data;
 public enum BaseTransactionName {
     IBT(InputBaseTransactionData.class),
     PIBT(PaymentInputBaseTransactionData.class),
+    EIBT(EventInputBaseTransactionData.class),
     FFBT(FullNodeFeeData.class),
     NFBT(NetworkFeeData.class),
     TGBT(TokenGenerationFeeBaseTransactionData.class),
     TMBT(TokenMintingFeeBaseTransactionData.class),
     RRBT(RollingReserveData.class),
-    RBT(ReceiverBaseTransactionData.class),
-    EVT(EventInputBaseTransactionData.class);
+    RBT(ReceiverBaseTransactionData.class);
 
     private final Class<? extends BaseTransactionData> baseTransactionClass;
 

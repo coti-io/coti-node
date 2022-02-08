@@ -15,7 +15,7 @@ public class EventInputBaseTransactionResponseData extends BaseTransactionRespon
     public EventInputBaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
         EventInputBaseTransactionData eventInputBaseTransactionData = (EventInputBaseTransactionData) baseTransactionData;
-        this.event = eventInputBaseTransactionData.getEvent();
-        this.hardFork = eventInputBaseTransactionData.isHardFork();
+        this.event = eventInputBaseTransactionData.getEvent().name();
+        this.hardFork = eventInputBaseTransactionData.getEvent().isHardFork();
     }
 }

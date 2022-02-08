@@ -57,20 +57,16 @@ public class TransactionCreationService {
     }
 
     public void createNewGenesisZeroSpendTransaction(double trustScore) {
-        createZeroSpendTransaction(trustScore, GENESIS);
+        TransactionData transactionData = createZeroSpendTransactionData(trustScore, GENESIS);
+
+        attachAndSendZeroSpendTransaction(transactionData);
     }
 
-    public String createNewZeroSpendTransaction(TransactionData incomingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
-        if (!validationService.fullValidation(incomingTransactionData)) {
-            log.error("Validation for waiting source  failed! requesting transaction {}", incomingTransactionData);
-            return "Invalid";
+    public void createNewZeroSpendTransaction(TransactionData existingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
+        if (!validationService.fullValidation(existingTransactionData)) {
+            log.error("Validation for waiting source  failed! requesting transaction {}", existingTransactionData);
+            return;
         }
-        TransactionData zeroSpendTransaction = createZeroSpendTransaction(incomingTransactionData, zeroSpendTransactionType);
-        sendTransactionToPublisher(zeroSpendTransaction);
-        return "Ok";
-    }
-
-    private TransactionData createZeroSpendTransaction(TransactionData existingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
         log.debug("Creating a new Zero Spend Transaction for transaction : Hash = {} , SenderTrustScore = {}", existingTransactionData.getHash(), existingTransactionData.getSenderTrustScore());
         TransactionData transactionData = createZeroSpendTransactionData(existingTransactionData.getSenderTrustScore(), zeroSpendTransactionType);
 
@@ -78,16 +74,13 @@ public class TransactionCreationService {
             transactionData.setLeftParentHash(existingTransactionData.getHash());
         }
 
-        attachTransactionToCluster(transactionData);
-        return transactionData;
+        attachAndSendZeroSpendTransaction(transactionData);
     }
 
-    private TransactionData createZeroSpendTransaction(double trustScore, ZeroSpendTransactionType zeroSpendTransactionType) {
-        TransactionData transactionData = createZeroSpendTransactionData(trustScore, zeroSpendTransactionType);
 
+    private void attachAndSendZeroSpendTransaction(TransactionData transactionData) {
         attachTransactionToCluster(transactionData);
         sendTransactionToPublisher(transactionData);
-        return transactionData;
     }
 
     private void attachTransactionToCluster(TransactionData transactionData) {
@@ -125,20 +118,19 @@ public class TransactionCreationService {
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
         Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now());
-        return createTransaction(baseTransactionData, description.name(), trustScore, TransactionType.ZeroSpend, addressHash);
+        return createTransactionData(baseTransactionData, description.name(), trustScore, TransactionType.ZeroSpend, addressHash);
     }
 
 
-    private TransactionData createEventTransactionData(String description, String event,
-                                                       boolean hardFork) {
+    private TransactionData createEventTransactionData(String description, Event event) {
         Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
-        EventInputBaseTransactionData ebt = new EventInputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now(),
-                event, hardFork);
-        return createTransaction(ebt, description, MAX_TRUST_SCORE, TransactionType.EventHardFork, addressHash);
+        EventInputBaseTransactionData eventInputBaseTransactionData = new EventInputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now(),
+                event);
+        return createTransactionData(eventInputBaseTransactionData, description, MAX_TRUST_SCORE, TransactionType.EventHardFork, addressHash);
     }
 
-    private TransactionData createTransaction(BaseTransactionData baseTransactionData, String description, double trustScore, TransactionType transactionType,
-                                              Hash addressHash) {
+    private TransactionData createTransactionData(BaseTransactionData baseTransactionData, String description, double trustScore, TransactionType transactionType,
+                                                  Hash addressHash) {
 
         Map<Hash, Integer> addressHashToAddressIndexMap = new HashMap<>();
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
@@ -151,9 +143,8 @@ public class TransactionCreationService {
         return transactionData;
     }
 
-    public ResponseEntity<IResponse> createEventTransaction(String description, String event,
-                                                            boolean hardFork) {
-        TransactionData transactionData = createEventTransactionData(description, event, hardFork);
+    public ResponseEntity<IResponse> createEventTransaction(String description, Event event) {
+        TransactionData transactionData = createEventTransactionData(description, event);
         try {
             if (eventService.checkEventAndUpdateEventsTable(transactionData)) {
                 clusterService.selectSources(transactionData);
