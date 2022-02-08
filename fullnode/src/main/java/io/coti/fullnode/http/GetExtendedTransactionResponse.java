@@ -1,5 +1,6 @@
 package io.coti.fullnode.http;
 
+import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

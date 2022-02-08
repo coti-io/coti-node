@@ -83,7 +83,16 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 throw new IllegalArgumentException(INVALID_TRANSACTION_TYPE);
             }
             List<InputBaseTransactionData> inputBaseTransactions = transactionData.getInputBaseTransactions();
-            return inputBaseTransactions.size() == 1;
+            if (inputBaseTransactions.size() != 1) {
+                return false;
+            }
+            InputBaseTransactionData inputBaseTransactionData = inputBaseTransactions.get(0);
+            if (!inputBaseTransactionData.getAmount().equals(BigDecimal.ZERO)
+                    || !(inputBaseTransactionData instanceof EventInputBaseTransactionData)) {
+                return false;
+            }
+            EventInputBaseTransactionData eventInputBaseTransactionData = (EventInputBaseTransactionData) inputBaseTransactionData;
+            return eventInputBaseTransactionData.getEvent().isHardFork();
         }
 
     },

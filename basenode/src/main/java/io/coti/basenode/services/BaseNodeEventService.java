@@ -1,10 +1,9 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.data.EventInputBaseTransactionData;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
-import io.coti.basenode.http.GetTransactionsResponse;
+import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IEventService;
@@ -15,8 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,7 +23,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class BaseNodeEventService implements IEventService {
 
-    protected Map<String, TransactionData> eventsMap = new ConcurrentHashMap<>();
+    protected Map<Event, Hash> eventsMap = new ConcurrentHashMap<>();
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -56,27 +53,27 @@ public class BaseNodeEventService implements IEventService {
     }
 
     private synchronized boolean addEventToMap(TransactionData eventTransactionData) {
-        EventInputBaseTransactionData event = transactionHelper.getEventInputBaseTransactionData(eventTransactionData);
-        String eventDescription = event.getEvent();
+        EventInputBaseTransactionData eventInputBaseTransactionData = transactionHelper.getEventInputBaseTransactionData(eventTransactionData);
+        Event event = eventInputBaseTransactionData.getEvent();
         boolean isHardFork = event.isHardFork();
-        if (eventsMap.containsKey(eventDescription) && isHardFork) {
-            log.error(String.format("Event of %s already processed as Hard Fork Event", event.getEvent()));
+        if (eventsMap.containsKey(event) && isHardFork) {
+            log.error(String.format("Event of %s already processed as Hard Fork Event", eventInputBaseTransactionData.getEvent()));
             return false;
         }
-        eventsMap.put(eventDescription, eventTransactionData);
+        eventsMap.put(event, eventTransactionData.getHash());
         return true;
     }
 
-    public TransactionData getEventTransactionData(String event) {
-        TransactionData eventTransactionData = eventsMap.get(event);
-        if (eventTransactionData != null) {
-            eventTransactionData = transactions.getByHash(eventTransactionData.getHash());
+    public TransactionData getEventTransactionData(Event event) {
+        Hash eventTransactionHash = eventsMap.get(event);
+        TransactionData eventTransactionData = null;
+        if (eventTransactionHash != null) {
+            eventTransactionData = transactions.getByHash(eventTransactionHash);
         }
-        //todo change the value of map to hash id
         return eventTransactionData;
     }
 
-    public TransactionData getConfirmedEventTransactionData(String event) {
+    public TransactionData getConfirmedEventTransactionData(Event event) {
         TransactionData eventTransactionData = getEventTransactionData(event);
         if (eventTransactionData != null && transactionHelper.isConfirmed(eventTransactionData)) {
             return eventTransactionData;
@@ -84,31 +81,21 @@ public class BaseNodeEventService implements IEventService {
         return null;
     }
 
-    public ResponseEntity<IResponse> getEventTransactionDataResponse(String event) {
+    public ResponseEntity<IResponse> getEventTransactionDataResponse(Event event) {
         TransactionData transactionData = getEventTransactionData(event);
         return prepareResponse(transactionData);
     }
 
-    public ResponseEntity<IResponse> getConfirmedEventTransactionDataResponse(String event) {
+    public ResponseEntity<IResponse> getConfirmedEventTransactionDataResponse(Event event) {
         TransactionData confirmedTransactionData = getConfirmedEventTransactionData(event);
         return prepareResponse(confirmedTransactionData);
     }
 
     private ResponseEntity<IResponse> prepareResponse(TransactionData transactionData) {
         if (transactionData != null) {
-            List<TransactionData> transactionsList = new ArrayList<>();
-            transactionsList.add(transactionData);
-            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionsResponse(transactionsList));
+            return ResponseEntity.status(HttpStatus.OK).body(new GetTransactionResponse(new TransactionResponseData(transactionData)));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Event Not Found", STATUS_ERROR));
         }
     }
-
-    public class EVENTS {
-        public static final String MULTI_CURRENCY = "MULTI_CURRENCY";
-
-        EVENTS() {
-        }
-    }
-
 }

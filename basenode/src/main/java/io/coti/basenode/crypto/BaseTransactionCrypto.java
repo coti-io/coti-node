@@ -66,8 +66,8 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
                 throw new IllegalArgumentException("BaseTransaction is not instance of EventInputBaseTransactionData");
             }
             byte[] inputMessageInBytes = getBaseMessageInBytes(baseTransactionData);
-            byte[] eventInBytes = ((EventInputBaseTransactionData) baseTransactionData).getEvent().getBytes();
-            byte isHardForkByte = (byte) (((EventInputBaseTransactionData) baseTransactionData).isHardFork() ? 1 : 0);
+            byte[] eventInBytes = ((EventInputBaseTransactionData) baseTransactionData).getEvent().name().getBytes();
+            byte isHardForkByte = (byte) (((EventInputBaseTransactionData) baseTransactionData).getEvent().isHardFork() ? 1 : 0);
 
             ByteBuffer baseTransactionBuffer = ByteBuffer.allocate(inputMessageInBytes.length + eventInBytes.length + 1).
                     put(inputMessageInBytes).put(eventInBytes).put(isHardForkByte);
