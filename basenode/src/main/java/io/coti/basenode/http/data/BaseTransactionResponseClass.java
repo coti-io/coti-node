@@ -9,7 +9,7 @@ public enum BaseTransactionResponseClass {
     TMBT(TokenServiceFeeResponseData.class),
     RRBT(RollingReserveResponseData.class),
     RBT(ReceiverBaseTransactionResponseData.class),
-    EVT(EventInputBaseTransactionResponseData.class);
+    EIBT(EventInputBaseTransactionResponseData.class);
 
     private Class<? extends BaseTransactionResponseData> responseClass;
 
