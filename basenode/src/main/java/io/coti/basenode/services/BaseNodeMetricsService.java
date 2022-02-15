@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
+import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ public class BaseNodeMetricsService implements IMetricsService {
     private String metricQueuesTemplate;
     private String metricTransactionsTemplate;
     private String metricBackupsTemplate;
+    private String metricDatabaseTemplate;
     private Thread sampleThread;
     private final AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
     @Autowired
@@ -53,6 +55,8 @@ public class BaseNodeMetricsService implements IMetricsService {
     private IWebSocketMessageService webSocketMessageService;
     @Autowired
     private IDBRecoveryService dbRecoveryService;
+    @Autowired
+    private IDatabaseConnector databaseConnector;
     @Value("${metrics.sample.milisec.interval:0}")
     private int metricsSampleInterval;
 
@@ -78,6 +82,7 @@ public class BaseNodeMetricsService implements IMetricsService {
         metricQueuesTemplate = metricTemplate.replace(COMPONENT_TEMPLATE, "queues");
         metricTransactionsTemplate = metricTemplate.replace(COMPONENT_TEMPLATE, "transactions");
         metricBackupsTemplate = metricTemplateSubComponent.replace(COMPONENT_TEMPLATE, "backups");
+        metricDatabaseTemplate = metricTemplate.replace(COMPONENT_TEMPLATE, "database");
 
         sampleThread = new Thread(this::getMetricsSample, "MetricsSample");
         sampleThread.start();
@@ -111,6 +116,12 @@ public class BaseNodeMetricsService implements IMetricsService {
 
     private void addBackup(String backupMetric, String backupName, long value) {
         metrics.add(metricBackupsTemplate.replace(METRIC_TEMPLATE, backupMetric).replace("componentNameTemplate", backupName)
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
+    }
+
+    private void addDatabase(String databaseMetric, long value)
+    {
+        metrics.add(metricDatabaseTemplate.replace(METRIC_TEMPLATE, databaseMetric)
                 .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
     }
 
@@ -155,6 +166,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                 addTransaction("Sources", clusterService.getTotalSources());
                 addTransaction("TotalPostponedTransactions", transactionService.totalPostponedTransactions());
 
+                addDatabase("liveFiles", databaseConnector.getLiveFilesNames().size());
                 addBackups();
             }
             try {
