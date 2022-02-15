@@ -222,14 +222,24 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     }
 
     @Override
-    public void generateDataBaseBackup(String backupPath) {
+    public BackupInfo generateDataBaseBackup(String backupPath) {
         log.info("Starting database backup to {}", backupPath);
         try (BackupableDBOptions backupableDBOptions = new BackupableDBOptions(backupPath);
              BackupEngine rocksBackupEngine = BackupEngine.open(Env.getDefault(), backupableDBOptions)) {
             rocksBackupEngine.createNewBackup(db, false);
             log.info("Finished database backup to {}", backupPath);
+            return rocksBackupEngine.getBackupInfo().get(rocksBackupEngine.getBackupInfo().size() - 1);
         } catch (Exception e) {
             throw new DataBaseException("Failed to generate database backup.", e);
+        }
+    }
+
+    public List<String> getLiveFilesNames() {
+        try {
+            return db.getLiveFiles().files;
+        } catch (RocksDBException e) {
+            log.error("Unable to get list of live files." , e);
+            return new ArrayList<>();
         }
     }
 
