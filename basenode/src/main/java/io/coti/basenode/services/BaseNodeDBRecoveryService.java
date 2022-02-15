@@ -20,6 +20,7 @@ import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.rocksdb.BackupInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -151,13 +152,17 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         return awsService.listS3Paths(backupBucket, backupS3Path);
     }
 
-    private void generateBackupLog(long duration) {
-        List<String> backupFiles = getBackupFiles();
+    private void generateBackupLog(BackupInfo lastBackupInfo, long backupStartedTime, long entireDuration, long backupDuration,
+                                   long uploadDuration, long removalDuration) {
         HashMap<String, Long> metricsList = new HashMap<>();
         metricsList.put("success", 1L);
-        metricsList.put("epoch", Instant.now().getEpochSecond());
-        metricsList.put("number_of_files", (long) backupFiles.size());
-        metricsList.put("duration", duration);
+        metricsList.put("epoch", backupStartedTime);
+        metricsList.put("number_of_files", (long) lastBackupInfo.numberFiles());
+        metricsList.put("size", lastBackupInfo.size());
+        metricsList.put("entire_duration", entireDuration);
+        metricsList.put("backup_duration", backupDuration);
+        metricsList.put("upload_duration", uploadDuration);
+        metricsList.put("removal_duration", removalDuration);
         synchronized (backupLog) {
             backupLog.put(s3FolderName, metricsList);
         }
@@ -194,13 +199,19 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 long backupStartedTime = java.time.Instant.now().getEpochSecond();
                 log.info("Starting DB backup flow");
                 deleteBackup(remoteBackupFolderPath);
-                dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
+                List<BackupInfo> backups = dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
+                BackupInfo lastBackupInfo = backups.get(backups.size()-1);
+                long backupDuration = java.time.Instant.now().getEpochSecond() - lastBackupInfo.timestamp();
                 List<String> uploadedBackupFiles = getBackupFiles();
+                long uploadBackupStartedTime = java.time.Instant.now().getEpochSecond();
                 uploadRecentBackupToS3(uploadedBackupFiles);
+                long uploadDuration = java.time.Instant.now().getEpochSecond() - uploadBackupStartedTime;
+                long removalBackupStartedTime = java.time.Instant.now().getEpochSecond();
                 removeOlderBackupsFromS3(uploadedBackupFiles);
+                long removalDuration = java.time.Instant.now().getEpochSecond() - removalBackupStartedTime;
                 log.info("Finished DB backup flow");
-                long duration = java.time.Instant.now().getEpochSecond() - backupStartedTime;
-                generateBackupLog(duration);
+                long entireDuration = java.time.Instant.now().getEpochSecond() - backupStartedTime;
+                generateBackupLog(lastBackupInfo, backupStartedTime, entireDuration, backupDuration, uploadDuration, removalDuration);
             } catch (CotiRunTimeException e) {
                 log.error("Backup DB error.");
                 e.logMessage();
