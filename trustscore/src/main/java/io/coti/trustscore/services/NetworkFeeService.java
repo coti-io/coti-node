@@ -106,12 +106,12 @@ public class NetworkFeeService {
             NetworkFeeResponseData networkFeeResponseData = new NetworkFeeResponseData(networkFeeData);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new NetworkFeeResponse(networkFeeResponseData));
-        }catch (TransactionValidationException e) {
+        } catch (TransactionValidationException e) {
             log.error("FullNodeFeeData validation failed: {}", e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new Response(e.getMessage(), STATUS_ERROR));
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
         }

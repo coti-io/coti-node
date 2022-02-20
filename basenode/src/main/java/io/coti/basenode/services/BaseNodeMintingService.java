@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.IBalanceService;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 @Service

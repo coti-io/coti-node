@@ -7,7 +7,6 @@ import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeCurrencyService;
-import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.financialserver.http.GenerateTokenFeeRequest;
 import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;

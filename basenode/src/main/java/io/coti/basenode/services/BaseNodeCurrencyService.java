@@ -30,9 +30,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.MULTI_CURRENCY_IS_NOT_SUPPORTED;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @Service
@@ -314,7 +312,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 synchronized (mintingTokenHashLockData.addLockToLockMap(currencyHash)) {
                     updateMintableAmountMapAndBalance(transactionData);
                 }
-            } finally{
+            } finally {
                 mintingTokenHashLockData.removeLockFromLocksMap(currencyHash);
             }
         }
