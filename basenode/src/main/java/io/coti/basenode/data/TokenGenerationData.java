@@ -5,15 +5,18 @@ import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.interfaces.ITokenServiceData;
 import lombok.Data;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 @Data
 public class TokenGenerationData implements ITokenServiceData {
-
-    private OriginatorCurrencyData originatorCurrencyData;
-    private CurrencyTypeData currencyTypeData;
+    @NotNull
+    private @Valid OriginatorCurrencyData originatorCurrencyData;
+    @NotNull
+    private @Valid CurrencyTypeData currencyTypeData;
     private BigDecimal feeAmount;
 
     private TokenGenerationData() {
