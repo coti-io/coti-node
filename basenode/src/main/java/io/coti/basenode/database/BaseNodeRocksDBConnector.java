@@ -162,7 +162,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                     columnFamilyHandle.close();
                     classNameToColumnFamilyHandleMapping.remove(columnFamilyName);
                     if (create) {
-                        columnFamilyHandle = db.createColumnFamily(new ColumnFamilyDescriptor(columnFamilyName.getBytes()));
+                        columnFamilyHandle = db.createColumnFamily(new ColumnFamilyDescriptor(columnFamilyName.getBytes(), columnFamilyOptions));
                         classNameToColumnFamilyHandleMapping.put(columnFamilyName, columnFamilyHandle);
                         log.info("Column family {} reset", columnFamilyName);
                     } else {
@@ -218,7 +218,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
     private void initiateColumnFamilyDescriptors(List<String> dbColumnFamilies, List<ColumnFamilyDescriptor> columnFamilyDescriptors) {
         List<String> columnFamilyNamesToInit = Optional.ofNullable(dbColumnFamilies).orElse(columnFamilyClassNames);
-        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName.getBytes(), columnFamilyOptions)));
+        columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(
+                new ColumnFamilyDescriptor(columnFamilyName.getBytes(), columnFamilyOptions)));
     }
 
     @Override
