@@ -5,7 +5,7 @@ COTI Node
 
 [![GitHub Stars](https://img.shields.io/github/stars/coti-io/coti-node.svg)](https://github.com/coti-io/coti-node/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/coti-io/coti-node.svg)](https://github.com/coti-io/coti-node/issues)
-[![Current Version](https://img.shields.io/badge/version-2.1.0.RELEASE-green.svg)](https://github.com/coti-io/coti-node/)
+[![Current Version](https://img.shields.io/badge/version-2.2.0--SNAPSHOT-yellow.svg)](https://github.com/coti-io/coti-node/)
 [![Discord Server](https://img.shields.io/discord/386571547508473876.svg)](https://discord.me/coti)
 
 ---
@@ -76,7 +76,7 @@ build:
 
 ```
 mvn initialize && mvn clean compile && mvn package -DskipTests
-java -jar fullnode/target/fullnode-2.1.0.RELEASE.jar --spring.config.additional-location=fullnode1.properties
+java -jar fullnode/target/fullnode-2.2.0-SNAPSHOT.jar --spring.config.additional-location=fullnode1.properties
 ```
 
 #### Docker container
