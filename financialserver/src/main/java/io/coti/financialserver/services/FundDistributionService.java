@@ -297,7 +297,7 @@ public class FundDistributionService {
             byte[] sourceInBytes = source.getBytes();
 
             byte[] entryDataInBytes = ByteBuffer.allocate(Long.BYTES + receiverAddressInBytes.length + distributionPoolInBytes.length
-                    + amountInBytes.length + Long.BYTES + Long.BYTES + sourceInBytes.length)
+                            + amountInBytes.length + Long.BYTES + Long.BYTES + sourceInBytes.length)
                     .putLong(id).put(receiverAddressInBytes).put(distributionPoolInBytes).put(amountInBytes)
                     .putLong(createTime.toEpochMilli()).putLong(transactionTime.toEpochMilli()).put(sourceInBytes)
                     .array();
@@ -629,7 +629,7 @@ public class FundDistributionService {
         byte[] transactionHashInBytes = entryResult.getTransactionHash() != null ? new Hash(entryResult.getTransactionHash()).getBytes() : new byte[0];
 
         byte[] resultLineInBytes = ByteBuffer.allocate(Long.BYTES + distributionPoolNameInBytes.length + sourceInBytes.length + distributionPoolAddressInBytes.length +
-                receiverAddressInBytes.length + isAcceptedInBytes.length + statusInBytes.length + transactionHashInBytes.length).
+                        receiverAddressInBytes.length + isAcceptedInBytes.length + statusInBytes.length + transactionHashInBytes.length).
                 putLong(entryResult.getId()).put(distributionPoolNameInBytes).put(sourceInBytes).put(distributionPoolAddressInBytes).put(receiverAddressInBytes).
                 put(statusInBytes).put(transactionHashInBytes).array();
 

@@ -1,4 +1,3 @@
-
 <p align="center"><img src="/basenode/resources/logo-slogan-300x200.jpg"></p>
 
 COTI Node
@@ -10,15 +9,16 @@ COTI Node
 [![Discord Server](https://img.shields.io/discord/386571547508473876.svg)](https://discord.me/coti)
 
 ---
-## What is COTI?
 
+## What is COTI?
 
 [COTI](https://coti.io/) is a fully encompassing “finance on the blockchain” ecosystem that is designed specifically to
 meet the challenges of traditional finance (fees, latency, global inclusion and risk) by introducing a new type of DAG
- based base protocol and infrastructure that is scalable, fast, private, inclusive, low cost and is optimized for real
+based base protocol and infrastructure that is scalable, fast, private, inclusive, low cost and is optimized for real
 time payments.
 
 The ecosystem includes a
+
 - [DAG based Blockchain](https://www.youtube.com/watch?v=kSdRxqHDKe8)
 - [Proof of Trust Consensus Algorithm](https://coti.io/files/COTI-technical-whitepaper.pdf)
 - [multiDAG](https://medium.com/cotinetwork/introducing-the-coti-multidag-b353793cf582)
@@ -31,20 +31,24 @@ The ecosystem includes a
 Find out more about COTI in our [Medium](https://medium.com/cotinetwork).
 
 ## About this repository
+
 ```coti node``` is the development repository for COTI's DAG-based distributed ledger. It is comprised of a basenode
 (which provides the base functionality for all COTI nodes) and all other COTI nodes.
 
-  :star: Star this repository to show your support!
+:star: Star this repository to show your support!
 
 
 ---
+
 ## Table of Contents
 
 - [Requirements](#requirements)
 - [Build](#Build)
 - [Support](#support)
 - [License](#License)
+
 ---
+
 ## Requirements
 
 #### Software requirements:
@@ -54,28 +58,38 @@ Find out more about COTI in our [Medium](https://medium.com/cotinetwork).
 
 #### Node requirements:
 
-* properties file for each node in the project root directory (Differs for each node type. A skeleton will be added later to the README of each node repository)
-* clusterstamp file for each node in the project root directory (Differs for each node type. Will be downloaded automatically in future releases)
+* properties file for each node in the project root directory (Differs for each node type. A skeleton will be added
+  later to the README of each node repository)
+* clusterstamp file for each node in the project root directory (Differs for each node type. Will be downloaded
+  automatically in future releases)
 * lift the nodes in the following order:
-      nodemanager :arrow_right: zerospend :arrow_right: trustscore :arrow_right: financial :arrow_right: storage :arrow_right: history :arrow_right: dsp :arrow_right: fullnode
+  nodemanager :arrow_right: zerospend :arrow_right: trustscore :arrow_right: financial :arrow_right: storage :
+  arrow_right: history :arrow_right: dsp :arrow_right: fullnode
 
 ---
+
 ## Build & Run
 
 #### Locally
+
 build:
+
 ```
 mvn initialize && mvn clean compile && mvn package -DskipTests
 java -jar fullnode/target/fullnode-2.2.0-SNAPSHOT.jar --spring.config.additional-location=fullnode1.properties
 ```
+
 #### Docker container
-There is a dockerfile and docker compose in this folder.
-to build:
+
+There is a dockerfile and docker compose in this folder. to build:
+
 ```
 docker-compose build
 docker-compose up -d
 ```
+
 ---
+
 ## Support
 
 Don't hesitate to reach out to us at one of the following places:
@@ -85,6 +99,8 @@ Don't hesitate to reach out to us at one of the following places:
 - Telegram: <a href="https://t.me/COTInetwork" target="_blank">`COTInetwork`</a>
 
 ---
+
 ## License
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 This project is licensed under the terms of the **GNU General Public License v3.0** license.

@@ -11,5 +11,5 @@ services:
     volumes:
       - "./data:/app/data"
     restart: on-failure
-    command: ["java", "-jar", "fullnode/target/fullnode-${VERSION}.jar", "--spring.config.additional-location=./data/fullnode1.properties"]
+    command: [ "java", "-jar", "fullnode/target/fullnode-${VERSION}.jar", "--spring.config.additional-location=./data/fullnode1.properties" ]
 

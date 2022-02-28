@@ -317,11 +317,11 @@ public class BaseNodeTransactionService implements ITransactionService {
             dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
         }
         Map<TransactionData, Boolean> postponedParentTransactionMap = postponedTransactionMap.entrySet().stream().filter(
-                postponedTransactionMapEntry ->
-                        (postponedTransactionMapEntry.getKey().getRightParentHash() != null
-                                && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
-                                || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
-                                && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
+                        postponedTransactionMapEntry ->
+                                (postponedTransactionMapEntry.getKey().getRightParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
+                                        || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         postponedParentTransactionMap.forEach((postponedTransaction, isTransactionFromFullNode) -> {
             log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
