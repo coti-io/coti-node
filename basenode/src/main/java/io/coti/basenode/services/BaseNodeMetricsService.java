@@ -119,8 +119,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                 .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
     }
 
-    private void addDatabase(String databaseMetric, long value)
-    {
+    private void addDatabase(String databaseMetric, long value) {
         metrics.add(metricDatabaseTemplate.replace(METRIC_TEMPLATE, databaseMetric)
                 .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
     }

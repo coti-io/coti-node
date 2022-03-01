@@ -248,7 +248,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         try {
             return db.getLiveFiles().files;
         } catch (RocksDBException e) {
-            log.error("Unable to get list of live files." , e);
+            log.error("Unable to get list of live files.", e);
             return new ArrayList<>();
         }
     }
