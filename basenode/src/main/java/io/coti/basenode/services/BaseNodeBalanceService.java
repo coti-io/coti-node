@@ -103,20 +103,22 @@ public class BaseNodeBalanceService implements IBalanceService {
         if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
             return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
         }
-        Map<Hash, Map<Hash, AddressBalance>> tokenToAddressesBalance = new HashMap<>();
+        Map<Hash, Map<Hash, AddressBalance>> addressToTokenBalances = new HashMap<>();
+        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
 
         getTokenBalancesRequest.getAddresses().forEach(address -> {
             Map<Hash, BigDecimal> addressToPreBalanceMap = preBalanceMap.get(address);
             if (addressToPreBalanceMap != null) {
                 addressToPreBalanceMap.forEach((currencyHash, preBalance) -> {
-                    tokenToAddressesBalance.putIfAbsent(address, new HashMap<>());
-                    tokenToAddressesBalance.get(address).putIfAbsent(currencyHash, new AddressBalance(getBalance(address, currencyHash), preBalance));
+                    if (!currencyHash.equals(nativeCurrencyHash)) {
+                        addressToTokenBalances.putIfAbsent(address, new HashMap<>());
+                        addressToTokenBalances.get(address).putIfAbsent(currencyHash, new AddressBalance(getBalance(address, currencyHash), preBalance));
+                    }
                 });
-                addressToPreBalanceMap.remove(currencyService.getNativeCurrencyHash());
             }
         });
 
-        return ResponseEntity.status(HttpStatus.OK).body(new GetTokenBalancesResponse(tokenToAddressesBalance));
+        return ResponseEntity.status(HttpStatus.OK).body(new GetTokenBalancesResponse(addressToTokenBalances));
     }
 
     @Override
