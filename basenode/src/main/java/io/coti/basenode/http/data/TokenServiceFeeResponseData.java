@@ -11,6 +11,10 @@ public class TokenServiceFeeResponseData extends OutputBaseTransactionResponseDa
 
     private String signerHash;
 
+    public TokenServiceFeeResponseData() {
+        super();
+    }
+
     public TokenServiceFeeResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
         signerHash = ((TokenFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
