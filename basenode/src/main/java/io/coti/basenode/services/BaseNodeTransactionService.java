@@ -72,7 +72,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response) {
+    public void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response,
+                                    Boolean isExtended) {
         CustomHttpServletResponse customResponse = new CustomHttpServletResponse(response);
         PrintWriter output;
         try {
@@ -96,7 +97,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             isChunkStarted = true;
             long limit = (endingIndex == -1) ? transactionIndexService.getLastTransactionIndexData().getIndex() : endingIndex;
             for (long i = startingIndex; i <= limit; i++) {
-                sendTransactionResponse(transactionIndexes.getByHash(new Hash(i)).getTransactionHash(), firstTransactionSent, output);
+                sendTransactionResponse(transactionIndexes.getByHash(new Hash(i)).getTransactionHash(), firstTransactionSent, output, isExtended);
             }
             chunkService.endOfChunk(output);
 
@@ -223,7 +224,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public void getNoneIndexedTransactionBatch(HttpServletResponse response) {
+    public void getNoneIndexedTransactionBatch(boolean isExtended, HttpServletResponse response) {
         try {
             Set<Hash> noneIndexedTransactionHashes = transactionHelper.getNoneIndexedTransactionHashes();
             PrintWriter output = response.getWriter();
@@ -231,7 +232,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
 
             noneIndexedTransactionHashes.forEach(transactionHash ->
-                    sendTransactionResponse(transactionHash, firstTransactionSent, output)
+                    sendTransactionResponse(transactionHash, firstTransactionSent, output, isExtended)
             );
             chunkService.endOfChunk(output);
         } catch (Exception e) {
@@ -433,8 +434,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter
-            output) {
-        sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false, false);
+            output, boolean isExtended) {
+        sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false, isExtended);
     }
 
     protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter

@@ -355,11 +355,13 @@ public class TransactionService extends BaseNodeTransactionService {
     public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {
         try {
             List<Hash> transactionHashes = getTransactionsRequest.getTransactionHashes();
+            Boolean isExtended = getTransactionsRequest.getExtended();
             PrintWriter output = response.getWriter();
             chunkService.startOfChunk(output);
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+
             transactionHashes.forEach(transactionHash ->
-                    sendTransactionResponse(transactionHash, firstTransactionSent, output)
+                    sendTransactionResponse(transactionHash, firstTransactionSent, output, isExtended)
             );
 
             chunkService.endOfChunk(output);
