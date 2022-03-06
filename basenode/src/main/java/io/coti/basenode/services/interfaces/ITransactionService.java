@@ -17,7 +17,7 @@ public interface ITransactionService {
 
     void init();
 
-    void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response);
+    void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response, Boolean isExtended);
 
     void getTransactionBatch(long startingIndex, HttpServletResponse response);
 
@@ -25,7 +25,7 @@ public interface ITransactionService {
 
     ResponseEntity<IResponse> getNoneIndexedTransactions();
 
-    void getNoneIndexedTransactionBatch(HttpServletResponse response);
+    void getNoneIndexedTransactionBatch(boolean isExtended, HttpServletResponse response);
 
     ResponseEntity<IResponse> getPostponedTransactions();
 

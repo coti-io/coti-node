@@ -29,7 +29,7 @@ public class BaseNodeTransactionController {
 
     @GetMapping(path = "/none-indexed/batch")
     public void getNoneIndexedTransactionBatch(HttpServletResponse response) {
-        transactionService.getNoneIndexedTransactionBatch(response);
+        transactionService.getNoneIndexedTransactionBatch(true, response);
     }
 
     @GetMapping(path = "/postponed")
