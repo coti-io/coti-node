@@ -14,7 +14,6 @@ public class GetTransactionByIndexRequest {
     @Valid
     @NotNull
     Long endingIndex;
-
-    private Boolean extended = Boolean.FALSE;
+    private boolean extended;
 
 }

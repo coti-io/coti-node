@@ -12,7 +12,6 @@ public class GetTransactionsRequest {
 
     @NotEmpty
     private List<@Valid Hash> transactionHashes;
-
-    private Boolean extended = Boolean.FALSE;
+    private boolean extended;
 
 }
