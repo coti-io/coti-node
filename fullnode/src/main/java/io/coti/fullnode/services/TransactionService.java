@@ -328,7 +328,7 @@ public class TransactionService extends BaseNodeTransactionService {
     public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {
         try {
             List<Hash> transactionHashes = getTransactionsRequest.getTransactionHashes();
-            Boolean isExtended = getTransactionsRequest.getExtended();
+            boolean isExtended = getTransactionsRequest.isExtended();
             PrintWriter output = response.getWriter();
             chunkService.startOfChunk(output);
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);

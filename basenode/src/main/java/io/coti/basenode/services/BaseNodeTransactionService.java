@@ -67,7 +67,7 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response,
-                                    Boolean isExtended) {
+                                    boolean isExtended) {
         CustomHttpServletResponse customResponse = new CustomHttpServletResponse(response);
         PrintWriter output;
         try {
@@ -218,7 +218,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public void getNoneIndexedTransactionBatch(boolean isExtended, HttpServletResponse response) {
+    public void getNoneIndexedTransactionBatch(HttpServletResponse response, boolean isExtended) {
         try {
             Set<Hash> noneIndexedTransactionHashes = transactionHelper.getNoneIndexedTransactionHashes();
             PrintWriter output = response.getWriter();
