@@ -213,15 +213,17 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         Hash transactionHash = transactionData.getHash();
         Hash senderHash = transactionData.getSenderHash();
         List<TransactionTrustScoreData> transactionTrustScores = transactionData.getTrustScoreResults();
-        if (transactionTrustScores == null)
+        if (transactionTrustScores == null) {
             return false;
+        }
         Map<Double, Integer> trustScoreResults = new HashMap<>();
         Set<Hash> transactionTrustScoreNodes = new HashSet<>();
         for (TransactionTrustScoreData transactionTrustScoreData : transactionTrustScores) {
             ExpandedTransactionTrustScoreData expandedTransactionTrustScoreData = new ExpandedTransactionTrustScoreData(senderHash, transactionHash, transactionTrustScoreData);
             if (transactionTrustScoreNodes.contains(transactionTrustScoreData.getTrustScoreNodeHash()) ||
-                    !expandedTransactionTrustScoreCrypto.verifySignature(expandedTransactionTrustScoreData))
+                    !expandedTransactionTrustScoreCrypto.verifySignature(expandedTransactionTrustScoreData)) {
                 return false;
+            }
             Double transactionTrustScore = transactionTrustScoreData.getTrustScore();
             trustScoreResults.computeIfPresent(transactionTrustScore, (trustScore, currentAmount) -> currentAmount + 1);
             trustScoreResults.putIfAbsent(transactionTrustScore, 1);

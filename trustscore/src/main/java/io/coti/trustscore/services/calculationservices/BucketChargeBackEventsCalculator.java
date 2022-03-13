@@ -35,7 +35,9 @@ public class BucketChargeBackEventsCalculator extends BucketCalculator {
     public void setCurrentScores() {
         Map<HighFrequencyEventScore, String> highFrequencyEventScoreToCalculationFormulaMap = new ConcurrentHashMap<>();
         HighFrequencyEventScore chargeBackEventScoreByEventScoreType = behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap().get(HighFrequencyEventScoreType.CHARGE_BACK_AMOUNT);
-        if (chargeBackEventScoreByEventScoreType == null) return;
+        if (chargeBackEventScoreByEventScoreType == null) {
+            return;
+        }
         highFrequencyEventScoreToCalculationFormulaMap.put(chargeBackEventScoreByEventScoreType, createChargeBackAmountFormula());
 
         highFrequencyEventScoreToCalculationFormulaMap.put(behaviorHighFrequencyEventsScore.getHighFrequencyEventScoreMap()

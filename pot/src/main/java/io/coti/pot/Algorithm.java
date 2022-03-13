@@ -39,10 +39,11 @@ public class Algorithm implements IAlgorithm {
     public Algorithm(AlgorithmType hashingAlgorithm) {
         this.hashingAlgorithm = hashingAlgorithm;
         try {
-            if (bouncyCastleAlgorithms.contains(hashingAlgorithm))
+            if (bouncyCastleAlgorithms.contains(hashingAlgorithm)) {
                 this.messageDigestAlgorithm = this.getBouncyCastle(hashingAlgorithm);
-            else
+            } else {
                 this.cryptoHashAlgorithm = this.getCryptoHash(hashingAlgorithm);
+            }
         } catch (Exception e) {
             log.error("Error finding algorithm {} in crypto hash, Exception {}", hashingAlgorithm, e);
         }
@@ -50,8 +51,9 @@ public class Algorithm implements IAlgorithm {
 
     @Override
     public byte[] hash(byte[] input) {
-        if (bouncyCastleAlgorithms.contains(hashingAlgorithm))
+        if (bouncyCastleAlgorithms.contains(hashingAlgorithm)) {
             return messageDigestAlgorithm.digest(input);
+        }
         return cryptoHashAlgorithm.digest(input);
     }
 

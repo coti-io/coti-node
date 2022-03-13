@@ -248,8 +248,9 @@ public class FundDistributionService {
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty())
+                if (line.isEmpty()) {
                     break;
+                }
                 String[] distributionDetails;
                 distributionDetails = line.split(COMMA_SEPARATOR);
                 if (distributionDetails.length != NUMBER_OF_DISTRIBUTION_LINE_DETAILS) {

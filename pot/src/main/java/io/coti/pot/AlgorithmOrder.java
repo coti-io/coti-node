@@ -32,7 +32,9 @@ class AlgorithmOrder implements IAlgorithmOrder {
     }
 
     private int getAlgorithmCount(int trustScore, int maxTrustScore, int maxLength) {
-        if (trustScore == 0) return maxLength;
+        if (trustScore == 0) {
+            return maxLength;
+        }
         return (int) ((maxLength + 1) - ((trustScore / (double) maxTrustScore) * maxLength));
     }
 }

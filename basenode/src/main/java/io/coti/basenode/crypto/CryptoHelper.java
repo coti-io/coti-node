@@ -132,9 +132,9 @@ public class CryptoHelper {
 
     public static boolean isAddressValid(Hash addressHash) {
         byte[] addressBytes = addressHash.getBytes();
-        if (addressBytes.length != ADDRESS_SIZE_IN_BYTES)
+        if (addressBytes.length != ADDRESS_SIZE_IN_BYTES) {
             return false;
-
+        }
         Checksum checksum = new CRC32();
         byte[] addressWithoutCheckSum = Arrays.copyOfRange(addressBytes, 0, addressBytes.length - ADDRESS_CHECKSUM_SIZE_IN_BYTES);
         byte[] addressWithoutPadding = CryptoHelper.removeLeadingZerosFromAddress(addressWithoutCheckSum);

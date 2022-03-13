@@ -14,9 +14,15 @@ public class SuspiciousEventScore extends EventScore {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SuspiciousEventScore)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof SuspiciousEventScore)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
         SuspiciousEventScore that = (SuspiciousEventScore) o;
         return term == that.term &&
                 contribution.equals(that.contribution);

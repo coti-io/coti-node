@@ -76,11 +76,13 @@ public class TransactionCrypto extends SignatureCrypto<TransactionData> {
 
     public boolean isTransactionValid(TransactionData transactionData) {
 
-        if (!this.isTransactionHashCorrect(transactionData))
+        if (!this.isTransactionHashCorrect(transactionData)) {
             return false;
+        }
         for (BaseTransactionData baseTransactionData : transactionData.getBaseTransactions()) {
-            if (!BaseTransactionCrypto.getByBaseTransactionClass(baseTransactionData.getClass()).isBaseTransactionValid(transactionData, baseTransactionData))
+            if (!BaseTransactionCrypto.getByBaseTransactionClass(baseTransactionData.getClass()).isBaseTransactionValid(transactionData, baseTransactionData)) {
                 return false;
+            }
         }
         return true;
     }

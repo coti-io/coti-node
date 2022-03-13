@@ -57,8 +57,12 @@ public class TokenSaleDistributionData implements IEntity, ISignValidatable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         TokenSaleDistributionData that = (TokenSaleDistributionData) o;
         return Objects.equals(tokenDistributionDataEntries, that.tokenDistributionDataEntries) &&
                 Objects.equals(signatureData, that.signatureData);

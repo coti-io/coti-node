@@ -240,10 +240,11 @@ public class DbConnectorService implements IDbConnectorService {
                     .put("index.number_of_replicas", INDEX_NUMBER_OF_REPLICAS)
             );
 
-            if (fromColdStorage)
+            if (fromColdStorage) {
                 restColdStorageClient.indices().create(request, RequestOptions.DEFAULT);
-            else
+            } else {
                 restClient.indices().create(request, RequestOptions.DEFAULT);
+            }
         } catch (Exception e) {
             throw new DbConnectorException(String.format("Error at creating index. %s: %s", e.getClass().getName(), e.getMessage()));
         }
@@ -302,11 +303,11 @@ public class DbConnectorService implements IDbConnectorService {
                 hash.toString());
         try {
             DeleteResponse deleteResponse;
-            if (fromColdStorage)
+            if (fromColdStorage) {
                 deleteResponse = restColdStorageClient.delete(request, RequestOptions.DEFAULT);
-            else
+            } else {
                 deleteResponse = restClient.delete(request, RequestOptions.DEFAULT);
-
+            }
             return deleteResponse;
         } catch (IOException e) {
             throw new DbConnectorException(e.getMessage());
