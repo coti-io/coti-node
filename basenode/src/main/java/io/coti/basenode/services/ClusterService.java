@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @Service
 public class ClusterService implements IClusterService {
 
+    private static final int TCC_CONFIRMATION_INTERVAL = 3000;
     private ArrayList<HashSet<Hash>> sourceSetsByTrustScore;
     private HashMap<Hash, TransactionData> sourceMap;
     @Autowired
@@ -38,7 +39,6 @@ public class ClusterService implements IClusterService {
     private final AtomicLong totalSources = new AtomicLong(0);
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private Thread trustChainConfirmedTransactionsThread;
-    private final int tccConfirmationInterval = 3000;
     private boolean initialConfirmation = true;
     private Object initialConfirmationLock;
 
@@ -110,7 +110,7 @@ public class ClusterService implements IClusterService {
             });
             initialConfirmation = false;
             try {
-                Thread.sleep(tccConfirmationInterval);
+                Thread.sleep(TCC_CONFIRMATION_INTERVAL);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
