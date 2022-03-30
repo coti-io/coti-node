@@ -49,4 +49,8 @@ public interface ICurrencyService {
     ResponseEntity<IResponse> getTokenSymbolDetails(GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest);
 
     void handleExistingTransaction(TransactionData transactionData);
+
+    boolean isNativeCurrency(Hash currencyHash);
+
+    Hash getNativeCurrencyHashIfNull(Hash currencyHash);
 }

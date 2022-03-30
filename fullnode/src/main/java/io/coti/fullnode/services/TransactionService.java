@@ -107,16 +107,15 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
-        TransactionData transactionData =
-                new TransactionData(
-                        request.getBaseTransactions(),
-                        request.getHash(),
-                        request.getTransactionDescription(),
-                        request.getTrustScoreResults(),
-                        request.getCreateTime(),
-                        request.getSenderHash(),
-                        request.getSenderSignature(),
-                        request.getType());
+        TransactionData transactionData = transactionHelper.createNewTransaction(
+                request.getBaseTransactions(),
+                request.getHash(),
+                request.getTransactionDescription(),
+                request.getTrustScoreResults(),
+                request.getCreateTime(),
+                request.getSenderHash(),
+                request.getSenderSignature(),
+                request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
             currentlyAddTransaction.incrementAndGet();

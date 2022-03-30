@@ -136,7 +136,7 @@ public class TransactionCreationService {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         addressHashToAddressIndexMap.put(addressHash, ZERO_SPEND_ADDRESS_INDEX);
         baseTransactions.add(baseTransactionData);
-        TransactionData transactionData = new TransactionData(baseTransactions, description, trustScore, Instant.now(), transactionType);
+        TransactionData transactionData = transactionHelper.createNewTransaction(baseTransactions, description, trustScore, Instant.now(), transactionType);
         transactionData.setAttachmentTime(Instant.now());
         transactionCryptoCreator.signBaseTransactions(transactionData, addressHashToAddressIndexMap);
         transactionCrypto.signMessage(transactionData);

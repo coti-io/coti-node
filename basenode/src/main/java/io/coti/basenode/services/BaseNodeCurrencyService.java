@@ -130,6 +130,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     @Override
+    public boolean isNativeCurrency(Hash currencyHash) {
+        return getNativeCurrencyHash().equals(currencyHash) || currencyHash == null;
+    }
+
+    @Override
     public void handleMissingTransaction(TransactionData transactionData) {
         handleTransaction(transactionData);
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
@@ -513,5 +518,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         return tokenResponseData;
     }
 
-
+    public Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
+        return Optional.ofNullable(currencyHash).orElse(getNativeCurrencyHash());
+    }
 }

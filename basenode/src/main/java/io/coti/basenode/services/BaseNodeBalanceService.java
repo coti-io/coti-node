@@ -51,7 +51,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
             BigDecimal amount = baseTransactionData.getAmount();
             Hash addressHash = baseTransactionData.getAddressHash();
-            Hash currencyHash = getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash());
+            Hash currencyHash = currencyService.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash());
             balanceInChangeMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
             balanceInChangeMap.get(addressHash).putIfAbsent(currencyHash, getBalance(addressHash, currencyHash));
             preBalanceInChangeMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
@@ -104,13 +104,11 @@ public class BaseNodeBalanceService implements IBalanceService {
             return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
         }
         Map<Hash, Map<Hash, AddressBalance>> addressToTokenBalances = new HashMap<>();
-        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
-
         getTokenBalancesRequest.getAddresses().forEach(address -> {
             Map<Hash, BigDecimal> addressToPreBalanceMap = preBalanceMap.get(address);
             if (addressToPreBalanceMap != null) {
                 addressToPreBalanceMap.forEach((currencyHash, preBalance) -> {
-                    if (!currencyHash.equals(nativeCurrencyHash)) {
+                    if (! currencyService.isNativeCurrency(currencyHash)) {
                         addressToTokenBalances.putIfAbsent(address, new HashMap<>());
                         addressToTokenBalances.get(address).putIfAbsent(currencyHash, new AddressBalance(getBalance(address, currencyHash), preBalance));
                     }
@@ -124,7 +122,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     @Override
     public void rollbackBaseTransactions(TransactionData transactionData) {
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            Hash currencyHash = getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash());
+            Hash currencyHash = currencyService.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash());
             preBalanceMap.computeIfPresent(baseTransactionData.getAddressHash(), (addressHash, currencyHashPreBalanceMap) -> {
                 currencyHashPreBalanceMap.computeIfPresent(currencyHash, (currentCurrencyHash, currentAmount) ->
                         currentAmount.add(baseTransactionData.getAmount().negate())
@@ -155,7 +153,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public void updateBalanceAndPreBalanceFromClusterStamp(Hash addressHash, Hash currencyHash, BigDecimal amount) {
-        currencyHash = getNativeCurrencyHashIfNull(currencyHash);
+        currencyHash = currencyService.getNativeCurrencyHashIfNull(currencyHash);
         if (balanceMap.containsKey(addressHash) && balanceMap.get(addressHash).containsKey(currencyHash)) {
             log.error("The address {} for currency {} was already found in the clusterstamp", addressHash, currencyHash);
             throw new IllegalArgumentException(String.format("The address %s for currency %s was already found in the clusterstamp", addressHash, currencyHash));
@@ -178,7 +176,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     }
 
     private void updateBalance(Hash addressHash, Hash currencyHash, BigDecimal amount, Map<Hash, Map<Hash, BigDecimal>> balanceMap) {
-        final Hash finalCurrencyHash = getNativeCurrencyHashIfNull(currencyHash);
+        final Hash finalCurrencyHash = currencyService.getNativeCurrencyHashIfNull(currencyHash);
         balanceMap.computeIfPresent(addressHash, (currentHash, currentCurrencyHashBalanceMap) -> {
             currentCurrencyHashBalanceMap.computeIfPresent(finalCurrencyHash, (currentCurrencyHash, currentBalance) -> currentBalance.add(amount));
             currentCurrencyHashBalanceMap.putIfAbsent(finalCurrencyHash, amount);
@@ -205,10 +203,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     private BigDecimal getBalance(Hash addressHash, Hash
             currencyHash, Map<Hash, Map<Hash, BigDecimal>> balanceMap) {
-        return new BigDecimal(Optional.ofNullable(Optional.ofNullable(balanceMap.get(addressHash)).orElse(new ConcurrentHashMap<>()).get(getNativeCurrencyHashIfNull(currencyHash))).orElse(BigDecimal.ZERO).toString());
+        return new BigDecimal(Optional.ofNullable(Optional.ofNullable(balanceMap.get(addressHash)).orElse(new ConcurrentHashMap<>()).get(currencyService.getNativeCurrencyHashIfNull(currencyHash))).orElse(BigDecimal.ZERO).toString());
     }
 
-    protected Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
-        return Optional.ofNullable(currencyHash).orElse(currencyService.getNativeCurrencyHash());
-    }
 }

@@ -61,7 +61,6 @@ public class NetworkFeeService {
 
     public ResponseEntity<IResponse> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
-            Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
             FullNodeFeeData fullNodeFeeData = networkFeeRequest.getFullNodeFeeData();
             boolean feeIncluded = networkFeeRequest.isFeeIncluded();
             validateFullNodeFeeData(fullNodeFeeData, feeIncluded);
@@ -78,7 +77,7 @@ public class NetworkFeeService {
             }
 
             BigDecimal fee;
-            if (fullNodeFeeData.getOriginalCurrencyHash() == null || fullNodeFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+            if (currencyService.isNativeCurrency( fullNodeFeeData.getOriginalCurrencyHash())) {
                 TrustScoreData trustScoreData = trustScores.getByHash(networkFeeRequest.getUserHash());
                 if (trustScoreData == null) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(TRUST_SCORE_NOT_EXIST, networkFeeRequest.getUserHash()), STATUS_ERROR));
@@ -99,7 +98,8 @@ public class NetworkFeeService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_REDUCED_AMOUNT_VS_NETWORK_FEE,
                         fee.add(fullNodeFeeData.getAmount()).toPlainString()), STATUS_ERROR));
             }
-            Hash feeDataCurrencyHash = fullNodeFeeData.getOriginalCurrencyHash() == null ? null : new Hash(nativeCurrencyHash.toString());
+
+            Hash feeDataCurrencyHash = fullNodeFeeData.getOriginalCurrencyHash() == null ? null : new Hash(currencyService.getNativeCurrencyHash().toString());
             NetworkFeeData networkFeeData = new NetworkFeeData(networkFeeAddress, feeDataCurrencyHash, fee, fullNodeFeeData.getOriginalCurrencyHash(), originalAmount, reducedAmount, Instant.now());
             setNetworkFeeHash(networkFeeData);
             signNetworkFee(networkFeeData, true);
@@ -164,9 +164,9 @@ public class NetworkFeeService {
     }
 
     private boolean isNetworkFeeValid(NetworkFeeData networkFeeData, Hash userHash) {
-        Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
+
         BigDecimal calculatedNetworkFee;
-        if (networkFeeData.getOriginalCurrencyHash() == null || networkFeeData.getOriginalCurrencyHash().equals(nativeCurrencyHash)) {
+        if (currencyService.isNativeCurrency(networkFeeData.getOriginalCurrencyHash())) {
             TrustScoreData trustScoreData = trustScores.getByHash(userHash);
             if (trustScoreData == null) {
                 return false;

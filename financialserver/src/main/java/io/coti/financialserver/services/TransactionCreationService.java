@@ -90,7 +90,7 @@ public class TransactionCreationService {
         baseTransactions.add(ibt);
         baseTransactions.add(rbt);
 
-        TransactionData initialTransactionData = new TransactionData(baseTransactions, TransactionType.Initial.toString(), MAX_TRUST_SCORE, Instant.now(), TransactionType.Initial);
+        TransactionData initialTransactionData = transactionHelper.createNewTransaction(baseTransactions, TransactionType.Initial.toString(), MAX_TRUST_SCORE, Instant.now(), TransactionType.Initial);
 
         if (!balanceService.checkBalancesAndAddToPreBalance(initialTransactionData.getBaseTransactions())) {
             throw new TransactionValidationException("Balance check failed");

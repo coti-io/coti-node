@@ -59,7 +59,7 @@ public class FeeService {
             if (!currencyService.isCurrencyHashAllowed(fullNodeFeeRequest.getOriginalCurrencyHash())) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
-            Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
+
             if (!fullNodeFeeRequestCrypto.verifySignature(fullNodeFeeRequest)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
@@ -74,7 +74,7 @@ public class FeeService {
             if (zeroFeeUserHashes.contains(fullNodeFeeRequest.getUserHash().toString())) {
                 amount = new BigDecimal(0);
             } else {
-                if (originalCurrencyHash == null || originalCurrencyHash.equals(nativeCurrencyHash)) {
+                if (currencyService.isNativeCurrency(originalCurrencyHash)) {
                     BigDecimal fee = originalAmount.multiply(feePercentage).divide(new BigDecimal(100));
                     if (fee.compareTo(minimumFee) <= 0) {
                         amount = minimumFee;
@@ -102,7 +102,8 @@ public class FeeService {
             if (feeIncluded && originalAmount.compareTo(amount) <= 0) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(INVALID_AMOUNT_VS_FULL_NODE_FEE, amount.toPlainString()), STATUS_ERROR));
             }
-            Hash feeDataCurrencyHash = originalCurrencyHash == null ? null : new Hash(nativeCurrencyHash.toString());
+
+            Hash feeDataCurrencyHash = originalCurrencyHash == null ? null : new Hash(currencyService.getNativeCurrencyHash().toString());
             FullNodeFeeData fullNodeFeeData = new FullNodeFeeData(address, feeDataCurrencyHash, amount, originalCurrencyHash, originalAmount, Instant.now());
             setFullNodeFeeHash(fullNodeFeeData);
             signFullNodeFee(fullNodeFeeData);

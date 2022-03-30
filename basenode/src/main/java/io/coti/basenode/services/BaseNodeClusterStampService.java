@@ -134,9 +134,7 @@ public class BaseNodeClusterStampService implements IClusterStampService {
         Hash addressHash = new Hash(lineDetails[ADDRESS_HASH_INDEX_IN_CLUSTERSTAMP_LINE]);
         BigDecimal currencyAmountInAddress = new BigDecimal(lineDetails[AMOUNT_INDEX_IN_CLUSTERSTAMP_LINE]);
         Hash currencyHash = numOfDetailsInLine == DETAILS_IN_CLUSTERSTAMP_LINE_WITH_CURRENCY_HASH && !lineDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE].isEmpty() ? new Hash(lineDetails[CURRENCY_HASH_INDEX_IN_CLUSTERSTAMP_LINE]) : null;
-        if (currencyHash == null) {
-            currencyHash = currencyService.getNativeCurrencyHash();
-        }
+        currencyHash = currencyService.getNativeCurrencyHashIfNull(currencyHash);
 
         balanceService.updateBalanceAndPreBalanceFromClusterStamp(addressHash, currencyHash, currencyAmountInAddress);
         log.trace("The address hash {} for currency hash {} was loaded from the clusterstamp with amount {}", addressHash, currencyHash, currencyAmountInAddress);

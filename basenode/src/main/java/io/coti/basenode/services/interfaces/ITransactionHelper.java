@@ -4,6 +4,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,4 +86,10 @@ public interface ITransactionHelper {
     boolean checkEventHardForkAndAddToEvents(TransactionData transactionData);
 
     EventInputBaseTransactionData getEventInputBaseTransactionData(TransactionData eventTransactionData);
+
+    BigDecimal getNativeAmount(TransactionData transactionData);
+
+    TransactionData createNewTransaction(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Instant createTime, Hash senderHash, SignatureData senderSignature, TransactionType type);
+
+    TransactionData createNewTransaction(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Instant createTime, TransactionType type);
 }

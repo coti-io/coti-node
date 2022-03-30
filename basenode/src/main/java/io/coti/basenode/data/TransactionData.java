@@ -76,11 +76,6 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         this.baseTransactions = baseTransactions;
         this.createTime = createTime;
         this.type = type;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        for (BaseTransactionData baseTransaction : baseTransactions) {
-            totalAmount = totalAmount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
-        }
-        this.amount = totalAmount;
         this.initTransactionData();
     }
 

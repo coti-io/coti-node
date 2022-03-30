@@ -463,4 +463,43 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
                 .filter(EventInputBaseTransactionData.class::isInstance)
                 .findFirst().orElse(null);
     }
+
+    @Override
+    public BigDecimal getNativeAmount(TransactionData transactionData) {
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        List<BaseTransactionData> baseTransactions = transactionData.getBaseTransactions();
+        for (BaseTransactionData baseTransaction : baseTransactions) {
+            if (currencyService.isNativeCurrency(baseTransaction.getCurrencyHash())) {
+                totalAmount = totalAmount.add(baseTransaction.getAmount().signum() > 0 ? baseTransaction.getAmount() : BigDecimal.ZERO);
+            }
+        }
+        return totalAmount;
+    }
+
+    @Override
+    public TransactionData createNewTransaction(List<BaseTransactionData> baseTransactions, Hash transactionHash,
+                                                String transactionDescription,
+                                                List<TransactionTrustScoreData> trustScoreResults, Instant createTime,
+                                                Hash senderHash, SignatureData senderSignature, TransactionType type) {
+        TransactionData transactionData = new TransactionData(
+                baseTransactions,
+                transactionHash,
+                transactionDescription,
+                trustScoreResults,
+                createTime,
+                senderHash,
+                senderSignature,
+                type);
+
+        transactionData.setAmount(getNativeAmount(transactionData));
+        return transactionData;
+    }
+
+    @Override
+    public TransactionData createNewTransaction(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Instant createTime, TransactionType type) {
+        TransactionData transactionData = new TransactionData(baseTransactions, transactionDescription, senderTrustScore, createTime, type);
+
+        transactionData.setAmount(getNativeAmount(transactionData));
+        return transactionData;
+    }
 }

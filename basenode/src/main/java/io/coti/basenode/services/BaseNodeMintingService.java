@@ -37,7 +37,7 @@ public class BaseNodeMintingService implements IMintingService {
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
         try {
             synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
-                if (currencyService.getNativeCurrencyHash().equals(tokenHash)) {
+                if (currencyService.isNativeCurrency(tokenHash)) {
                     log.error("Error in Minting check. Token {} is Native currency", tokenHash);
                     return false;
                 }
@@ -96,7 +96,7 @@ public class BaseNodeMintingService implements IMintingService {
         TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
         Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
 
-        if (currencyService.getNativeCurrencyHash().equals(tokenHash)) {
+        if (currencyService.isNativeCurrency(tokenHash)) {
             log.error("Error in Minting check. Token {} is Native currency", tokenHash);
             return;
         }
