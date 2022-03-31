@@ -1,7 +1,7 @@
 package io.coti.financialserver.http.data;
 
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.TokenGenerationData;
+import io.coti.basenode.data.TokenGenerationServiceData;
 import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 
@@ -18,13 +18,13 @@ public class OriginatorCurrencyResponseData implements IResponseData {
     private String originatorHash;
     private SignatureData originatorSignature;
 
-    public OriginatorCurrencyResponseData(TokenGenerationData tokenGenerationData) {
-        this.name = tokenGenerationData.getOriginatorCurrencyData().getName();
-        this.symbol = tokenGenerationData.getOriginatorCurrencyData().getSymbol();
-        this.description = tokenGenerationData.getOriginatorCurrencyData().getDescription();
-        this.totalSupply = tokenGenerationData.getOriginatorCurrencyData().getTotalSupply();
-        this.scale = tokenGenerationData.getOriginatorCurrencyData().getScale();
-        this.originatorHash = tokenGenerationData.getOriginatorCurrencyData().getSignerHash().toString();
-        this.originatorSignature = tokenGenerationData.getOriginatorCurrencyData().getOriginatorSignature();
+    public OriginatorCurrencyResponseData(TokenGenerationServiceData tokenGenerationServiceData) {
+        this.name = tokenGenerationServiceData.getOriginatorCurrencyData().getName();
+        this.symbol = tokenGenerationServiceData.getOriginatorCurrencyData().getSymbol();
+        this.description = tokenGenerationServiceData.getOriginatorCurrencyData().getDescription();
+        this.totalSupply = tokenGenerationServiceData.getOriginatorCurrencyData().getTotalSupply();
+        this.scale = tokenGenerationServiceData.getOriginatorCurrencyData().getScale();
+        this.originatorHash = tokenGenerationServiceData.getOriginatorCurrencyData().getSignerHash().toString();
+        this.originatorSignature = tokenGenerationServiceData.getOriginatorCurrencyData().getOriginatorSignature();
     }
 }

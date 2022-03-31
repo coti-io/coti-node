@@ -7,15 +7,15 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class TokenServiceFeeResponseData extends OutputBaseTransactionResponseData {
+public class TokenFeeResponseData extends OutputBaseTransactionResponseData {
 
     private String signerHash;
 
-    public TokenServiceFeeResponseData() {
+    public TokenFeeResponseData() {
         super();
     }
 
-    public TokenServiceFeeResponseData(BaseTransactionData baseTransactionData) {
+    public TokenFeeResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
         signerHash = ((TokenFeeBaseTransactionData) baseTransactionData).getSignerHash().toString();
     }

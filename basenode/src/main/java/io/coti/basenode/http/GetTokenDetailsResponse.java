@@ -1,6 +1,6 @@
 package io.coti.basenode.http;
 
-import io.coti.basenode.http.data.TokenGenerationResponseData;
+import io.coti.basenode.http.data.TokenResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -8,6 +8,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class GetTokenDetailsResponse extends BaseResponse {
 
-    private TokenGenerationResponseData token;
+    private TokenResponseData token;
 
 }

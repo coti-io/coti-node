@@ -57,19 +57,19 @@ public class MintingService extends BaseNodeMintingService {
             if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
-            TokenMintingData tokenMintingData = tokenMintingFeeRequest.getTokenMintingData();
-            if (currencyService.getNativeCurrencyHash().equals(tokenMintingData.getMintingCurrencyHash())) {
+            TokenMintingServiceData tokenMintingServiceData = tokenMintingFeeRequest.getTokenMintingServiceData();
+            if (currencyService.getNativeCurrencyHash().equals(tokenMintingServiceData.getMintingCurrencyHash())) {
                 throw new CurrencyValidationException(TOKEN_MINTING_FEE_QUOTE_REQUEST_INVALID_NATIVE_CURRENCY);
             }
 
-            CurrencyData currencyData = currencies.getByHash(tokenMintingData.getMintingCurrencyHash());
+            CurrencyData currencyData = currencies.getByHash(tokenMintingServiceData.getMintingCurrencyHash());
 
             ResponseEntity<IResponse> badRequestResponse = validateTokenMintingFeeRequest(tokenMintingFeeRequest, currencyData);
             if (badRequestResponse != null) {
                 return badRequestResponse;
             }
 
-            return createTokenMintingFee(tokenMintingData, currencyData, tokenMintingFeeRequest.getMintingFeeQuoteData());
+            return createTokenMintingFee(tokenMintingServiceData, currencyData, tokenMintingFeeRequest.getMintingFeeQuoteData());
         } catch (CurrencyValidationException e) {
             String error = String.format(EXCEPTION_MESSAGE, TOKEN_MINTING_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
@@ -83,9 +83,9 @@ public class MintingService extends BaseNodeMintingService {
     }
 
     private ResponseEntity<IResponse> validateTokenMintingFeeRequest(TokenMintingFeeRequest tokenMintingFeeRequest, CurrencyData currencyData) {
-        TokenMintingData tokenMintingData = tokenMintingFeeRequest.getTokenMintingData();
+        TokenMintingServiceData tokenMintingServiceData = tokenMintingFeeRequest.getTokenMintingServiceData();
         MintingFeeQuoteData mintingFeeQuoteData = tokenMintingFeeRequest.getMintingFeeQuoteData();
-        if (!tokenMintingCrypto.verifySignature(tokenMintingData)) {
+        if (!tokenMintingCrypto.verifySignature(tokenMintingServiceData)) {
             throw new CurrencyValidationException(TOKEN_MINTING_REQUEST_INVALID_SIGNATURE);
         }
         if (mintingFeeQuoteData != null && !mintingFeeQuoteCrypto.verifySignature(mintingFeeQuoteData)) {
@@ -94,37 +94,37 @@ public class MintingService extends BaseNodeMintingService {
         if (currencyData == null) {
             throw new CurrencyValidationException(TOKEN_MINTING_REQUEST_INVALID_CURRENCY);
         }
-        if (!currencyData.getOriginatorHash().equals(tokenMintingData.getSignerHash())) {
+        if (!currencyData.getOriginatorHash().equals(tokenMintingServiceData.getSignerHash())) {
             throw new CurrencyValidationException(TOKEN_MINTING_REQUEST_INVALID_ORIGINATOR);
         }
-        if (!isAddressValid(tokenMintingFeeRequest.getTokenMintingData().getReceiverAddress())) {
+        if (!isAddressValid(tokenMintingFeeRequest.getTokenMintingServiceData().getReceiverAddress())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_ADDRESS, STATUS_ERROR));
         }
 
         if (mintingFeeQuoteData != null && (!isStillValid(mintingFeeQuoteData) ||
-                !mintingFeeQuoteData.getMintingAmount().equals(tokenMintingData.getMintingAmount())
-                || !mintingFeeQuoteData.getCurrencyHash().equals(tokenMintingData.getMintingCurrencyHash())
-                || !mintingFeeQuoteData.getMintingFee().equals(tokenMintingData.getFeeAmount()))) {
+                !mintingFeeQuoteData.getMintingAmount().equals(tokenMintingServiceData.getMintingAmount())
+                || !mintingFeeQuoteData.getCurrencyHash().equals(tokenMintingServiceData.getMintingCurrencyHash())
+                || !mintingFeeQuoteData.getMintingFee().equals(tokenMintingServiceData.getFeeAmount()))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_FOR_THE_QUOTE, STATUS_ERROR));
         }
-        BigDecimal mintableAmount = Optional.ofNullable(currencyService.getTokenMintableAmount(tokenMintingData.getMintingCurrencyHash())).orElse(BigDecimal.ZERO);
-        if (mintableAmount.subtract(tokenMintingData.getMintingAmount()).signum() < 0) {
+        BigDecimal mintableAmount = Optional.ofNullable(currencyService.getTokenMintableAmount(tokenMintingServiceData.getMintingCurrencyHash())).orElse(BigDecimal.ZERO);
+        if (mintableAmount.subtract(tokenMintingServiceData.getMintingAmount()).signum() < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_AMOUNT, STATUS_ERROR));
         }
         return null;
     }
 
-    private ResponseEntity<IResponse> createTokenMintingFee(TokenMintingData tokenMintingData, CurrencyData currencyData, MintingFeeQuoteData mintingFeeQuoteData) {
+    private ResponseEntity<IResponse> createTokenMintingFee(TokenMintingServiceData tokenMintingServiceData, CurrencyData currencyData, MintingFeeQuoteData mintingFeeQuoteData) {
         try {
             BigDecimal mintingFee = null;
             if (mintingFeeQuoteData != null) {
                 mintingFee = mintingFeeQuoteData.getMintingFee();
             }
             if (mintingFee == null) {
-                mintingFee = feeService.calculateTokenMintingFee(tokenMintingData.getMintingAmount(), Instant.now(), currencyData);
+                mintingFee = feeService.calculateTokenMintingFee(tokenMintingServiceData.getMintingAmount(), Instant.now(), currencyData);
             }
             TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = new TokenMintingFeeBaseTransactionData(feeService.networkFeeAddress(),
-                    currencyService.getNativeCurrencyHash(), NodeCryptoHelper.getNodeHash(), mintingFee, Instant.now(), tokenMintingData);
+                    currencyService.getNativeCurrencyHash(), NodeCryptoHelper.getNodeHash(), mintingFee, Instant.now(), tokenMintingServiceData);
             setTokenMintingFeeHash(tokenMintingFeeBaseTransactionData);
             signTokenMintingFee(tokenMintingFeeBaseTransactionData);
             TokenMintingFeeResponseData tokenMintingFeeResponseData = new TokenMintingFeeResponseData(tokenMintingFeeBaseTransactionData);

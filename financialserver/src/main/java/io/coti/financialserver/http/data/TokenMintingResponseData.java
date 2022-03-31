@@ -1,7 +1,7 @@
 package io.coti.financialserver.http.data;
 
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.TokenMintingData;
+import io.coti.basenode.data.TokenMintingServiceData;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -19,13 +19,13 @@ public class TokenMintingResponseData implements Serializable {
     private String signerHash;
     private SignatureData signature;
 
-    public TokenMintingResponseData(TokenMintingData tokenMintingData) {
-        this.mintingCurrencyHash = tokenMintingData.getMintingCurrencyHash().toString();
-        this.mintingAmount = tokenMintingData.getMintingAmount();
-        this.receiverAddress = tokenMintingData.getReceiverAddress().toString();
-        this.createTime = tokenMintingData.getCreateTime();
-        this.feeAmount = tokenMintingData.getFeeAmount();
-        this.signerHash = tokenMintingData.getSignerHash().toString();
-        this.signature = tokenMintingData.getSignature();
+    public TokenMintingResponseData(TokenMintingServiceData tokenMintingServiceData) {
+        this.mintingCurrencyHash = tokenMintingServiceData.getMintingCurrencyHash().toString();
+        this.mintingAmount = tokenMintingServiceData.getMintingAmount();
+        this.receiverAddress = tokenMintingServiceData.getReceiverAddress().toString();
+        this.createTime = tokenMintingServiceData.getCreateTime();
+        this.feeAmount = tokenMintingServiceData.getFeeAmount();
+        this.signerHash = tokenMintingServiceData.getSignerHash().toString();
+        this.signature = tokenMintingServiceData.getSignature();
     }
 }

@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class TokenMintingData implements ITokenServiceData, ISignValidatable {
+public class TokenMintingServiceData implements ITokenServiceData, ISignValidatable {
 
     @NotNull
     private Hash mintingCurrencyHash;
@@ -26,7 +26,7 @@ public class TokenMintingData implements ITokenServiceData, ISignValidatable {
     @NotNull
     private @Valid SignatureData signature;
 
-    private TokenMintingData() {
+    private TokenMintingServiceData() {
     }
 
     @Override

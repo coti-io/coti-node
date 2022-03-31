@@ -14,15 +14,15 @@ public class TokenMintingFeeBaseTransactionData extends TokenFeeBaseTransactionD
 
     private static final long serialVersionUID = 7641308128208586733L;
     @NotNull
-    private @Valid TokenMintingData serviceData;
+    private @Valid TokenMintingServiceData serviceData;
 
     private TokenMintingFeeBaseTransactionData() {
         super();
     }
 
-    public TokenMintingFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenMintingData tokenMintingData) {
+    public TokenMintingFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenMintingServiceData tokenMintingServiceData) {
         super(addressHash, currencyHash, signerHash, amount, createTime);
-        this.serviceData = tokenMintingData;
+        this.serviceData = tokenMintingServiceData;
     }
 
 }

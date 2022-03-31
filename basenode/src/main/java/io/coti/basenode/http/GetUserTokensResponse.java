@@ -1,6 +1,6 @@
 package io.coti.basenode.http;
 
-import io.coti.basenode.http.data.TokenGenerationResponseData;
+import io.coti.basenode.http.data.TokenResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -11,7 +11,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 public class GetUserTokensResponse extends BaseResponse {
 
-    private Set<TokenGenerationResponseData> userTokens;
+    private Set<TokenResponseData> userTokens;
 
     public GetUserTokensResponse() {
         userTokens = new HashSet<>();

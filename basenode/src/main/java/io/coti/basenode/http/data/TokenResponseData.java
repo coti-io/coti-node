@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class TokenGenerationResponseData implements IResponseData {
+public class TokenResponseData implements IResponseData {
 
     private String currencyName;
     private String currencySymbol;
@@ -34,7 +34,7 @@ public class TokenGenerationResponseData implements IResponseData {
     private BigDecimal mintedAmount;
     private BigDecimal mintableAmount;
 
-    public TokenGenerationResponseData(CurrencyData token) {
+    public TokenResponseData(CurrencyData token) {
         this.currencyName = token.getName();
         this.currencySymbol = token.getSymbol();
         this.currencyHash = token.getHash().toString();

@@ -29,7 +29,7 @@ public class TokenMintingFeeResponseData implements IResponseData {
         this.addressHash = tokenFeeBaseTransactionData.getAddressHash().toString();
         this.originalAmount = tokenFeeBaseTransactionData.getOriginalAmount();
         this.originalCurrencyHash = tokenFeeBaseTransactionData.getOriginalCurrencyHash() != null ? tokenFeeBaseTransactionData.getOriginalCurrencyHash().toString() : null;
-        this.serviceData = new TokenMintingResponseData((TokenMintingData) tokenFeeBaseTransactionData.getServiceData());
+        this.serviceData = new TokenMintingResponseData((TokenMintingServiceData) tokenFeeBaseTransactionData.getServiceData());
         this.signerHash = tokenFeeBaseTransactionData.getSignerHash().toString();
         this.createTime = tokenFeeBaseTransactionData.getCreateTime();
         this.name = BaseTransactionName.getName(TokenMintingFeeBaseTransactionData.class).name();

@@ -6,15 +6,15 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class TokenGenerationServiceFeeResponseData extends TokenServiceFeeResponseData {
+public class TokenGenerationFeeResponseData extends TokenFeeResponseData {
 
     TokenGenerationServiceResponseData tokenGenerationServiceResponseData;
 
-    public TokenGenerationServiceFeeResponseData() {
+    public TokenGenerationFeeResponseData() {
         super();
     }
 
-    public TokenGenerationServiceFeeResponseData(BaseTransactionData baseTransactionData) {
+    public TokenGenerationFeeResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
         tokenGenerationServiceResponseData = new TokenGenerationServiceResponseData(baseTransactionData);
     }

@@ -12,17 +12,17 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 @Data
-public class TokenGenerationData implements ITokenServiceData {
+public class TokenGenerationServiceData implements ITokenServiceData {
     @NotNull
     private @Valid OriginatorCurrencyData originatorCurrencyData;
     @NotNull
     private @Valid CurrencyTypeData currencyTypeData;
     private BigDecimal feeAmount;
 
-    private TokenGenerationData() {
+    private TokenGenerationServiceData() {
     }
 
-    public TokenGenerationData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData, BigDecimal feeAmount) {
+    public TokenGenerationServiceData(OriginatorCurrencyData originatorCurrencyData, CurrencyTypeData currencyTypeData, BigDecimal feeAmount) {
         this.originatorCurrencyData = originatorCurrencyData;
         this.currencyTypeData = currencyTypeData;
         this.feeAmount = feeAmount;

@@ -14,14 +14,14 @@ public class TokenGenerationFeeBaseTransactionData extends TokenFeeBaseTransacti
 
     private static final long serialVersionUID = -7466306830924153999L;
     @NotNull
-    private @Valid TokenGenerationData serviceData;
+    private @Valid TokenGenerationServiceData serviceData;
 
     private TokenGenerationFeeBaseTransactionData() {
         super();
     }
 
-    public TokenGenerationFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenGenerationData tokenGenerationData) {
+    public TokenGenerationFeeBaseTransactionData(Hash addressHash, Hash currencyHash, Hash signerHash, BigDecimal amount, Instant createTime, TokenGenerationServiceData tokenGenerationServiceData) {
         super(addressHash, currencyHash, signerHash, amount, createTime);
-        this.serviceData = tokenGenerationData;
+        this.serviceData = tokenGenerationServiceData;
     }
 }

@@ -1,6 +1,6 @@
 package io.coti.financialserver.http;
 
-import io.coti.basenode.data.TokenMintingData;
+import io.coti.basenode.data.TokenMintingServiceData;
 import io.coti.basenode.http.Request;
 import io.coti.financialserver.data.MintingFeeQuoteData;
 import lombok.Data;
@@ -14,6 +14,6 @@ import javax.validation.constraints.NotNull;
 public class TokenMintingFeeRequest extends Request {
 
     @NotNull
-    private @Valid TokenMintingData tokenMintingData;
+    private @Valid TokenMintingServiceData tokenMintingServiceData;
     private @Valid MintingFeeQuoteData mintingFeeQuoteData;
 }

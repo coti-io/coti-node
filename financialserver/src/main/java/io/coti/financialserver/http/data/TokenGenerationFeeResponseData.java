@@ -29,7 +29,7 @@ public class TokenGenerationFeeResponseData implements IResponseData {
         this.addressHash = tokenFeeBaseTransactionData.getAddressHash().toString();
         this.originalAmount = tokenFeeBaseTransactionData.getOriginalAmount();
         this.originalCurrencyHash = tokenFeeBaseTransactionData.getOriginalCurrencyHash() != null ? tokenFeeBaseTransactionData.getOriginalCurrencyHash().toString() : null;
-        this.serviceData = new TokenGenerationResponseData((TokenGenerationData) tokenFeeBaseTransactionData.getServiceData());
+        this.serviceData = new TokenGenerationResponseData((TokenGenerationServiceData) tokenFeeBaseTransactionData.getServiceData());
         this.signerHash = tokenFeeBaseTransactionData.getSignerHash().toString();
         this.createTime = tokenFeeBaseTransactionData.getCreateTime();
         this.name = BaseTransactionName.getName(TokenGenerationFeeBaseTransactionData.class).name();

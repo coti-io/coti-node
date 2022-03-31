@@ -2,7 +2,7 @@ package io.coti.basenode.http.data;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.TokenMintingData;
+import io.coti.basenode.data.TokenMintingServiceData;
 import io.coti.basenode.data.TokenMintingFeeBaseTransactionData;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import lombok.Data;
@@ -22,13 +22,13 @@ public class TokenMintingServiceResponseData implements ITransactionResponseData
     private SignatureData signature;
 
     public TokenMintingServiceResponseData(BaseTransactionData baseTransactionData) {
-        TokenMintingData tokenMintingData = ((TokenMintingFeeBaseTransactionData) baseTransactionData).getServiceData();
-        this.setMintingAmount(tokenMintingData.getMintingAmount());
-        this.setMintingCurrencyHash(tokenMintingData.getMintingCurrencyHash().toString());
-        this.setFeeAmount(tokenMintingData.getFeeAmount());
-        this.setReceiverAddress(tokenMintingData.getReceiverAddress().toString());
-        this.setCreateTime(tokenMintingData.getCreateTime());
-        this.setSignerHash(tokenMintingData.getSignerHash().toString());
-        this.setSignature(tokenMintingData.getSignature());
+        TokenMintingServiceData tokenMintingServiceData = ((TokenMintingFeeBaseTransactionData) baseTransactionData).getServiceData();
+        this.setMintingAmount(tokenMintingServiceData.getMintingAmount());
+        this.setMintingCurrencyHash(tokenMintingServiceData.getMintingCurrencyHash().toString());
+        this.setFeeAmount(tokenMintingServiceData.getFeeAmount());
+        this.setReceiverAddress(tokenMintingServiceData.getReceiverAddress().toString());
+        this.setCreateTime(tokenMintingServiceData.getCreateTime());
+        this.setSignerHash(tokenMintingServiceData.getSignerHash().toString());
+        this.setSignature(tokenMintingServiceData.getSignature());
     }
 }
