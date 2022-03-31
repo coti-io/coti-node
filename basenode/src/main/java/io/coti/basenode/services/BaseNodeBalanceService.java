@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.MULTI_CURRENCY_IS_NOT_SUPPORTED;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.MULTI_DAG_IS_NOT_SUPPORTED;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 
 @Slf4j
@@ -100,8 +100,8 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public ResponseEntity<IResponse> getTokenBalances(GetTokenBalancesRequest getTokenBalancesRequest) {
-        if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
-            return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+        if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
         }
         Map<Hash, Map<Hash, AddressBalance>> addressToTokenBalances = new HashMap<>();
         Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();

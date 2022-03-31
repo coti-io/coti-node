@@ -54,8 +54,8 @@ public class MintingService extends BaseNodeMintingService {
 
     public ResponseEntity<IResponse> getTokenMintingFee(TokenMintingFeeRequest tokenMintingFeeRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
-                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             TokenMintingServiceData tokenMintingServiceData = tokenMintingFeeRequest.getTokenMintingServiceData();
             if (currencyService.getNativeCurrencyHash().equals(tokenMintingServiceData.getMintingCurrencyHash())) {
@@ -141,8 +141,8 @@ public class MintingService extends BaseNodeMintingService {
 
     public ResponseEntity<IResponse> getTokenMintingFeeQuote(GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
-                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             if (!getTokenMintingFeeQuoteRequestCrypto.verifySignature(getTokenMintingFeeQuoteRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));

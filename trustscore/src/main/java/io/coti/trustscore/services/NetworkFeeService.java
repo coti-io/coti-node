@@ -135,7 +135,7 @@ public class NetworkFeeService {
 
     private void validateFullNodeFeeData(FullNodeFeeData fullNodeFeeData, boolean feeIncluded) {
         if (!currencyService.isCurrencyHashAllowed(fullNodeFeeData.getCurrencyHash())) {
-            throw new TransactionValidationException(MULTI_CURRENCY_IS_NOT_SUPPORTED);
+            throw new TransactionValidationException(MULTI_DAG_IS_NOT_SUPPORTED);
         }
 
         if (!validateFullNodeFee(fullNodeFeeData, feeIncluded)) {

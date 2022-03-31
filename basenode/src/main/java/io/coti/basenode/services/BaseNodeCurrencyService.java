@@ -120,7 +120,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public boolean isCurrencyHashAllowed(Hash currencyHash) {
-        return baseNodeEventService.eventHappened(Event.MULTI_CURRENCY) ||
+        return baseNodeEventService.eventHappened(Event.MULTI_DAG) ||
                 currencyHash == null;
     }
 
@@ -432,8 +432,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
-                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             if (!getUserTokensRequestCrypto.verifySignature(getUserTokensRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -457,8 +457,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
-                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             if (!getTokenDetailsRequestCrypto.verifySignature(getTokenDetailsRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
@@ -473,8 +473,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenSymbolDetails(GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_CURRENCY)) {
-                return ResponseEntity.badRequest().body(new Response(MULTI_CURRENCY_IS_NOT_SUPPORTED, STATUS_ERROR));
+            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             if (!getTokenSymbolDetailsRequestCrypto.verifySignature(getTokenSymbolDetailsRequest)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));

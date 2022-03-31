@@ -18,13 +18,13 @@ public class BaseNodeEventController {
     @Autowired
     IEventService eventService;
 
-    @GetMapping(path = "/multi-currency/confirmed")
-    public ResponseEntity<IResponse> getConfirmedMultiCurrencyEvent() {
-        return eventService.getConfirmedEventTransactionDataResponse(Event.MULTI_CURRENCY);
+    @GetMapping(path = "/multi-dag/confirmed")
+    public ResponseEntity<IResponse> getConfirmedMultiDagEvent() {
+        return eventService.getConfirmedEventTransactionDataResponse(Event.MULTI_DAG);
     }
 
-    @GetMapping(path = "/multi-currency")
-    public ResponseEntity<IResponse> getMultiCurrencyEventTransactionData() {
-        return eventService.getEventTransactionDataResponse(Event.MULTI_CURRENCY);
+    @GetMapping(path = "/multi-dag")
+    public ResponseEntity<IResponse> getMultiDagEventTransactionData() {
+        return eventService.getEventTransactionDataResponse(Event.MULTI_DAG);
     }
 }

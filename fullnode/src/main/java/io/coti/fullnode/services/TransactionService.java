@@ -205,7 +205,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    private boolean validateMultiCurrency(TransactionData transactionData) {
+    private boolean validateMultiDag(TransactionData transactionData) {
         for (BaseTransactionData transaction : transactionData.getBaseTransactions()) {
             if (!currencyService.isCurrencyHashAllowed(transaction.getCurrencyHash())) {
                 return false;
@@ -303,9 +303,9 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     private void validateTransaction(TransactionData transactionData) {
-        if (!validateMultiCurrency(transactionData)) {
-            log.error("Multi Currency validation failed for transaction {}", transactionData.getHash());
-            throw new TransactionValidationException(MULTI_CURRENCY_IS_NOT_SUPPORTED);
+        if (!validateMultiDag(transactionData)) {
+            log.error("Multi DAG validation failed for transaction {}", transactionData.getHash());
+            throw new TransactionValidationException(MULTI_DAG_IS_NOT_SUPPORTED);
         }
 
         if (!validationService.validateTransactionDataIntegrity(transactionData)) {

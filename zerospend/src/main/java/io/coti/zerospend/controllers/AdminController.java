@@ -25,9 +25,9 @@ public class AdminController {
         return transactionService.setIndexToTransactions(setIndexesRequest);
     }
 
-    @PostMapping(path = "/event/multi-currency")
-    public ResponseEntity<IResponse> eventMultiCurrency() {
-        return transactionCreationService.createEventTransaction("Multi Currencies Support via DAG", Event.MULTI_CURRENCY
+    @PostMapping(path = "/event/multi-dag")
+    public ResponseEntity<IResponse> eventMultiDag() {
+        return transactionCreationService.createEventTransaction("Multi DAG", Event.MULTI_DAG
         );
     }
 
