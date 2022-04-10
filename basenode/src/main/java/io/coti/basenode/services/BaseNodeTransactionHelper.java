@@ -50,7 +50,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     private IMintingService mintingService;
     @Autowired
     private IEventService eventService;
-
+    @Autowired
+    private ITransactionHelper transactionHelper;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private final AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
@@ -95,15 +96,32 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     @Override
     public void updateAddressTransactionHistory(TransactionData transactionData) {
-        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            AddressTransactionsHistory addressHistory = Optional.ofNullable(addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash()))
-                    .orElse(new AddressTransactionsHistory(baseTransactionData.getAddressHash()));
+        transactionData.getBaseTransactions().forEach(baseTransactionData ->
+                updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
+        );
+        updateMintedAddress(transactionData);
+    }
 
-            if (!addressHistory.addTransactionHashToHistory(transactionData.getHash())) {
-                log.debug("Transaction {} is already in history of address {}", transactionData.getHash(), baseTransactionData.getAddressHash());
+    public void updateMintedAddress(TransactionData transactionData) {
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
+        if (tokenMintingFeeBaseTransactionData != null) {
+            Hash receiverAddressHash = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
+            Optional<BaseTransactionData> identicalAddresses = transactionData.getBaseTransactions().stream().filter(t-> t.getAddressHash().equals(receiverAddressHash)).findFirst();
+            if (!identicalAddresses.isPresent()) {
+                updateAddressTransactionsHistories(receiverAddressHash, transactionData);
             }
-            addressTransactionsHistories.put(addressHistory);
-        });
+        }
+    }
+
+    private void updateAddressTransactionsHistories(Hash addressHash, TransactionData transactionData)
+    {
+        AddressTransactionsHistory addressHistory = Optional.ofNullable(addressTransactionsHistories.getByHash(addressHash))
+                .orElse(new AddressTransactionsHistory(addressHash));
+
+        if (!addressHistory.addTransactionHashToHistory(transactionData.getHash())) {
+            log.debug("Transaction {} is already in history of address {}", transactionData.getHash(), addressHash);
+        }
+        addressTransactionsHistories.put(addressHistory);
     }
 
     public void updateAddressTransactionHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap, TransactionData transactionData) {

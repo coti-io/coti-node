@@ -101,6 +101,13 @@ public class BaseNodeMintingService implements IMintingService {
             return;
         }
         currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
+        updateMintedAddress(tokenMintingFeeBaseTransactionServiceData);
+    }
+
+    private void updateMintedAddress(TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData) {
+        Hash receiverAddressHash = tokenMintingFeeBaseTransactionServiceData.getReceiverAddress();
+        Hash currencyHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
+        balanceService.continueHandleBalanceChanges(receiverAddressHash, currencyHash);
     }
 
     @Override

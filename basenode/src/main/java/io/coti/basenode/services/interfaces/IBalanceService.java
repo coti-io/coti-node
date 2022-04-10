@@ -16,7 +16,7 @@ public interface IBalanceService {
 
     void init();
 
-    boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactionDatas);
+    boolean checkBalancesAndAddToPreBalance(List<BaseTransactionData> baseTransactions);
 
     ResponseEntity<GetBalancesResponse> getBalances(GetBalancesRequest getBalancesRequest);
 
