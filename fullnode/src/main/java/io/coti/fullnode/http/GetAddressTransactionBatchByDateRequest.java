@@ -20,4 +20,5 @@ public class GetAddressTransactionBatchByDateRequest implements IRequest {
     private @Valid LocalDate endDate;
     private @Valid @Positive Integer limit;
     private @Valid TimeOrder order;
+    private boolean includeRuntimeTrustScore;
 }

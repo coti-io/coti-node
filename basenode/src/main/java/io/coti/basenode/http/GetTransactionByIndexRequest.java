@@ -15,5 +15,6 @@ public class GetTransactionByIndexRequest {
     @NotNull
     Long endingIndex;
     private boolean extended;
+    private boolean includeRuntimeTrustScore;
 
 }

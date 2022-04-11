@@ -22,7 +22,7 @@ public class TransactionBatchController {
 
     @PostMapping()
     public void getTransactionBatchByStartAndEnd(@RequestBody @Valid GetTransactionByIndexRequest transactionByIndexRequest, HttpServletResponse response) {
-        transactionService.getTransactionBatch(transactionByIndexRequest.getStartingIndex(), transactionByIndexRequest.getEndingIndex(), response, transactionByIndexRequest.isExtended());
+        transactionService.getTransactionBatch(transactionByIndexRequest.getStartingIndex(), transactionByIndexRequest.getEndingIndex(), response, transactionByIndexRequest.isExtended(), transactionByIndexRequest.isIncludeRuntimeTrustScore());
     }
 
     @GetMapping()

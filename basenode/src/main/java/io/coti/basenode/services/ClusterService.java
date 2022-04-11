@@ -244,4 +244,8 @@ public class ClusterService implements IClusterService {
         return SerializationUtils.clone(sourceSetsByTrustScore);
     }
 
+    @Override
+    public double getRuntimeTrustChainTrustScore(Hash transactionHash) {
+        return Optional.ofNullable(trustChainConfirmationCluster.get(transactionHash)).map(TransactionData::getTrustChainTrustScore).orElse((double) 0);
+    }
 }

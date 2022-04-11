@@ -13,5 +13,6 @@ public class GetTransactionsRequest {
     @NotEmpty
     private List<@Valid Hash> transactionHashes;
     private boolean extended;
+    private boolean includeRuntimeTrustScore;
 
 }

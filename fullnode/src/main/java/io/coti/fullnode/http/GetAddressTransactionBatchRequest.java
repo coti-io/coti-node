@@ -15,4 +15,5 @@ public class GetAddressTransactionBatchRequest implements IRequest {
     private List<@Valid Hash> addresses;
     @Valid
     private boolean extended;
+    private boolean includeRuntimeTrustScore;
 }
