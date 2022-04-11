@@ -355,12 +355,13 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             List<Hash> transactionHashes = getTransactionsRequest.getTransactionHashes();
             boolean isExtended = getTransactionsRequest.isExtended();
+            boolean includeRuntimeTrustScore = getTransactionsRequest.isIncludeRuntimeTrustScore();
             PrintWriter output = response.getWriter();
             chunkService.startOfChunk(output);
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
 
             transactionHashes.forEach(transactionHash ->
-                    sendTransactionResponse(transactionHash, firstTransactionSent, output, isExtended)
+                    sendTransactionResponse(transactionHash, firstTransactionSent, output, isExtended, includeRuntimeTrustScore)
             );
 
             chunkService.endOfChunk(output);
@@ -404,6 +405,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             List<Hash> addressHashList = getAddressTransactionBatchRequest.getAddresses();
             boolean extended = getAddressTransactionBatchRequest.isExtended();
+            boolean isIncludeRuntimeTrustScore = getAddressTransactionBatchRequest.isIncludeRuntimeTrustScore();
             PrintWriter output = response.getWriter();
             chunkService.startOfChunk(output);
 
@@ -412,7 +414,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
                 if (addressTransactionsHistory != null) {
                     addressTransactionsHistory.getTransactionsHistory().forEach(transactionHash ->
-                            sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced, extended)
+                            sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced, extended, isIncludeRuntimeTrustScore)
                     );
                 }
             });
@@ -448,6 +450,7 @@ public class TransactionService extends BaseNodeTransactionService {
         Instant endTime = getAddressTransactionBatchByTimestampRequest.getEndTime();
         Integer limit = getAddressTransactionBatchByTimestampRequest.getLimit();
         TimeOrder order = getAddressTransactionBatchByTimestampRequest.getOrder();
+        boolean isIncludeRuntimeTrustScore = getAddressTransactionBatchByTimestampRequest.isIncludeRuntimeTrustScore();
 
         AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
         addressHashSet.forEach(addressHash -> {
@@ -463,7 +466,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 }
                 if (!from.isAfter(to)) {
                     NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap = getTransactionHistoryByAttachmentSubMap(transactionsHistoryByAttachment, from, to, order);
-                    sendAddressTransactionsByAttachmentResponse(addressHash, transactionsHistoryByAttachmentSubMap, limit, reduced, firstTransactionSent, output);
+                    sendAddressTransactionsByAttachmentResponse(addressHash, transactionsHistoryByAttachmentSubMap, limit, reduced, firstTransactionSent, output, isIncludeRuntimeTrustScore);
                 }
             }
         });
@@ -477,12 +480,12 @@ public class TransactionService extends BaseNodeTransactionService {
         return transactionsHistoryByAttachmentSubMap;
     }
 
-    private void sendAddressTransactionsByAttachmentResponse(Hash addressHash, NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap, Integer limit, boolean reduced, AtomicBoolean firstTransactionSent, PrintWriter output) {
+    private void sendAddressTransactionsByAttachmentResponse(Hash addressHash, NavigableMap<Instant, Set<Hash>> transactionsHistoryByAttachmentSubMap, Integer limit, boolean reduced, AtomicBoolean firstTransactionSent, PrintWriter output, boolean includeRuntimeTrustScore) {
         int sentTxNumber = 0;
         for (Set<Hash> transactionHashSet : transactionsHistoryByAttachmentSubMap.values()) {
             boolean maxLimitReached = false;
             for (Hash transactionHash : transactionHashSet) {
-                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced, false);
+                sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced, false, includeRuntimeTrustScore);
                 sentTxNumber++;
                 if (limit != null && sentTxNumber == limit) {
                     maxLimitReached = true;
@@ -502,6 +505,7 @@ public class TransactionService extends BaseNodeTransactionService {
             LocalDate endDate = getAddressTransactionBatchByDateRequest.getEndDate();
             Integer limit = getAddressTransactionBatchByDateRequest.getLimit();
             TimeOrder order = getAddressTransactionBatchByDateRequest.getOrder();
+            boolean isIncludeRuntimeTrustScore = getAddressTransactionBatchByDateRequest.isIncludeRuntimeTrustScore();
 
             Instant startTime = null;
             Instant endTime = null;
@@ -512,7 +516,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 endTime = endDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
             }
 
-            getAddressTransactionBatchByTimestamp(new GetAddressTransactionBatchByTimestampRequest(addressHashSet, startTime, endTime, limit, order), response, reduced);
+            getAddressTransactionBatchByTimestamp(new GetAddressTransactionBatchByTimestampRequest(addressHashSet, startTime, endTime, limit, order, isIncludeRuntimeTrustScore), response, reduced);
         } catch (Exception e) {
             log.error("Error sending date range address transaction batch by date");
             log.error(e.getMessage());

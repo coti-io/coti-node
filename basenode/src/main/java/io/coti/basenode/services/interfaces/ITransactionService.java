@@ -17,7 +17,7 @@ public interface ITransactionService {
 
     void init();
 
-    void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response, boolean isExtended);
+    void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response, boolean isExtended, boolean isIncludeRuntimeTrustScore);
 
     void getTransactionBatch(long startingIndex, HttpServletResponse response);
 
