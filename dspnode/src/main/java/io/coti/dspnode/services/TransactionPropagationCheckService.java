@@ -4,6 +4,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeTransactionPropagationCheckService;
+import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.dspnode.data.UnconfirmedReceivedTransactionHashDspNodeData;
 import io.coti.dspnode.model.UnconfirmedTransactionDspVotes;
@@ -34,6 +35,8 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     private INetworkService networkService;
     @Autowired
     private UnconfirmedTransactionDspVotes unconfirmedTransactionDspVotes;
+    @Autowired
+    private ICommunicationService communicationService;
 
     @Override
     public void init() {
@@ -166,7 +169,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                 if (transactionData == null) {
                     unconfirmedReceivedTransactionHashDspNodeData.setRetries(0);
                 } else {
-                    sendUnconfirmedReceivedTransactionsDSP(transactionData, unconfirmedReceivedTransactionHashDspNodeData.isDspVoteOnly());
+                    sendUnconfirmedReceivedTransactionsDSP(transactionData, unconfirmedReceivedTransactionHashDspNodeData);
                     unconfirmedReceivedTransactionHashDspNodeData.setRetries(unconfirmedReceivedTransactionHashDspNodeData.getRetries() - 1);
                 }
             }
@@ -175,8 +178,8 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
-    private void sendUnconfirmedReceivedTransactionsDSP(TransactionData transactionData, boolean dspVoteOnly) {
-        if (!dspVoteOnly) {
+    private void sendUnconfirmedReceivedTransactionsDSP(TransactionData transactionData, UnconfirmedReceivedTransactionHashDspNodeData dspNodeData) {
+        if (!dspNodeData.isDspVoteOnly()) {
             log.info("Sending unconfirmed transaction {} to ZeroSpendServer", transactionData.getHash());
             propagationPublisher.propagate(transactionData, Arrays.asList(
                     NodeType.FullNode,
@@ -191,7 +194,16 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         if (transactionDspVote != null) {
             log.info("Sending dsp vote for transaction {} to ZeroSpendServer", transactionData.getHash());
             String zeroSpendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
+            handleSenderReconnect(zeroSpendReceivingAddress, dspNodeData);
             sender.send(transactionDspVote, zeroSpendReceivingAddress);
         }
+    }
+
+    private void handleSenderReconnect(String zeroSpendReceivingAddress, UnconfirmedReceivedTransactionHashDspNodeData dspNodeData) {
+        if (dspNodeData.getRetries() > 3) {
+            return;
+        }
+        communicationService.removeSender(zeroSpendReceivingAddress, NodeType.ZeroSpendServer);
+        communicationService.addSender(zeroSpendReceivingAddress,NodeType.ZeroSpendServer);
     }
 }

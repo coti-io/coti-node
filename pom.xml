@@ -55,6 +55,14 @@
                 <enabled>false</enabled> <!-- or set to true if desired, default is false -->
             </snapshots>
         </repository>
+        <repository>
+            <id>ossrh</id>
+            <name>oss-sonatype</name>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
     </repositories>
 
     <properties>

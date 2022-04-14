@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.ZeroMQContext;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
@@ -29,6 +30,7 @@ public class BaseNodeShutDownService implements IShutDownService {
     protected IDatabaseConnector databaseConnector;
 
     public void shutdown() {
+        ZeroMQContext.terminate();
         shutDownServices();
     }
 

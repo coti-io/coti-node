@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.ZeroMQUtils;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.zeromq.SocketType;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
@@ -37,6 +39,7 @@ public class BaseNodeMetricsService implements IMetricsService {
     private String metricTransactionsTemplate;
     private String metricBackupsTemplate;
     private String metricDatabaseTemplate;
+    private String metricDisconnectTemplate;
     private Thread sampleThread;
     private final AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
     @Autowired
@@ -89,6 +92,7 @@ public class BaseNodeMetricsService implements IMetricsService {
         metricTransactionsTemplate = metricTemplate.replace(COMPONENT_TEMPLATE, "transactions");
         metricBackupsTemplate = metricTemplateSubComponent.replace(COMPONENT_TEMPLATE, "backups");
         metricDatabaseTemplate = metricTemplate.replace(COMPONENT_TEMPLATE, "database");
+        metricDisconnectTemplate = metricTemplate.replace(COMPONENT_TEMPLATE, "0mq");
 
         sampleThread = new Thread(this::getMetricsSample, "MetricsSample");
         sampleThread.start();
@@ -127,6 +131,11 @@ public class BaseNodeMetricsService implements IMetricsService {
 
     private void addDatabase(String databaseMetric, long value) {
         metrics.add(metricDatabaseTemplate.replace(METRIC_TEMPLATE, databaseMetric)
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
+    }
+
+    private void addDisconnect(String disconnectMetric, long value) {
+        metrics.add(metricDisconnectTemplate.replace(METRIC_TEMPLATE, disconnectMetric)
                 .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
     }
 
@@ -169,6 +178,8 @@ public class BaseNodeMetricsService implements IMetricsService {
                     addTransaction("TotalConfirmed", confirmationService.getTotalConfirmed());
                     addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
                 }
+                addDisconnect("ReceiverDisconnects", ZeroMQUtils.getSocketDisconnects(SocketType.ROUTER));
+                addDisconnect("PublisherDisconnects", ZeroMQUtils.getSocketDisconnects(SocketType.PUB));
                 addTransaction("WaitingDspConsensusResultsConfirmed", confirmationService.getWaitingDspConsensusResultsMapSize());
                 addTransaction("WaitingMissingTransactionIndexes", confirmationService.getWaitingMissingTransactionIndexesSize());
                 addTransaction("Sources", clusterService.getTotalSources());

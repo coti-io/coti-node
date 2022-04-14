@@ -10,8 +10,6 @@ import java.util.Map;
 
 public interface IPropagationSubscriber {
 
-    void startListening();
-
     void init();
 
     void setSubscriberNodeType(NodeType subscriberNodeType);
