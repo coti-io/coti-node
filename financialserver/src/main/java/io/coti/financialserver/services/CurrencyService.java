@@ -74,7 +74,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         }
         List<GetCurrencyResponseData> tokenDetails = new ArrayList<>();
         getCurrenciesRequest.getTokenHashes().forEach(tokenHash -> {
-            if (! isNativeCurrency(tokenHash)) {
+            if (!isNativeCurrency(tokenHash)) {
                 CurrencyData tokenData = currencies.getByHash(tokenHash);
                 if (tokenData != null) {
                     tokenDetails.add(new GetCurrencyResponseData(tokenData));

@@ -26,6 +26,7 @@ public class WebSocketSender {
     private IWebSocketMessageService messagingSender;
     @Autowired
     private ITransactionHelper transactionHelper;
+
     public void notifyBalanceChange(Hash addressHash, Hash currencyHash, BigDecimal balance, BigDecimal preBalance) {
         log.trace("Address {} with currency {} , balance {} and pre balance {} is about to be sent to the subscribed user", addressHash, currencyHash, balance, preBalance);
         messagingSender.convertAndSend("/topic/" + addressHash.toString(),
@@ -47,7 +48,7 @@ public class WebSocketSender {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeBaseTransactionData != null) {
             Hash receiverAddressHash = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
-            Optional<BaseTransactionData> identicalAddresses = transactionData.getBaseTransactions().stream().filter(t-> t.getAddressHash().equals(receiverAddressHash)).findFirst();
+            Optional<BaseTransactionData> identicalAddresses = transactionData.getBaseTransactions().stream().filter(t -> t.getAddressHash().equals(receiverAddressHash)).findFirst();
             if (!identicalAddresses.isPresent()) {
                 messagingSender.convertAndSend("/topic/addressTransactions/" + receiverAddressHash.toString(), notifyTransactionChange);
             }

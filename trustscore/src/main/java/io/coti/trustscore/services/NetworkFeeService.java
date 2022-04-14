@@ -77,7 +77,7 @@ public class NetworkFeeService {
             }
 
             BigDecimal fee;
-            if (currencyService.isNativeCurrency( fullNodeFeeData.getOriginalCurrencyHash())) {
+            if (currencyService.isNativeCurrency(fullNodeFeeData.getOriginalCurrencyHash())) {
                 TrustScoreData trustScoreData = trustScores.getByHash(networkFeeRequest.getUserHash());
                 if (trustScoreData == null) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(TRUST_SCORE_NOT_EXIST, networkFeeRequest.getUserHash()), STATUS_ERROR));

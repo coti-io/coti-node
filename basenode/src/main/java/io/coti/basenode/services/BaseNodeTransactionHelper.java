@@ -106,15 +106,14 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeBaseTransactionData != null) {
             Hash receiverAddressHash = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
-            Optional<BaseTransactionData> identicalAddresses = transactionData.getBaseTransactions().stream().filter(t-> t.getAddressHash().equals(receiverAddressHash)).findFirst();
+            Optional<BaseTransactionData> identicalAddresses = transactionData.getBaseTransactions().stream().filter(t -> t.getAddressHash().equals(receiverAddressHash)).findFirst();
             if (!identicalAddresses.isPresent()) {
                 updateAddressTransactionsHistories(receiverAddressHash, transactionData);
             }
         }
     }
 
-    private void updateAddressTransactionsHistories(Hash addressHash, TransactionData transactionData)
-    {
+    private void updateAddressTransactionsHistories(Hash addressHash, TransactionData transactionData) {
         AddressTransactionsHistory addressHistory = Optional.ofNullable(addressTransactionsHistories.getByHash(addressHash))
                 .orElse(new AddressTransactionsHistory(addressHash));
 

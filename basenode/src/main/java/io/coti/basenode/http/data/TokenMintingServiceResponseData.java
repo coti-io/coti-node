@@ -2,8 +2,8 @@ package io.coti.basenode.http.data;
 
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.data.TokenMintingServiceData;
 import io.coti.basenode.data.TokenMintingFeeBaseTransactionData;
+import io.coti.basenode.data.TokenMintingServiceData;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import lombok.Data;
 
