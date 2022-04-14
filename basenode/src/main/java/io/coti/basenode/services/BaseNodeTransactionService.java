@@ -442,13 +442,8 @@ public class BaseNodeTransactionService implements ITransactionService {
             output, Hash addressHash, boolean reduced, boolean extended, boolean includeRuntimeTrustScore) {
         try {
             TransactionData transactionData = transactions.getByHash(transactionHash);
-            if (includeRuntimeTrustScore) {
-                double runtimeTrustChainTrustScore = clusterService.getRuntimeTrustChainTrustScore(transactionHash);
-                if (runtimeTrustChainTrustScore > 0) {
-                    transactionData.setTrustChainTrustScore(runtimeTrustChainTrustScore);
-                }
-            }
             if (transactionData != null) {
+                setRunTimeTrustChainTrustScore(transactionData, includeRuntimeTrustScore);
                 ITransactionResponseData transactionResponseData;
                 if (reduced) {
                     transactionResponseData = new ReducedTransactionResponseData(transactionData, addressHash);
@@ -463,11 +458,20 @@ public class BaseNodeTransactionService implements ITransactionService {
                 chunkService.sendChunk(new CustomGson().getInstance().toJson(transactionResponseData), output);
             }
         } catch (ChunkException e) {
-            log.error("Error at transaction response data for {}", transactionHash.toString());
+            log.error("Error at transaction response data for {}", transactionHash);
             throw e;
         } catch (Exception e) {
-            log.error("Error at transaction response data for {}", transactionHash.toString());
+            log.error("Error at transaction response data for {}", transactionHash);
             log.error(e.getMessage());
+        }
+    }
+
+    private void setRunTimeTrustChainTrustScore(TransactionData transactionData, boolean includeRuntimeTrustScore) {
+        if (!transactionData.isTrustChainConsensus() && includeRuntimeTrustScore) {
+            double runtimeTrustChainTrustScore = clusterService.getRuntimeTrustChainTrustScore(transactionData.getHash());
+            if (runtimeTrustChainTrustScore > 0) {
+                transactionData.setTrustChainTrustScore(runtimeTrustChainTrustScore);
+            }
         }
     }
 
