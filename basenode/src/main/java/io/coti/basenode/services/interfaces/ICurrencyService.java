@@ -7,6 +7,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTokenDetailsRequest;
 import io.coti.basenode.http.GetTokenSymbolDetailsRequest;
 import io.coti.basenode.http.GetUserTokensRequest;
+import io.coti.basenode.http.data.TokenResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -53,4 +54,6 @@ public interface ICurrencyService {
     boolean isNativeCurrency(Hash currencyHash);
 
     Hash getNativeCurrencyHashIfNull(Hash currencyHash);
+
+    TokenResponseData fillTokenGenerationResponseData(Hash currencyHash);
 }

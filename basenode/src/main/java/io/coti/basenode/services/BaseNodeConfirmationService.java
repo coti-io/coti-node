@@ -180,6 +180,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
         if (transactionData.getType().equals(TransactionType.TokenMinting)) {
             mintingService.doTokenMinting(transactionData);
+            continueHandleTokenChanges(transactionData);
         }
 
         continueHandleAddressHistoryChanges(transactionData);
@@ -348,5 +349,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     @Override
     public AtomicBoolean getInitialConfirmationFinished() {
         return initialConfirmationFinished;
+    }
+
+    protected void continueHandleTokenChanges(TransactionData transactionData){
+        // implemented by the sub classes
     }
 }

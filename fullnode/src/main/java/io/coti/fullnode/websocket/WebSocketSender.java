@@ -4,13 +4,16 @@ import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TokenMintingFeeBaseTransactionData;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.http.data.TokenResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
+import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IWebSocketMessageService;
 import io.coti.fullnode.websocket.data.GeneratedAddressMessage;
 import io.coti.fullnode.websocket.data.NotifyTransactionChange;
 import io.coti.fullnode.websocket.data.TotalTransactionsMessage;
 import io.coti.fullnode.websocket.data.UpdatedBalanceMessage;
+import io.coti.fullnode.websocket.data.TokenChangeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,6 +29,8 @@ public class WebSocketSender {
     private IWebSocketMessageService messagingSender;
     @Autowired
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private ICurrencyService currencyService;
 
     public void notifyBalanceChange(Hash addressHash, Hash currencyHash, BigDecimal balance, BigDecimal preBalance) {
         log.trace("Address {} with currency {} , balance {} and pre balance {} is about to be sent to the subscribed user", addressHash, currencyHash, balance, preBalance);
@@ -42,6 +47,13 @@ public class WebSocketSender {
         updateMintedAddresses(transactionData, notifyTransactionChange);
         messagingSender.convertAndSend("/topic/transactions", notifyTransactionChange);
         messagingSender.convertAndSend("/topic/transaction/" + transactionData.getHash().toString(), notifyTransactionChange);
+    }
+
+    public void notifyTokenChange(Hash currencyHash) {
+        log.debug("token {} is about to be sent to the subscribed user", currencyHash.toString());
+        TokenResponseData tokenResponseData = currencyService.fillTokenGenerationResponseData(currencyHash);
+        TokenChangeMessage tokenChangeMessage = new TokenChangeMessage(currencyHash, tokenResponseData);
+        messagingSender.convertAndSend("/topic/token/" + currencyHash.toHexString(), tokenChangeMessage);
     }
 
     public void updateMintedAddresses(TransactionData transactionData, NotifyTransactionChange notifyTransactionChange) {

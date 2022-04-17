@@ -499,7 +499,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         return ResponseEntity.ok(getTokenDetailsResponse);
     }
 
-    private TokenResponseData fillTokenGenerationResponseData(Hash currencyHash) {
+    public TokenResponseData fillTokenGenerationResponseData(Hash currencyHash) {
         CurrencyData currencyData = currencies.getByHash(currencyHash);
         if (currencyData == null) {
             throw new CurrencyException(String.format("Unidentified currency hash: %s", currencyHash));
