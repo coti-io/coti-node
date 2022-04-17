@@ -5,6 +5,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.OriginatorCurrencyData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTokenDetailsRequest;
+import io.coti.basenode.http.GetTokenHistoryRequest;
 import io.coti.basenode.http.GetTokenSymbolDetailsRequest;
 import io.coti.basenode.http.GetUserTokensRequest;
 import io.coti.basenode.http.data.TokenResponseData;
@@ -56,4 +57,6 @@ public interface ICurrencyService {
     Hash getNativeCurrencyHashIfNull(Hash currencyHash);
 
     TokenResponseData fillTokenGenerationResponseData(Hash currencyHash);
+
+    ResponseEntity<IResponse> getTokenHistory(GetTokenHistoryRequest getTokenHistoryRequest);
 }

@@ -59,6 +59,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private GetTokenDetailsRequestCrypto getTokenDetailsRequestCrypto;
     @Autowired
+    private GetTokenHistoryRequestCrypto getTokenHistoryRequestCrypto;
+    @Autowired
     private GetTokenSymbolDetailsRequestCrypto getTokenSymbolDetailsRequestCrypto;
     @Autowired
     protected IBalanceService balanceService;
@@ -75,11 +77,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private Map<Hash, BigDecimal> currencyHashToMintableAmountMap;
     private Map<Hash, Set<TransactionData>> postponedTokenMintingTransactionsMap;
     private Map<Hash, Boolean> mintingTransactionToConfirmationMap;
+    private Map<Hash, Set<TransactionData>> tokenTransactionsMap;
 
     public void init() {
         currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
         postponedTokenMintingTransactionsMap = new ConcurrentHashMap<>();
         mintingTransactionToConfirmationMap = new ConcurrentHashMap<>();
+        tokenTransactionsMap = new ConcurrentHashMap<>();
         try {
             setNativeCurrencyHashFromSymbol();
             log.info("{} is up", this.getClass().getSimpleName());
@@ -253,6 +257,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
             if (mintableAmount == null) {
                 putToMintableAmountMap(tokenHash, totalSupply);
+                updateTokenHistory(tokenHash, transactionData);
                 processPostponedMintingTransactions(tokenHash);
             } else {
                 throw new CurrencyException(String.format("Attempting to generate existing token %s", tokenHash));
@@ -298,6 +303,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     balanceService.updatePreBalance(receiverAddress, tokenHash, mintingRequestedAmount);
                 }
                 mintingTransactionToConfirmationMap.put(transactionData.getHash(), confirmed);
+                updateTokenHistory(tokenHash, transactionData);
             } else {
                 postponedTokenMintingTransactionsMap.computeIfPresent(tokenHash, (hash, transactionSet) -> {
                     transactionSet.add(transactionData);
@@ -408,6 +414,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 currencies.put(currencyData);
                 putToMintableAmountMap(currencyHash, originatorCurrencyData.getTotalSupply());
                 processPostponedMintingTransactions(currencyHash);
+                updateTokenHistory(currencyHash, transactionData);
                 try {
                     synchronized (originatorHashLockData.addLockToLockMap(originatorHash)) {
                         addToUserCurrencyIndexes(originatorHash, currencyHash);
@@ -492,6 +499,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
+    private ResponseEntity<IResponse> getTokenHistoryResponseDetails(Hash currencyHash) {
+        GetTokenHistoryResponse getTokenHistoryResponse = new GetTokenHistoryResponse();
+        getTokenHistoryResponse.setTransactions(tokenTransactionsMap.get(currencyHash));
+        return ResponseEntity.ok(getTokenHistoryResponse);
+    }
+
     private ResponseEntity<IResponse> getTokenDetails(Hash currencyHash) {
         GetTokenDetailsResponse getTokenDetailsResponse = new GetTokenDetailsResponse();
         TokenResponseData tokenResponseData = fillTokenGenerationResponseData(currencyHash);
@@ -518,7 +531,36 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         return tokenResponseData;
     }
 
+    @Override
+    public ResponseEntity<IResponse> getTokenHistory(GetTokenHistoryRequest getTokenHistoryRequest) {
+        try {
+            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+                return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
+            }
+            if (!getTokenHistoryRequestCrypto.verifySignature(getTokenHistoryRequest)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
+            }
+            Hash currencyHash = getTokenHistoryRequest.getCurrencyHash();
+            return getTokenHistoryResponseDetails(currencyHash);
+        } catch (Exception e) {
+            log.error(ERROR_AT_GETTING_USER_TOKENS + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
+        }
+    }
+
     public Hash getNativeCurrencyHashIfNull(Hash currencyHash) {
         return Optional.ofNullable(currencyHash).orElse(getNativeCurrencyHash());
     }
+
+    private void updateTokenHistory(Hash currencyHash, TransactionData transactionData)
+    {
+
+        tokenTransactionsMap.computeIfPresent(currencyHash, (hash, transactionSet) -> {
+            transactionSet.add(transactionData);
+            return transactionSet;
+        });
+        tokenTransactionsMap.putIfAbsent(currencyHash, new HashSet<>(Collections.singletonList(transactionData)));
+
+    }
+
 }
