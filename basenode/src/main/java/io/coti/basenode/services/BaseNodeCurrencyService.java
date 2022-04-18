@@ -6,9 +6,11 @@ import io.coti.basenode.exceptions.CurrencyException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.TokenResponseData;
+import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.CurrencyNameIndexes;
+import io.coti.basenode.model.Transactions;
 import io.coti.basenode.model.UserCurrencyIndexes;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -70,6 +72,8 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     protected BaseNodeEventService baseNodeEventService;
     @Autowired
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private Transactions transactions;
     private final LockData currencyLockData = new LockData();
     private final LockData currencyNameLockData = new LockData();
     private final LockData originatorHashLockData = new LockData();
@@ -77,13 +81,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private Map<Hash, BigDecimal> currencyHashToMintableAmountMap;
     private Map<Hash, Set<TransactionData>> postponedTokenMintingTransactionsMap;
     private Map<Hash, Boolean> mintingTransactionToConfirmationMap;
-    private Map<Hash, Set<TransactionData>> tokenTransactionsMap;
+    private Map<Hash, Set<Hash>> tokenTransactionHashesMap;
 
     public void init() {
         currencyHashToMintableAmountMap = new ConcurrentHashMap<>();
         postponedTokenMintingTransactionsMap = new ConcurrentHashMap<>();
         mintingTransactionToConfirmationMap = new ConcurrentHashMap<>();
-        tokenTransactionsMap = new ConcurrentHashMap<>();
+        tokenTransactionHashesMap = new ConcurrentHashMap<>();
         try {
             setNativeCurrencyHashFromSymbol();
             log.info("{} is up", this.getClass().getSimpleName());
@@ -499,9 +503,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
-    private ResponseEntity<IResponse> getTokenHistoryResponseDetails(Hash currencyHash) {
-        GetTokenHistoryResponse getTokenHistoryResponse = new GetTokenHistoryResponse();
-        getTokenHistoryResponse.setTransactions(tokenTransactionsMap.get(currencyHash));
+    private ResponseEntity<IResponse> getTokenHistory(Hash currencyHash) {
+        Set<TransactionResponseData> transactionSet = new HashSet<>();
+        tokenTransactionHashesMap.get(currencyHash).forEach(transactionHash -> {
+            TransactionData transactionData = transactions.getByHash(transactionHash);
+            transactionSet.add(new TransactionResponseData(transactionData));
+        });
+        GetTokenHistoryResponse getTokenHistoryResponse = new GetTokenHistoryResponse(transactionSet);
         return ResponseEntity.ok(getTokenHistoryResponse);
     }
 
@@ -541,7 +549,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Hash currencyHash = getTokenHistoryRequest.getCurrencyHash();
-            return getTokenHistoryResponseDetails(currencyHash);
+            return getTokenHistory(currencyHash);
         } catch (Exception e) {
             log.error(ERROR_AT_GETTING_USER_TOKENS + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(e.getMessage(), STATUS_ERROR));
@@ -552,14 +560,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         return Optional.ofNullable(currencyHash).orElse(getNativeCurrencyHash());
     }
 
-    private void updateTokenHistory(Hash currencyHash, TransactionData transactionData)
-    {
+    private void updateTokenHistory(Hash currencyHash, TransactionData transactionData) {
 
-        tokenTransactionsMap.computeIfPresent(currencyHash, (hash, transactionSet) -> {
-            transactionSet.add(transactionData);
+        tokenTransactionHashesMap.computeIfPresent(currencyHash, (hash, transactionSet) -> {
+            transactionSet.add(transactionData.getHash());
             return transactionSet;
         });
-        tokenTransactionsMap.putIfAbsent(currencyHash, new HashSet<>(Collections.singletonList(transactionData)));
+        tokenTransactionHashesMap.putIfAbsent(currencyHash, new HashSet<>(Collections.singletonList(transactionData.getHash())));
 
     }
 
