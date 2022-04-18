@@ -4,6 +4,7 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.NodeFeeType;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -66,6 +67,7 @@ public class InitializationService extends BaseNodeInitializationService {
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
 
+            nodeFeeTypeList.addAll(Arrays.asList(NodeFeeType.TOKEN_MINTING_FEE, NodeFeeType.TOKEN_GENERATION_FEE));
             super.initServices();
 
             distributionService.distributeToInitialFunds();

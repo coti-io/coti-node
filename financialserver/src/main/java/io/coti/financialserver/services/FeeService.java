@@ -2,13 +2,14 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.CurrencyData;
+import io.coti.basenode.data.NodeFeeType;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TokenGenerationFeeBaseTransactionData;
 import io.coti.basenode.data.TokenGenerationServiceData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ICurrencyService;
+import io.coti.basenode.services.interfaces.INodeFeesService;
 import io.coti.financialserver.data.ReservedAddress;
 import io.coti.financialserver.http.GenerateTokenFeeRequest;
 import io.coti.financialserver.http.TokenGenerationFeeResponse;
@@ -29,15 +30,12 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class FeeService {
 
-    private static final BigDecimal totalSupplyFeeFactor = BigDecimal.ZERO;
-    @Value("${token.generation.fee}")
-    private BigDecimal tokenGenerationFee;
     @Value("${financialserver.seed}")
     private String seed;
-    @Value("${regular.token.minting.fee}")
-    private BigDecimal regularTokenMintingFee;
     @Autowired
     private ICurrencyService currencyService;
+    @Autowired
+    private INodeFeesService nodeFeesService;
 
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         try {
@@ -58,13 +56,11 @@ public class FeeService {
     }
 
     public BigDecimal calculateTokenGenerationFee(BigDecimal totalSupply) {
-        return totalSupplyFeeFactor.multiply(totalSupply).add(tokenGenerationFee);
+        return nodeFeesService.calculateClassicFee(NodeFeeType.TOKEN_GENERATION_FEE, totalSupply);
     }
 
-    public BigDecimal calculateTokenMintingFee(BigDecimal amount, Instant creationTime, CurrencyData currencyData) {
-        return regularTokenMintingFee;
-//        return tokenMintingFeeFactor.divide(new BigDecimal(100)).multiply(amount)
-//                .multiply(new BigDecimal(currencyRateService.getTokenRateToNativeCoin(currencyData))).add(tokenMintingMinimumFee)
+    public BigDecimal calculateTokenMintingFee(BigDecimal amount) {
+        return nodeFeesService.calculateClassicFee(NodeFeeType.TOKEN_MINTING_FEE, amount);
     }
 
     protected Hash networkFeeAddress() {

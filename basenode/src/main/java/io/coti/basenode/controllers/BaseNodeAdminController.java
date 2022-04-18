@@ -1,10 +1,12 @@
 package io.coti.basenode.controllers;
 
 import io.coti.basenode.http.AddressFileRequest;
+import io.coti.basenode.http.NodeFeeSetRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IAddressService;
 import io.coti.basenode.services.interfaces.IDBRecoveryService;
 import io.coti.basenode.services.interfaces.IDatabaseService;
+import io.coti.basenode.services.interfaces.INodeFeesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,9 @@ public class BaseNodeAdminController {
     @Autowired
     private IDBRecoveryService dbRecoveryService;
 
+    @Autowired
+    private INodeFeesService nodeFeesService;
+
     @GetMapping(path = "/address/batch")
     public void getAddressBatch(HttpServletResponse response) {
         addressService.getAddressBatch(response);
@@ -47,4 +52,8 @@ public class BaseNodeAdminController {
         return dbRecoveryService.manualBackupDB();
     }
 
+    @PostMapping(path = "/fee/set")
+    public ResponseEntity<IResponse> setFeeValue(@Valid @RequestBody NodeFeeSetRequest nodeFeeSetRequest){
+        return nodeFeesService.setFeeValue(nodeFeeSetRequest);
+    }
 }

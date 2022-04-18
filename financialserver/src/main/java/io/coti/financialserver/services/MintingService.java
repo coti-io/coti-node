@@ -69,7 +69,7 @@ public class MintingService extends BaseNodeMintingService {
                 return badRequestResponse;
             }
 
-            return createTokenMintingFee(tokenMintingServiceData, currencyData, tokenMintingFeeRequest.getMintingFeeQuoteData());
+            return createTokenMintingFee(tokenMintingServiceData, tokenMintingFeeRequest.getMintingFeeQuoteData());
         } catch (CurrencyValidationException e) {
             String error = String.format(EXCEPTION_MESSAGE, TOKEN_MINTING_FAILURE, e.getMessageAndCause());
             return ResponseEntity.badRequest().body(new Response(error, STATUS_ERROR));
@@ -114,14 +114,14 @@ public class MintingService extends BaseNodeMintingService {
         return null;
     }
 
-    private ResponseEntity<IResponse> createTokenMintingFee(TokenMintingServiceData tokenMintingServiceData, CurrencyData currencyData, MintingFeeQuoteData mintingFeeQuoteData) {
+    private ResponseEntity<IResponse> createTokenMintingFee(TokenMintingServiceData tokenMintingServiceData, MintingFeeQuoteData mintingFeeQuoteData) {
         try {
             BigDecimal mintingFee = null;
             if (mintingFeeQuoteData != null) {
                 mintingFee = mintingFeeQuoteData.getMintingFee();
             }
             if (mintingFee == null) {
-                mintingFee = feeService.calculateTokenMintingFee(tokenMintingServiceData.getMintingAmount(), Instant.now(), currencyData);
+                mintingFee = feeService.calculateTokenMintingFee(tokenMintingServiceData.getMintingAmount());
             }
             TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = new TokenMintingFeeBaseTransactionData(feeService.networkFeeAddress(),
                     currencyService.getNativeCurrencyHash(), NodeCryptoHelper.getNodeHash(), mintingFee, Instant.now(), tokenMintingServiceData);
@@ -165,7 +165,7 @@ public class MintingService extends BaseNodeMintingService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_AMOUNT, STATUS_ERROR));
             }
             Instant createTime = Instant.now();
-            BigDecimal feeQuoteAmount = feeService.calculateTokenMintingFee(mintingAmount, createTime, currencyData);
+            BigDecimal feeQuoteAmount = feeService.calculateTokenMintingFee(mintingAmount);
             MintingFeeQuoteData mintingFeeQuoteData = new MintingFeeQuoteData(currencyHash, createTime, mintingAmount, feeQuoteAmount);
             mintingFeeQuoteCrypto.signMessage(mintingFeeQuoteData);
 

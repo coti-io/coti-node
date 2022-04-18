@@ -34,6 +34,8 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -127,7 +129,9 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     protected IEventService eventService;
     private Object initialConfirmationLock;
-
+    protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
+    @Autowired
+    private INodeFeesService nodeFeesService;
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
         version = buildProperties.getVersion();
@@ -157,6 +161,7 @@ public abstract class BaseNodeInitializationService {
         propagationSubscriber.initPropagationHandler();
         monitorService.init();
         metricsService.init();
+        nodeFeesService.init(nodeFeeTypeList);
     }
 
     public void initTransactionSync() {
