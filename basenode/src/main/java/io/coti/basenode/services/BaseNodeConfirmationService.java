@@ -351,7 +351,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         return initialConfirmationFinished;
     }
 
-    protected void continueHandleTokenChanges(TransactionData transactionData){
+    protected void continueHandleTokenChanges(TransactionData transactionData) {
         // implemented by the sub classes
     }
 }

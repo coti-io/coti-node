@@ -9,11 +9,7 @@ import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IWebSocketMessageService;
-import io.coti.fullnode.websocket.data.GeneratedAddressMessage;
-import io.coti.fullnode.websocket.data.NotifyTransactionChange;
-import io.coti.fullnode.websocket.data.TotalTransactionsMessage;
-import io.coti.fullnode.websocket.data.UpdatedBalanceMessage;
-import io.coti.fullnode.websocket.data.TokenChangeMessage;
+import io.coti.fullnode.websocket.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -52,7 +48,7 @@ public class WebSocketSender {
     public void notifyTokenChange(Hash currencyHash) {
         log.debug("token {} is about to be sent to the subscribed user", currencyHash.toString());
         TokenResponseData tokenResponseData = currencyService.fillTokenGenerationResponseData(currencyHash);
-        TokenChangeMessage tokenChangeMessage = new TokenChangeMessage(currencyHash, tokenResponseData);
+        TokenChangeMessage tokenChangeMessage = new TokenChangeMessage(tokenResponseData);
         messagingSender.convertAndSend("/topic/token/" + currencyHash.toHexString(), tokenChangeMessage);
     }
 
