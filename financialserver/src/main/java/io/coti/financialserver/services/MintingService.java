@@ -186,7 +186,7 @@ public class MintingService extends BaseNodeMintingService {
 
     private boolean isStillValid(MintingFeeQuoteData mintingFeeQuoteData) {
         Instant createTime = mintingFeeQuoteData.getCreateTime();
-        return createTime.isAfter(Instant.now().minus(MINTING_FEE_QUOTE_EXPIRATION_MINUTES, ChronoUnit.MINUTES)) && createTime.isBefore(Instant.now());
+        return createTime.isAfter(Instant.now().minus(MINTING_FEE_QUOTE_EXPIRATION_MINUTES, ChronoUnit.MINUTES)) && createTime.isBefore(Instant.now().plus(10, ChronoUnit.MINUTES));
     }
 
 }
