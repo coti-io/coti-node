@@ -139,6 +139,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             }
             addressToTransactionsHistoryMap.put(baseTransactionData.getAddressHash(), addressHistory);
         });
+        updateMintedAddress(transactionData);
     }
 
     public boolean validateTransactionCrypto(TransactionData transactionData) {
