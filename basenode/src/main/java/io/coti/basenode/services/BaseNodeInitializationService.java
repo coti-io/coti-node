@@ -30,12 +30,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -132,6 +127,7 @@ public abstract class BaseNodeInitializationService {
     protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
     @Autowired
     private INodeFeesService nodeFeesService;
+
     public void init() {
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
         version = buildProperties.getVersion();

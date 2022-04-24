@@ -2,8 +2,8 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.NodeFeeType;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.NodeFeeType;
 import io.coti.basenode.data.TokenGenerationFeeBaseTransactionData;
 import io.coti.basenode.data.TokenGenerationServiceData;
 import io.coti.basenode.http.Response;

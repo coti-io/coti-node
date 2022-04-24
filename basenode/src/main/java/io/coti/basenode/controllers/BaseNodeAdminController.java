@@ -53,7 +53,7 @@ public class BaseNodeAdminController {
     }
 
     @PostMapping(path = "/fee/set")
-    public ResponseEntity<IResponse> setFeeValue(@Valid @RequestBody NodeFeeSetRequest nodeFeeSetRequest){
+    public ResponseEntity<IResponse> setFeeValue(@Valid @RequestBody NodeFeeSetRequest nodeFeeSetRequest) {
         return nodeFeesService.setFeeValue(nodeFeeSetRequest);
     }
 }
