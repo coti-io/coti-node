@@ -101,7 +101,7 @@ public class BucketTransactionsCalculator extends BucketCalculator {
         bucketTransactionEventsData.setOldMonthBalanceContribution(scoreAfterDecay.getValue());
     }
 
-    public Map<Date, BalanceCountAndContribution> getCurrentMonthDayToMoveToTailBalance(int daysDiff) {
+    public Map<Date, BalanceCountAndContribution> getCurrentMonthDayToMoveToTailBalance() {
         // Map of balances after 30 days. will be moved to the tail after decay.
         Map<Date, BalanceCountAndContribution> currentMonthDayToTailBalanceMap = new ConcurrentHashMap<>();
 
@@ -113,7 +113,7 @@ public class BucketTransactionsCalculator extends BucketCalculator {
         for (Iterator<Map.Entry<Date, BalanceCountAndContribution>> currentMonthBalanceIterator
              = currentMonthBalanceMap.entrySet().iterator(); currentMonthBalanceIterator.hasNext(); ) {
             Map.Entry<Date, BalanceCountAndContribution> entry = currentMonthBalanceIterator.next();
-            daysDiff = DatesCalculation.calculateDaysDiffBetweenDates(DatesCalculation.setDateOnBeginningOfDay(entry.getKey()),
+            int daysDiff = DatesCalculation.calculateDaysDiffBetweenDates(DatesCalculation.setDateOnBeginningOfDay(entry.getKey()),
                     DatesCalculation.setDateOnBeginningOfDay(new Date()));
             if (daysDiff >= MONTH_LENGTH) {
                 currentMonthDayToTailBalanceMap.put(entry.getKey(), entry.getValue());
@@ -129,7 +129,7 @@ public class BucketTransactionsCalculator extends BucketCalculator {
         decayAndUpdateOldMonthlyEventScores(getEventScoreByEventScoreType(TransactionEventScoreType.AVERAGE_BALANCE), daysDiff);
 
         // Map of balances after 30 days. will be moved to the tail after decay.
-        Map<Date, BalanceCountAndContribution> currentMonthDayToTailBalanceMap = getCurrentMonthDayToMoveToTailBalance(daysDiff);
+        Map<Date, BalanceCountAndContribution> currentMonthDayToTailBalanceMap = getCurrentMonthDayToMoveToTailBalance();
 
         Map<TransactionEventScore, Map<Date, BalanceCountAndContribution>> eventScoresToDatesScoreMap = new ConcurrentHashMap<>();
         Date lastUpdate = bucketTransactionEventsData.getLastUpdate();
