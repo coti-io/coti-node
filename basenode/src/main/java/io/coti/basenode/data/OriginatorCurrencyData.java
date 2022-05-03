@@ -22,7 +22,7 @@ public class OriginatorCurrencyData implements ISignable, ISignValidatable, Seri
     protected String symbol;
     @Length(min = 5, max = 255)
     private String description;
-    @Range(min = 1000000L, max = 100000000000L)
+    @Range(min = 1L, max = 100000000000L)
     protected BigDecimal totalSupply;
     @Range(min = 8, max = 8)
     protected int scale;
