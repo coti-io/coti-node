@@ -47,7 +47,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
-        log.debug("Running new transactions from full node handler");
+        log.debug("Running new transaction from full node handler: {}", transactionData.getHash());
         AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
 
         try {

@@ -303,6 +303,9 @@ public class BaseNodeTransactionService implements ITransactionService {
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 isTransactionAlreadyPropagated.set(transactionHelper.isTransactionAlreadyPropagated(transactionData));
                 if (!isTransactionAlreadyPropagated.get()) {
+                    if (!TransactionType.ZeroSpend.equals(transactionData.getType())) {
+                        log.info("Starting handling for new transaction: {}", transactionData.getHash());
+                    }
                     transactionHelper.startHandleTransaction(transactionData);
                 }
             }

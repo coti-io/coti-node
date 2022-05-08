@@ -100,7 +100,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
     public void receiveDspVote(TransactionDspVote transactionDspVote) {
         Hash transactionHash = transactionDspVote.getHash();
         Hash voterDspHash = transactionDspVote.getVoterDspHash();
-        log.debug("Received new Dsp Vote: Sender = {} , Transaction = {}", voterDspHash, transactionHash);
+        log.info("Received new Dsp Vote: Sender = {} , Transaction = {}", voterDspHash, transactionHash);
         try {
             synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 TransactionVoteData transactionVoteData = transactionVotes.getByHash(transactionHash);
@@ -137,11 +137,14 @@ public class DspVoteService extends BaseNodeDspVoteService {
                             publishDecision(transactionHash, mapHashToDspVote, false);
                             log.debug("Invalid vote majority achieved for transaction {}", currentTransactionVoteData.getHash());
                         } else {
-                            log.debug("Undecided majority for transaction {}", currentTransactionVoteData.getHash());
+                            log.warn("Undecided majority for transaction {}", currentTransactionVoteData.getHash());
                         }
                     }
                 }
-            } finally {
+            }catch (Exception e) {
+                log.error("Exception at DspVoteService::sumAndSaveVotes(): ", e);
+                throw e;
+            } finally{
                 transactionHashLockData.removeLockFromLocksMap(transactionHash);
             }
         }
