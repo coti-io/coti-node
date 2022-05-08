@@ -10,13 +10,13 @@ import java.math.BigDecimal;
 @Data
 public class TokenGenerationServiceResponseData implements ITransactionResponseData {
 
-    private OriginatorCurrencyResponseData originatorCurrencyResponseData;
-    private CurrencyTypeResponseData currencyTypeResponseData;
+    private OriginatorCurrencyResponseData originatorCurrencyData;
+    private CurrencyTypeResponseData currencyTypeData;
     private BigDecimal feeAmount;
 
     public TokenGenerationServiceResponseData(BaseTransactionData baseTransactionData) {
-        originatorCurrencyResponseData = new OriginatorCurrencyResponseData(((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getOriginatorCurrencyData());
-        currencyTypeResponseData = new CurrencyTypeResponseData(((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getCurrencyTypeData());
+        originatorCurrencyData = new OriginatorCurrencyResponseData(((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getOriginatorCurrencyData());
+        currencyTypeData = new CurrencyTypeResponseData(((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getCurrencyTypeData());
         this.feeAmount = ((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getFeeAmount();
     }
 }

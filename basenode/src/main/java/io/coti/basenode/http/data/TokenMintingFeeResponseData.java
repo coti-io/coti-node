@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class TokenMintingFeeResponseData extends TokenFeeResponseData {
 
-    TokenMintingServiceResponseData tokenMintingServiceResponseData;
+    TokenMintingServiceResponseData tokenMintingServiceData;
 
     public TokenMintingFeeResponseData() {
         super();
@@ -16,6 +16,6 @@ public class TokenMintingFeeResponseData extends TokenFeeResponseData {
 
     public TokenMintingFeeResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
-        tokenMintingServiceResponseData = new TokenMintingServiceResponseData(baseTransactionData);
+        tokenMintingServiceData = new TokenMintingServiceResponseData(baseTransactionData);
     }
 }
