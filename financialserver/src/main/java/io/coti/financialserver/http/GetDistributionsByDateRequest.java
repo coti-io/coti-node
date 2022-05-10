@@ -41,6 +41,6 @@ public class GetDistributionsByDateRequest {
             fundDistributionData.setHash();
             return fundDistributionData.getHash();
         }
-        return null;
+        return null; //NOSONAR
     }
 }
