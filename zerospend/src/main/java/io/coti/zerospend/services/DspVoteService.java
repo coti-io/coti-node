@@ -141,10 +141,10 @@ public class DspVoteService extends BaseNodeDspVoteService {
                         }
                     }
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 log.error("Exception at DspVoteService::sumAndSaveVotes(): ", e);
                 throw e;
-            } finally{
+            } finally {
                 transactionHashLockData.removeLockFromLocksMap(transactionHash);
             }
         }

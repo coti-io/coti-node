@@ -81,7 +81,7 @@ public class TrustChainConfirmationService {
                 TccInfo tccInfo = new TccInfo(transactionData.getHash(), transactionData.getTrustChainTrustScore(), trustScoreConsensusTime);
                 trustChainConfirmations.addFirst(tccInfo);
                 log.debug("transaction with hash:{} is confirmed with trustScore: {} and totalTrustScore:{} ", transactionData.getHash(), transactionData.getSenderTrustScore(), transactionData.getTrustChainTrustScore());
-            }else {
+            } else {
                 monitorTotalTrustScore(transactionData);
             }
         }
@@ -93,8 +93,7 @@ public class TrustChainConfirmationService {
     private void updateMonitorState() {
         if (trustScoreNotChanged) {
             tccOutsideNormalCounter++;
-        }
-        else {
+        } else {
             tccOutsideNormalCounter = 0;
         }
     }
@@ -105,7 +104,7 @@ public class TrustChainConfirmationService {
         }
 
         tccWaitingConfirmation++;
-        if(nonZeroSpendTransactionTSValuesMap.containsKey(transactionData.getHash()) &&
+        if (nonZeroSpendTransactionTSValuesMap.containsKey(transactionData.getHash()) &&
                 nonZeroSpendTransactionTSValuesMap.get(transactionData.getHash()) >= transactionData.getTrustChainTrustScore() &&
                 isWaitingMoreThanMinimum(transactionData)) {
             trustScoreNotChanged = true;
