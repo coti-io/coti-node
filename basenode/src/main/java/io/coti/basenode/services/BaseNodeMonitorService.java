@@ -25,7 +25,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    TrustChainConfirmationService trustChainConfirmationService;
+    private TrustChainConfirmationService trustChainConfirmationService;
     @Autowired
     private IClusterService clusterService;
     @Autowired

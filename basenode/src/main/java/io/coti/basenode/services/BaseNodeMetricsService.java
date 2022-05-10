@@ -46,9 +46,9 @@ public class BaseNodeMetricsService implements IMetricsService {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @Autowired
-    BaseNodeMonitorService baseNodeMonitorService;
+    private BaseNodeMonitorService baseNodeMonitorService;
     @Autowired
-    TrustChainConfirmationService trustChainConfirmationService;
+    private TrustChainConfirmationService trustChainConfirmationService;
     @Autowired
     private IClusterService clusterService;
     @Autowired
