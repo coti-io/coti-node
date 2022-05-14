@@ -3,7 +3,6 @@ package io.coti.basenode.services;
 import io.coti.basenode.crypto.*;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
-import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.TokenResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
@@ -30,7 +29,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
@@ -330,28 +328,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             } finally {
                 mintingTokenHashLockData.removeLockFromLocksMap(currencyHash);
             }
-        }
-    }
-
-    @Override
-    public void validateName(OriginatorCurrencyData originatorCurrencyData) {
-        String name = originatorCurrencyData.getName();
-        if (name.length() != name.trim().length()) {
-            throw new CurrencyValidationException(String.format("Attempted to set an invalid currency name with spaces at the start or the end %s.", name));
-        }
-        final String[] words = name.split(" ");
-        for (String word : words) {
-            if (word == null || word.isEmpty() || !Pattern.compile("[A-Za-z0-9.]+").matcher(word).matches()) {
-                throw new CurrencyValidationException(String.format("Attempted to set an invalid currency name with the word %s.", name));
-            }
-        }
-    }
-
-    @Override
-    public void validateSymbol(OriginatorCurrencyData originatorCurrencyData) {
-        String symbol = originatorCurrencyData.getSymbol();
-        if (!Pattern.compile("[A-Z.]{0,15}").matcher(symbol).matches()) {
-            throw new CurrencyException(String.format("Attempted to set an invalid currency symbol of %s.", symbol));
         }
     }
 

@@ -9,6 +9,7 @@ import org.hibernate.validator.constraints.Range;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -16,9 +17,9 @@ import java.math.BigDecimal;
 public class OriginatorCurrencyData implements ISignable, ISignValidatable, Serializable {
 
     private static final long serialVersionUID = 6995268770045990662L;
-    @Length(min = 1, max = 64)
+    @Pattern(regexp = "^(?=.{1,64}$)(?:[A-Za-z0-9]+[-. ])*[A-Za-z0-9]+$")
     protected String name;
-    @Length(min = 2, max = 6)
+    @Pattern(regexp = "[A-Za-z0-9]{1,6}+")
     protected String symbol;
     @Length(min = 5, max = 255)
     private String description;

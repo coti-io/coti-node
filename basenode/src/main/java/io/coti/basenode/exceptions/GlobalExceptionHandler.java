@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.web.firewall.RequestRejectedException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,6 +18,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.UnexpectedTypeException;
+import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
@@ -26,12 +28,26 @@ public class GlobalExceptionHandler {
 
     private static final String EXCEPTION_MESSAGE = "Exception message: ";
 
+    private String getErrorsDetails(Exception e) {
+        if (e instanceof MethodArgumentNotValidException) {
+            String details = "";
+            List<ObjectError> errors = ((MethodArgumentNotValidException) e).getBindingResult().getAllErrors();
+            for (ObjectError objectError : errors) {
+                details = details.concat(objectError.toString()).concat(System.getProperty("line.separator"));
+            }
+            return details;
+        } else {
+            return "None";
+        }
+    }
+
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, UnexpectedTypeException.class})
     public ResponseEntity<ExceptionResponse> handleArgumentNotValid(Exception e) {
         log.info("Received a request with missing or invalid parameters.");
         log.info(EXCEPTION_MESSAGE + e);
+        String details = getErrorsDetails(e);
         return new ResponseEntity<>(
-                new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR), HttpStatus.BAD_REQUEST);
+                new ExceptionResponse(INVALID_PARAMETERS_MESSAGE, API_CLIENT_ERROR, details), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NullPointerException.class)

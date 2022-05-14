@@ -41,8 +41,6 @@ public class CurrencyService extends BaseNodeCurrencyService {
                 throw new CurrencyValidationException(MULTI_DAG_IS_NOT_SUPPORTED);
             }
             OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
-            validateName(originatorCurrencyData);
-            validateSymbol(originatorCurrencyData);
             CurrencyTypeData currencyTypeData = generateTokenRequest.getCurrencyTypeData();
             if (!currencyTypeData.getCurrencyType().equals(CurrencyType.REGULAR_CMD_TOKEN)) {
                 throw new CurrencyValidationException(TOKEN_GENERATION_REQUEST_NOT_REGULAR_CMD_TOKEN);

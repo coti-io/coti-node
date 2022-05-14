@@ -32,10 +32,6 @@ public interface ICurrencyService {
 
     void handleMissingTransaction(TransactionData transactionData);
 
-    void validateName(OriginatorCurrencyData originatorCurrencyData);
-
-    void validateSymbol(OriginatorCurrencyData originatorCurrencyData);
-
     boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData);
 
     void addConfirmedCurrency(TransactionData transactionData);
