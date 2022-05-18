@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.crypto.NetworkCrypto;
+import io.coti.basenode.crypto.NetworkLastKnownNodesCrypto;
 import io.coti.basenode.crypto.NetworkNodeCrypto;
 import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
@@ -10,6 +11,8 @@ import io.coti.basenode.exceptions.NetworkChangeException;
 import io.coti.basenode.exceptions.NetworkException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
+import io.coti.basenode.http.GetNetworkLastKnownNodesResponse;
+import io.coti.basenode.http.data.NetworkLastKnownNodesResponseData;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ISslService;
@@ -42,6 +45,7 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
@@ -78,6 +82,9 @@ public class BaseNodeNetworkService implements INetworkService {
     protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
     protected NetworkNodeData networkNodeData;
+    protected HashMap<Hash, NetworkNodeData> networkLastKnownNodes;
+    @Autowired
+    private NetworkLastKnownNodesCrypto networkLastKnownNodesCrypto;
 
     @Override
     public void init() {
@@ -86,6 +93,8 @@ public class BaseNodeNetworkService implements INetworkService {
 
         singleNodeNetworkDataMap = new EnumMap<>(NodeType.class);
         NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, null));
+
+        setNetworkLastKnownNodes(new HashMap<>());
 
         sslService.init();
         log.info("{} is up", this.getClass().getSimpleName());
@@ -133,8 +142,23 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
+    @Override
+    public void verifyNodeManager(NetworkLastKnownNodesResponseData networkLastKnownNodesResponseData) {
+        if (!verifyNodeManagerKey(networkLastKnownNodesResponseData)) {
+            throw new NetworkNodeValidationException("Invalid node manager hash");
+        }
+
+        if (!networkLastKnownNodesCrypto.verifySignature(networkLastKnownNodesResponseData)) {
+            throw new NetworkNodeValidationException("Invalid signature by node manager");
+        }
+    }
+
     private boolean verifyNodeManagerKey(NetworkData newNetworkData) {
         return nodeManagerPublicKey.equals(newNetworkData.getSignerHash().toString());
+    }
+
+    private boolean verifyNodeManagerKey(NetworkLastKnownNodesResponseData networkLastKnownNodesResponseData) {
+        return nodeManagerPublicKey.equals(networkLastKnownNodesResponseData.getSignerHash().toString());
     }
 
     public boolean isNodeConnectedToNetwork(NetworkData networkData) {
@@ -190,6 +214,7 @@ public class BaseNodeNetworkService implements INetworkService {
             getMapFromFactory(networkNodeData.getNodeType()).put(networkNodeData.getHash(), networkNodeData);
         }
 
+        networkLastKnownNodes.put(networkNodeData.getNodeHash(), networkNodeData);
     }
 
     @Override
@@ -484,8 +509,12 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void setNetworkData(NetworkData networkData) {
-        multipleNodeMaps = networkData.getMultipleNodeMaps();
-        singleNodeNetworkDataMap = networkData.getSingleNodeNetworkDataMap();
+        networkData.getMultipleNodeMaps().forEach((k, v) -> v.values().forEach(this::addNode));
+        networkData.getSingleNodeNetworkDataMap().forEach((k, v) -> {
+            if (v != null) {
+                addNode(v);
+            }
+        });
     }
 
     @Override
@@ -518,6 +547,31 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public boolean isZeroSpendServerInNetwork() {
         return Optional.ofNullable(getSingleNodeData(NodeType.ZeroSpendServer)).isPresent();
+    }
+
+    @Override
+    public GetNetworkLastKnownNodesResponse getSignedNetworkLastKnownNodesResponse() {
+        NetworkLastKnownNodesResponseData networkLastKnownNodesResponseData = new NetworkLastKnownNodesResponseData(networkLastKnownNodes);
+        networkLastKnownNodesCrypto.signMessage(networkLastKnownNodesResponseData);
+        return new GetNetworkLastKnownNodesResponse(networkLastKnownNodesResponseData);
+    }
+
+    @Override
+    public List<Hash> getNodesHashes(NodeType nodeType) {
+        List<Hash> nodesHashes = new ArrayList<>();
+        NetworkNodeData networkNodeDataRecord = getSingleNodeData(nodeType);
+        if (networkNodeDataRecord != null) {
+            nodesHashes.add(networkNodeDataRecord.getNodeHash());
+        } else {
+            List<NetworkNodeData> listOfNodeTypes = networkLastKnownNodes.values().stream().filter(p -> p.getNodeType().equals(nodeType)).collect(Collectors.toList());
+            listOfNodeTypes.stream().forEach(p -> nodesHashes.add(p.getNodeHash()));
+        }
+        return nodesHashes;
+    }
+
+    @Override
+    public void setNetworkLastKnownNodes(HashMap<Hash, NetworkNodeData> networkLastKnownNodes) {
+        this.networkLastKnownNodes = networkLastKnownNodes;
     }
 
 }

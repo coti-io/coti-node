@@ -92,4 +92,7 @@ public interface ITransactionHelper {
     TransactionData createNewTransaction(List<BaseTransactionData> baseTransactions, Hash transactionHash, String transactionDescription, List<TransactionTrustScoreData> trustScoreResults, Instant createTime, Hash senderHash, SignatureData senderSignature, TransactionType type);
 
     TransactionData createNewTransaction(List<BaseTransactionData> baseTransactions, String transactionDescription, double senderTrustScore, Instant createTime, TransactionType type);
+
+    boolean validateBaseTransactionPublicKey(BaseTransactionData baseTransactionData, NodeType nodeType);
+
 }

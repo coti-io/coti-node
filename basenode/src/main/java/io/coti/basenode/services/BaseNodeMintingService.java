@@ -34,6 +34,11 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public boolean checkMintingAmountAndUpdateMintableAmount(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
+        if (!transactionHelper.validateBaseTransactionPublicKey(tokenMintingFeeBaseTransactionData, NodeType.FinancialServer)) {
+            log.error("Error in Minting check. Base transaction not signed by an authorized Financial server");
+            return false;
+        }
+
         Hash tokenHash = tokenMintingFeeBaseTransactionData.getServiceData().getMintingCurrencyHash();
         try {
             synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {

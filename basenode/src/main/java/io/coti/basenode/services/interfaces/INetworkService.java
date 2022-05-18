@@ -1,8 +1,11 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetNetworkLastKnownNodesResponse;
+import io.coti.basenode.http.data.NetworkLastKnownNodesResponseData;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +16,8 @@ public interface INetworkService {
     void handleNetworkChanges(NetworkData networkData);
 
     void verifyNodeManager(NetworkData newNetworkData);
+
+    void verifyNodeManager(NetworkLastKnownNodesResponseData networkLastKnownNodesResponseData);
 
     String getRecoveryServerAddress();
 
@@ -61,4 +66,10 @@ public interface INetworkService {
     String getHost(String webServerUrl);
 
     boolean isZeroSpendServerInNetwork();
+
+    GetNetworkLastKnownNodesResponse getSignedNetworkLastKnownNodesResponse();
+
+    List<Hash> getNodesHashes(NodeType nodeType);
+
+    void setNetworkLastKnownNodes(HashMap<Hash, NetworkNodeData> networkLastKnownNodes);
 }

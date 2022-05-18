@@ -15,6 +15,7 @@ import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNodeRegistrationRequest;
 import io.coti.basenode.http.GetNodeRegistrationResponse;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.GetNetworkLastKnownNodesResponse;
 import io.coti.basenode.model.NodeRegistrations;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
@@ -43,6 +44,8 @@ public abstract class BaseNodeInitializationService {
 
     private static final String NODE_REGISTRATION = "/node/node_registration";
     private static final String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
+    private static final String LAST_KNOWN_WALLET_ENDPOINT = "/nodes/last";
+
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")
@@ -255,7 +258,30 @@ public abstract class BaseNodeInitializationService {
     protected void getNetwork() {
 
         nodeManagerHttpAddress = "http://" + nodeManagerIp + ":" + nodeManagerPort;
+        networkService.setNetworkLastKnownNodes(getNetworkLastKnownNodesFromNodeManager());
         networkService.setNetworkData(getNetworkDetailsFromNodeManager());
+    }
+
+    private HashMap<Hash, NetworkNodeData> getNetworkLastKnownNodesFromNodeManager() {
+        GetNetworkLastKnownNodesResponse networkLastKnownNodesResponse;
+        try {
+            networkLastKnownNodesResponse = restTemplate.getForObject(nodeManagerHttpAddress + LAST_KNOWN_WALLET_ENDPOINT, GetNetworkLastKnownNodesResponse.class);
+        } catch (HttpStatusCodeException e) {
+            throw new NetworkException("Error at getting network details. Node manager error: " + new Gson().fromJson(e.getResponseBodyAsString(), Response.class));
+        } catch (Exception e) {
+            throw new NetworkException("Error at getting network details", e);
+        }
+        if (networkLastKnownNodesResponse == null) {
+            throw new NetworkException("Null network from node manager");
+        }
+
+        try {
+            networkService.verifyNodeManager(networkLastKnownNodesResponse.getNetworkLastKnownNodesResponseData());
+        } catch (NetworkNodeValidationException e) {
+            throw new NetworkException("Error at getting network details", e);
+        }
+
+        return networkLastKnownNodesResponse.getNetworkLastKnownNodesResponseData().getNetworkLastKnownNodes();
     }
 
     private NetworkData getNetworkDetailsFromNodeManager() {

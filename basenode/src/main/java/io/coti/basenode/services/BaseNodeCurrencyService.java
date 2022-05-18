@@ -352,6 +352,12 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
         TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
+
+        if (!transactionHelper.validateBaseTransactionPublicKey(tokenGenerationFeeBaseTransactionData, NodeType.FinancialServer)) {
+            log.error("Error in generation check. Base transaction not signed by an authorized financial server");
+            return false;
+        }
+
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         CurrencyTypeData currencyTypeData = tokenGenerationFeeBaseTransactionData.getServiceData().getCurrencyTypeData();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());

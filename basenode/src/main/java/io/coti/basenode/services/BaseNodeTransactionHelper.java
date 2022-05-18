@@ -1,6 +1,8 @@
 package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
+import io.coti.basenode.crypto.BaseTransactionCrypto;
+import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
@@ -55,6 +57,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private final AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
+    @Autowired
+    private INetworkService networkService;
 
     @PostConstruct
     private void init() {
@@ -519,5 +523,23 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
         transactionData.setAmount(getNativeAmount(transactionData));
         return transactionData;
+    }
+
+    @Override
+    public boolean validateBaseTransactionPublicKey(BaseTransactionData baseTransactionData, NodeType nodeType) {
+        try {
+            boolean verified = false;
+            List<Hash> nodesHashes = networkService.getNodesHashes(nodeType);
+            Iterator<io.coti.basenode.data.Hash> nodeHashIterator = nodesHashes.iterator();
+            while (nodeHashIterator.hasNext() && !verified) {
+                Hash nodeHash = nodeHashIterator.next();
+                String baseTransactionSignaturePublicKey = BaseTransactionCrypto.getByBaseTransactionClass(baseTransactionData.getClass()).getPublicKey(baseTransactionData);
+                verified = nodeHash.toString().equals(baseTransactionSignaturePublicKey);
+            }
+            return verified;
+        } catch (Exception e) {
+            log.error("{}: {}", e.getClass().getName(), e.getMessage());
+            return false;
+        }
     }
 }

@@ -4,6 +4,7 @@ import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.INetworkService;
+import io.coti.basenode.http.GetNetworkLastKnownNodesResponse;
 import io.coti.nodemanager.http.SetNodeStakeRequest;
 import io.coti.nodemanager.services.StakingService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
@@ -32,6 +33,11 @@ public class NodeController {
 
         log.info("New networkNodeData received: {} ", networkNodeData);
         return nodeManagementService.addNode(networkNodeData);
+    }
+
+    @GetMapping("/last")
+    public ResponseEntity<GetNetworkLastKnownNodesResponse> getLastKnownNodes() {
+        return ResponseEntity.ok(networkService.getSignedNetworkLastKnownNodesResponse());
     }
 
     @GetMapping
