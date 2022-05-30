@@ -2,9 +2,9 @@ package io.coti.nodemanager.controllers;
 
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.http.GetNetworkLastKnownNodesResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.http.GetNetworkLastKnownNodesResponse;
 import io.coti.nodemanager.http.SetNodeStakeRequest;
 import io.coti.nodemanager.services.StakingService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;

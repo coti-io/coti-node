@@ -25,7 +25,7 @@ public class NetworkLastKnownNodesResponseData implements IPropagatable, ISignab
     }
 
     public NetworkLastKnownNodesResponseData(Map<Hash, NetworkNodeData> networkLastKnownNodes) {
-        this.networkLastKnownNodes = (HashMap<Hash, NetworkNodeData>)networkLastKnownNodes;
+        this.networkLastKnownNodes = (HashMap<Hash, NetworkNodeData>) networkLastKnownNodes;
     }
 
     @Override

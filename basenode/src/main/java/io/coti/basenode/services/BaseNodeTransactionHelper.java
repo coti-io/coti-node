@@ -2,7 +2,6 @@ package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
