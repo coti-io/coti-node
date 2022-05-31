@@ -82,7 +82,7 @@ public class BaseNodeNetworkService implements INetworkService {
     protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
     protected NetworkNodeData networkNodeData;
-    protected HashMap<Hash, NetworkNodeData> networkLastKnownNodes;
+    protected HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap;
     @Autowired
     private NetworkLastKnownNodesCrypto networkLastKnownNodesCrypto;
 
@@ -94,7 +94,7 @@ public class BaseNodeNetworkService implements INetworkService {
         singleNodeNetworkDataMap = new EnumMap<>(NodeType.class);
         NodeTypeService.getNodeTypeList(false).forEach(nodeType -> singleNodeNetworkDataMap.put(nodeType, null));
 
-        setNetworkLastKnownNodes(new HashMap<>());
+        setNetworkLastKnownNodeMap(new HashMap<>());
 
         sslService.init();
         log.info("{} is up", this.getClass().getSimpleName());
@@ -214,7 +214,7 @@ public class BaseNodeNetworkService implements INetworkService {
             getMapFromFactory(networkNodeData.getNodeType()).put(networkNodeData.getHash(), networkNodeData);
         }
 
-        networkLastKnownNodes.put(networkNodeData.getNodeHash(), networkNodeData);
+        networkLastKnownNodeMap.put(networkNodeData.getNodeHash(), networkNodeData);
     }
 
     @Override
@@ -551,7 +551,7 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public GetNetworkLastKnownNodesResponse getSignedNetworkLastKnownNodesResponse() {
-        NetworkLastKnownNodesResponseData networkLastKnownNodesResponseData = new NetworkLastKnownNodesResponseData(networkLastKnownNodes);
+        NetworkLastKnownNodesResponseData networkLastKnownNodesResponseData = new NetworkLastKnownNodesResponseData(networkLastKnownNodeMap);
         networkLastKnownNodesCrypto.signMessage(networkLastKnownNodesResponseData);
         return new GetNetworkLastKnownNodesResponse(networkLastKnownNodesResponseData);
     }
@@ -563,15 +563,15 @@ public class BaseNodeNetworkService implements INetworkService {
         if (networkNodeDataRecord != null) {
             nodesHashes.add(networkNodeDataRecord.getNodeHash());
         } else {
-            List<NetworkNodeData> listOfNodeTypes = networkLastKnownNodes.values().stream().filter(p -> p.getNodeType().equals(nodeType)).collect(Collectors.toList());
-            listOfNodeTypes.stream().forEach(p -> nodesHashes.add(p.getNodeHash()));
+            List<NetworkNodeData> listOfNodeTypes = networkLastKnownNodeMap.values().stream().filter(p -> p.getNodeType().equals(nodeType)).collect(Collectors.toList());
+            listOfNodeTypes.forEach(p -> nodesHashes.add(p.getNodeHash()));
         }
         return nodesHashes;
     }
 
     @Override
-    public void setNetworkLastKnownNodes(HashMap<Hash, NetworkNodeData> networkLastKnownNodes) {
-        this.networkLastKnownNodes = networkLastKnownNodes;
+    public void setNetworkLastKnownNodeMap(HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap) {
+        this.networkLastKnownNodeMap = networkLastKnownNodeMap;
     }
 
 }

@@ -79,7 +79,7 @@ public class InitializationService {
     }
 
     private void setNetworkLastKnownNodes() {
-        HashMap<Hash, NetworkNodeData> activeHistoryNodes = new HashMap();
+        HashMap<Hash, NetworkNodeData> activeHistoryNodes = new HashMap<>();
         nodeDailyActivities.forEach(consumer ->
         {
             ActiveNodeData activeNodeData = activeNodes.getByHash(consumer.getHash());
@@ -89,7 +89,7 @@ public class InitializationService {
             }
         });
 
-        networkService.setNetworkLastKnownNodes(activeHistoryNodes);
+        networkService.setNetworkLastKnownNodeMap(activeHistoryNodes);
     }
 
     private void insertActiveNodesToMemory() {

@@ -20,7 +20,7 @@ public class NetworkLastKnownNodesCrypto extends SignatureCrypto<NetworkLastKnow
 
         TreeSet<Hash> networkNodeHashSet = new TreeSet<>();
 
-        networkLastKnownNodesResponseData.getNetworkLastKnownNodes().values().stream().filter(Objects::nonNull).forEach(
+        networkLastKnownNodesResponseData.getNetworkLastKnownNodeMap().values().stream().filter(Objects::nonNull).forEach(
                 networkNodeData -> {
                     byte[] bytes = networkNodeCrypto.getSignatureMessage(networkNodeData);
                     networkNodeHashSet.add(new Hash(bytes));

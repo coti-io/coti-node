@@ -254,7 +254,7 @@ public abstract class BaseNodeInitializationService {
     protected void getNetwork() {
 
         nodeManagerHttpAddress = "http://" + nodeManagerIp + ":" + nodeManagerPort;
-        networkService.setNetworkLastKnownNodes(getNetworkLastKnownNodesFromNodeManager());
+        networkService.setNetworkLastKnownNodeMap(getNetworkLastKnownNodesFromNodeManager());
         networkService.setNetworkData(getNetworkDetailsFromNodeManager());
     }
 
@@ -277,7 +277,7 @@ public abstract class BaseNodeInitializationService {
             throw new NetworkException("Error at getting network details", e);
         }
 
-        return networkLastKnownNodesResponse.getNetworkLastKnownNodesResponseData().getNetworkLastKnownNodes();
+        return networkLastKnownNodesResponse.getNetworkLastKnownNodesResponseData().getNetworkLastKnownNodeMap();
     }
 
     private NetworkData getNetworkDetailsFromNodeManager() {
