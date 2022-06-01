@@ -509,10 +509,12 @@ public class BaseNodeNetworkService implements INetworkService {
 
     @Override
     public void setNetworkData(NetworkData networkData) {
-        networkData.getMultipleNodeMaps().forEach((k, v) -> v.values().forEach(this::addNode));
+        multipleNodeMaps = networkData.getMultipleNodeMaps();
+        singleNodeNetworkDataMap = networkData.getSingleNodeNetworkDataMap();
+        networkData.getMultipleNodeMaps().forEach((k, v) -> v.values().forEach(n -> networkLastKnownNodeMap.put(n.getNodeHash(), n)));
         networkData.getSingleNodeNetworkDataMap().forEach((k, v) -> {
             if (v != null) {
-                addNode(v);
+                networkLastKnownNodeMap.put(v.getNodeHash(), v);
             }
         });
     }
