@@ -46,6 +46,7 @@ public abstract class BaseNodeInitializationService {
 
     private static final String NODE_REGISTRATION = "/node/node_registration";
     private static final String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
+    private static final String NETWORK_DETAILS_ERROR = "Error at getting network details";
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")
@@ -251,7 +252,7 @@ public abstract class BaseNodeInitializationService {
         } catch (HttpStatusCodeException e) {
             throw new NetworkException("Error at getting network details. Node manager error: " + new Gson().fromJson(e.getResponseBodyAsString(), Response.class));
         } catch (Exception e) {
-            throw new NetworkException("Error at getting network details", e);
+            throw new NetworkException(NETWORK_DETAILS_ERROR, e);
         }
         if (networkData == null) {
             throw new NetworkException("Null network from node manager");
@@ -260,7 +261,7 @@ public abstract class BaseNodeInitializationService {
         try {
             networkService.verifyNodeManager(networkData);
         } catch (NetworkNodeValidationException e) {
-            throw new NetworkException("Error at getting network details", e);
+            throw new NetworkException(NETWORK_DETAILS_ERROR, e);
         }
         return networkData;
     }
