@@ -51,7 +51,6 @@ public class JacksonSerializer implements ISerializer {
         try {
             return serializer.readValue(bytes, IPropagatable.class);
         } catch (IOException e) {
-            //log.error("Error at jackson serializer", e);
             return null;
         }
     }

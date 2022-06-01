@@ -320,7 +320,7 @@ public class BaseNodeNetworkService implements INetworkService {
                 throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_CERTIFICATE_NOT_FOUND, nodeUrl));
             }
             LocalDate now = LocalDate.now(ZoneId.of("UTC"));
-            long daysBeforeExpiration = 0;
+            long daysBeforeExpiration;
             for (Certificate c : certs) {
                 if (!(c instanceof X509Certificate)) {
                     throw new NetworkNodeValidationException(String.format(INVALID_NODE_SERVER_URL_SSL_INVALID_SERVER_CERTIFICATE, nodeUrl));
