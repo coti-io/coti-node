@@ -57,12 +57,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private GetUserTokensRequestCrypto getUserTokensRequestCrypto;
     @Autowired
-    private GetTokenDetailsRequestCrypto getTokenDetailsRequestCrypto;
-    @Autowired
-    private GetTokenHistoryRequestCrypto getTokenHistoryRequestCrypto;
-    @Autowired
-    private GetTokenSymbolDetailsRequestCrypto getTokenSymbolDetailsRequestCrypto;
-    @Autowired
     protected IBalanceService balanceService;
     @Autowired
     private UserCurrencyIndexes userCurrencyIndexes;
@@ -458,9 +452,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
-            if (!getTokenDetailsRequestCrypto.verifySignature(getTokenDetailsRequest)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
-            }
             Hash currencyHash = getTokenDetailsRequest.getCurrencyHash();
             return getTokenDetails(currencyHash);
         } catch (Exception e) {
@@ -473,9 +464,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         try {
             if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
-            }
-            if (!getTokenSymbolDetailsRequestCrypto.verifySignature(getTokenSymbolDetailsRequest)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(getTokenSymbolDetailsRequest.getSymbol());
             return getTokenDetails(currencyHash);
@@ -526,9 +514,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         try {
             if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
-            }
-            if (!getTokenHistoryRequestCrypto.verifySignature(getTokenHistoryRequest)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_SIGNATURE, STATUS_ERROR));
             }
             Hash currencyHash = getTokenHistoryRequest.getCurrencyHash();
             return getTokenHistory(currencyHash);
