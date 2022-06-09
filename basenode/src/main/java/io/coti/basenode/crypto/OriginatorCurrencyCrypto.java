@@ -28,6 +28,6 @@ public class OriginatorCurrencyCrypto extends SignatureCrypto<OriginatorCurrency
     }
 
     public static Hash calculateHash(String symbol) {
-        return CryptoHelper.cryptoHash(symbol.getBytes(), 224);
+        return CryptoHelper.cryptoHash(symbol.toLowerCase().getBytes(), 224);
     }
 }
