@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class SourceStarvationService {
 
-    private static final long SOURCE_STARVATION_CHECK_TASK_DELAY = 10000;
+    private static final long SOURCE_STARVATION_CHECK_TASK_DELAY = 5000;
     @Autowired
     private IClusterService clusterService;
     @Autowired
