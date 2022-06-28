@@ -358,7 +358,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     public void attachTransactionToCluster(TransactionData transactionData) {
         transactionData.setTrustChainConsensus(false);
-        transactionData.setTrustChainTrustScore(0);
+        transactionData.setTrustChainTrustScore(transactionData.getSenderTrustScore());
         transactionData.setTransactionConsensusUpdateTime(null);
         transactionData.setChildrenTransactionHashes(new ArrayList<>());
         transactions.put(transactionData);

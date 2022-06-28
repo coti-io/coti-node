@@ -30,7 +30,7 @@ public class AdminFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         CustomHttpServletResponse response = new CustomHttpServletResponse((HttpServletResponse) servletResponse);
 
-        if (!whiteListIps.contains(getClientIp(request)) && !whiteListIps.stream().anyMatch( p-> p.equals("0.0.0.0") || p.equals("0:0:0:0:0:0:0:0"))) {
+        if (!whiteListIps.contains(getClientIp(request)) && !whiteListIps.stream().anyMatch(p -> p.equals("0.0.0.0") || p.equals("0:0:0:0:0:0:0:0"))) {
             response.printResponse(new Response(UNAUTHORIZED_IP_ACCESS, STATUS_ERROR), HttpStatus.SC_UNAUTHORIZED);
         } else {
             filterChain.doFilter(request, response);
