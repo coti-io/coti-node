@@ -434,7 +434,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     private void setRunTimeTrustChainTrustScore(TransactionData transactionData, boolean includeRuntimeTrustScore) {
         if (!transactionData.isTrustChainConsensus() && includeRuntimeTrustScore) {
             double runtimeTrustChainTrustScore = clusterService.getRuntimeTrustChainTrustScore(transactionData.getHash());
-            if (runtimeTrustChainTrustScore > 0) {
+            if (runtimeTrustChainTrustScore > transactionData.getTrustChainTrustScore()) {
                 transactionData.setTrustChainTrustScore(runtimeTrustChainTrustScore);
             }
         }
