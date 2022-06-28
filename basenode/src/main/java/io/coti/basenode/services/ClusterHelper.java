@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentMap;
 public class ClusterHelper implements IClusterHelper {
 
     private static final long MINIMUM_WAIT_TIME_IN_SECONDS = 5;
-    private static final long WAIT_REDUCTION_FACTOR = 8;
+    private static final long WAIT_REDUCTION_FACTOR = 10;
     @Autowired
     private Transactions transactions;
 
