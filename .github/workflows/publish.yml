@@ -1,6 +1,6 @@
 # Build the docker image and push it to GitHub Packages
 
-name: Coti Node Publisher
+name: node publisher
 
 on:
   workflow_dispatch:
