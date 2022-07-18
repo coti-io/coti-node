@@ -21,12 +21,6 @@ jobs:
       EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
 
     steps:
-      - name: Obtain Latest Git ONLY within container for checkout
-        run: |
-          apt-get update -y 
-          apt-get upgrade -y
-          apt-get install -y git
-
       - name: Clone
         uses: actions/checkout@v3
         with:

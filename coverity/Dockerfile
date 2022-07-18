@@ -1,9 +1,13 @@
-FROM maven:3.5.4-jdk-8
+FROM maven:3.6.0-jdk-8
 
 ARG PROJECT
 ARG TOKEN
 
-RUN apt-get install -qy wget
+RUN apt-get install -y software-properties-common && \
+    apt-get update  && \
+    add-apt-repository -y ppa:git-core/ppa && \
+    apt-get update && apt-get upgrade -qy && \
+    apt-get install -qy git wget
 
 RUN wget -q https://scan.coverity.com/download/cxx/linux64 --post-data "token=$TOKEN&project=$PROJECT" -O cov-analysis-linux64.tar.gz && \
     mkdir /opt/cov-analysis-linux64 && \
