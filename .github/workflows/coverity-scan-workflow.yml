@@ -1,0 +1,48 @@
+name: coverity scan
+
+on:
+  workflow_dispatch:
+    branches:
+      - multi_currency_new_dev
+      - dev
+      - master
+
+jobs:
+  coverity_scan:
+    name: Coverity Scan
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/coti-io/coti-node-scanner:latest
+
+    env:
+      PROJECT: coti-io%2Fcoti-node
+      TOKEN: ${{ secrets.COVERITY_SCAN_COTI_NODE_TOKEN }}
+      EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
+
+    steps:
+      - name: Obtain Latest Git ONLY within container for checkout
+        run: |
+          apt-get update -y 
+          apt-get upgrade -y
+          apt-get install -y git
+
+      - name: Clone
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Build with cov-build
+        run: cov-build --dir cov-int mvn initialize && mvn clean compile && mvn package -DskipTests
+
+      - name: Submit the result to Coverity Scan
+        run: |
+          tar czvf cov-int.tar.gz cov-int
+          curl \
+            --form token=$TOKEN \
+            --form email=$EMAIL \
+            --form file=@cov-int.tar.gz \
+            --form version=master \
+            --form description="Coti Node" \
+            https://scan.coverity.com/builds?project=$PROJECT
