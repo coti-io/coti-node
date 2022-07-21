@@ -56,6 +56,14 @@
             </snapshots>
         </repository>
         <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>besu</id>
+            <name>Hyperledger Besu</name>
+            <url>https://hyperledger.jfrog.io/artifactory/besu-maven</url>
+        </repository>
+        <repository>
             <id>ossrh</id>
             <name>oss-sonatype</name>
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
