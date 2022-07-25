@@ -183,5 +183,9 @@ public abstract class Collection<T extends IEntity> {
             }
         }
     }
+
+    public long size() {
+        return databaseConnector.size(columnFamilyName);
+    }
 }
 

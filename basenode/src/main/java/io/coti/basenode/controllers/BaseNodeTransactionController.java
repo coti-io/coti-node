@@ -41,4 +41,9 @@ public class BaseNodeTransactionController {
     public ResponseEntity<IResponse> getLastTransactionIndex() {
         return transactionIndexService.getLastTransactionIndex();
     }
+
+    @GetMapping(path = "/rejected")
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        return transactionService.getRejectedTransactions();
+    }
 }

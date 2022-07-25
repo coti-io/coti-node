@@ -58,6 +58,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     private Set<Hash> noneIndexedTransactionHashes;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
 
     @PostConstruct
     private void init() {
@@ -232,7 +234,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         if (transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
             confirmationService.setDspcToTrue(dspConsensusResult);
         }
-
     }
 
     public boolean validateTrustScore(TransactionData transactionData) {
@@ -260,7 +261,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     }
 
     public void startHandleTransaction(TransactionData transactionData) {
-
         transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack<>());
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(RECEIVED);
     }
@@ -275,6 +275,13 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             rollbackTransaction(transactionData);
         }
         transactionHashToTransactionStateStackMapping.remove(transactionData.getHash());
+    }
+
+    public void continueHandleRejectedTransaction(TransactionData rejectedTransactionData) {
+        detachTransactionFromCluster(rejectedTransactionData);
+        revertPreBalance(rejectedTransactionData);
+        revertPayloadAction(rejectedTransactionData);
+        revertSavedInDB(rejectedTransactionData);
     }
 
     @Override
@@ -310,10 +317,16 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             log.error("Reverting minting transaction: {}", transactionData.getHash());
             mintingService.revertMintingAllocation(transactionData);
         }
+        if (transactionData.getType() == TransactionType.TokenGeneration) {
+            log.error("Reverting token generation transaction: {}", transactionData.getHash());
+            currencyService.revertCurrencyUnconfirmedRecord(transactionData);
+        }
     }
 
     private void revertSavedInDB(TransactionData transactionData) {
         log.error("Reverting transaction saved in DB: {}", transactionData.getHash());
+        transactions.deleteByHash(transactionData.getHash());
+        totalTransactions.decrementAndGet();
     }
 
     private void revertPreBalance(TransactionData transactionData) {
@@ -371,6 +384,13 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         }
         updateAddressTransactionHistory(transactionData);
         clusterService.attachToCluster(transactionData);
+    }
+
+    public void detachTransactionFromCluster(TransactionData transactionData) {
+        transactionPropagationCheckService.removeTransactionHashFromUnconfirmed(transactionData.getHash());
+        clusterService.detachFromCluster(transactionData);
+        removeAddressTransactionHistory(transactionData);
+        removeNoneIndexedTransaction(transactionData);
     }
 
     @Override
@@ -546,4 +566,24 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             return false;
         }
     }
+
+    @Override
+    public void removeAddressTransactionHistory(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            Hash addressHash = baseTransactionData.getAddressHash();
+            AddressTransactionsHistory addressHistory = addressTransactionsHistories.getByHash(addressHash);
+            if (addressHistory == null) {
+                log.error("Address history does not exist for address {}", addressHash);
+            }
+            else {
+                if (!addressHistory.removeTransactionHashFromHistory(transactionData.getHash())) {
+                    log.error("Transaction {} is not in history of address {}", transactionData.getHash(), addressHash);
+                }
+                else {
+                    addressTransactionsHistories.put(addressHistory);
+                }
+            }
+        });
+    }
+
 }

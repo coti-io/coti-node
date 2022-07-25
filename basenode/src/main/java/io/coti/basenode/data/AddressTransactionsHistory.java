@@ -27,6 +27,10 @@ public class AddressTransactionsHistory implements IEntity {
         return transactionsHistory.add(transactionHash);
     }
 
+    public boolean removeTransactionHashFromHistory(Hash transactionHash) {
+        return transactionsHistory.remove(transactionHash);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {

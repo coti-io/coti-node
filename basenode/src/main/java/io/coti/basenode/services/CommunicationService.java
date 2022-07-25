@@ -7,6 +7,7 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.data.RejectedTransactionData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.interfaces.ICommunicationService;
@@ -35,7 +36,7 @@ public class CommunicationService implements ICommunicationService {
         propagationSubscriber.init();
         propagationSubscriber.setSubscriberNodeType(subscriberNodeType);
         initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Collections.singletonList(NetworkData.class));
-        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class));
+        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, RejectedTransactionData.class));
         propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(initialPublisherNodeTypeToMessageTypesMap);
     }
 
