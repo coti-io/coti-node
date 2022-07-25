@@ -1,10 +1,12 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.RejectedTransactionCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.crypto.TransactionSenderCrypto;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.RejectedTransactionData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
@@ -33,6 +35,8 @@ public class BaseNodeValidationService implements IValidationService {
     private TransactionCrypto transactionCrypto;
     @Autowired
     private TransactionSenderCrypto transactionSenderCrypto;
+    @Autowired
+    private RejectedTransactionCrypto rejectedTransactionCrypto;
     @Autowired
     private IPotService potService;
 
@@ -65,6 +69,11 @@ public class BaseNodeValidationService implements IValidationService {
         return validateTransactionDataIntegrity(transactionData) && validateTransactionNodeSignature(transactionData) &&
                 //validateTransactionTrustScore(transactionData) &&
                 validateBaseTransactionAmounts(transactionData) && validatePot(transactionData);
+    }
+
+    @Override
+    public boolean validatePropagatedRejectedTransactionDataIntegrity(RejectedTransactionData rejectedTransactionData) {
+        return rejectedTransactionCrypto.verifySignature(rejectedTransactionData);
     }
 
     @Override

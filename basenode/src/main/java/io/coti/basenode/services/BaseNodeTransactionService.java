@@ -260,6 +260,15 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(new Response(
+                        METHOD_NOT_ALLOWED,
+                        STATUS_ERROR));
+    }
+
+    @Override
     public void handlePropagatedTransaction(TransactionData transactionData) {
         AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
 
@@ -317,18 +326,22 @@ public class BaseNodeTransactionService implements ITransactionService {
     protected boolean validateAndAttachTransaction(TransactionData transactionData) {
         if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
             log.error("Balance check failed: {}", transactionData.getHash());
+            propagateRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.BALANCE);
             return false;
         }
         if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
             log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
+            propagateRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.TOKEN_UNIQUENESS);
             return false;
         }
         if (transactionData.getType().equals(TransactionType.TokenMinting) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
             log.error("Minting balance check failed: {}", transactionData.getHash());
+            propagateRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.MINTING_BALANCE);
             return false;
         }
         if (transactionData.getType().equals(TransactionType.EventHardFork) && !validationService.validateEventHardFork(transactionData)) {
             log.error("EVENT HARD FORK validation failed for transaction: {}", transactionData.getHash());
+            propagateRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.EVENT_HARDFORK);
             return false;
         }
         transactionHelper.attachTransactionToCluster(transactionData);
@@ -340,23 +353,32 @@ public class BaseNodeTransactionService implements ITransactionService {
         // Implemented by Full Node
     }
 
+    @Override
+    public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+        // Implemented by Full Node
+    }
+
     protected void processPostponedTransactions(TransactionData transactionData) {
         DspConsensusResult postponedDspConsensusResult = dspVoteService.getPostponedDspConsensusResult(transactionData.getHash());
         if (postponedDspConsensusResult != null) {
             dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
         }
-        Map<TransactionData, Boolean> postponedParentTransactionMap = postponedTransactionMap.entrySet().stream().filter(
-                        postponedTransactionMapEntry ->
-                                (postponedTransactionMapEntry.getKey().getRightParentHash() != null
-                                        && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
-                                        || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
-                                        && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<TransactionData, Boolean> postponedParentTransactionMap = getPostponedChildrenTransactionMap(transactionData.getHash(),postponedTransactionMap);
         postponedParentTransactionMap.forEach((postponedTransaction, isTransactionFromFullNode) -> {
             log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
             postponedTransactionMap.remove(postponedTransaction);
             handlePostponedTransaction(postponedTransaction, isTransactionFromFullNode);
         });
+    }
+
+    protected Map<TransactionData, Boolean> getPostponedChildrenTransactionMap(Hash transactionDataHash, Map<TransactionData, Boolean> postponedTransactionMap) {
+        return postponedTransactionMap.entrySet().stream().filter(
+                        postponedTransactionMapEntry ->
+                                (postponedTransactionMapEntry.getKey().getRightParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionDataHash))
+                                        || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionDataHash)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     protected void handlePostponedTransaction(TransactionData postponedTransaction,
@@ -367,7 +389,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        // implemented by sub classes
+        // implemented by subclasses
     }
 
     @Override
@@ -427,6 +449,10 @@ public class BaseNodeTransactionService implements ITransactionService {
         log.debug("Adding the transaction {} to explorer indexes by base node", transactionData.getHash());
     }
 
+    public void removeDataFromMemory(TransactionData transactionData) {
+        log.debug("Removing the transaction {} from explorer indexes by base node", transactionData.getHash());
+    }
+
     protected boolean hasOneOfParentsMissing(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && transactions.getByHash(transactionData.getLeftParentHash()) == null) ||
                 (transactionData.getRightParentHash() != null && transactions.getByHash(transactionData.getRightParentHash()) == null);
@@ -434,6 +460,12 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactionMap.size();
+    }
+
+    @Override
+    public long getRejectedTransactionsSize() {
+        // implemented by DSP node
+        return 0;
     }
 
     protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter
@@ -476,6 +508,10 @@ public class BaseNodeTransactionService implements ITransactionService {
                 transactionData.setTrustChainTrustScore(runtimeTrustChainTrustScore);
             }
         }
+    }
+
+    protected void propagateRejectedTransactionToFullNode(TransactionData transactionData, RejectedTransactionDataReason rejectedTransactionDataReason) {
+        // implemented by DSP node
     }
 
 }
