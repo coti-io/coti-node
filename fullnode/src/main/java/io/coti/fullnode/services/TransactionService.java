@@ -17,6 +17,7 @@ import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
@@ -41,6 +42,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
@@ -80,10 +82,13 @@ public class TransactionService extends BaseNodeTransactionService {
     private Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
+    @Autowired
+    private BaseNodeEventService baseNodeEventService;
     private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
     private final LockData transactionLockData = new LockData();
     @Value("${java.process.memory.limit:95}")
     private int javaProcessMemoryLimit;
+    final ReentrantReadWriteLock transactionHandlingReadWriteLock = new ReentrantReadWriteLock(true);
 
     @Override
     public void init() {
@@ -119,6 +124,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
             currentlyAddTransaction.incrementAndGet();
+            transactionHandlingReadWriteLock.readLock().lock();
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 if (((NetworkService) networkService).isNotConnectedToDspNodes()) {
                     log.error("FullNode is not connected to any DspNode. Rejecting transaction {}", transactionData.getHash());
@@ -201,6 +207,7 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.endHandleTransaction(transactionData);
             transactionLockData.removeLockFromLocksMap(transactionData.getHash());
             currentlyAddTransaction.decrementAndGet();
+            transactionHandlingReadWriteLock.readLock().unlock();
         }
     }
 
@@ -564,7 +571,6 @@ public class TransactionService extends BaseNodeTransactionService {
             index--;
         }
         return ResponseEntity.ok(new GetTransactionsResponse(transactionDataList));
-
     }
 
     public ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash, boolean extended) {
@@ -595,6 +601,12 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
+    public void removeDataFromMemory(TransactionData transactionData) {
+        explorerIndexedTransactionSet.remove(new ExplorerTransactionData(transactionData));
+        webSocketSender.notifyTotalTransactionsChange(explorerIndexedTransactionSet.size());
+        removeAddressTransactionsByAttachment(transactionData);
+    }
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -631,9 +643,66 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    private void removeAddressTransactionsByAttachment(TransactionData transactionData) {
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            NavigableMap<Instant, Set<Hash>> transactionHashesByAttachmentMap = addressToTransactionsByAttachmentMap.getOrDefault(baseTransactionData.getAddressHash(), new ConcurrentSkipListMap<>());
+            Set<Hash> transactionHashSet = transactionHashesByAttachmentMap.getOrDefault(transactionData.getAttachmentTime(), Sets.newConcurrentHashSet());
+            transactionHashSet.remove(transactionData.getHash());
+            transactionHashesByAttachmentMap.put(transactionData.getAttachmentTime(), transactionHashSet);
+            addressToTransactionsByAttachmentMap.put(baseTransactionData.getAddressHash(), transactionHashesByAttachmentMap);
+        });
+    }
+
     @Override
     public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
         transactionPropagationCheckService.removeTransactionHashFromUnconfirmed(transactionData.getHash());
+    }
+
+    @Override
+    public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+        if (!baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
+            log.error("Error encountered during the handling of rejected transaction data, event TRUST_SCORE_CONSENSUS didn't happen");
+            return;
+        }
+        Hash rejectedTransactionHash = rejectedTransactionData.getHash();
+        if (rejectedTransactionHash == null) {
+            log.error("Error encountered during the handling of rejected transaction data, hash is null");
+            return;
+        }
+        try {
+            transactionHandlingReadWriteLock.writeLock().lock();
+            synchronized (transactionLockData.addLockToLockMap(rejectedTransactionHash)) {
+                if (!transactionHelper.isTransactionHashExists(rejectedTransactionHash)) {
+                    return;
+                }
+                if (!validationService.validatePropagatedRejectedTransactionDataIntegrity(rejectedTransactionData)) {
+                    log.error("Data Integrity validation failed for rejected transaction: {}", rejectedTransactionHash);
+                    return;
+                }
+
+                rejectTransaction(rejectedTransactionHash);
+            }
+        } catch (RuntimeException error) {
+            log.error(error.getMessage());
+        }
+        finally {
+            transactionLockData.removeLockFromLocksMap(rejectedTransactionHash);
+            transactionHandlingReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    private void rejectTransaction(Hash rejectedTransactionDataHash) {
+        TransactionData transactionData = transactions.getByHash(rejectedTransactionDataHash);
+        if (transactionData == null) {
+            throw new TransactionException("No TransactionData found for rejected transaction hash: " + rejectedTransactionDataHash);
+        }
+
+        transactionData.getChildrenTransactionHashes().forEach(this::rejectTransaction);
+
+        log.debug("Starting to remove the rejected transaction {}", rejectedTransactionDataHash);
+        removeDataFromMemory(transactionData);
+        transactionHelper.continueHandleRejectedTransaction(transactionData);
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.REJECTED_TRANSACTION);
     }
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)

@@ -102,6 +102,10 @@ public class TransactionData implements IPropagatable, Comparable<TransactionDat
         childrenTransactionHashes.add(hash);
     }
 
+    public boolean removeFromChildrenTransactions(Hash hash) {
+        return childrenTransactionHashes.remove(hash);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {

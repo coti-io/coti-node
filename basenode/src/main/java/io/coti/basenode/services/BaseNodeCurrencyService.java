@@ -224,6 +224,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
             if (tokenHashSet.isEmpty()) {
                 userCurrencyIndexes.deleteByHash(originatorHash);
             }
+            else {
+                userCurrencyIndexes.put(userCurrencyIndexData);
+            }
         }
     }
 
@@ -372,6 +375,26 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyHash));
                     addToUserCurrencyIndexes(currencyData.getOriginatorHash(), currencyHash);
                     return true;
+                }
+            }
+        } finally {
+            currencyNameLockData.removeLockFromLocksMap(currencyNameHash);
+            currencyLockData.removeLockFromLocksMap(currencyHash);
+        }
+    }
+
+    public void revertCurrencyUnconfirmedRecord(TransactionData transactionData) {
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
+
+        OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
+        Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
+        Hash currencyNameHash = CryptoHelper.cryptoHash(originatorCurrencyData.getName().getBytes());
+        try {
+            synchronized (currencyLockData.addLockToLockMap(currencyHash)) {
+                synchronized (currencyNameLockData.addLockToLockMap(currencyNameHash)) {
+                    currencies.deleteByHash(currencyHash);
+                    currencyNameIndexes.deleteByHash(currencyNameHash);
+                    removeFromUserCurrencyIndexes(originatorCurrencyData.getOriginatorHash(), currencyHash);
                 }
             }
         } finally {
@@ -540,5 +563,5 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         tokenTransactionHashesMap.putIfAbsent(currencyHash, new HashSet<>(Collections.singletonList(transactionData.getHash())));
 
     }
-
+    
 }

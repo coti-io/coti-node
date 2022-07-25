@@ -15,6 +15,8 @@ public interface IClusterService {
 
     void updateTransactionOnTrustChainConfirmationCluster(TransactionData transactionData);
 
+    void detachFromCluster(TransactionData transactionData);
+
     void selectSources(TransactionData transactionData);
 
     void addExistingTransactionOnInit(TransactionData transactionData);

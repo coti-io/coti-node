@@ -78,12 +78,11 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public void revertMintingAllocation(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
-        Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
+        Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
         try {
             synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
-                CurrencyData currencyFromDB = currencies.getByHash(tokenHash);
                 BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
-                if (currencyFromDB == null || mintableAmount == null) {
+                if (mintableAmount == null) {
                     log.error("Error in Minting revert. Token {} is invalid", tokenHash);
                     return;
                 }
