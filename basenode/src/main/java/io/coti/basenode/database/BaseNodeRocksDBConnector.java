@@ -445,4 +445,13 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
         return true;
     }
 
+    @Override
+    public long size(String columnFamilyName) {
+        try {
+            return db.getLongProperty(classNameToColumnFamilyHandleMapping.get(columnFamilyName), "rocksdb.estimate-num-keys");
+        } catch (RocksDBException e) {
+            log.error("Error at getting property: size from db", e);
+            return -1;
+        }
+    }
 }

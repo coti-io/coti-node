@@ -121,6 +121,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             appendOutput(output, "DspConfirmed", confirmationService.getDspConfirmed());
             appendOutput(output, "Confirmed", confirmationService.getTotalConfirmed());
             appendOutput(output, "LastIndex", transactionIndexService.getLastTransactionIndexData().getIndex());
+            appendOutput(output, "RejectedTransactions", transactionService.getRejectedTransactionsSize());
         }
         appendOutput(output, "Sources", clusterService.getTotalSources());
         appendOutput(output, "DSPHealthState", dspConfirmedState.toString());

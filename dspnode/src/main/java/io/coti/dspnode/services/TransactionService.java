@@ -2,25 +2,40 @@ package io.coti.dspnode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.crypto.RejectedTransactionCrypto;
 import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.GetRejectedTransactionsResponse;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.data.RejectedTransactionResponseData;
+import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.model.RejectedTransactions;
+import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_NONE_INDEXED_SERVER_ERROR;
+
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
+    public static final int NUMBER_OF_SECONDS_IN_DAY = 24 * 60 * 60;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -37,6 +52,12 @@ public class TransactionService extends BaseNodeTransactionService {
     private TransactionPropagationCheckService transactionPropagationCheckService;
     private BlockingQueue<TransactionData> transactionsToValidate;
     private Thread transactionValidationThread;
+    @Autowired
+    private RejectedTransactions rejectedTransactions;
+    @Autowired
+    private RejectedTransactionCrypto rejectedTransactionCrypto;
+    @Autowired
+    private BaseNodeEventService baseNodeEventService;
 
     @Override
     public void init() {
@@ -56,8 +77,19 @@ public class TransactionService extends BaseNodeTransactionService {
                 log.debug("Transaction already exists: {}", transactionData.getHash());
                 return;
             }
+            if (rejectedTransactions.getByHash(transactionData.getHash()) != null) {
+                log.debug("Transaction already rejected as invalid: {}", transactionData.getHash());
+                notifyNodesOnRejectedTransaction(rejectedTransactions.getByHash(transactionData.getHash()));
+                return;
+            }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 log.error("Data Integrity validation failed: {}", transactionData.getHash());
+                propagateRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.DATA_INTEGRITY);
+                return;
+            }
+            if (hasOneOfParentsRejected(transactionData)) {
+                log.debug("Transaction rejected as parent already rejected: {}", transactionData.getHash());
+                propagateRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.REJECTED_PARENT);
                 return;
             }
             if (hasOneOfParentsMissing(transactionData)) {
@@ -85,9 +117,33 @@ public class TransactionService extends BaseNodeTransactionService {
                 transactionHelper.endHandleTransaction(transactionData);
                 if (isTransactionFinished) {
                     processPostponedTransactions(transactionData);
+                } else {
+                    processPostponedRejectedTransactions(transactionData);
                 }
             }
         }
+    }
+
+    @Override
+    protected void propagateRejectedTransactionToFullNode(TransactionData transactionData,
+                                                          RejectedTransactionDataReason rejectedTransactionDataReason) {
+        if (baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
+            log.debug("Informing full node that transaction is rejected");
+            RejectedTransactionData rejectedTransactionData = new RejectedTransactionData(transactionData);
+            rejectedTransactionData.setRejectionReason(rejectedTransactionDataReason);
+            rejectedTransactionCrypto.signMessage(rejectedTransactionData);
+            notifyNodesOnRejectedTransaction(rejectedTransactionData);
+            rejectedTransactions.put(rejectedTransactionData);
+        }
+    }
+
+    private void notifyNodesOnRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+        propagationPublisher.propagate(rejectedTransactionData, Arrays.asList(NodeType.FullNode));
+    }
+
+    private boolean hasOneOfParentsRejected(TransactionData transactionData) {
+        return (transactionData.getLeftParentHash() != null && rejectedTransactions.getByHash(transactionData.getLeftParentHash()) != null) ||
+                (transactionData.getRightParentHash() != null && rejectedTransactions.getByHash(transactionData.getRightParentHash()) != null);
     }
 
     @Override
@@ -97,6 +153,52 @@ public class TransactionService extends BaseNodeTransactionService {
         } else {
             handlePropagatedTransaction(postponedTransaction);
         }
+    }
+
+    @Scheduled(initialDelay = 1000, fixedDelay = 30000)
+    private void clearRejectedTransactions() {
+        rejectedTransactions.forEach(rejectedTransaction -> {
+                    if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > NUMBER_OF_SECONDS_IN_DAY)) {
+                        log.debug("removing rejected transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
+                                rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReason());
+                        rejectedTransactions.delete(rejectedTransaction);
+                    }
+                }
+        );
+    }
+
+    private void processPostponedRejectedTransactions(TransactionData rejectedTransaction) {
+        if (postponedTransactionMap.size() > 0) {
+            Map<TransactionData, Boolean> postponedChildrenTransactionMap = getPostponedChildrenTransactionMap(rejectedTransaction.getHash(), postponedTransactionMap);
+            for (Map.Entry<TransactionData, Boolean> entry : postponedChildrenTransactionMap.entrySet()) {
+                if (entry.getValue().equals(true)) {
+                    propagateRejectedTransactionToFullNode(entry.getKey(), RejectedTransactionDataReason.REJECTED_PARENT);
+                    postponedTransactionMap.remove(entry.getKey());
+                    processPostponedTransactions(entry.getKey());
+                }
+            }
+        }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        try {
+            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
+            rejectedTransactions.forEach(rejectedTransaction -> rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction)));
+            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
+        } catch (Exception e) {
+            log.info("Exception while getting rejected transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            TRANSACTION_NONE_INDEXED_SERVER_ERROR,
+                            STATUS_ERROR));
+        }
+    }
+
+    @Override
+    public long getRejectedTransactionsSize() {
+        return rejectedTransactions.size();
     }
 
     private void checkAttachedTransactions() {
@@ -167,6 +269,5 @@ public class TransactionService extends BaseNodeTransactionService {
             Thread.currentThread().interrupt();
             log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
         }
-
     }
 }
