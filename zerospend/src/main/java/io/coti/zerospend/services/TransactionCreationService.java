@@ -52,8 +52,8 @@ public class TransactionCreationService {
     @Value("${zerospend.seed}")
     private String seed;
 
-    public void createNewStarvationZeroSpendTransaction(TransactionData transactionData) {
-        createNewZeroSpendTransaction(transactionData, STARVATION);
+    public TransactionData createNewStarvationZeroSpendTransaction(TransactionData transactionData) {
+        return createNewZeroSpendTransaction(transactionData, STARVATION);
     }
 
     public void createNewGenesisZeroSpendTransaction(double trustScore) {
@@ -62,23 +62,23 @@ public class TransactionCreationService {
         attachAndSendZeroSpendTransaction(transactionData);
     }
 
-    public void createNewZeroSpendTransaction(TransactionData existingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
+    public TransactionData createNewZeroSpendTransaction(TransactionData existingTransactionData, ZeroSpendTransactionType zeroSpendTransactionType) {
         if (!validationService.fullValidation(existingTransactionData)) {
-            log.error("Validation for waiting source  failed! requesting transaction {}", existingTransactionData);
-            return;
+            log.error("Validation for waiting source failed! requesting transaction {}", existingTransactionData);
+            return null;
         }
         log.debug("Creating a new Zero Spend Transaction for transaction : Hash = {} , SenderTrustScore = {}", existingTransactionData.getHash(), existingTransactionData.getSenderTrustScore());
         TransactionData transactionData = createZeroSpendTransactionData(existingTransactionData.getSenderTrustScore(), zeroSpendTransactionType);
-
         if (zeroSpendTransactionType == STARVATION) {
             transactionData.setLeftParentHash(existingTransactionData.getHash());
         }
-
-        attachAndSendZeroSpendTransaction(transactionData);
+        return transactionData;
     }
 
-
-    private void attachAndSendZeroSpendTransaction(TransactionData transactionData) {
+    public void attachAndSendZeroSpendTransaction(TransactionData transactionData) {
+        if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
+            return;
+        }
         attachTransactionToCluster(transactionData);
         sendTransactionToPublisher(transactionData);
     }

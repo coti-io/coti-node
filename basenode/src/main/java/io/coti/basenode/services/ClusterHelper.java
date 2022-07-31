@@ -2,13 +2,16 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IClusterHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -21,6 +24,79 @@ public class ClusterHelper implements IClusterHelper {
     private static final long WAIT_REDUCTION_FACTOR = 10;
     @Autowired
     private Transactions transactions;
+
+    private void addMissingChildIntoCluster(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster,
+                                            Hash child) {
+        trustChainConfirmationCluster.computeIfAbsent(child, c -> trustChainConfirmationCluster.put(c, transactions.getByHash(child)));
+    }
+
+    private void populateSourceMaps(TransactionData oldestNonZeroSpendRoot, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs,
+                                    TransactionData transactionData, List<TransactionData> orphanedZeroSpendSources) {
+        if (oldestNonZeroSpendRoot != null) {
+            rootSourcePairs.put(oldestNonZeroSpendRoot, transactionData);
+        } else {
+            orphanedZeroSpendSources.add(transactionData);
+        }
+    }
+
+    private TransactionData setOldestRoot(TransactionData transactionData, ConcurrentHashMap<Hash,
+            TransactionData> trustChainConfirmationCluster, TransactionData oldestNonZeroSpendRoot) {
+        boolean isZeroSpendTx = transactionData.getType().equals(TransactionType.ZeroSpend);
+        boolean parentInCluster = isParentInCluster(transactionData, trustChainConfirmationCluster);
+        if ((!parentInCluster || oldestNonZeroSpendRoot == null) && !isZeroSpendTx) {
+            return transactionData;
+        }
+        return oldestNonZeroSpendRoot;
+    }
+
+    public boolean isParentInCluster(TransactionData transactionData, ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
+        boolean isLeftParentInCluster = transactionData.getLeftParentHash() != null && trustChainConfirmationCluster.containsKey(transactionData.getLeftParentHash());
+        boolean isRightParentInCluster = transactionData.getRightParentHash() != null && trustChainConfirmationCluster.containsKey(transactionData.getRightParentHash());
+        return isLeftParentInCluster || isRightParentInCluster;
+    }
+
+    public void mapPathsToSources(TransactionData transactionData, ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster,
+                                  TransactionData oldestNonZeroSpendRoot, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs,
+                                  List<TransactionData> orphanedZeroSpendSources) {
+
+        oldestNonZeroSpendRoot = setOldestRoot(transactionData, trustChainConfirmationCluster, oldestNonZeroSpendRoot);
+
+        List<Hash> children = transactionData.getChildrenTransactionHashes();
+        if (children.isEmpty()) {
+            populateSourceMaps(oldestNonZeroSpendRoot, rootSourcePairs, transactionData, orphanedZeroSpendSources);
+        } else {
+            mapChildPaths(trustChainConfirmationCluster, oldestNonZeroSpendRoot, rootSourcePairs, orphanedZeroSpendSources, children);
+        }
+    }
+
+    private void mapChildPaths(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster, TransactionData oldestNonZeroSpendRoot, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs, List<TransactionData> orphanedZeroSpendSources, List<Hash> children) {
+        TransactionData majorChild = null;
+        double maxTrustChainTrustScore = 0;
+        List<TransactionData> minorChildren = new ArrayList<>();
+        for (Hash child : children) {
+            addMissingChildIntoCluster(trustChainConfirmationCluster, child);
+            TransactionData childTransactionData = trustChainConfirmationCluster.get(child);
+            if (oldestNonZeroSpendRoot != null) {
+                if (childTransactionData.getTrustChainTrustScore() > maxTrustChainTrustScore) {
+                    if (majorChild != null) {
+                        minorChildren.add(majorChild);
+                    }
+                    maxTrustChainTrustScore = childTransactionData.getTrustChainTrustScore();
+                    majorChild = childTransactionData;
+                }
+            } else {
+                mapPathsToSources(childTransactionData, trustChainConfirmationCluster, null, rootSourcePairs, orphanedZeroSpendSources);
+            }
+        }
+        if (majorChild != null) {
+            mapPathsToSources(majorChild, trustChainConfirmationCluster, oldestNonZeroSpendRoot, rootSourcePairs, orphanedZeroSpendSources);
+        }
+        if (!minorChildren.isEmpty()) {
+            for (TransactionData minorChild : minorChildren) {
+                mapPathsToSources(minorChild, trustChainConfirmationCluster, null, rootSourcePairs, orphanedZeroSpendSources);
+            }
+        }
+    }
 
     @Override
     public void sortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph) {

@@ -2,9 +2,9 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.services.interfaces.IClusterHelper;
 import io.coti.basenode.services.interfaces.IClusterService;
+import io.coti.zerospend.data.ZeroSpendTransactionType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,8 +16,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -36,13 +38,18 @@ public class SourceStarvationService {
         log.debug("Checking Source Starvation");
         Instant now = Instant.now();
         ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
-        LinkedList<TransactionData> topologicalOrderedGraph = new LinkedList<>();
-        ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions = new ConcurrentHashMap<>();
+        List<TransactionData> orphanedZeroSpendSources = new ArrayList<>();
 
-        clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
+        ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs = new ConcurrentHashMap<>();
+        for (TransactionData transactionData : trustChainConfirmationCluster.values()) {
+            boolean isParentInCluster = clusterHelper.isParentInCluster(transactionData, trustChainConfirmationCluster);
+            if (!isParentInCluster) {
+                clusterHelper.mapPathsToSources(transactionData, trustChainConfirmationCluster, null, rootSourcePairs, orphanedZeroSpendSources);
+            }
+        }
+        List<TransactionData> orphanedStarvationSources = orphanedZeroSpendSources.stream().filter(p -> !ZeroSpendTransactionType.GENESIS.toString().equals(p.getTransactionDescription())).collect(Collectors.toList());
 
-        createNewStarvationZeroSpendTransactions(now, topologicalOrderedGraph, nonZeroSpendChainTransactions);
-
+        createNewStarvationZeroSpendTransactions(now, rootSourcePairs, orphanedStarvationSources);
         createNewGenesisZeroSpendTransactions();
     }
 
@@ -62,34 +69,59 @@ public class SourceStarvationService {
         }
     }
 
-    private void createNewStarvationZeroSpendTransactions(Instant now, LinkedList<TransactionData> topologicalOrderedGraph, ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions) {
-        for (int i = topologicalOrderedGraph.size() - 1; i >= 0; i--) {
-            TransactionData transactionData = topologicalOrderedGraph.get(i);
-            if (!transactionData.getType().equals(TransactionType.ZeroSpend)) {
-                nonZeroSpendChainTransactions.put(transactionData.getHash(), transactionData.getAttachmentTime());
-            }
-            parentInNonZeroChain(transactionData.getLeftParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
-            parentInNonZeroChain(transactionData.getRightParentHash(), transactionData.getHash(), nonZeroSpendChainTransactions);
-
-            if (transactionData.getChildrenTransactionHashes().isEmpty() && nonZeroSpendChainTransactions.containsKey(transactionData.getHash())) {
-                long minimumWaitingTimeInMilliseconds = clusterHelper.getMinimumWaitTimeInMilliseconds(transactionData);
-                long actualWaitingTimeInMilliseconds = Duration.between(nonZeroSpendChainTransactions.get(transactionData.getHash()), now).toMillis();
-                log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", transactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
+    private void createNewStarvationZeroSpendTransactions(Instant now, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs, List<TransactionData> orphanedStarvationSources) {
+        List<TransactionData> sourcesAttached = new ArrayList<>();
+        List<TransactionData> zeroSpendSourcesAttached = new ArrayList<>();
+        List<TransactionData> newlyCreatedZeroSpends = new ArrayList<>();
+        for (Map.Entry<TransactionData, TransactionData> rootSourcePair : rootSourcePairs.entrySet()) {
+            TransactionData rootTransactionData = rootSourcePair.getKey();
+            TransactionData sourceTransactionData = rootSourcePair.getValue();
+            if (!sourcesAttached.contains(sourceTransactionData)) {
+                long minimumWaitingTimeInMilliseconds = clusterHelper.getMinimumWaitTimeInMilliseconds(rootTransactionData);
+                long actualWaitingTimeInMilliseconds = Duration.between(rootTransactionData.getAttachmentTime(), now).toMillis();
+                log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", rootTransactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
                 if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
-                    transactionCreationService.createNewStarvationZeroSpendTransaction(transactionData);
+                    createJointSourceStarvationZeroSpendTransaction(newlyCreatedZeroSpends, sourceTransactionData, sourcesAttached,
+                            rootSourcePairs, orphanedStarvationSources, zeroSpendSourcesAttached);
+                } else {
+                    rootSourcePairs.remove(rootTransactionData);
                 }
             }
         }
+        for (TransactionData newZeroSpend : newlyCreatedZeroSpends) {
+            transactionCreationService.attachAndSendZeroSpendTransaction(newZeroSpend);
+        }
     }
 
-    private void parentInNonZeroChain(Hash parentHash, Hash transactionHash, ConcurrentHashMap<Hash, Instant> nonZeroSpendChainTransactions) {
-        if (parentHash != null) {
-            Instant parentAttachmentTime = nonZeroSpendChainTransactions.get(parentHash);
-            if (parentAttachmentTime != null) {
-                nonZeroSpendChainTransactions.computeIfPresent(transactionHash, (transactionHashKey, transactionAttachmentTime) ->
-                        transactionAttachmentTime.isAfter(parentAttachmentTime) ? parentAttachmentTime : transactionAttachmentTime
-                );
-                nonZeroSpendChainTransactions.putIfAbsent(transactionHash, parentAttachmentTime);
+    private void createJointSourceStarvationZeroSpendTransaction(List<TransactionData> newlyCreatedZeroSpends, TransactionData sourceTransactionData, List<TransactionData> sourcesAttached,
+                                                                 ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs, List<TransactionData> orphanedStarvationSources,
+                                                                 List<TransactionData> zeroSpendSourcesAttached) {
+        TransactionData zeroSpendTransaction = transactionCreationService.createNewStarvationZeroSpendTransaction(sourceTransactionData);
+        if (zeroSpendTransaction == null) {
+            return;
+        }
+        newlyCreatedZeroSpends.add(zeroSpendTransaction);
+        sourcesAttached.add(sourceTransactionData);
+        List<TransactionData> possibleSources = clusterService.findSources(zeroSpendTransaction);
+        possibleSources = possibleSources.stream().filter(p -> !p.getHash().equals(sourceTransactionData.getHash())).collect(Collectors.toList());
+        possibleSources = possibleSources.stream().filter(p -> !ZeroSpendTransactionType.GENESIS.toString().equals(p.getTransactionDescription())).collect(Collectors.toList());
+        for (TransactionData possibleOtherParent : rootSourcePairs.values()) {
+            if (possibleSources.stream().anyMatch(tx -> tx.getHash().equals(possibleOtherParent.getHash()))) {
+                zeroSpendTransaction.setRightParentHash(possibleOtherParent.getHash());
+                if (possibleOtherParent.getSenderTrustScore() > zeroSpendTransaction.getSenderTrustScore()) {
+                    zeroSpendTransaction.setSenderTrustScore(possibleOtherParent.getSenderTrustScore());
+                }
+                sourcesAttached.add(possibleOtherParent);
+                break;
+            }
+        }
+        if (zeroSpendTransaction.getRightParentHash() == null && !orphanedStarvationSources.isEmpty()) {
+            for (TransactionData possibleZeroSpendParent : orphanedStarvationSources) {
+                if (possibleSources.contains(possibleZeroSpendParent) && !zeroSpendSourcesAttached.contains(possibleZeroSpendParent)) {
+                    zeroSpendTransaction.setRightParentHash(possibleZeroSpendParent.getHash());
+                    zeroSpendSourcesAttached.add(possibleZeroSpendParent);
+                    break;
+                }
             }
         }
     }

@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 public class ClusterService implements IClusterService {
 
     private static final int TCC_CONFIRMATION_INTERVAL = 3000;
+    private final AtomicLong totalSources = new AtomicLong(0);
+    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private ArrayList<HashSet<Hash>> sourceSetsByTrustScore;
     private HashMap<Hash, TransactionData> sourceMap;
     @Autowired
@@ -36,8 +38,6 @@ public class ClusterService implements IClusterService {
     @Autowired
     private TrustChainConfirmationService trustChainConfirmationService;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
-    private final AtomicLong totalSources = new AtomicLong(0);
-    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private Thread trustChainConfirmedTransactionsThread;
     private boolean initialConfirmation = true;
     private Object initialConfirmationLock;
@@ -201,16 +201,20 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
-    public void selectSources(TransactionData transactionData) {
+    public List<TransactionData> findSources(TransactionData transactionData) {
         List<Set<Hash>> trustScoreToTransactionMappingSnapshot =
                 Collections.unmodifiableList(sourceSetsByTrustScore);
         Map<Hash, TransactionData> sourceMapSnapshot = Collections.unmodifiableMap(sourceMap);
-        List<TransactionData> selectedSourcesForAttachment =
-                sourceSelector.selectSourcesForAttachment(
-                        trustScoreToTransactionMappingSnapshot,
-                        sourceMapSnapshot,
-                        transactionData.getSenderTrustScore(), readWriteLock);
+        return sourceSelector.selectSourcesForAttachment(
+                trustScoreToTransactionMappingSnapshot,
+                sourceMapSnapshot,
+                transactionData.getSenderTrustScore(), readWriteLock);
 
+    }
+
+    @Override
+    public void selectSources(TransactionData transactionData) {
+        List<TransactionData> selectedSourcesForAttachment = findSources(transactionData);
         if (selectedSourcesForAttachment.isEmpty()) {
             return;
         }
