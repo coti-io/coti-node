@@ -64,6 +64,38 @@
             <url>https://hyperledger.jfrog.io/artifactory/besu-maven</url>
         </repository>
         <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>consensys</id>
+            <name>Artifacts Consensys</name>
+            <url>https://artifacts.consensys.net/public/maven/maven/</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>cloudsmith</id>
+            <name>Consensys Cloudsmith</name>
+            <url>https://dl.cloudsmith.io/public/consensys/quorum-mainnet-launcher/maven/</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>splunk</id>
+            <name>Splunk</name>
+            <url>https://splunk.jfrog.io/splunk/ext-releases-local</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>spring</id>
+            <name>Spring Native</name>
+            <url>https://repo.spring.io/ui/native/libs-release/</url>
+        </repository>
+        <repository>
             <id>ossrh</id>
             <name>oss-sonatype</name>
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>

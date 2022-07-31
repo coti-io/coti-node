@@ -24,6 +24,8 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Autowired
     private ICommunicationService communicationService;
+    @Autowired
+    private EvmCompatibilityService evmCompatibilityService;
     @Value("${server.port}")
     private String serverPort;
     @Value("${minimumFee}")
@@ -60,6 +62,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
+            evmCompatibilityService.init();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

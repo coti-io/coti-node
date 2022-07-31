@@ -72,6 +72,12 @@
             <appender-ref ref="ERROR_LOG_FILE"/>
         </logger>
 
+        <logger name="org.hyperledger.besu" level="debug">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="LOG_FILE"/>
+            <appender-ref ref="ERROR_LOG_FILE"/>
+        </logger>
+
         <logger name="org.springframework" level="info">
             <appender-ref ref="STDOUT"/>
             <appender-ref ref="LOG_FILE"/>
