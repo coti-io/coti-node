@@ -70,10 +70,14 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     @Override
     public void updateAddressTransactionHistory(TransactionData transactionData) {
-        transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
-        );
-        updateMintedAddress(transactionData);
+
+        Thread x = new Thread(() -> {
+            transactionData.getBaseTransactions().forEach(baseTransactionData ->
+                    updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
+            );
+            updateMintedAddress(transactionData);
+        });
+        x.start();
     }
 
     public void updateMintedAddress(TransactionData transactionData) {
