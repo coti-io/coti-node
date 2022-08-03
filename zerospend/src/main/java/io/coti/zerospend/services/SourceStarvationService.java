@@ -37,7 +37,8 @@ public class SourceStarvationService {
     public void checkSourcesStarvation() {
         log.debug("Checking Source Starvation");
         Instant now = Instant.now();
-        ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
+        //ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
+        ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = new ConcurrentHashMap<>(clusterService.getCopyTrustChainConfirmationCluster()); //clusterService.getCopyTrustChainConfirmationCluster();
         List<TransactionData> orphanedZeroSpendSources = new ArrayList<>();
 
         ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs = new ConcurrentHashMap<>();

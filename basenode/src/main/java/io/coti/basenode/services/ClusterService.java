@@ -240,7 +240,8 @@ public class ClusterService implements IClusterService {
 
     @Override
     public ConcurrentHashMap<Hash, TransactionData> getCopyTrustChainConfirmationCluster() {
-        return SerializationUtils.clone(trustChainConfirmationCluster);
+        return trustChainConfirmationCluster;
+        //return SerializationUtils.clone(trustChainConfirmationCluster);
     }
 
     @Override
