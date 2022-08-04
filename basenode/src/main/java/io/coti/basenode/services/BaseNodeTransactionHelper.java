@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -59,11 +60,18 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     @Autowired
     private INetworkService networkService;
 
+    Thread updateAddressHistoryThread;
+    private BlockingQueue<TransactionData> addressTransactionQueue;
+
+
+
     @PostConstruct
     private void init() {
         transactionHashToTransactionStateStackMapping = new ConcurrentHashMap<>();
         noneIndexedTransactionHashes = Sets.newConcurrentHashSet();
         log.info("{} is up", this.getClass().getSimpleName());
+        updateAddressHistoryThread = new Thread(this::updateTransactionAddressHistory, "xxx");
+        updateAddressHistoryThread.start();
     }
 
     @Override
@@ -97,16 +105,34 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         return timeField.isAfter(systemTime.minus(60, ChronoUnit.MINUTES)) && timeField.isBefore(systemTime.plus(10, ChronoUnit.MINUTES));
     }
 
+    public void updateTransactionAddressHistory() {
+
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                try {
+                    TransactionData transactionData = addressTransactionQueue.take();
+                    transactionData.getBaseTransactions().forEach(baseTransactionData ->
+                            updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
+                    );
+                    updateMintedAddress(transactionData);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     @Override
     public void updateAddressTransactionHistory(TransactionData transactionData) {
 
-        Thread x = new Thread(() -> {
-            transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                    updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
-            );
-            updateMintedAddress(transactionData);
-        });
-        x.start();
+        try {
+            addressTransactionQueue.put(transactionData);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void updateMintedAddress(TransactionData transactionData) {
