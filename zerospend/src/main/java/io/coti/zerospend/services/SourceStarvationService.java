@@ -83,12 +83,12 @@ public class SourceStarvationService {
                 //todo
                 log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", rootTransactionData.getHash(), actualWaitingTimeInMilliseconds, minimumWaitingTimeInMilliseconds);
                 //log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", rootTransactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
-                if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
+                //if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
                     createJointSourceStarvationZeroSpendTransaction(newlyCreatedZeroSpends, sourceTransactionData, sourcesAttached,
                             rootSourcePairs, orphanedStarvationSources, zeroSpendSourcesAttached);
-                } else {
-                    rootSourcePairs.remove(rootTransactionData);
-                }
+                //} else {
+               //     rootSourcePairs.remove(rootTransactionData);
+               // }
             }
         }
         for (TransactionData newZeroSpend : newlyCreatedZeroSpends) {
