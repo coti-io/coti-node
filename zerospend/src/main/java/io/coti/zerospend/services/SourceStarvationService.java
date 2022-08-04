@@ -80,7 +80,9 @@ public class SourceStarvationService {
             if (!sourcesAttached.contains(sourceTransactionData)) {
                 long minimumWaitingTimeInMilliseconds = clusterHelper.getMinimumWaitTimeInMilliseconds(rootTransactionData);
                 long actualWaitingTimeInMilliseconds = Duration.between(rootTransactionData.getAttachmentTime(), now).toMillis();
-                log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", rootTransactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
+                //todo
+                log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", rootTransactionData.getHash(), actualWaitingTimeInMilliseconds, minimumWaitingTimeInMilliseconds);
+                //log.debug("Waiting transaction: {}. Time without attachment: {}, Minimum wait time: {}", rootTransactionData.getHash(), millisecondsToMinutes(actualWaitingTimeInMilliseconds), millisecondsToMinutes(minimumWaitingTimeInMilliseconds));
                 if (actualWaitingTimeInMilliseconds > minimumWaitingTimeInMilliseconds) {
                     createJointSourceStarvationZeroSpendTransaction(newlyCreatedZeroSpends, sourceTransactionData, sourcesAttached,
                             rootSourcePairs, orphanedStarvationSources, zeroSpendSourcesAttached);
