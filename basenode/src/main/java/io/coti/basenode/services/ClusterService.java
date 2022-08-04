@@ -246,7 +246,8 @@ public class ClusterService implements IClusterService {
 
     @Override
     public ArrayList<HashSet<Hash>> getSourceSetsByTrustScore() {
-        return SerializationUtils.clone(sourceSetsByTrustScore);
+        return sourceSetsByTrustScore;
+        //return SerializationUtils.clone(sourceSetsByTrustScore);
     }
 
     @Override
