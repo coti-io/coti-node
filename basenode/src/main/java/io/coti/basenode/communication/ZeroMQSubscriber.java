@@ -152,7 +152,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private void addToMessageQueue() throws ClassNotFoundException {
         try {
             String channel = propagationSubscriber.recvStr();
-            log.debug("Received a new message on channel: {}", channel);
+            //log.debug("Received a new message on channel: {}", channel);
             String[] channelArray = channel.split("-");
             Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
             byte[] message = propagationSubscriber.recv();
@@ -177,7 +177,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZeroMQMessageData zeroMQMessageData = messageQueue.take();
-                log.debug("ZMQ message arrived: {}", zeroMQMessageData.getChannel());
+                //log.debug("ZMQ message arrived: {}", zeroMQMessageData.getChannel());
                 propagationProcess(zeroMQMessageData);
             } catch (InterruptedException e) {
                 log.info("ZMQ subscriber message handler interrupted");
@@ -295,7 +295,7 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         {
             String channel = Channel.getChannelString(messageType, publisherAddressAndPort, publisherNodeType, subscriberNodeType);
             if (propagationSubscriber.unsubscribe(channel)) {
-                log.debug("Unsubscribed from server {} and channel {}", publisherAddressAndPort, channel);
+               // log.debug("Unsubscribed from server {} and channel {}", publisherAddressAndPort, channel);
             } else {
                 log.error("UnSubscription failed from server {} and channel {}", publisherAddressAndPort, channel);
             }

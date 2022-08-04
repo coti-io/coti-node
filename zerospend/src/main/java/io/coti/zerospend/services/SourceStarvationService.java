@@ -35,7 +35,7 @@ public class SourceStarvationService {
 
     @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)
     public void checkSourcesStarvation() {
-        log.debug("Checking Source Starvation");
+        //log.debug("Checking Source Starvation");
         Instant now = Instant.now();
         //ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
         ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = new ConcurrentHashMap<>(clusterService.getCopyTrustChainConfirmationCluster()); //clusterService.getCopyTrustChainConfirmationCluster();
