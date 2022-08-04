@@ -5,15 +5,18 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.TransactionIndexService;
 import io.coti.fullnode.http.*;
+import io.coti.fullnode.services.EvmCompatibilityService;
 import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_INVALID;
@@ -28,6 +31,8 @@ public class TransactionController {
     private TransactionService transactionService;
     @Autowired
     private TransactionIndexService transactionIndexService;
+    @Autowired
+    private EvmCompatibilityService evmCompatibilityService;
 
     @PutMapping()
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {
@@ -107,5 +112,20 @@ public class TransactionController {
     @GetMapping(value = "/index")
     public ResponseEntity<TransactionIndexData> getCurrentIndex() {
         return ResponseEntity.ok(transactionIndexService.getLastTransactionIndexData());
+    }
+
+    @PostMapping(value = "/deploy")
+    public String deployContract() {
+        return evmCompatibilityService.deployContract();
+    }
+
+    @PostMapping(value = "/evm/setBid")
+    public String setBid(@RequestParam(name = "contract_address") @Valid @NotNull String contractAddress) {
+        return evmCompatibilityService.setBid(contractAddress);
+    }
+
+    @GetMapping(value = "/evm/highestBid")
+    public String getHighestBid(@RequestParam(name = "contract_address") @Valid @NotNull String contractAddress) {
+        return evmCompatibilityService.getHighestBid(contractAddress);
     }
 }

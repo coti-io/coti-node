@@ -10,17 +10,25 @@ import org.web3j.crypto.TransactionEncoder;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.evm.Configuration;
 import org.web3j.evm.EmbeddedWeb3jService;
+import org.web3j.model.SimpleAuction;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.tx.gas.ContractGasProvider;
+import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EvmCompatibilityService {
 
     private Web3j web3j;
+    private EmbeddedWeb3jService service;
     private Credentials credentials;
+    private Map<String, Object> contractsAddressToContractMap = new HashMap<>();
 
     private Log logger = LogFactory.getLog(getClass());
     public void init() {
@@ -30,23 +38,65 @@ public class EvmCompatibilityService {
 
         try {
             // Define our own address and how much ether to prefund this address with
-            Configuration configuration = new Configuration(new Address(credentials.getAddress()), 10);
+            Configuration configuration = new Configuration(new Address(credentials.getAddress()), 10000000);
             logger.info("prefund 10 eth to this credentials address");
 
             // We use EmbeddedWeb3jService rather than the usual service implementation.
             // This will let us run an EVM and a ledger inside the running JVM..
-            EmbeddedWeb3jService service = new EmbeddedWeb3jService(configuration);
+            this.service = new EmbeddedWeb3jService(configuration);
             this.web3j = Web3j.build(service);
-
-            RawTransaction rawTransaction = RawTransaction.createContractTransaction(BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO,
-                    "608060405234801561001057600080fd5b50610150806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c80632e64cec11461003b5780636057361d14610059575b600080fd5b610043610075565b60405161005091906100a1565b60405180910390f35b610073600480360381019061006e91906100ed565b61007e565b005b60008054905090565b8060008190555050565b6000819050919050565b61009b81610088565b82525050565b60006020820190506100b66000830184610092565b92915050565b600080fd5b6100ca81610088565b81146100d557600080fd5b50565b6000813590506100e7816100c1565b92915050565b600060208284031215610103576101026100bc565b5b6000610111848285016100d8565b9150509291505056fea264697066735822122005d160d7f76cf393033d59a64019e4eac4fd1bfc66036fb96874f3343f112b5364736f6c634300080f0033");
-            byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
-            String hexValue = Numeric.toHexString(signedMessage);
-
-            EthSendTransaction sendTransaction = web3j.ethSendRawTransaction(hexValue).send();
-            logger.info("Transaction to send: " + sendTransaction.getJsonrpc());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public String deployContract() {
+        String contractAddress = "";
+        try {
+            logger.info("Deploying smart contract");
+            ContractGasProvider contractGasProvider = new DefaultGasProvider();
+            SimpleAuction contract = SimpleAuction.deploy(
+                    web3j,
+                    credentials,
+                    contractGasProvider,
+                    new BigInteger(ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(1000000).array()),
+                    "0x6053131a7e304d5c5422cb20a3f63c319cd476ac"
+            ).send();
+
+            contractAddress = contract.getContractAddress();
+            contractsAddressToContractMap.put(contractAddress, contract);
+            logger.info("Smart contract deployed to address " + contractAddress);
+        } catch (Exception e) {
+            logger.error("EvmCompatibilityService::deployContract - encountered an error: ", e);
+            throw new RuntimeException(e);
+        }
+
+        return contractAddress;
+    }
+
+    public String setBid(String contractAddress) {
+        Long bid = System.currentTimeMillis()%1000000;
+        try {
+            SimpleAuction contract = (SimpleAuction) contractsAddressToContractMap.get(contractAddress);
+            contract.bid(new BigInteger(String.valueOf(bid))).send();
+            logger.info("New bid was set to be: " + bid);
+        } catch (Exception e) {
+            logger.error("EvmCompatibilityService::setBid - encountered an error: ", e);
+            throw new RuntimeException(e);
+        }
+        return "New bid was set to be: " + bid;
+    }
+
+    public String getHighestBid(String contractAddress) {
+        Long highestBid;
+        try {
+            SimpleAuction contract = (SimpleAuction) contractsAddressToContractMap.get(contractAddress);
+            highestBid = contract.highestBid().send().longValue();
+            logger.info("The highest bid was set to be: " + highestBid);
+        } catch (Exception e) {
+            logger.error("EvmCompatibilityService::getHighestBid - encountered an error: ", e);
+            throw new RuntimeException(e);
+        }
+        return "The highest bid was set to be: " + highestBid;
     }
 }

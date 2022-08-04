@@ -85,6 +85,11 @@
             <version>4.9.2</version>
         </dependency>
         <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>codegen</artifactId>
+            <version>4.9.2</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -94,14 +99,23 @@
             <artifactId>klaxon</artifactId>
             <version>5.6</version>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.hyperledger.besu/evm >
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.9.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>1.3.70</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.hyperledger.besu/evm -->
         <dependency>
             <groupId>org.hyperledger.besu</groupId>
             <artifactId>evm</artifactId>
             <version>22.4.4</version>
-        </dependency-->
-        <!-- https://mvnrepository.com/artifact/org.hyperledger.besu/besu-datatypes >
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.hyperledger.besu/besu-datatypes -->
         <dependency>
             <groupId>org.hyperledger.besu</groupId>
             <artifactId>besu-datatypes</artifactId>
@@ -111,7 +125,12 @@
             <groupId>org.hyperledger.besu.internal</groupId>
             <artifactId>core</artifactId>
             <version>21.7.2</version>
-        </dependency-->
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.11.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -151,6 +170,19 @@
                 <version>3.10.1</version>
                 <configuration>
                     <forceJavacCompilerUse>true</forceJavacCompilerUse>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.web3j</groupId>
+                <artifactId>web3j-maven-plugin</artifactId>
+                <version>4.9.4</version>
+                <configuration>
+                    <soliditySourceFiles>
+                        <directory>src/main/solidity</directory>
+                        <includes>
+                            <include>*.sol</include>
+                        </includes>
+                    </soliditySourceFiles>
                 </configuration>
             </plugin>
         </plugins>
