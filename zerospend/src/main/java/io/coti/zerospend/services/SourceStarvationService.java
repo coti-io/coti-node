@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Service
 public class SourceStarvationService {
 
-    private static final long SOURCE_STARVATION_CHECK_TASK_DELAY = 3000;
+    private static final long SOURCE_STARVATION_CHECK_TASK_DELAY = 500;
     @Autowired
     private IClusterService clusterService;
     @Autowired
