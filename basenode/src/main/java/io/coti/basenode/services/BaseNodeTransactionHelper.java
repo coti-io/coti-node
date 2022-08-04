@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.data.TransactionState.*;
@@ -70,6 +71,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         transactionHashToTransactionStateStackMapping = new ConcurrentHashMap<>();
         noneIndexedTransactionHashes = Sets.newConcurrentHashSet();
         log.info("{} is up", this.getClass().getSimpleName());
+        addressTransactionQueue = new LinkedBlockingQueue<>();
         updateAddressHistoryThread = new Thread(this::updateTransactionAddressHistory, "xxx");
         updateAddressHistoryThread.start();
     }
