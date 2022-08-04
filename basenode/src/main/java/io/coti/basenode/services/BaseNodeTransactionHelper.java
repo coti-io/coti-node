@@ -113,10 +113,10 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             try {
                 try {
                     TransactionData transactionData = addressTransactionQueue.take();
-                    transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                            updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
-                    );
-                    updateMintedAddress(transactionData);
+//                    transactionData.getBaseTransactions().forEach(baseTransactionData ->
+//                            updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
+//                    );
+//                    updateMintedAddress(transactionData);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
