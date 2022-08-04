@@ -41,6 +41,8 @@ public class CryptoHelper {
 
     }
 
+    static BouncyCastleProvider x = new BouncyCastleProvider();
+
     public static PublicKey getPublicKeyFromHexString(String pubKeyHex) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String pointX = pubKeyHex.substring(0, (pubKeyHex.length() / 2));
         String pointY = pubKeyHex.substring(pubKeyHex.length() / 2);
@@ -50,7 +52,7 @@ public class CryptoHelper {
 
         ECPoint point = curve.getCurve().createPoint(p256X, p256Y);
         ECPublicKeySpec publicSpec = new ECPublicKeySpec(point, spec);
-        KeyFactory keyfac = KeyFactory.getInstance(EC_ALGORITHM, new BouncyCastleProvider());
+        KeyFactory keyfac = KeyFactory.getInstance(EC_ALGORITHM, x);
 
         return keyfac.generatePublic(publicSpec);
     }
