@@ -31,6 +31,7 @@ public class TransactionCreationService {
 
     public static final int MAX_TRUST_SCORE = 100;
     private static final int ZERO_SPEND_ADDRESS_INDEX = 0;
+    private Hash ZERO_SPEND_ADDRESS_HASH = null;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -116,9 +117,11 @@ public class TransactionCreationService {
     }
 
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
-        Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
-        BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now());
-        return createTransactionData(baseTransactionData, description.name(), trustScore, TransactionType.ZeroSpend, addressHash);
+        if (ZERO_SPEND_ADDRESS_HASH == null) {
+            ZERO_SPEND_ADDRESS_HASH = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
+        }
+        BaseTransactionData baseTransactionData = new InputBaseTransactionData(ZERO_SPEND_ADDRESS_HASH, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now());
+        return createTransactionData(baseTransactionData, description.name(), trustScore, TransactionType.ZeroSpend, ZERO_SPEND_ADDRESS_HASH);
     }
 
 
