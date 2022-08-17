@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.mariuszgromada.math</groupId>
             <artifactId>MathParser.org-mXparser</artifactId>
-            <version>4.2.0</version>
+            <version>5.0.6</version>
         </dependency>
     </dependencies>
 
