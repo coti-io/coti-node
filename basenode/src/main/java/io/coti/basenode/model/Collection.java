@@ -15,6 +15,7 @@ import org.springframework.util.SerializationUtils;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -26,6 +27,7 @@ public abstract class Collection<T extends IEntity> {
     public IDatabaseConnector databaseConnector;
     protected String columnFamilyName = getClass().getName();
     private Map<Hash, byte[]> lockByteArrayMap;
+    private static ConcurrentHashMap<String, ConcurrentHashMap<Hash, Object>> columns = new ConcurrentHashMap<>();
 
     public void init() {
         log.info("Collection init running. Class: " + columnFamilyName);
@@ -35,6 +37,12 @@ public abstract class Collection<T extends IEntity> {
         if (entity == null) {
             throw new DataBaseWriteException("Null entity to write to database");
         }
+
+        if (columns.get(columnFamilyName) == null) {
+            columns.put(columnFamilyName, new ConcurrentHashMap<Hash, Object>());
+        }
+        columns.get(columnFamilyName).put(entity.getHash(), entity);
+
         databaseConnector.put(columnFamilyName, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
     }
 
@@ -42,6 +50,12 @@ public abstract class Collection<T extends IEntity> {
         if (entity == null) {
             throw new DataBaseWriteException("Null entity to write to database");
         }
+
+        if (columns.get(columnFamilyName) == null) {
+            columns.put(columnFamilyName, new ConcurrentHashMap<Hash, Object>());
+        };
+        columns.get(columnFamilyName).put(entity.getHash(), entity);
+
         databaseConnector.put(columnFamilyName, writeOptions, entity.getHash().getBytes(), SerializationUtils.serialize(entity));
     }
 
@@ -51,6 +65,12 @@ public abstract class Collection<T extends IEntity> {
                     if (entity == null) {
                         throw new DataBaseWriteException("Null entity to write from database");
                     }
+
+                    if (columns.get(columnFamilyName) == null) {
+                        columns.put(columnFamilyName, new ConcurrentHashMap<Hash, Object>());
+                    }
+                    columns.get(columnFamilyName).put(entity.getHash(), entity);
+
                     databaseConnector.put(columnFamilyName, writeBatch, hash.getBytes(), SerializationUtils.serialize(entity));
 
                 }
@@ -62,6 +82,9 @@ public abstract class Collection<T extends IEntity> {
         if (entity == null) {
             throw new DataBaseDeleteException("Null entity to delete from database");
         }
+
+        columns.get(columnFamilyName).remove(entity.getHash());
+
         databaseConnector.delete(columnFamilyName, entity.getHash().getBytes());
     }
 
@@ -75,7 +98,15 @@ public abstract class Collection<T extends IEntity> {
             if (bytes == null || bytes.length == 0) {
                 return null;
             }
-            return getDeserializedValue(hash, bytes);
+            if (columns.get(columnFamilyName) != null) {
+                Object o = columns.get(columnFamilyName).get(hash);
+                if (o != null) {
+                    return (T) columns.get(columnFamilyName).get(hash);
+                }
+            }
+            T serializedEntity = getDeserializedValue(hash, bytes);
+            //columns.get(columnFamilyName).put(hash, serializedEntity);
+            return serializedEntity;
         } catch (Exception e) {
             log.error("Error at getting by hash from column family {}", columnFamilyName, e);
             return null;
@@ -83,9 +114,19 @@ public abstract class Collection<T extends IEntity> {
     }
 
     private T getDeserializedValue(Hash hash, byte[] serializedValue) {
+        if (columns.get(columnFamilyName) != null) {
+            Object o = columns.get(columnFamilyName).get(hash);
+            if (o != null) {
+                return (T) columns.get(columnFamilyName).get(hash);
+            }
+        }
         T deserialized = (T) SerializationUtils.deserialize(serializedValue);
         if (deserialized != null) {
             deserialized.setHash(hash);
+            if (columns.get(columnFamilyName) == null) {
+                columns.put(columnFamilyName, new ConcurrentHashMap<>());
+            }
+            columns.get(columnFamilyName).put(hash, deserialized);
         }
         return deserialized;
     }
@@ -157,6 +198,8 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public void deleteByHash(Hash hash) {
+        columns.get(columnFamilyName).remove(hash);
+
         databaseConnector.delete(columnFamilyName, hash.getBytes());
     }
 
@@ -164,6 +207,7 @@ public abstract class Collection<T extends IEntity> {
         try (RocksIterator iterator = databaseConnector.getIterator(columnFamilyName)) {
             iterator.seekToFirst();
             while (iterator.isValid()) {
+                columns.get(columnFamilyName).remove(iterator.key());
                 databaseConnector.delete(columnFamilyName, iterator.key());
                 iterator.next();
             }
