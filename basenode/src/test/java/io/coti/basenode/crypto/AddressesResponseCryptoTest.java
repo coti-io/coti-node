@@ -12,13 +12,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@TestPropertySource(locations = "classpath:test.properties")
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {GetHistoryAddressesResponseCrypto.class, CryptoHelper.class})
 public class AddressesResponseCryptoTest {
@@ -35,15 +38,18 @@ public class AddressesResponseCryptoTest {
         Hash hash = HashTestUtils.generateRandomAddressHash();
         addressHashesToAddresses.put(hash, null);
 
-        ByteBuffer addressesResponseBuffer = ByteBuffer.allocate(getByteBufferSize(addressHashesToAddresses));
+        GetHistoryAddressesResponse getHistoryAddressesResponse = new GetHistoryAddressesResponse(addressHashesToAddresses);
+        Instant createTime = getHistoryAddressesResponse.getCreateTime();
+
+        ByteBuffer addressesResponseBuffer = ByteBuffer.allocate(getByteBufferSize(addressHashesToAddresses) + Long.BYTES);
         for (Map.Entry<Hash, AddressData> entry : addressHashesToAddresses.entrySet()) {
             addressesResponseBuffer.put(entry.getKey().getBytes());
             if (entry.getValue() != null) {
                 addressesResponseBuffer.putLong(entry.getValue().getCreationTime().toEpochMilli());
             }
         }
+        addressesResponseBuffer.putLong(createTime.toEpochMilli());
 
-        GetHistoryAddressesResponse getHistoryAddressesResponse = new GetHistoryAddressesResponse(addressHashesToAddresses);
         byte[] addressesResponseInBytes = addressesResponseBuffer.array();
         byte[] bytes = CryptoHelper.cryptoHash(addressesResponseInBytes).getBytes();
         Assert.assertArrayEquals(bytes, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponse));
@@ -59,27 +65,29 @@ public class AddressesResponseCryptoTest {
         Hash hash = HashTestUtils.generateRandomAddressHash();
         addressHashesToAddressesOne.put(hash, null);
 
-        ByteBuffer addressesResponseBufferOne = ByteBuffer.allocate(getByteBufferSize(addressHashesToAddressesOne));
+        GetHistoryAddressesResponse getHistoryAddressesResponseOne = new GetHistoryAddressesResponse(addressHashesToAddressesOne);
+        Instant createTime = getHistoryAddressesResponseOne.getCreateTime();
+
+        ByteBuffer addressesResponseBufferOne = ByteBuffer.allocate(getByteBufferSize(addressHashesToAddressesOne) + Long.BYTES);
         for (Map.Entry<Hash, AddressData> entry : addressHashesToAddressesOne.entrySet()) {
             addressesResponseBufferOne.put(entry.getKey().getBytes());
             if (entry.getValue() != null) {
                 addressesResponseBufferOne.putLong(entry.getValue().getCreationTime().toEpochMilli());
             }
         }
-        GetHistoryAddressesResponse getHistoryAddressesResponseOne = new GetHistoryAddressesResponse(addressHashesToAddressesOne);
+        addressesResponseBufferOne.putLong(createTime.toEpochMilli());
+
         byte[] addressesResponseInBytesOne = addressesResponseBufferOne.array();
         byte[] bytesOne = CryptoHelper.cryptoHash(addressesResponseInBytesOne).getBytes();
         Assert.assertArrayEquals(bytesOne, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne));
 
-
         //------------------------------
-
 
         Map<Hash, AddressData> addressHashesToAddressesTwo = new LinkedHashMap<>();
         addressHashesToAddressesTwo.put(hash, null);
         addresses.forEach(addressData -> addressHashesToAddressesTwo.put(addressData.getHash(), addressData));
 
-        ByteBuffer addressesResponseBufferTwo = ByteBuffer.allocate(getByteBufferSize(addressHashesToAddressesTwo));
+        ByteBuffer addressesResponseBufferTwo = ByteBuffer.allocate(getByteBufferSize(addressHashesToAddressesTwo) + Long.BYTES);
         for (Map.Entry<Hash, AddressData> entry : addressHashesToAddressesTwo.entrySet()) {
             addressesResponseBufferTwo.put(entry.getKey().getBytes());
             if (entry.getValue() != null) {
@@ -87,6 +95,8 @@ public class AddressesResponseCryptoTest {
             }
         }
         GetHistoryAddressesResponse getHistoryAddressesResponseTwo = new GetHistoryAddressesResponse(addressHashesToAddressesTwo);
+        Instant createTimeTwo = getHistoryAddressesResponseTwo.getCreateTime();
+        addressesResponseBufferTwo.putLong(createTimeTwo.toEpochMilli());
 
         byte[] addressesResponseInBytesTwo = addressesResponseBufferTwo.array();
         byte[] bytesTwo = CryptoHelper.cryptoHash(addressesResponseInBytesTwo).getBytes();
