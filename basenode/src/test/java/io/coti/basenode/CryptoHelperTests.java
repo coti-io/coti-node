@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.security.NoSuchAlgorithmException;
@@ -16,6 +17,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
+@TestPropertySource(locations = "classpath:test.properties")
 @ContextConfiguration(classes = {CryptoHelper.class})
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {CryptoHelper.class})
