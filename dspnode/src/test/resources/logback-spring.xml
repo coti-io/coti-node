@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <property name="LOGS_PATH" value="./../logs"/>
+    <property resource="application.properties"/>
+    <springProperty name="logging.file.name" source="logging.file.name"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ERROR_LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${LOGS_PATH}/${logging.file.name}_error.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                ${FILE_LOG_PATTERN}
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/${logging.file.name}_error.%d{yyyy-MM-dd}.%i.log.zip
+            </fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="LOG_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS_PATH}/${logging.file.name}.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>
+                ${FILE_LOG_PATTERN}
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_PATH}/archived/${logging.file.name}_debug.%d{yyyy-MM-dd}.%i.log.zip
+            </fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+    <springProfile name="development">
+        <logger name="io.coti" level="debug">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="LOG_FILE"/>
+            <appender-ref ref="ERROR_LOG_FILE"/>
+        </logger>
+
+        <logger name="org.springframework" level="info">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="LOG_FILE"/>
+            <appender-ref ref="ERROR_LOG_FILE"/>
+        </logger>
+    </springProfile>
+
+    <springProfile name="production">
+        <logger name="io.coti" level="info">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="LOG_FILE"/>
+            <appender-ref ref="ERROR_LOG_FILE"/>
+        </logger>
+
+        <logger name="org.springframework" level="warn">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="LOG_FILE"/>
+            <appender-ref ref="ERROR_LOG_FILE"/>
+        </logger>
+    </springProfile>
+
+</configuration>

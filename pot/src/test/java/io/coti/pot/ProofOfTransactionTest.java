@@ -2,10 +2,13 @@ package io.coti.pot;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.TestPropertySource;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@TestPropertySource(locations = "classpath:test.properties")
 
 class ProofOfTransactionTest {
     private ProofOfTrust pow;
