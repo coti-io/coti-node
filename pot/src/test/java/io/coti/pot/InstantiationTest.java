@@ -2,12 +2,15 @@ package io.coti.pot;
 
 import io.coti.pot.interfaces.IAlgorithm.AlgorithmType;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+@TestPropertySource(locations = "classpath:test.properties")
 
 class InstantiationTest {
 
