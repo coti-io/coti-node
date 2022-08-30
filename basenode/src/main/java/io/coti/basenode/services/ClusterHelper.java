@@ -25,38 +25,16 @@ public class ClusterHelper implements IClusterHelper {
     @Autowired
     private Transactions transactions;
 
-    private void addMissingChildIntoCluster(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster,
-                                            Hash child) {
-        trustChainConfirmationCluster.computeIfAbsent(child, c -> trustChainConfirmationCluster.put(c, transactions.getByHash(child)));
-    }
-
-    private void populateSourceMaps(TransactionData oldestNonZeroSpendRoot, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs,
-                                    TransactionData transactionData, List<TransactionData> orphanedZeroSpendSources) {
-        if (oldestNonZeroSpendRoot != null) {
-            rootSourcePairs.put(oldestNonZeroSpendRoot, transactionData);
-        } else {
-            orphanedZeroSpendSources.add(transactionData);
-        }
-    }
-
-    private TransactionData setOldestRoot(TransactionData transactionData, ConcurrentHashMap<Hash,
-            TransactionData> trustChainConfirmationCluster, TransactionData oldestNonZeroSpendRoot) {
-        boolean isZeroSpendTx = transactionData.getType().equals(TransactionType.ZeroSpend);
-        boolean parentInCluster = isParentInCluster(transactionData, trustChainConfirmationCluster);
-        if ((!parentInCluster || oldestNonZeroSpendRoot == null) && !isZeroSpendTx) {
-            return transactionData;
-        }
-        return oldestNonZeroSpendRoot;
-    }
-
+    @Override
     public boolean isParentInCluster(TransactionData transactionData, ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         boolean isLeftParentInCluster = transactionData.getLeftParentHash() != null && trustChainConfirmationCluster.containsKey(transactionData.getLeftParentHash());
         boolean isRightParentInCluster = transactionData.getRightParentHash() != null && trustChainConfirmationCluster.containsKey(transactionData.getRightParentHash());
         return isLeftParentInCluster || isRightParentInCluster;
     }
 
-    public void mapPathsToSources(TransactionData transactionData, ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster,
-                                  TransactionData oldestNonZeroSpendRoot, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs,
+    @Override
+    public void mapPathsToSources(TransactionData transactionData, ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster,
+                                  TransactionData oldestNonZeroSpendRoot, ConcurrentMap<TransactionData, TransactionData> rootSourcePairs,
                                   List<TransactionData> orphanedZeroSpendSources) {
 
         oldestNonZeroSpendRoot = setOldestRoot(transactionData, trustChainConfirmationCluster, oldestNonZeroSpendRoot);
@@ -69,7 +47,25 @@ public class ClusterHelper implements IClusterHelper {
         }
     }
 
-    private void mapChildPaths(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster, TransactionData oldestNonZeroSpendRoot, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs, List<TransactionData> orphanedZeroSpendSources, List<Hash> children) {
+    private TransactionData setOldestRoot(TransactionData transactionData, ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, TransactionData oldestNonZeroSpendRoot) {
+        boolean isZeroSpendTx = transactionData.getType().equals(TransactionType.ZeroSpend);
+        boolean parentInCluster = isParentInCluster(transactionData, trustChainConfirmationCluster);
+        if ((!parentInCluster || oldestNonZeroSpendRoot == null) && !isZeroSpendTx) {
+            return transactionData;
+        }
+        return oldestNonZeroSpendRoot;
+    }
+
+    private void populateSourceMaps(TransactionData oldestNonZeroSpendRoot, ConcurrentMap<TransactionData, TransactionData> rootSourcePairs,
+                                    TransactionData transactionData, List<TransactionData> orphanedZeroSpendSources) {
+        if (oldestNonZeroSpendRoot != null) {
+            rootSourcePairs.put(oldestNonZeroSpendRoot, transactionData);
+        } else {
+            orphanedZeroSpendSources.add(transactionData);
+        }
+    }
+
+    private void mapChildPaths(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, TransactionData oldestNonZeroSpendRoot, ConcurrentMap<TransactionData, TransactionData> rootSourcePairs, List<TransactionData> orphanedZeroSpendSources, List<Hash> children) {
         TransactionData majorChild = null;
         double maxTrustChainTrustScore = 0;
         List<TransactionData> minorChildren = new ArrayList<>();
@@ -96,6 +92,11 @@ public class ClusterHelper implements IClusterHelper {
                 mapPathsToSources(minorChild, trustChainConfirmationCluster, null, rootSourcePairs, orphanedZeroSpendSources);
             }
         }
+    }
+
+    private void addMissingChildIntoCluster(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster,
+                                            Hash child) {
+        trustChainConfirmationCluster.computeIfAbsent(child, c -> trustChainConfirmationCluster.put(c, transactions.getByHash(child)));
     }
 
     @Override
