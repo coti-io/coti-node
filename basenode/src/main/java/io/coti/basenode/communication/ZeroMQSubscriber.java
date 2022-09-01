@@ -223,7 +223,12 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
             publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType -> {
 
                 if (messageType.equals(propagatedMessageType)) {
-                    handleMessageData(messageData, propagatedMessageType, publisherNodeType);
+                    Thread x = new Thread() {
+                        public void run() {
+                            handleMessageData(messageData, propagatedMessageType, publisherNodeType);
+                        }
+                    };
+                    x.start();
                 }
             });
         }
