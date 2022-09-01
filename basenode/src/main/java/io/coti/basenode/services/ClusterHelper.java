@@ -27,7 +27,11 @@ public class ClusterHelper implements IClusterHelper {
 
     private void addMissingChildIntoCluster(ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster,
                                             Hash child) {
-        trustChainConfirmationCluster.computeIfAbsent(child, c -> trustChainConfirmationCluster.put(c, transactions.getByHash(child)));
+        //trustChainConfirmationCluster.computeIfAbsent(child, c -> trustChainConfirmationCluster.put(c, transactions.getByHash(child)));
+        if (!trustChainConfirmationCluster.containsKey(child))
+        {
+            trustChainConfirmationCluster.put(child, transactions.getByHash(child));
+        }
     }
 
     private void populateSourceMaps(TransactionData oldestNonZeroSpendRoot, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs,
