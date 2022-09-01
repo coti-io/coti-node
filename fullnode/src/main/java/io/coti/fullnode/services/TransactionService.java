@@ -195,6 +195,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(TRANSACTION_INTERNAL_ERROR_MESSAGE, STATUS_ERROR));
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             log.error("Exception while adding transaction: {}", transactionData.getHash());
             throw new TransactionException(e);
         } finally {
