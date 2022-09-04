@@ -373,6 +373,11 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         clusterService.attachToCluster(transactionData);
     }
 
+    @Override
+    public void updateTransactionOnCluster(TransactionData transactionData) {
+        clusterService.updateTransactionOnTrustChainConfirmationCluster(transactionData);
+    }
+
     public void setTransactionStateToSaved(TransactionData transactionData) {
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(SAVED_IN_DB);
     }

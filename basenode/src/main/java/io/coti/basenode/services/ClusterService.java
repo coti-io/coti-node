@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
+import io.coti.basenode.data.Event;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
@@ -8,6 +9,7 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.ISourceSelector;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,10 @@ public class ClusterService implements IClusterService {
     private ISourceSelector sourceSelector;
     @Autowired
     private TrustChainConfirmationService trustChainConfirmationService;
+    @Autowired
+    private ITransactionHelper transactionHelper;
+    @Autowired
+    private BaseNodeEventService baseNodeEventService;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private Thread trustChainConfirmedTransactionsThread;
     private boolean initialConfirmation = true;
@@ -60,7 +66,7 @@ public class ClusterService implements IClusterService {
     public void addExistingTransactionOnInit(TransactionData transactionData) {
         removeTransactionParentsFromSources(transactionData);
         if (!transactionData.isTrustChainConsensus()) {
-            addTransactionToTrustChainConfirmationCluster(transactionData);
+            addTransactionToTCCClusterAndToSources(transactionData);
         }
     }
 
@@ -68,7 +74,7 @@ public class ClusterService implements IClusterService {
     public void addMissingTransactionOnInit(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes) {
         updateParentsByMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes);
         if (!transactionData.isTrustChainConsensus()) {
-            addTransactionToTrustChainConfirmationCluster(transactionData);
+            addTransactionToTCCClusterAndToSources(transactionData);
         } else if (trustChainUnconfirmedExistingTransactionHashes.remove(transactionData.getHash())) {
             removeTransactionFromTrustChainConfirmationCluster(transactionData);
         }
@@ -121,7 +127,7 @@ public class ClusterService implements IClusterService {
     public void attachToCluster(TransactionData transactionData) {
         updateParents(transactionData);
 
-        addTransactionToTrustChainConfirmationCluster(transactionData);
+        addTransactionToTCCClusterAndToSources(transactionData);
     }
 
     private void updateParents(TransactionData transactionData) {
@@ -168,10 +174,8 @@ public class ClusterService implements IClusterService {
         }
     }
 
-    private void addTransactionToTrustChainConfirmationCluster(TransactionData transactionData) {
+    private void addNewSourceTransactionToSources(TransactionData transactionData) {
         Hash transactionHash = transactionData.getHash();
-        trustChainConfirmationCluster.put(transactionHash, transactionData);
-
         try {
             readWriteLock.writeLock().lock();
             if (transactionData.isSource() && sourceMap.put(transactionHash, transactionData) == null) {
@@ -183,6 +187,17 @@ public class ClusterService implements IClusterService {
         }
 
         log.debug("Added New Transaction with hash:{}", transactionHash);
+    }
+
+    @Override
+    public void addTransactionToTrustChainConfirmationCluster(TransactionData transactionData) {
+        if (!baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) || transactionHelper.isDspConfirmed(transactionData))
+            updateTransactionOnTrustChainConfirmationCluster(transactionData);
+    }
+
+    private void addTransactionToTCCClusterAndToSources(TransactionData transactionData) {
+        addTransactionToTrustChainConfirmationCluster(transactionData);
+        addNewSourceTransactionToSources(transactionData);
     }
 
     private void removeTransactionFromTrustChainConfirmationCluster(TransactionData transactionData) {
@@ -201,6 +216,14 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
+    public void updateTransactionOnTrustChainConfirmationCluster(TransactionData transactionData) {
+        final TransactionData oldTransactionData = trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
+        if (oldTransactionData == null) {
+            log.debug("Updated cluster with a new Transaction with hash:{}", transactionData.getHash());
+        }
+    }
+
+    @Override
     public List<TransactionData> findSources(TransactionData transactionData) {
         List<Set<Hash>> trustScoreToTransactionMappingSnapshot =
                 Collections.unmodifiableList(sourceSetsByTrustScore);
@@ -209,7 +232,6 @@ public class ClusterService implements IClusterService {
                 trustScoreToTransactionMappingSnapshot,
                 sourceMapSnapshot,
                 transactionData.getSenderTrustScore(), readWriteLock);
-
     }
 
     @Override

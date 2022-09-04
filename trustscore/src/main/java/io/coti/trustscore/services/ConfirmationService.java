@@ -19,6 +19,7 @@ public class ConfirmationService extends BaseNodeConfirmationService {
 
     @Override
     protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
+        super.continueHandleDSPConfirmedTransaction(transactionData);
         if (!EnumSet.of(TransactionType.ZeroSpend, TransactionType.Initial).contains(transactionData.getType())) {
             trustScoreService.addTransactionToTsCalculation(transactionData);
         }
