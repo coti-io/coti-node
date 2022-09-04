@@ -23,4 +23,6 @@ public interface IEventService {
 
     ResponseEntity<IResponse> getConfirmedEventTransactionDataResponse(Event event);
 
+    boolean eventHappened(Event event);
+
 }
