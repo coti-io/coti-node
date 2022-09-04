@@ -9,8 +9,8 @@ import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.basenode.services.BaseNodeMintingService;
+import io.coti.basenode.services.interfaces.IEventService;
 import io.coti.financialserver.crypto.GetTokenMintingFeeQuoteRequestCrypto;
 import io.coti.financialserver.crypto.MintingFeeQuoteCrypto;
 import io.coti.financialserver.data.MintingFeeQuoteData;
@@ -50,7 +50,7 @@ public class MintingService extends BaseNodeMintingService {
     @Autowired
     private MintingFeeQuoteCrypto mintingFeeQuoteCrypto;
     @Autowired
-    BaseNodeEventService baseNodeEventService;
+    private IEventService baseNodeEventService;
 
     public ResponseEntity<IResponse> getTokenMintingFee(TokenMintingFeeRequest tokenMintingFeeRequest) {
         try {
