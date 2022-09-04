@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
@@ -95,8 +94,7 @@ public class ClusterHelper implements IClusterHelper {
 
     private void addMissingChildIntoCluster(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster,
                                             Hash child) {
-        if (!trustChainConfirmationCluster.containsKey(child))
-        {
+        if (!trustChainConfirmationCluster.containsKey(child)) {
             trustChainConfirmationCluster.put(child, transactions.getByHash(child));
         }
     }

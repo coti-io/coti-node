@@ -53,7 +53,7 @@ public class BaseNodeBalanceServiceTest {
     @Test
     public void getCurrencyBalances_noNative_valuesMatch() {
         when(nodeEventService.eventHappened(isA(Event.MULTI_DAG.getClass()))).thenReturn(true);
-        when(currencyService.getNativeCurrencyHashIfNull(any(Hash.class))).then(a->a.getArgument(0));
+        when(currencyService.getNativeCurrencyHashIfNull(any(Hash.class))).then(a -> a.getArgument(0));
 
         GetTokenBalancesRequest getCurrencyBalanceRequest = new GetTokenBalancesRequest();
         Hash tokenHash1 = generateRandomAddressHash();
