@@ -96,7 +96,10 @@ public class ClusterHelper implements IClusterHelper {
 
     private void addMissingChildIntoCluster(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster,
                                             Hash child) {
-        trustChainConfirmationCluster.computeIfAbsent(child, c -> trustChainConfirmationCluster.put(c, transactions.getByHash(child)));
+        if (!trustChainConfirmationCluster.containsKey(child))
+        {
+            trustChainConfirmationCluster.put(child, transactions.getByHash(child));
+        }
     }
 
     @Override
