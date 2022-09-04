@@ -11,4 +11,9 @@ public interface IClusterHelper {
     void sortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph);
 
     long getMinimumWaitTimeInMilliseconds(TransactionData transactionData);
+
+    void addSubTreeDescendants(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster);
+
+    void addAndSortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph);
+
 }

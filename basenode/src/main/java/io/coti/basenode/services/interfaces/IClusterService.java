@@ -13,6 +13,8 @@ public interface IClusterService {
 
     void attachToCluster(TransactionData transactionData);
 
+    void updateTransactionOnTrustChainConfirmationCluster(TransactionData transactionData);
+
     void selectSources(TransactionData transactionData);
 
     void addExistingTransactionOnInit(TransactionData transactionData);
@@ -34,5 +36,7 @@ public interface IClusterService {
     double getRuntimeTrustChainTrustScore(Hash transactionHash);
 
     List<TransactionData> findSources(TransactionData transactionData);
+
+    void addTransactionToTrustChainConfirmationCluster(TransactionData transactionData);
 
 }

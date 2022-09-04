@@ -43,6 +43,8 @@ public interface ITransactionHelper {
 
     void setTransactionStateToFinished(TransactionData transactionData);
 
+    void updateTransactionOnCluster(TransactionData transactionData);
+
     boolean isConfirmed(TransactionData transactionData);
 
     boolean isDspConfirmed(TransactionData transactionData);

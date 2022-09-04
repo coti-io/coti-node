@@ -1,10 +1,12 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.Event;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.services.interfaces.IClusterHelper;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +37,15 @@ public class TrustChainConfirmationService {
     private int tccWaitingConfirmation = 0;
     @Autowired
     private IClusterHelper clusterHelper;
+    @Autowired
+    private ITransactionHelper transactionHelper;
+    @Autowired
+    private BaseNodeEventService baseNodeEventService;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
         topologicalOrderedGraph = new LinkedList<>();
-        clusterHelper.sortByTopologicalOrder(this.trustChainConfirmationCluster, topologicalOrderedGraph);
+        clusterHelper.addAndSortByTopologicalOrder(this.trustChainConfirmationCluster, topologicalOrderedGraph);
     }
 
     private void setTotalTrustScore(TransactionData parent) {
@@ -58,11 +64,13 @@ public class TrustChainConfirmationService {
             }
         }
 
-        // updating parent trustChainTrustScore
-        if (parent.getTrustChainTrustScore() < parent.getSenderTrustScore() + maxChildrenTotalTrustScore) {
-            parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxChildrenTotalTrustScore);
-        }
+        double parentSenderTrustScore = !baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)
+                || transactionHelper.isDspConfirmed(parent) ? parent.getSenderTrustScore() : 0;
 
+        // updating parent trustChainTrustScore
+        if (parent.getTrustChainTrustScore() < parentSenderTrustScore + maxChildrenTotalTrustScore) {
+            parent.setTrustChainTrustScore(parentSenderTrustScore + maxChildrenTotalTrustScore);
+        }
     }
 
     public List<TccInfo> getTrustChainConfirmedTransactions() {
@@ -71,7 +79,8 @@ public class TrustChainConfirmationService {
         trustScoreNotChanged = false;
         for (TransactionData transactionData : topologicalOrderedGraph) {
             setTotalTrustScore(transactionData);
-            if (transactionData.getTrustChainTrustScore() >= threshold && !transactionData.isTrustChainConsensus()) {
+            if (transactionData.getTrustChainTrustScore() >= threshold && !transactionData.isTrustChainConsensus()
+                    && (!baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) || transactionHelper.isDspConfirmed(transactionData))) {
                 nonZeroSpendTransactionTSValuesMap.remove(transactionData.getHash());
                 Instant trustScoreConsensusTime = Optional.ofNullable(transactionData.getTrustChainConsensusTime()).orElse(Instant.now());
                 TccInfo tccInfo = new TccInfo(transactionData.getHash(), transactionData.getTrustChainTrustScore(), trustScoreConsensusTime);

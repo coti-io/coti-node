@@ -31,4 +31,10 @@ public class AdminController {
         );
     }
 
+    @PostMapping(path = "/event/trust-score-consensus")
+    public ResponseEntity<IResponse> eventTrustScoreConsensus() {
+        return transactionCreationService.createEventTransaction("Trust Score Consensus", Event.TRUST_SCORE_CONSENSUS
+        );
+    }
+
 }

@@ -27,4 +27,14 @@ public class BaseNodeEventController {
     public ResponseEntity<IResponse> getMultiDagEventTransactionData() {
         return eventService.getEventTransactionDataResponse(Event.MULTI_DAG);
     }
+
+    @GetMapping(path = "/trust-score-consensus/confirmed")
+    public ResponseEntity<IResponse> getConfirmedTrustScoreConsensusEvent() {
+        return eventService.getConfirmedEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
+    }
+
+    @GetMapping(path = "/trust-score-consensus")
+    public ResponseEntity<IResponse> getTrustScoreConsensusTransactionData() {
+        return eventService.getEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
+    }
 }
