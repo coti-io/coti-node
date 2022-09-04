@@ -10,6 +10,7 @@ import io.coti.basenode.http.data.AddressBalance;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
+import io.coti.basenode.services.interfaces.IEventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,7 +36,7 @@ public class BaseNodeBalanceService implements IBalanceService {
     @Autowired
     protected ICurrencyService currencyService;
     @Autowired
-    private BaseNodeEventService baseNodeEventService;
+    private IEventService baseNodeEventService;
 
     public void init() {
         balanceMap = new ConcurrentHashMap<>();

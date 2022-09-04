@@ -18,6 +18,7 @@ import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.IEventService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +65,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private UserCurrencyIndexes userCurrencyIndexes;
     @Autowired
-    protected BaseNodeEventService baseNodeEventService;
+    protected IEventService baseNodeEventService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
