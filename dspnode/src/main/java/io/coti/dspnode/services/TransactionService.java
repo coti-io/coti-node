@@ -57,7 +57,6 @@ public class TransactionService extends BaseNodeTransactionService {
     private RejectedTransactions rejectedTransactions;
     @Autowired
     private RejectedTransactionCrypto rejectedTransactionCrypto;
-    private final LockData transactionLockData = new LockData();
 
     @Override
     public void init() {

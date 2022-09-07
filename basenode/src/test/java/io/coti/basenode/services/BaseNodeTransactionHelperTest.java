@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import com.google.common.collect.Sets;
 import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
@@ -20,16 +21,18 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @ContextConfiguration(classes = {BaseNodeTransactionHelper.class, BaseNodeTransactionService.class, AddressTransactionsHistories.class,
@@ -52,7 +55,9 @@ public class BaseNodeTransactionHelperTest {
     private BaseNodeTransactionService transactionService;
     @Autowired
     private ITransactionHelper transactionHelper;
-    @Autowired
+    @MockBean
+    private ITransactionPropagationCheckService transactionPropagationCheckService;
+    @MockBean
     private AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
     private TransactionCrypto transactionCrypto;
@@ -66,7 +71,7 @@ public class BaseNodeTransactionHelperTest {
     private ISourceSelector sourceSelector;
     @MockBean
     private TrustChainConfirmationService trustChainConfirmationService;
-    @Autowired
+    @MockBean
     private Transactions transactions;
     @MockBean
     private TransactionIndexes transactionIndexes;
@@ -244,4 +249,35 @@ public class BaseNodeTransactionHelperTest {
         Assert.assertNotNull(copyTrustChainConfirmationCluster.get(secondTransactionData.getHash()));
     }
 
+    @Test
+    public void endHandleRejectedTransaction_verifyAllMethodsCalled() {
+        TransactionData rejectedTransactionData = TransactionTestUtils.createRandomTransaction();
+        transactionHelper.continueHandleRejectedTransaction(rejectedTransactionData);
+        verify(transactions, atLeastOnce()).deleteByHash(rejectedTransactionData.getHash());
+    }
+
+    @Test
+    public void removeAddressTransactionHistory_verifyRemoval() {
+        TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            Hash addressHash = baseTransactionData.getAddressHash();
+            AddressTransactionsHistory addressHistory = new AddressTransactionsHistory(baseTransactionData.getAddressHash());
+            addressHistory.addTransactionHashToHistory(transactionData.getHash());
+            when(addressTransactionsHistories.getByHash(addressHash)).thenReturn(addressHistory);
+        });
+
+        transactionHelper.removeAddressTransactionHistory(transactionData);
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            Assert.assertEquals(Sets.newConcurrentHashSet(), addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash()).getTransactionsHistory());
+        });
+    }
+
+    @Test
+    public void removeNoneIndexedTransaction_verifyRemoval() {
+        TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
+        Set<Hash> noneIndexedTransactionHashes = new HashSet<>(Collections.singleton(transactionData.getHash()));
+        ReflectionTestUtils.setField(transactionHelper, "noneIndexedTransactionHashes", noneIndexedTransactionHashes);
+        transactionHelper.removeNoneIndexedTransaction(transactionData);
+        Assert.assertEquals(Sets.newConcurrentHashSet(), noneIndexedTransactionHashes);
+    }
 }

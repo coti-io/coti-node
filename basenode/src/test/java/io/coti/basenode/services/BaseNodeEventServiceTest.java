@@ -45,6 +45,8 @@ public class BaseNodeEventServiceTest {
     @Autowired
     private ITransactionHelper transactionHelper;
     @MockBean
+    private ITransactionPropagationCheckService transactionPropagationCheckService;
+    @MockBean
     private Transactions transactions;
 
     @MockBean

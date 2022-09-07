@@ -48,6 +48,8 @@ public class BaseNodeConfirmationServiceTest {
     @Autowired
     private ITransactionHelper transactionHelper;
     @MockBean
+    private ITransactionPropagationCheckService transactionPropagationCheckService;
+    @MockBean
     private TransactionIndexService transactionIndexService;
     @MockBean
     private TransactionIndexes transactionIndexes;
