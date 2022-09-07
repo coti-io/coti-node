@@ -7,6 +7,6 @@ public final class TestConstants {
     public static final int SIZE_OF_ADDRESS_HASH = 136;
     public static final String TRANSACTION_DESCRIPTION = "test";
     public static final int MAX_TRUST_SCORE = 100;
-    public static final String NATIVE_CURRENCY_HASH = "e72d2137d5cfcc672ab743bddbdedb4e059ca9d3db3219f4eb623b01";
+    public static final String NATIVE_CURRENCY_HASH = "ae2b227ab7e614b8734be1f03d1532e66bf6caf76accc02ca4da6e28";
 
 }

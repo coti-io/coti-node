@@ -48,6 +48,8 @@ public class TrustChainConfirmationServiceTest {
     @Autowired
     private BaseNodeTransactionHelper transactionHelper;
     @MockBean
+    private ITransactionPropagationCheckService transactionPropagationCheckService;
+    @MockBean
     private BaseNodeEventService baseNodeEventService;
     @MockBean
     private Transactions transactions;

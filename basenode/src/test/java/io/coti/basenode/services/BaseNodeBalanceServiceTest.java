@@ -2,11 +2,13 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.Event;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetTokenBalancesRequest;
 import io.coti.basenode.http.GetTokenBalancesResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IEventService;
+import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,11 +22,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static io.coti.basenode.utils.HashTestUtils.generateRandomAddressHash;
 import static org.mockito.ArgumentMatchers.any;
@@ -83,4 +89,22 @@ public class BaseNodeBalanceServiceTest {
         Assert.assertEquals(BigDecimal.ONE, ((GetTokenBalancesResponse) currencyBalances.getBody()).getTokenBalances().get(addressHash1).get(tokenHash2).getAddressBalance());
     }
 
+    @Test
+    public void rollbackBaseTransactions() {
+        TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
+        Map<Hash, Map<Hash, BigDecimal>> preBalanceMap = new ConcurrentHashMap<>();
+        AtomicReference<Hash> currencyHash = new AtomicReference<>();
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> {
+            baseTransactionData.setAmount(new BigDecimal(-2));
+            BigDecimal amount = baseTransactionData.getAmount();
+            Hash addressHash = baseTransactionData.getAddressHash();
+            currencyHash.set(baseTransactionData.getCurrencyHash());
+            preBalanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
+            preBalanceMap.get(addressHash).putIfAbsent(currencyHash.get(), amount);
+            when(currencyService.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash())).thenReturn(baseTransactionData.getCurrencyHash());
+        });
+        ReflectionTestUtils.setField(balanceService, "preBalanceMap", preBalanceMap);
+        balanceService.rollbackBaseTransactions(transactionData);
+        Assert.assertEquals(BigDecimal.ZERO, preBalanceMap.get(transactionData.getBaseTransactions().get(0).getAddressHash()).get(currencyHash.get()));
+    }
 }

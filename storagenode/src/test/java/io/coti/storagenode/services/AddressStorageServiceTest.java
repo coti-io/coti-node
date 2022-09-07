@@ -48,6 +48,8 @@ public class AddressStorageServiceTest {
     @Autowired
     private BaseNodeValidationService validationService;
     @MockBean
+    private RejectedTransactionCrypto rejectedTransactionCrypto;
+    @MockBean
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
     @MockBean
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
