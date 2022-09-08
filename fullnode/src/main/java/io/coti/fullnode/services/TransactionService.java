@@ -83,12 +83,12 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
     @Autowired
-    private BaseNodeEventService baseNodeEventService;
+    private IEventService baseNodeEventService;
     private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
     private final LockData transactionLockData = new LockData();
     @Value("${java.process.memory.limit:95}")
     private int javaProcessMemoryLimit;
-    final ReentrantReadWriteLock transactionHandlingReadWriteLock = new ReentrantReadWriteLock(true);
+    private final ReentrantReadWriteLock transactionHandlingReadWriteLock = new ReentrantReadWriteLock(true);
 
     @Override
     public void init() {
