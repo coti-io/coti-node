@@ -201,16 +201,20 @@ public class ClusterService implements IClusterService {
     }
 
     @Override
-    public void selectSources(TransactionData transactionData) {
+    public List<TransactionData> findSources(TransactionData transactionData) {
         List<Set<Hash>> trustScoreToTransactionMappingSnapshot =
                 Collections.unmodifiableList(sourceSetsByTrustScore);
         Map<Hash, TransactionData> sourceMapSnapshot = Collections.unmodifiableMap(sourceMap);
-        List<TransactionData> selectedSourcesForAttachment =
-                sourceSelector.selectSourcesForAttachment(
-                        trustScoreToTransactionMappingSnapshot,
-                        sourceMapSnapshot,
-                        transactionData.getSenderTrustScore(), readWriteLock);
+        return sourceSelector.selectSourcesForAttachment(
+                trustScoreToTransactionMappingSnapshot,
+                sourceMapSnapshot,
+                transactionData.getSenderTrustScore(), readWriteLock);
 
+    }
+
+    @Override
+    public void selectSources(TransactionData transactionData) {
+        List<TransactionData> selectedSourcesForAttachment = findSources(transactionData);
         if (selectedSourcesForAttachment.isEmpty()) {
             return;
         }

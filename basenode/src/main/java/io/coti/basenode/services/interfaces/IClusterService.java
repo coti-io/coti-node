@@ -5,6 +5,7 @@ import io.coti.basenode.data.TransactionData;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,4 +32,7 @@ public interface IClusterService {
     void checkForTrustChainConfirmedTransaction();
 
     double getRuntimeTrustChainTrustScore(Hash transactionHash);
+
+    List<TransactionData> findSources(TransactionData transactionData);
+
 }
