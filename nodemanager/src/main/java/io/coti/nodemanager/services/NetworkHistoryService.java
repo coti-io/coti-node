@@ -475,7 +475,7 @@ public class NetworkHistoryService implements INetworkHistoryService {
         lastRelevantNodeNetworkRecordMap = getNodeNetworkDataRecordMap(nodeNetworkDataRecordByChainRef, lastRelevantNodeNetworkRecordMap);
         lastRelevantNodeNetworkDataRecord = getNodeNetworkDataRecordByChainRef(nodeNetworkDataRecordByChainRef, lastRelevantNodeNetworkRecordMap);
 
-        while (lastRelevantNodeNetworkDataRecord != null && startInstant.equals(localDateToInstant(startDate)) && lastRelevantNodeNetworkDataRecord.getRecordTime().isAfter(localDateToInstant(startDate))) {
+        while (lastRelevantNodeNetworkDataRecord != null && !startInstant.equals(localDateToInstant(startDate)) && lastRelevantNodeNetworkDataRecord.getRecordTime().isAfter(localDateToInstant(startDate))) {
             startInstant = localDateToInstant(startDate);
             endInstant = lastRelevantNodeNetworkDataRecord.getRecordTime();
             lastRelevantNodeNetworkRecordMap = getNodeNetworkDataRecordMap(lastRelevantNodeNetworkDataRecord, lastRelevantNodeNetworkRecordMap);
