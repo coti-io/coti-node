@@ -18,6 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {BaseNodeCurrencyService.class, BaseNodeBalanceService.class})
 
-//@TestPropertySource(locations = "classpath:test.properties")
+@TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @Slf4j
@@ -53,7 +54,7 @@ public class BaseNodeBalanceServiceTest {
     @Test
     public void getCurrencyBalances_noNative_valuesMatch() {
         when(nodeEventService.eventHappened(isA(Event.MULTI_DAG.getClass()))).thenReturn(true);
-        when(currencyService.getNativeCurrencyHashIfNull(any(Hash.class))).then(a->a.getArgument(0));
+        when(currencyService.getNativeCurrencyHashIfNull(any(Hash.class))).then(a -> a.getArgument(0));
 
         GetTokenBalancesRequest getCurrencyBalanceRequest = new GetTokenBalancesRequest();
         Hash tokenHash1 = generateRandomAddressHash();
