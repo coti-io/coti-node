@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestPropertySource(locations = "classpath:test.properties")
-
 class ProofOfTransactionTest {
     private ProofOfTrust pow;
     private final byte[] targetDifficulty = parseHexBinary("00F00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
