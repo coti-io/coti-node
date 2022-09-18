@@ -15,12 +15,7 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -81,16 +76,16 @@ public class SourceStarvationService {
         return majorChild;
     }
 
-    private void pairSourceToRoot(TransactionData parentTransactionData, ConcurrentHashMap<Hash, TransactionData> sourceToRootMap,
+    private void pairSourceToRoot(TransactionData sourceTransactionData, ConcurrentHashMap<Hash, TransactionData> sourceToRootMap,
                                   ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs, List<TransactionData> orphanedStarvationSources) {
 
-        if (sourceToRootMap.get(parentTransactionData.getHash()) != null) {
-            rootSourcePairs.put(sourceToRootMap.get(parentTransactionData.getHash()), parentTransactionData);
+        if (sourceToRootMap.get(sourceTransactionData.getHash()) != null) {
+            rootSourcePairs.put(sourceToRootMap.get(sourceTransactionData.getHash()), sourceTransactionData);
         } else {
-            if (!parentTransactionData.getType().equals(TransactionType.ZeroSpend)) {
-                rootSourcePairs.put(parentTransactionData, parentTransactionData);
+            if (!sourceTransactionData.getType().equals(TransactionType.ZeroSpend)) {
+                rootSourcePairs.put(sourceTransactionData, sourceTransactionData);
             } else {
-                orphanedStarvationSources.add(parentTransactionData);
+                orphanedStarvationSources.add(sourceTransactionData);
             }
         }
     }
@@ -144,9 +139,9 @@ public class SourceStarvationService {
         List<TransactionData> orphanedStarvationSources = new ArrayList<>();
         pairSourcesWithRoots(topologicalOrderedGraph, rootSourcePairs, orphanedStarvationSources);
 
-        List<TransactionData> sourcesAttached = new ArrayList<>();
+        Set<TransactionData> sourcesAttached = new HashSet<>();
+        Set<TransactionData> zeroSpendSourcesAttached = new HashSet<>();
         List<TransactionData> newlyCreatedZeroSpends = new ArrayList<>();
-        List<TransactionData> zeroSpendSourcesAttached = new ArrayList<>();
 
         for (Map.Entry<TransactionData, TransactionData> rootSourcePair : rootSourcePairs.entrySet()) {
             TransactionData rootTransactionData = rootSourcePair.getKey();
@@ -169,9 +164,9 @@ public class SourceStarvationService {
         }
     }
 
-    private void createJointSourceStarvationZeroSpendTransaction(List<TransactionData> newlyCreatedZeroSpends, TransactionData sourceTransactionData, List<TransactionData> sourcesAttached,
+    private void createJointSourceStarvationZeroSpendTransaction(List<TransactionData> newlyCreatedZeroSpends, TransactionData sourceTransactionData, Set<TransactionData> sourcesAttached,
                                                                  ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs, List<TransactionData> orphanedStarvationSources,
-                                                                 List<TransactionData> zeroSpendSourcesAttached) {
+                                                                 Set<TransactionData> zeroSpendSourcesAttached) {
         TransactionData zeroSpendTransaction = transactionCreationService.createNewStarvationZeroSpendTransaction(sourceTransactionData);
         if (zeroSpendTransaction == null) {
             return;
@@ -179,10 +174,9 @@ public class SourceStarvationService {
         newlyCreatedZeroSpends.add(zeroSpendTransaction);
         sourcesAttached.add(sourceTransactionData);
         List<TransactionData> possibleSources = clusterService.findSources(zeroSpendTransaction);
-        possibleSources = possibleSources.stream().filter(p -> !p.getHash().equals(sourceTransactionData.getHash())).collect(Collectors.toList());
-        possibleSources = possibleSources.stream().filter(p -> !ZeroSpendTransactionType.GENESIS.toString().equals(p.getTransactionDescription())).collect(Collectors.toList());
+        possibleSources = possibleSources.stream().filter(p -> !p.getHash().equals(sourceTransactionData.getHash()) && !(p.getType().equals(TransactionType.ZeroSpend) && ZeroSpendTransactionType.GENESIS.toString().equals(p.getTransactionDescription()))).collect(Collectors.toList());
         for (TransactionData possibleOtherParent : rootSourcePairs.values()) {
-            if (possibleSources.stream().anyMatch(tx -> tx.getHash().equals(possibleOtherParent.getHash()))) {
+            if (possibleSources.contains(possibleOtherParent) && !sourcesAttached.contains(possibleOtherParent)) {
                 zeroSpendTransaction.setRightParentHash(possibleOtherParent.getHash());
                 if (possibleOtherParent.getSenderTrustScore() > zeroSpendTransaction.getSenderTrustScore()) {
                     zeroSpendTransaction.setSenderTrustScore(possibleOtherParent.getSenderTrustScore());
