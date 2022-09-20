@@ -14,16 +14,21 @@ public class RejectedTransactionData implements IPropagatable, ISignable, ISignV
     private static final long serialVersionUID = -4057207227904211625L;
 
     private Hash hash;
-    private Instant rejectionTime;
-    private RejectedTransactionDataReason rejectionReason;
+    private TransactionData transactionData;
+    private final Instant rejectionTime;
+    private final String rejectionReasonDescription;
     private Hash nodeHash;
     private SignatureData nodeSignature;
 
     private RejectedTransactionData() {
+        this.rejectionReasonDescription = "";
+        this.rejectionTime = Instant.now();
     }
 
-    public RejectedTransactionData(TransactionData transactionData) {
+    public RejectedTransactionData(TransactionData transactionData, String rejectionReasonDescription) {
         this.hash = transactionData.getHash();
+        this.transactionData = transactionData;
+        this.rejectionReasonDescription = rejectionReasonDescription;
         this.rejectionTime = Instant.now();
     }
 

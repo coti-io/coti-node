@@ -4,5 +4,5 @@ public enum TransactionStatus {
     CONFIRMED,
     ATTACHED_TO_DAG,
     ERROR,
-    REJECTED_TRANSACTION
+    REJECTED
 }

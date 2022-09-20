@@ -16,8 +16,8 @@ import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
+import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
@@ -84,6 +84,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
     @Autowired
     private IEventService baseNodeEventService;
+    @Autowired
+    private RejectedTransactions rejectedTransactions;
     private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
     private final LockData transactionLockData = new LockData();
     @Value("${java.process.memory.limit:95}")
@@ -123,8 +125,8 @@ public class TransactionService extends BaseNodeTransactionService {
                 request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
-            currentlyAddTransaction.incrementAndGet();
             transactionHandlingReadWriteLock.readLock().lock();
+            currentlyAddTransaction.incrementAndGet();
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 if (((NetworkService) networkService).isNotConnectedToDspNodes()) {
                     log.error("FullNode is not connected to any DspNode. Rejecting transaction {}", transactionData.getHash());
@@ -682,10 +684,9 @@ public class TransactionService extends BaseNodeTransactionService {
 
                 rejectTransaction(rejectedTransactionHash);
             }
-        } catch (RuntimeException error) {
-            log.error(error.getMessage());
-        }
-        finally {
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        } finally {
             transactionLockData.removeLockFromLocksMap(rejectedTransactionHash);
             transactionHandlingReadWriteLock.writeLock().unlock();
         }
@@ -702,7 +703,24 @@ public class TransactionService extends BaseNodeTransactionService {
         log.debug("Starting to remove the rejected transaction {}", rejectedTransactionDataHash);
         removeDataFromMemory(transactionData);
         transactionHelper.continueHandleRejectedTransaction(transactionData);
-        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.REJECTED_TRANSACTION);
+        webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.REJECTED);
+    }
+
+    @Override
+    public long getRejectedTransactionsSize() {
+        return rejectedTransactions.size();
+    }
+
+    @Scheduled(initialDelay = 1000, fixedDelay = 86400000)
+    private void clearRejectedTransactions() {
+        rejectedTransactions.forEach(rejectedTransaction -> {
+                    if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > REJECTED_TRANSACTIONS_TTL)) {
+                        log.debug("removing rejected transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
+                                rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReasonDescription());
+                        rejectedTransactions.delete(rejectedTransaction);
+                    }
+                }
+        );
     }
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)

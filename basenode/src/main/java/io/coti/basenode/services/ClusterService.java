@@ -137,7 +137,7 @@ public class ClusterService implements IClusterService {
     private void updateParentsToDetachChild(TransactionData transactionData) {
         removeChildFromParent(transactionData, transactionData.getLeftParentHash());
         removeChildFromParent(transactionData, transactionData.getRightParentHash());
-        restoreTransactionParentsToSources(transactionData);
+        restoreTransactionParentsAsSources(transactionData);
     }
 
     private void removeChildFromParent(TransactionData transactionData, Hash parentHash) {
@@ -145,7 +145,7 @@ public class ClusterService implements IClusterService {
             transactions.lockAndGetByHash(parentHash, parentTransactionData -> {
                 if (parentTransactionData != null) {
                     if (!parentTransactionData.removeFromChildrenTransactions(transactionData.getHash())) {
-                        log.error("Failed to remove child: {} from parent: {}",transactionData.getHash(),parentHash);
+                        log.error("Failed to remove child: {} from parent: {}", transactionData.getHash(), parentHash);
                     }
                     if (trustChainConfirmationCluster.containsKey(parentTransactionData.getHash())) {
                         trustChainConfirmationCluster.put(parentTransactionData.getHash(), parentTransactionData);
@@ -158,16 +158,16 @@ public class ClusterService implements IClusterService {
         }
     }
 
-    private void restoreTransactionParentsToSources(TransactionData transactionData) {
+    private void restoreTransactionParentsAsSources(TransactionData transactionData) {
         if (transactionData.getLeftParentHash() != null) {
-            restoreTransactionToSources(transactionData.getLeftParentHash());
+            restoreTransactionAsSource(transactionData.getLeftParentHash());
         }
         if (transactionData.getRightParentHash() != null) {
-            restoreTransactionToSources(transactionData.getRightParentHash());
+            restoreTransactionAsSource(transactionData.getRightParentHash());
         }
     }
 
-    private void restoreTransactionToSources(Hash transactionHash) {
+    private void restoreTransactionAsSource(Hash transactionHash) {
         TransactionData transactionData = transactions.getByHash(transactionHash);
         if (transactionData != null) {
             addNewSourceTransactionToSources(transactionData);
