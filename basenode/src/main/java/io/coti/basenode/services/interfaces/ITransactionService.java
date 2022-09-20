@@ -1,10 +1,6 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.data.ExecutorData;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.InitializationTransactionHandlerType;
-import io.coti.basenode.data.RejectedTransactionData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.FluxSink;
@@ -29,8 +25,6 @@ public interface ITransactionService {
     void getNoneIndexedTransactionBatch(HttpServletResponse response, boolean isExtended);
 
     ResponseEntity<IResponse> getPostponedTransactions();
-
-    ResponseEntity<IResponse> getRejectedTransactions();
 
     void handlePropagatedTransaction(TransactionData transactionData);
 

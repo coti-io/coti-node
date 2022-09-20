@@ -574,12 +574,10 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             AddressTransactionsHistory addressHistory = addressTransactionsHistories.getByHash(addressHash);
             if (addressHistory == null) {
                 log.error("Address history does not exist for address {}", addressHash);
-            }
-            else {
+            } else {
                 if (!addressHistory.removeTransactionHashFromHistory(transactionData.getHash())) {
                     log.error("Transaction {} is not in history of address {}", transactionData.getHash(), addressHash);
-                }
-                else {
+                } else {
                     addressTransactionsHistories.put(addressHistory);
                 }
             }

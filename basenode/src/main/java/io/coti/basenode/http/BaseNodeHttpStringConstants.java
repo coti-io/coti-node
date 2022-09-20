@@ -89,8 +89,6 @@ public class BaseNodeHttpStringConstants {
 
     public static final String MULTI_DAG_IS_NOT_SUPPORTED = "The system is not supporting multi DAG.";
 
-    public static final String METHOD_NOT_ALLOWED = "This method is not in use";
-
     protected BaseNodeHttpStringConstants() {
 
     }

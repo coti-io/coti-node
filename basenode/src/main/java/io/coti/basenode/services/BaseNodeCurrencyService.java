@@ -14,11 +14,7 @@ import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.CurrencyNameIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.model.UserCurrencyIndexes;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.IEventService;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -217,16 +213,21 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     private void removeFromUserCurrencyIndexes(Hash originatorHash, Hash currencyHash) {
-        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
-        if (userCurrencyIndexData != null) {
-            Set<Hash> tokenHashSet = userCurrencyIndexData.getTokenHashes();
-            tokenHashSet.remove(currencyHash);
-            if (tokenHashSet.isEmpty()) {
-                userCurrencyIndexes.deleteByHash(originatorHash);
+        try {
+            synchronized (originatorHashLockData.addLockToLockMap(originatorHash)) {
+                UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
+                if (userCurrencyIndexData != null) {
+                    Set<Hash> tokenHashSet = userCurrencyIndexData.getTokenHashes();
+                    tokenHashSet.remove(currencyHash);
+                    if (tokenHashSet.isEmpty()) {
+                        userCurrencyIndexes.deleteByHash(originatorHash);
+                    } else {
+                        userCurrencyIndexes.put(userCurrencyIndexData);
+                    }
+                }
             }
-            else {
-                userCurrencyIndexes.put(userCurrencyIndexData);
-            }
+        } finally {
+            originatorHashLockData.removeLockFromLocksMap(originatorHash);
         }
     }
 
@@ -563,5 +564,5 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         tokenTransactionHashesMap.putIfAbsent(currencyHash, new HashSet<>(Collections.singletonList(transactionData.getHash())));
 
     }
-    
+
 }
