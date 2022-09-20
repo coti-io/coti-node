@@ -214,16 +214,21 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     private void removeFromUserCurrencyIndexes(Hash originatorHash, Hash currencyHash) {
-        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
-        if (userCurrencyIndexData != null) {
-            Set<Hash> tokenHashSet = userCurrencyIndexData.getTokenHashes();
-            tokenHashSet.remove(currencyHash);
-            if (tokenHashSet.isEmpty()) {
-                userCurrencyIndexes.deleteByHash(originatorHash);
+        try {
+            synchronized (originatorHashLockData.addLockToLockMap(originatorHash)) {
+                UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
+                if (userCurrencyIndexData != null) {
+                    Set<Hash> tokenHashSet = userCurrencyIndexData.getTokenHashes();
+                    tokenHashSet.remove(currencyHash);
+                    if (tokenHashSet.isEmpty()) {
+                        userCurrencyIndexes.deleteByHash(originatorHash);
+                    } else {
+                        userCurrencyIndexes.put(userCurrencyIndexData);
+                    }
+                }
             }
-            else {
-                userCurrencyIndexes.put(userCurrencyIndexData);
-            }
+        } finally {
+            originatorHashLockData.removeLockFromLocksMap(originatorHash);
         }
     }
 
@@ -560,5 +565,5 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         tokenTransactionHashesMap.putIfAbsent(currencyHash, new HashSet<>(Collections.singletonList(transactionData.getHash())));
 
     }
-    
+
 }

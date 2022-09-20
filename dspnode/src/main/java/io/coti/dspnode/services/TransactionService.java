@@ -5,13 +5,14 @@ import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.RejectedTransactionCrypto;
 import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.GetRejectedTransactionsResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.RejectedTransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.RejectedTransactions;
-import io.coti.basenode.services.BaseNodeEventService;
 import io.coti.basenode.services.BaseNodeTransactionService;
+import io.coti.basenode.services.interfaces.IEventService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
@@ -28,14 +29,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_NONE_INDEXED_SERVER_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    public static final int NUMBER_OF_SECONDS_IN_DAY = 24 * 60 * 60;
+    private static final String REJECTED_PARENT = "Transaction rejected as parent already rejected";
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -57,7 +57,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Autowired
     private RejectedTransactionCrypto rejectedTransactionCrypto;
     @Autowired
-    private BaseNodeEventService baseNodeEventService;
+    private IEventService baseNodeEventService;
 
     @Override
     public void init() {
@@ -78,27 +78,21 @@ public class TransactionService extends BaseNodeTransactionService {
                 return;
             }
             if (rejectedTransactions.getByHash(transactionData.getHash()) != null) {
-                log.debug("Transaction already rejected as invalid: {}", transactionData.getHash());
-                notifyNodesOnRejectedTransaction(rejectedTransactions.getByHash(transactionData.getHash()));
+                log.debug("Transaction: {} already rejected", transactionData.getHash());
+                propagateRejectedTransaction(rejectedTransactions.getByHash(transactionData.getHash()));
                 return;
             }
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
-                log.error("Data Integrity validation failed: {}", transactionData.getHash());
-                propagateRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.DATA_INTEGRITY);
-                return;
+                throw new TransactionValidationException(AUTHENTICATION_FAILED_MESSAGE);
             }
             if (hasOneOfParentsRejected(transactionData)) {
-                log.debug("Transaction rejected as parent already rejected: {}", transactionData.getHash());
-                propagateRejectedTransactionToFullNode(transactionData, RejectedTransactionDataReason.REJECTED_PARENT);
-                return;
+                throw new TransactionValidationException(REJECTED_PARENT);
             }
             if (hasOneOfParentsMissing(transactionData)) {
                 postponedTransactionMap.putIfAbsent(transactionData, true);
                 return;
             }
-            if (!validateAndAttachTransaction(transactionData)) {
-                return;
-            }
+            validateAndAttachTransaction(transactionData);
             propagationPublisher.propagate(transactionData, Arrays.asList(
                     NodeType.FullNode,
                     NodeType.TrustScoreNode,
@@ -109,8 +103,11 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
             transactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
+        } catch (TransactionValidationException ex) {
+            log.error("Transaction Validation Exception while handling transaction {} : {}", transactionData.getHash(), ex.getMessage());
+            handleRejectedTransaction(transactionData, ex.getMessage());
         } catch (Exception ex) {
-            log.error("Exception while handling transaction {}", transactionData, ex);
+            log.error("Exception while handling transaction {}", transactionData.getHash(), ex);
         } finally {
             if (!isTransactionAlreadyPropagated.get()) {
                 boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
@@ -118,26 +115,24 @@ public class TransactionService extends BaseNodeTransactionService {
                 if (isTransactionFinished) {
                     processPostponedTransactions(transactionData);
                 } else {
-                    processPostponedRejectedTransactions(transactionData);
+                    processRejectedTransactions(transactionData);
                 }
             }
         }
     }
 
-    @Override
-    protected void propagateRejectedTransactionToFullNode(TransactionData transactionData,
-                                                          RejectedTransactionDataReason rejectedTransactionDataReason) {
+    protected void handleRejectedTransaction(TransactionData transactionData,
+                                             String rejectionReasonDescription) {
         if (baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
             log.debug("Informing full node that transaction is rejected");
-            RejectedTransactionData rejectedTransactionData = new RejectedTransactionData(transactionData);
-            rejectedTransactionData.setRejectionReason(rejectedTransactionDataReason);
+            RejectedTransactionData rejectedTransactionData = new RejectedTransactionData(transactionData, rejectionReasonDescription);
             rejectedTransactionCrypto.signMessage(rejectedTransactionData);
-            notifyNodesOnRejectedTransaction(rejectedTransactionData);
+            propagateRejectedTransaction(rejectedTransactionData);
             rejectedTransactions.put(rejectedTransactionData);
         }
     }
 
-    private void notifyNodesOnRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
+    private void propagateRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
         propagationPublisher.propagate(rejectedTransactionData, Arrays.asList(NodeType.FullNode));
     }
 
@@ -155,32 +150,31 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 30000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 86400000)
     private void clearRejectedTransactions() {
         rejectedTransactions.forEach(rejectedTransaction -> {
-                    if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > NUMBER_OF_SECONDS_IN_DAY)) {
+                    if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > REJECTED_TRANSACTIONS_TTL)) {
                         log.debug("removing rejected transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
-                                rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReason());
+                                rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReasonDescription());
                         rejectedTransactions.delete(rejectedTransaction);
                     }
                 }
         );
     }
 
-    private void processPostponedRejectedTransactions(TransactionData rejectedTransaction) {
-        if (postponedTransactionMap.size() > 0) {
+    private void processRejectedTransactions(TransactionData rejectedTransaction) {
+        if (rejectedTransactions.getByHash(rejectedTransaction.getHash()) != null && postponedTransactionMap.size() > 0) {
             Map<TransactionData, Boolean> postponedChildrenTransactionMap = getPostponedChildrenTransactionMap(rejectedTransaction.getHash(), postponedTransactionMap);
             for (Map.Entry<TransactionData, Boolean> entry : postponedChildrenTransactionMap.entrySet()) {
                 if (entry.getValue().equals(true)) {
-                    propagateRejectedTransactionToFullNode(entry.getKey(), RejectedTransactionDataReason.REJECTED_PARENT);
+                    handleRejectedTransaction(entry.getKey(), REJECTED_PARENT);
                     postponedTransactionMap.remove(entry.getKey());
-                    processPostponedTransactions(entry.getKey());
+                    processRejectedTransactions(entry.getKey());
                 }
             }
         }
     }
 
-    @Override
     public ResponseEntity<IResponse> getRejectedTransactions() {
         try {
             List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
