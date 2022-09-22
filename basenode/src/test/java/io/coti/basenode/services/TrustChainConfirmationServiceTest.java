@@ -2,12 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.data.Event;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TccInfo;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionIndexData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
