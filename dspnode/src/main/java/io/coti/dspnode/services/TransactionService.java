@@ -12,7 +12,6 @@ import io.coti.basenode.http.data.RejectedTransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.IEventService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
@@ -29,13 +28,15 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.constants.BaseNodeMessages.AUTHENTICATION_FAILED_MESSAGE;
+import static io.coti.basenode.constants.BaseNodeMessages.REJECTED_PARENT;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_NONE_INDEXED_SERVER_ERROR;
 
 @Slf4j
 @Service
 public class TransactionService extends BaseNodeTransactionService {
 
-    private static final String REJECTED_PARENT = "Transaction rejected as parent already rejected";
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -56,8 +57,7 @@ public class TransactionService extends BaseNodeTransactionService {
     private RejectedTransactions rejectedTransactions;
     @Autowired
     private RejectedTransactionCrypto rejectedTransactionCrypto;
-    @Autowired
-    private IEventService baseNodeEventService;
+    private final LockData transactionLockData = new LockData();
 
     @Override
     public void init() {
@@ -85,7 +85,7 @@ public class TransactionService extends BaseNodeTransactionService {
             if (!validationService.validatePropagatedTransactionDataIntegrity(transactionData)) {
                 throw new TransactionValidationException(AUTHENTICATION_FAILED_MESSAGE);
             }
-            if (hasOneOfParentsRejected(transactionData)) {
+            if (hasRejectedParent(transactionData)) {
                 throw new TransactionValidationException(REJECTED_PARENT);
             }
             if (hasOneOfParentsMissing(transactionData)) {
@@ -123,7 +123,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     protected void handleRejectedTransaction(TransactionData transactionData,
                                              String rejectionReasonDescription) {
-        if (baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
+        if (eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
             log.debug("Informing full node that transaction is rejected");
             RejectedTransactionData rejectedTransactionData = new RejectedTransactionData(transactionData, rejectionReasonDescription);
             rejectedTransactionCrypto.signMessage(rejectedTransactionData);
@@ -136,7 +136,7 @@ public class TransactionService extends BaseNodeTransactionService {
         propagationPublisher.propagate(rejectedTransactionData, Arrays.asList(NodeType.FullNode));
     }
 
-    private boolean hasOneOfParentsRejected(TransactionData transactionData) {
+    private boolean hasRejectedParent(TransactionData transactionData) {
         return (transactionData.getLeftParentHash() != null && rejectedTransactions.getByHash(transactionData.getLeftParentHash()) != null) ||
                 (transactionData.getRightParentHash() != null && rejectedTransactions.getByHash(transactionData.getRightParentHash()) != null);
     }
@@ -150,7 +150,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 86400000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 86400000)
     private void clearRejectedTransactions() {
         rejectedTransactions.forEach(rejectedTransaction -> {
                     if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > REJECTED_TRANSACTIONS_TTL)) {
@@ -188,11 +188,6 @@ public class TransactionService extends BaseNodeTransactionService {
                             TRANSACTION_NONE_INDEXED_SERVER_ERROR,
                             STATUS_ERROR));
         }
-    }
-
-    @Override
-    public long getRejectedTransactionsSize() {
-        return rejectedTransactions.size();
     }
 
     private void checkAttachedTransactions() {

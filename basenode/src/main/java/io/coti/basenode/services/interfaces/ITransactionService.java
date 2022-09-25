@@ -37,6 +37,4 @@ public interface ITransactionService {
     int totalPostponedTransactions();
 
     void addDataToMemory(TransactionData transactionData);
-
-    long getRejectedTransactionsSize();
 }

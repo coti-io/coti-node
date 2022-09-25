@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import static io.coti.basenode.constants.BaseNodeMessages.*;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 
 @Slf4j
@@ -446,12 +447,6 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     public int totalPostponedTransactions() {
         return postponedTransactionMap.size();
-    }
-
-    @Override
-    public long getRejectedTransactionsSize() {
-        // implemented by DSP and Fullnode
-        return 0;
     }
 
     protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter
