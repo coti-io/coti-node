@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
@@ -24,22 +22,7 @@ public class ClusterHelper implements IClusterHelper {
 
     @Override
     public void sortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph) {
-        Map<Hash, TransactionData> childrenToAdd = new ConcurrentHashMap<>();
-        trustChainConfirmationCluster.forEach((hash, transactionData) -> {
-            transactionData.setVisit(false);
-            transactionData.getChildrenTransactionHashes().forEach(childHash -> {
-                if (!trustChainConfirmationCluster.containsKey(childHash)) {
-                    TransactionData childTransaction = transactions.getByHash(childHash);
-                    if (childTransaction == null) {
-                        log.error("Child {} of transaction {} is not in cluster", childHash, transactionData.getHash());
-                    } else {
-                        childTransaction.setVisit(false);
-                        childrenToAdd.put(childHash, childTransaction);
-                    }
-                }
-            });
-        });
-        trustChainConfirmationCluster.putAll(childrenToAdd);
+        resetClusterVisit(trustChainConfirmationCluster);
 
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
@@ -57,7 +40,6 @@ public class ClusterHelper implements IClusterHelper {
             if (childTransactionData != null && !childTransactionData.isVisit()) {
                 topologicalSortingHelper(childTransactionData, trustChainConfirmationCluster, topologicalOrderedGraph);
             }
-
         }
         //making the vertex visited for future reference
         parentTransactionData.setVisit(true);
@@ -70,4 +52,29 @@ public class ClusterHelper implements IClusterHelper {
     public long getMinimumWaitTimeInMilliseconds(TransactionData transactionData) {
         return (long) ((100 - transactionData.getSenderTrustScore()) / WAIT_REDUCTION_FACTOR + MINIMUM_WAIT_TIME_IN_SECONDS) * 1000;
     }
+
+    @Override
+    public void resetClusterVisit(ConcurrentMap<Hash, TransactionData> transactionsCluster) {
+        transactionsCluster.forEach((hash, transactionData) -> {
+                    transactionData.setVisit(false);
+                    completeClusterChildren(transactionsCluster, transactionData);
+                }
+        );
+    }
+
+    private void completeClusterChildren(ConcurrentMap<Hash, TransactionData> transactionsCluster, TransactionData transactionData) {
+        transactionData.getChildrenTransactionHashes().forEach(childHash -> {
+            if (!transactionsCluster.containsKey(childHash)) {
+                TransactionData childTransaction = transactions.getByHash(childHash);
+                if (childTransaction == null) {
+                    log.error("Child {} of transaction {} is not in cluster", childHash, transactionData.getHash());
+                } else {
+                    childTransaction.setVisit(false);
+                    transactionsCluster.putIfAbsent(childHash, childTransaction);
+                    completeClusterChildren(transactionsCluster, childTransaction);
+                }
+            }
+        });
+    }
+
 }
