@@ -22,6 +22,8 @@ public class ClusterHelper implements IClusterHelper {
 
     @Override
     public void sortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph) {
+        resetClusterVisit(trustChainConfirmationCluster);
+
         //loop is for making sure that every vertex is visited since if we select only one random source
         //all vertices might not be reachable from this source
         //eg:1->2->3,1->3 and if we select 3 as source first then no vertex can be visited of course except for 3
@@ -52,15 +54,15 @@ public class ClusterHelper implements IClusterHelper {
     }
 
     @Override
-    public void addSubTreeDescendants(ConcurrentMap<Hash, TransactionData> transactionsCluster) {
+    public void resetClusterVisit(ConcurrentMap<Hash, TransactionData> transactionsCluster) {
         transactionsCluster.forEach((hash, transactionData) -> {
                     transactionData.setVisit(false);
-                    addTransactionDescendants(transactionsCluster, transactionData);
+                    completeClusterChildren(transactionsCluster, transactionData);
                 }
         );
     }
 
-    private void addTransactionDescendants(ConcurrentMap<Hash, TransactionData> transactionsCluster, TransactionData transactionData) {
+    private void completeClusterChildren(ConcurrentMap<Hash, TransactionData> transactionsCluster, TransactionData transactionData) {
         transactionData.getChildrenTransactionHashes().forEach(childHash -> {
             if (!transactionsCluster.containsKey(childHash)) {
                 TransactionData childTransaction = transactions.getByHash(childHash);
@@ -69,15 +71,10 @@ public class ClusterHelper implements IClusterHelper {
                 } else {
                     childTransaction.setVisit(false);
                     transactionsCluster.putIfAbsent(childHash, childTransaction);
-                    addTransactionDescendants(transactionsCluster, childTransaction);
+                    completeClusterChildren(transactionsCluster, childTransaction);
                 }
             }
         });
     }
 
-    @Override
-    public void addAndSortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> transactionsCluster, LinkedList<TransactionData> topologicalOrderedGraph) {
-        addSubTreeDescendants(transactionsCluster);
-        sortByTopologicalOrder(transactionsCluster, topologicalOrderedGraph);
-    }
 }

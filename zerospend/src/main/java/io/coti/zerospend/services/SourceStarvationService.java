@@ -40,7 +40,7 @@ public class SourceStarvationService {
         ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
         LinkedList<TransactionData> topologicalOrderedGraph = new LinkedList<>();
 
-        clusterHelper.addAndSortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
+        clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
 
         createNewStarvationZeroSpendTransactions(now, topologicalOrderedGraph);
 

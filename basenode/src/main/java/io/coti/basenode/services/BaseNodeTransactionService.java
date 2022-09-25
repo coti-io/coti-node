@@ -247,7 +247,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             ConcurrentHashMap<Hash, TransactionData> postponedTransactionCluster = new ConcurrentHashMap<>();
             postponedTransactionCluster.putAll(postponedTransactionMap.keySet().stream().collect(Collectors.toMap(TransactionData::getHash, transactionData -> transactionData)));
             LinkedList<TransactionData> topologicalOrderedPostponedTransactions = new LinkedList<>();
-            clusterHelper.addAndSortByTopologicalOrder(postponedTransactionCluster, topologicalOrderedPostponedTransactions);
+            clusterHelper.sortByTopologicalOrder(postponedTransactionCluster, topologicalOrderedPostponedTransactions);
             return ResponseEntity.ok(new GetExtendedTransactionsResponse(topologicalOrderedPostponedTransactions));
         } catch (Exception e) {
             log.info("Exception while getting postponed transactions", e);
