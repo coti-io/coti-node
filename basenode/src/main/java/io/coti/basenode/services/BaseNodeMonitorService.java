@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     private IClusterService clusterService;
     @Autowired
     private ITransactionService transactionService;
+    @Autowired
+    private RejectedTransactions rejectedTransactions;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
     @Autowired
@@ -121,7 +124,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             appendOutput(output, "DspConfirmed", confirmationService.getDspConfirmed());
             appendOutput(output, "Confirmed", confirmationService.getTotalConfirmed());
             appendOutput(output, "LastIndex", transactionIndexService.getLastTransactionIndexData().getIndex());
-            appendOutput(output, "RejectedTransactions", transactionService.getRejectedTransactionsSize());
+            appendOutput(output, "RejectedTransactions", rejectedTransactions == null ? -1 : rejectedTransactions.size());
         }
         appendOutput(output, "Sources", clusterService.getTotalSources());
         appendOutput(output, "DSPHealthState", dspConfirmedState.toString());

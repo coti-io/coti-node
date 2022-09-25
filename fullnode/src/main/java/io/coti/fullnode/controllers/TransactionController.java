@@ -79,6 +79,11 @@ public class TransactionController {
         transactionService.getAddressTransactionBatch(getAddressTransactionBatchRequest, response, true);
     }
 
+    @PostMapping(value = "/addressTransactions/rejected/batch")
+    public void getAddressRejectedTransactionBatch(@Valid @RequestBody GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response) {
+        transactionService.getAddressRejectedTransactionBatch(getAddressTransactionBatchRequest, response);
+    }
+
     @PostMapping(value = "/addressTransactions/timestamp/reduced/batch")
     public void getAddressReducedTransactionBatchByTimestamp(@Valid @RequestBody GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response) {
         transactionService.getAddressTransactionBatchByTimestamp(getAddressTransactionBatchByTimestampRequest, response, true);

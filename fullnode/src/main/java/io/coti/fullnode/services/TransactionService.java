@@ -8,12 +8,15 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.PotException;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.exceptions.TransactionValidationException;
+import io.coti.basenode.http.CustomGson;
 import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.http.GetTransactionsResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;
+import io.coti.basenode.http.data.RejectedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
+import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.RejectedTransactions;
@@ -44,6 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static io.coti.basenode.constants.BaseNodeMessages.*;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
 import static io.coti.fullnode.http.HttpStringConstants.TRANSACTION_NO_DSP_IN_THE_NETWORK;
@@ -80,22 +84,22 @@ public class TransactionService extends BaseNodeTransactionService {
     private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
     private BlockingQueue<TransactionData> addressTransactionsByAttachmentQueue;
     private Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap;
+    private Map<Hash, Set<Hash>> addressToRejectedTransactionsMap;
     @Autowired
     private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
-    @Autowired
-    private IEventService baseNodeEventService;
     @Autowired
     private RejectedTransactions rejectedTransactions;
     private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
     private final LockData transactionLockData = new LockData();
     @Value("${java.process.memory.limit:95}")
     private int javaProcessMemoryLimit;
-    private final ReentrantReadWriteLock transactionHandlingReadWriteLock = new ReentrantReadWriteLock(true);
+    private final ReentrantReadWriteLock transactionReadWriteLock = new ReentrantReadWriteLock(true);
 
     @Override
     public void init() {
         startExplorerIndexThread();
         startAddressTransactionsByAttachmentThread();
+        initAddressToRejectedTransactionsMap();
         super.init();
     }
 
@@ -125,7 +129,7 @@ public class TransactionService extends BaseNodeTransactionService {
                 request.getType());
         try {
             log.debug("New transaction request is being processed. Transaction Hash = {}", request.getHash());
-            transactionHandlingReadWriteLock.readLock().lock();
+            transactionReadWriteLock.readLock().lock();
             currentlyAddTransaction.incrementAndGet();
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 if (((NetworkService) networkService).isNotConnectedToDspNodes()) {
@@ -209,7 +213,7 @@ public class TransactionService extends BaseNodeTransactionService {
             transactionHelper.endHandleTransaction(transactionData);
             transactionLockData.removeLockFromLocksMap(transactionData.getHash());
             currentlyAddTransaction.decrementAndGet();
-            transactionHandlingReadWriteLock.readLock().unlock();
+            transactionReadWriteLock.readLock().unlock();
         }
     }
 
@@ -662,7 +666,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
-        if (!baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
+        if (!eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
             log.error("Error encountered during the handling of rejected transaction data, event TRUST_SCORE_CONSENSUS didn't happen");
             return;
         }
@@ -672,7 +676,7 @@ public class TransactionService extends BaseNodeTransactionService {
             return;
         }
         try {
-            transactionHandlingReadWriteLock.writeLock().lock();
+            transactionReadWriteLock.writeLock().lock();
             synchronized (transactionLockData.addLockToLockMap(rejectedTransactionHash)) {
                 if (!transactionHelper.isTransactionHashExists(rejectedTransactionHash)) {
                     return;
@@ -682,42 +686,67 @@ public class TransactionService extends BaseNodeTransactionService {
                     return;
                 }
 
-                rejectTransaction(rejectedTransactionHash);
+                rejectTransaction(rejectedTransactionData);
             }
         } catch (Exception e) {
             log.error(e.getMessage());
         } finally {
             transactionLockData.removeLockFromLocksMap(rejectedTransactionHash);
-            transactionHandlingReadWriteLock.writeLock().unlock();
+            transactionReadWriteLock.writeLock().unlock();
         }
     }
 
-    private void rejectTransaction(Hash rejectedTransactionDataHash) {
+    private void rejectTransaction(RejectedTransactionData rejectedTransactionData) {
+        Hash rejectedTransactionDataHash = rejectedTransactionData.getHash();
         TransactionData transactionData = transactions.getByHash(rejectedTransactionDataHash);
         if (transactionData == null) {
             throw new TransactionException("No TransactionData found for rejected transaction hash: " + rejectedTransactionDataHash);
         }
 
-        transactionData.getChildrenTransactionHashes().forEach(this::rejectTransaction);
+        transactionData.getChildrenTransactionHashes().forEach(hash ->
+                rejectTransaction(new RejectedTransactionData(transactions.getByHash(hash), REJECTED_PARENT)));
 
         log.debug("Starting to remove the rejected transaction {}", rejectedTransactionDataHash);
         removeDataFromMemory(transactionData);
         transactionHelper.continueHandleRejectedTransaction(transactionData);
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.REJECTED);
+        rejectedTransactions.put(rejectedTransactionData);
+        addAddressToRejectedTransactionsMap(rejectedTransactionData);
     }
 
-    @Override
-    public long getRejectedTransactionsSize() {
-        return rejectedTransactions.size();
+    private void addAddressToRejectedTransactionsMap(RejectedTransactionData rejectedTransactionData) {
+        rejectedTransactionData.getTransactionData().getBaseTransactions().forEach(baseTransactionData -> {
+            Set<Hash> transactionHashSet = addressToRejectedTransactionsMap.getOrDefault(baseTransactionData.getAddressHash(), Sets.newConcurrentHashSet());
+            transactionHashSet.add(rejectedTransactionData.getHash());
+            addressToRejectedTransactionsMap.put(baseTransactionData.getAddressHash(), transactionHashSet);
+        });
     }
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 86400000)
+    private void removeAddressFromRejectedTransactionsMap(RejectedTransactionData rejectedTransactionData) {
+        rejectedTransactionData.getTransactionData().getBaseTransactions().forEach(baseTransactionData -> {
+            Set<Hash> transactionHashSet = addressToRejectedTransactionsMap.getOrDefault(baseTransactionData.getAddressHash(), Sets.newConcurrentHashSet());
+            transactionHashSet.remove(rejectedTransactionData.getHash());
+            if (transactionHashSet.isEmpty()) {
+                addressToRejectedTransactionsMap.remove(baseTransactionData.getAddressHash());
+            } else {
+                addressToRejectedTransactionsMap.put(baseTransactionData.getAddressHash(), transactionHashSet);
+            }
+        });
+    }
+
+    private void initAddressToRejectedTransactionsMap() {
+        addressToRejectedTransactionsMap = new ConcurrentHashMap<>();
+        rejectedTransactions.forEach(this::addAddressToRejectedTransactionsMap);
+    }
+
+    @Scheduled(initialDelay = 10000, fixedDelay = 86400000)
     private void clearRejectedTransactions() {
         rejectedTransactions.forEach(rejectedTransaction -> {
                     if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > REJECTED_TRANSACTIONS_TTL)) {
                         log.debug("removing rejected transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
                                 rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReasonDescription());
                         rejectedTransactions.delete(rejectedTransaction);
+                        removeAddressFromRejectedTransactionsMap(rejectedTransaction);
                     }
                 }
         );
@@ -728,6 +757,32 @@ public class TransactionService extends BaseNodeTransactionService {
         int currentAddTransactionForMonitoring = currentlyAddTransaction.get();
         if (currentAddTransactionForMonitoring > 0) {
             log.info("Current add tx number: {}", currentAddTransactionForMonitoring);
+        }
+    }
+
+    public void getAddressRejectedTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response) {
+        try {
+            List<Hash> addressHashList = getAddressTransactionBatchRequest.getAddresses();
+            PrintWriter output = response.getWriter();
+            chunkService.startOfChunk(output);
+            AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
+            addressHashList.forEach(addressHash -> {
+                Set<Hash> transactionHashSet = addressToRejectedTransactionsMap.getOrDefault(addressHash, Sets.newConcurrentHashSet());
+                transactionHashSet.forEach(rejectedTransactionHash -> {
+                    RejectedTransactionData rejectedTransactionData = rejectedTransactions.getByHash(rejectedTransactionHash);
+                    ITransactionResponseData transactionResponseData = new RejectedTransactionResponseData(rejectedTransactionData);
+                    if (firstTransactionSent.get()) {
+                        chunkService.sendChunk(",", output);
+                    } else {
+                        firstTransactionSent.set(true);
+                    }
+                    chunkService.sendChunk(new CustomGson().getInstance().toJson(transactionResponseData), output);
+                });
+            });
+            chunkService.endOfChunk(output);
+        } catch (Exception e) {
+            log.error("Error sending address rejected transaction batch");
+            log.error(e.getMessage());
         }
     }
 }

@@ -26,14 +26,7 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_NONE_INDEXED_SERVER_ERROR = "Server error while getting none indexed transactions";
     public static final String TRANSACTION_POSTPONED_SERVER_ERROR = "Server error while getting postponed transactions";
     public static final String TRANSACTION_INTERNAL_ERROR_MESSAGE = "Internal error while adding new transaction";
-
-    public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
-    public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
-    public static final String INSUFFICIENT_MINTING_FUNDS_MESSAGE = "Minting balance for address is insufficient!";
-    public static final String NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION = "Not unique token generation attempt!";
     public static final String ILLEGAL_BASE_TRANSACTIONS_AMOUNT = "Illegal transaction - sum of base transactions must be 0!";
-    public static final String INVALID_TRUST_SCORE_MESSAGE = "Invalid sender trust score!";
-    public static final String EVENT_HARD_FORK_ERROR = "Error with Hard Fork Event";
 
     public static final String API_CLIENT_ERROR = "Api Client Error";
     public static final String API_SERVER_ERROR = "Api Server Error";
@@ -43,10 +36,7 @@ public class BaseNodeHttpStringConstants {
     public static final String GENERAL_EXCEPTION_ERROR = "Error In Service";
 
     public static final String UNAUTHORIZED = "Unauthorized";
-    public static final String INVALID_FULL_NODE_FEE = "Invalid full node fee";
     public static final String INVALID_SIGNATURE = "Invalid signature";
-    public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
-    public static final String INVALID_NODE_IP_VERSION = "Invalid node IP version";
     public static final String INVALID_NODE_SERVER_URL = "Invalid node server URL";
     public static final String INVALID_NODE_SERVER_URL_UNKNOWN_HOST = "Invalid node server URL %s: unknown host. Dns record not found";
     public static final String INVALID_NODE_SERVER_URL_EMPTY_HOST = "Invalid node server URL %s: empty host";
@@ -60,8 +50,6 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION = "Invalid node server URL %s: failed to verify SSL certificate. Certificate is expired";
     public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE = "Invalid node server URL %s: failed to verify certificate";
     public static final String INVALID_NODE_IP_FOR_SERVER_URL = "Invalid node server URL %s: host %s is not matching with ip %s. The expected ip is %s";
-    public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
-    public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
     public static final String INVALID_NODE_TYPE = "Unsupported node type : %s";
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";
     public static final String INVALID_AMOUNT = "Invalid amount";

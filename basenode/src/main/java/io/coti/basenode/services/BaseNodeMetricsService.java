@@ -4,6 +4,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,8 @@ public class BaseNodeMetricsService implements IMetricsService {
     private IClusterService clusterService;
     @Autowired
     private ITransactionService transactionService;
+    @Autowired
+    private RejectedTransactions rejectedTransactions;
     @Autowired
     private IPropagationSubscriber propagationSubscriber;
     @Autowired
@@ -168,7 +171,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                     addTransaction("DspConfirmed", confirmationService.getDspConfirmed());
                     addTransaction("TotalConfirmed", confirmationService.getTotalConfirmed());
                     addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
-                    addTransaction("RejectedTransactions", transactionService.getRejectedTransactionsSize());
+                    addTransaction("RejectedTransactions", rejectedTransactions == null ? -1 : rejectedTransactions.size());
                 }
                 addTransaction("WaitingDspConsensusResultsConfirmed", confirmationService.getWaitingDspConsensusResultsMapSize());
                 addTransaction("WaitingMissingTransactionIndexes", confirmationService.getWaitingMissingTransactionIndexesSize());
