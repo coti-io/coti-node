@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.interfaces.IClusterHelper;
+import io.coti.basenode.services.interfaces.IEventService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ public class TrustChainConfirmationService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
-    private BaseNodeEventService baseNodeEventService;
+    private IEventService eventService;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
@@ -60,7 +61,7 @@ public class TrustChainConfirmationService {
             }
         }
 
-        double parentSenderTrustScore = !baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)
+        double parentSenderTrustScore = !eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)
                 || transactionHelper.isDspConfirmed(parent) ? parent.getSenderTrustScore() : 0;
 
         // updating parent trustChainTrustScore
@@ -76,7 +77,7 @@ public class TrustChainConfirmationService {
         for (TransactionData transactionData : topologicalOrderedGraph) {
             setTotalTrustScore(transactionData);
             if (transactionData.getTrustChainTrustScore() >= threshold && !transactionData.isTrustChainConsensus()
-                    && (!baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) || transactionHelper.isDspConfirmed(transactionData))) {
+                    && (!eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) || transactionHelper.isDspConfirmed(transactionData))) {
                 nonZeroSpendTransactionTSValuesMap.remove(transactionData.getHash());
                 Instant trustScoreConsensusTime = Optional.ofNullable(transactionData.getTrustChainConsensusTime()).orElse(Instant.now());
                 TccInfo tccInfo = new TccInfo(transactionData.getHash(), transactionData.getTrustChainTrustScore(), trustScoreConsensusTime);

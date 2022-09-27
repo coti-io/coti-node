@@ -61,7 +61,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private UserCurrencyIndexes userCurrencyIndexes;
     @Autowired
-    protected IEventService baseNodeEventService;
+    protected IEventService eventService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -120,7 +120,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public boolean isCurrencyHashAllowed(Hash currencyHash) {
-        return baseNodeEventService.eventHappened(Event.MULTI_DAG) ||
+        return eventService.eventHappened(Event.MULTI_DAG) ||
                 currencyHash == null;
     }
 
@@ -424,7 +424,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             if (!getUserTokensRequestCrypto.verifySignature(getUserTokensRequest)) {
@@ -449,7 +449,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = getTokenDetailsRequest.getCurrencyHash();
@@ -462,7 +462,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenSymbolDetails(GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(getTokenSymbolDetailsRequest.getSymbol());
@@ -512,7 +512,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public ResponseEntity<IResponse> getTokenHistory(GetTokenHistoryRequest getTokenHistoryRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = getTokenHistoryRequest.getCurrencyHash();

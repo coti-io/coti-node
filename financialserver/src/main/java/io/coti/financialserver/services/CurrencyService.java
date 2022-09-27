@@ -37,7 +37,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         Hash currencyHash;
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 throw new CurrencyValidationException(MULTI_DAG_IS_NOT_SUPPORTED);
             }
             OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
@@ -67,7 +67,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     public ResponseEntity<IResponse> getCurrenciesForWallet(GetCurrenciesRequest getCurrenciesRequest) {
-        if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+        if (!eventService.eventHappened(Event.MULTI_DAG)) {
             return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
         }
         List<GetCurrencyResponseData> tokenDetails = new ArrayList<>();
