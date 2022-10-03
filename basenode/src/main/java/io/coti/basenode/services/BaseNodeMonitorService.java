@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class BaseNodeMonitorService implements IMonitorService {
 
-    enum HealthState {
+    public enum HealthState {
         NORMAL, WARNING, CRITICAL
     }
 
