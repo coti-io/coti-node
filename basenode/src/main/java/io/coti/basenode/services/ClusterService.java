@@ -6,10 +6,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.ISourceSelector;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +37,7 @@ public class ClusterService implements IClusterService {
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
-    private BaseNodeEventService baseNodeEventService;
+    private IEventService eventService;
     private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private final AtomicLong totalSources = new AtomicLong(0);
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -191,7 +188,7 @@ public class ClusterService implements IClusterService {
 
     @Override
     public void addTransactionToTrustChainConfirmationCluster(TransactionData transactionData) {
-        if (!baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) || transactionHelper.isDspConfirmed(transactionData))
+        if (!eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) || transactionHelper.isDspConfirmed(transactionData))
             updateTransactionOnTrustChainConfirmationCluster(transactionData);
     }
 

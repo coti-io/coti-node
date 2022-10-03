@@ -35,7 +35,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     @Autowired
     private Transactions transactions;
     @Autowired
-    private BaseNodeEventService baseNodeEventService;
+    private IEventService eventService;
     private BlockingQueue<ConfirmationData> confirmationQueue;
     private final Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
@@ -190,7 +190,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
-        if (baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) && !transactionData.isTrustChainConsensus()) {
+        if (eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) && !transactionData.isTrustChainConsensus()) {
             transactionHelper.updateTransactionOnCluster(transactionData);
         }
     }
