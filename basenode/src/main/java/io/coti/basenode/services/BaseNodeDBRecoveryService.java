@@ -277,7 +277,12 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             awsService.downloadFolderAndContents(restoreBucket, latestS3Backup, remoteBackupFolderPath);
             dBConnector.restoreDataBase(remoteBackupFolderPath);
         } catch (Exception e) {
-            log.error("Error while trying to restore DB from Remote:" + e);
+            if (e.getCause() != null) {
+                log.error("Error while trying to restore DB from Remote:" + e.getCause());
+            } else {
+                log.error("Error while trying to restore DB from Remote:" + e);
+            }
+
             dBConnector.restoreDataBase(localBackupFolderPath);
             throw e;
         } finally {
