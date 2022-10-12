@@ -90,8 +90,7 @@ public class BaseNodeMintingService implements IMintingService {
                     }
                     currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getAmount()));
                 }
-            } finally {
-                tokenHashLockData.removeLockFromLocksMap(tokenHash);
+                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getServiceData().getMintingAmount()));
             }
         }
     }

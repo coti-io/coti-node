@@ -307,6 +307,11 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     }
 
     @Override
+    public boolean columnFamilyExists(String columnFamilyName) {
+        return classNameToColumnFamilyHandleMapping.get(columnFamilyName) != null;
+    }
+
+    @Override
     public boolean isEmpty(String columnFamilyName) {
         RocksIterator iterator = getIterator(columnFamilyName);
         iterator.seekToFirst();

@@ -171,7 +171,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                     addTransaction("DspConfirmed", confirmationService.getDspConfirmed());
                     addTransaction("TotalConfirmed", confirmationService.getTotalConfirmed());
                     addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
-                    addTransaction("RejectedTransactions", rejectedTransactions == null ? -1 : rejectedTransactions.size());
+                    addTransaction("RejectedTransactions", rejectedTransactions.size());
                 }
                 addTransaction("WaitingDspConsensusResultsConfirmed", confirmationService.getWaitingDspConsensusResultsMapSize());
                 addTransaction("WaitingMissingTransactionIndexes", confirmationService.getWaitingMissingTransactionIndexesSize());

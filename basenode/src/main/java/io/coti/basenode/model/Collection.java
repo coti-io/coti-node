@@ -185,6 +185,9 @@ public abstract class Collection<T extends IEntity> {
     }
 
     public long size() {
+        if (!databaseConnector.columnFamilyExists(columnFamilyName)) {
+            return -1;
+        }
         return databaseConnector.size(columnFamilyName);
     }
 }

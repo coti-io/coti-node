@@ -48,4 +48,6 @@ public interface IDatabaseConnector {
     List<String> getLiveFilesNames();
 
     long size(String columnFamilyName);
+
+    boolean columnFamilyExists(String columnFamilyName);
 }
