@@ -86,7 +86,7 @@ public class BaseNodeMintingService implements IMintingService {
                     log.error("Error in Minting revert. Token {} is invalid", tokenHash);
                     return;
                 }
-                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getAmount()));
+                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getServiceData().getMintingAmount()));
             }
         } finally {
             tokenHashLockData.removeLockFromLocksMap(tokenHash);
