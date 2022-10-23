@@ -9,6 +9,7 @@ import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
+import io.coti.nodemanager.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -41,6 +42,8 @@ public class HealthCheckService implements IHealthCheckService {
     private RestTemplate restTemplate;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    private WebSocketSender webSocketSender;
 
     @Override
     public void init() {
@@ -85,7 +88,10 @@ public class HealthCheckService implements IHealthCheckService {
                 if (reportedHealthState != null) {
                     log.debug("{} of address {} and port {} is responding to healthcheck {}.",
                             networkNodeDataToCheck.getNodeType(), networkNodeDataToCheck.getAddress(), networkNodeDataToCheck.getHttpPort(), reportedHealthState);
-                    networkNodeDataToCheck.setReportedHealthState(reportedHealthState);
+                    if (networkNodeDataToCheck.getReportedHealthState() != reportedHealthState) {
+                        networkNodeDataToCheck.setReportedHealthState(reportedHealthState);
+                        webSocketSender.notifyNodeHealthState(networkNodeDataToCheck.getNodeHash(), reportedHealthState);
+                    }
                     return true;
                 }
             } catch (InterruptedException e) {
