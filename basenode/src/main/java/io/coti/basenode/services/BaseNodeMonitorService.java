@@ -63,6 +63,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Value("${sources.upperBound.threshold.critical:34}")
     private int sourcesUpperBoundThresholdCritical;
 
+    private HealthState lastTotalHealthState = HealthState.NORMAL;
+
     private long prevDspConfirmed = 0;
     private int dspOutsideNormalCounter = 0;
     private HealthState dspConfirmedState = HealthState.NORMAL;
@@ -91,6 +93,17 @@ public class BaseNodeMonitorService implements IMonitorService {
     private void calculateHealthMetrics() {
         healthMetrics.forEach((healthMetric, metricData) -> healthMetric.calculateHealthMetric()
         );
+    }
+
+    private void calculateTotalHealthState() {
+        HealthState calculatedTotalHealthState = HealthState.NORMAL;
+        for (Map.Entry<HealthMetric, HealthMetricData> entry : healthMetrics.entrySet()) {
+            HealthMetricData metricData = entry.getValue();
+            if (metricData.getLastHealthState().ordinal() > calculatedTotalHealthState.ordinal()) {
+                calculatedTotalHealthState = metricData.getLastHealthState();
+            }
+        }
+        this.lastTotalHealthState = calculatedTotalHealthState;
     }
 
     @Override
@@ -125,6 +138,11 @@ public class BaseNodeMonitorService implements IMonitorService {
         return tccConfirmedState;
     }
 
+    @Override
+    public HealthState getLastTotalHealthState() {
+        return lastTotalHealthState;
+    }
+
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void lastState() {
         if (allowTransactionMonitoring) {
@@ -135,6 +153,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
             updateHealthMetricsSnapshot();
             calculateHealthMetrics();
+            calculateTotalHealthState();
         }
     }
 

@@ -1,11 +1,14 @@
 package io.coti.basenode.services.interfaces;
 
-import io.coti.basenode.services.HealthMetric;
 import io.coti.basenode.data.HealthMetricData;
+import io.coti.basenode.services.BaseNodeMonitorService;
+import io.coti.basenode.services.HealthMetric;
 
 public interface IMonitorService {
 
     void init();
+
+    BaseNodeMonitorService.HealthState getLastTotalHealthState();
 
     void lastState();
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.basenode.services.BaseNodeMonitorService;
 import lombok.Data;
 
 import java.util.Objects;
@@ -23,26 +24,28 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private transient Double trustScore;
     private String webServerUrl;
     private FeeData feeData;
+    private BaseNodeMonitorService.HealthState reportedHealthState;
     private SignatureData nodeSignature;
     private NodeRegistrationData nodeRegistrationData;
 
     public NetworkNodeData() {
     }
 
-    public NetworkNodeData(NodeType nodeType, String version, String address, String httpPort, Hash nodeHash, NetworkType networkType) {
+    public NetworkNodeData(NodeType nodeType, String version, String address, String httpPort, Hash nodeHash, NetworkType networkType, BaseNodeMonitorService.HealthState reportedHealthState) {
         this.nodeType = nodeType;
         this.version = version;
         this.address = address;
         this.httpPort = httpPort;
         this.nodeHash = nodeHash;
         this.networkType = networkType;
+        this.reportedHealthState = reportedHealthState;
     }
 
     @Override
     public boolean equals(Object a) {
         if (a instanceof NetworkNodeData) {
             NetworkNodeData aNetworkNodeData = (NetworkNodeData) a;
-            return nodeType.equals(aNetworkNodeData.nodeType) && nodeHash.equals(aNetworkNodeData.getHash());
+            return nodeType.equals(aNetworkNodeData.nodeType) && nodeHash.equals(aNetworkNodeData.getHash()) && reportedHealthState.equals(aNetworkNodeData.reportedHealthState);
         } else {
             return false;
         }
@@ -111,5 +114,6 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
         feeData = networkNodeData.getFeeData();
         nodeSignature = networkNodeData.getNodeSignature();
         nodeRegistrationData = networkNodeData.getNodeRegistrationData();
+        reportedHealthState = networkNodeData.getReportedHealthState();
     }
 }
