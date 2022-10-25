@@ -136,7 +136,8 @@ public class BaseNodeMonitorService implements IMonitorService {
         appendOutput(output, "PropagationQueue", propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION));
         appendOutput(output, "WebSocketMessagesQueueLength", webSocketMessageService.getMessageQueueSize());
         appendOutput(output, "waitingDspConsensus", confirmationService.getWaitingDspConsensusResultsMapSize());
-        appendOutput(output, "confirmationQueueSize", confirmationService.getQueueSize());
+        appendOutput(output, "tccConfirmationQueueSize", confirmationService.getTccConfirmationQueueSize());
+        appendOutput(output, "dcrConfirmationQueueSize", confirmationService.getDcrConfirmationQueueSize());
         appendOutput(output, "percentageUsedHeapMemory", MemoryUtils.getPercentageUsedHeapFormatted());
         appendOutput(output, "percentageUsedMemory", MemoryUtils.getPercentageUsedFormatted());
 

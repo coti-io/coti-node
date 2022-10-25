@@ -34,11 +34,15 @@ public interface IConfirmationService {
 
     int getWaitingMissingTransactionIndexesSize();
 
-    int getQueueSize();
+    int getTccConfirmationQueueSize();
 
-    Object getInitialConfirmationLock();
+    int getDcrConfirmationQueueSize();
+
+    Object getInitialTccConfirmationLock();
 
     AtomicBoolean getInitialConfirmationStarted();
 
-    AtomicBoolean getInitialConfirmationFinished();
+    AtomicBoolean getInitialTccConfirmationFinished();
+
+    int getResendDcrCounter();
 }

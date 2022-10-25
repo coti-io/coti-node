@@ -7,6 +7,7 @@ import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
+import io.coti.basenode.services.interfaces.IDspVoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +37,9 @@ public class InitializationService extends BaseNodeInitializationService {
     private ICommunicationService communicationService;
     @Autowired
     private IReceiver messageReceiver;
+    @Autowired
+    private IDspVoteService dspVoteService;
+
     private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
@@ -56,7 +60,7 @@ public class InitializationService extends BaseNodeInitializationService {
                 log.error("No zerospend server exists in the network got from the node manager, about to exit application");
                 System.exit(SpringApplication.exit(applicationContext));
             }
-            networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
+            networkService.setRecoveryServer(zerospendNetworkNodeData);
             communicationService.initPublisher(propagationPort, NodeType.DspNode);
 
             HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping = new HashMap<>();
@@ -64,6 +68,8 @@ public class InitializationService extends BaseNodeInitializationService {
                     transactionService.handleNewTransactionFromFullNode((TransactionData) data));
             classNameToReceiverHandlerMapping.put(AddressData.class.getName(), data ->
                     addressService.handleNewAddressFromFullNode((AddressData) data));
+            classNameToReceiverHandlerMapping.put(NodeResendDcrData.class.getName(), data ->
+                    dspVoteService.handleDspConsensusResultResend((NodeResendDcrData) data));
             communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
 
             communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress(), NodeType.ZeroSpendServer);

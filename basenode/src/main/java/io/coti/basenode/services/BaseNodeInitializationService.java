@@ -122,7 +122,6 @@ public abstract class BaseNodeInitializationService {
     protected IMetricsService metricsService;
     @Autowired
     protected IEventService eventService;
-    private Object initialConfirmationLock;
     protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
     @Autowired
     private INodeFeesService nodeFeesService;
@@ -192,16 +191,11 @@ public abstract class BaseNodeInitializationService {
             indexToTransactionMap.clear();
             log.info("Finished to read existing transactions");
 
-            if (networkService.getRecoveryServerAddress() != null) {
+            if (networkService.getRecoveryServer() != null) {
                 transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
             }
             clusterService.startToCheckTrustChainConfirmation();
-            initialConfirmationLock = confirmationService.getInitialConfirmationLock();
-            synchronized (initialConfirmationLock) {
-                while (!confirmationService.getInitialConfirmationFinished().get()) {
-                    initialConfirmationLock.wait(100);
-                }
-            }
+            waitingInitialConfirmation();
             balanceService.validateBalances();
             log.info("Transactions Load completed");
 
@@ -212,6 +206,15 @@ public abstract class BaseNodeInitializationService {
             throw new TransactionSyncException("Error at sync transactions.", e);
         } catch (Exception e) {
             throw new TransactionSyncException("Error at sync transactions.", e);
+        }
+    }
+
+    private void waitingInitialConfirmation() throws InterruptedException {
+        Object initialTccConfirmationLock = confirmationService.getInitialTccConfirmationLock();
+        synchronized (initialTccConfirmationLock) {
+            while (!confirmationService.getInitialTccConfirmationFinished().get()) {
+                initialTccConfirmationLock.wait(100);
+            }
         }
     }
 

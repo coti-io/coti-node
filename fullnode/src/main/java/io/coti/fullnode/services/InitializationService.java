@@ -51,7 +51,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             List<NetworkNodeData> dspNetworkNodeData = networkService.getShuffledNetworkNodeDataListFromMapValues(NodeType.DspNode);
             if (!dspNetworkNodeData.isEmpty()) {
-                networkService.setRecoveryServerAddress(dspNetworkNodeData.get(0).getHttpFullAddress());
+                networkService.setRecoveryServer(dspNetworkNodeData.get(0));
             }
             for (int i = 0; i < dspNetworkNodeData.size() && i < 2; i++) {
                 communicationService.addSubscription(dspNetworkNodeData.get(i).getPropagationFullAddress(), NodeType.DspNode);
