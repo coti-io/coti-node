@@ -55,7 +55,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @Service
 public class BaseNodeNetworkService implements INetworkService {
 
-    protected String recoveryServerAddress;
+    protected NetworkNodeData recoveryServer;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
     @Value("${node.manager.public.key:}")
@@ -168,11 +168,15 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     public String getRecoveryServerAddress() {
-        return recoveryServerAddress;
+        return recoveryServer.getHttpFullAddress();
     }
 
-    public void setRecoveryServerAddress(String recoveryServerAddress) {
-        this.recoveryServerAddress = recoveryServerAddress;
+    public NetworkNodeData getRecoveryServer() {
+        return recoveryServer;
+    }
+
+    public void setRecoveryServer(NetworkNodeData recoveryServer) {
+        this.recoveryServer = recoveryServer;
     }
 
     public Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType) {
@@ -418,8 +422,9 @@ public class BaseNodeNetworkService implements INetworkService {
                     communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
                     communicationService.addSender(newDspNode.getReceivingFullAddress(), NodeType.DspNode);
                 }
-                if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress()) && !newDspNode.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
-                    recoveryServerAddress = newDspNode.getHttpFullAddress();
+                if (recoveryServer != null && recoveryServer.getHttpFullAddress().equals(dspNode.getHttpFullAddress())
+                        && !newDspNode.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
+                    recoveryServer = newDspNode;
                 }
                 dspNode.clone(newDspNode);
             }
@@ -433,8 +438,8 @@ public class BaseNodeNetworkService implements INetworkService {
         if (nodeType.equals(NodeType.FullNode)) {
             communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
         }
-        if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
-            recoveryServerAddress = null;
+        if (recoveryServer != null && recoveryServer.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
+            recoveryServer = null;
         }
     }
 
@@ -447,8 +452,9 @@ public class BaseNodeNetworkService implements INetworkService {
                 handleSingleNodeWithDifferentPropagationPort(singleNodeType, newSingleNodeData, currentSingleNodeData);
             }
             handleConnectedZeroSpendServer(singleNodeType, connectingNodeType, newSingleNodeData, currentSingleNodeData);
-            if (recoveryServerAddress != null && (currentSingleNodeData == null || recoveryServerAddress.equals(currentSingleNodeData.getHttpFullAddress()))) {
-                recoveryServerAddress = newSingleNodeData.getHttpFullAddress();
+            if (recoveryServer != null && (currentSingleNodeData == null
+                    || recoveryServer.getHttpFullAddress().equals(currentSingleNodeData.getHttpFullAddress()))) {
+                recoveryServer = newSingleNodeData;
             }
             setSingleNodeData(singleNodeType, newSingleNodeData);
         }
@@ -577,4 +583,8 @@ public class BaseNodeNetworkService implements INetworkService {
         this.networkLastKnownNodeMap = networkLastKnownNodeMap;
     }
 
+    @Override
+    public HashMap<Hash, NetworkNodeData> getNetworkLastKnownNodeMap() {
+        return new HashMap<>(networkLastKnownNodeMap);
+    }
 }
