@@ -43,11 +43,11 @@ public class ClusterService implements IClusterService {
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private Thread trustChainConfirmedTransactionsThread;
     private boolean initialConfirmation = true;
-    private Object initialConfirmationLock;
+    private Object initialTccConfirmationLock;
 
     @PostConstruct
     public void init() {
-        initialConfirmationLock = confirmationService.getInitialConfirmationLock();
+        initialTccConfirmationLock = confirmationService.getInitialTccConfirmationLock();
         trustChainConfirmationCluster = new ConcurrentHashMap<>();
         sourceSetsByTrustScore = new ArrayList<>();
         sourceMap = new HashMap<>();
@@ -98,9 +98,9 @@ public class ClusterService implements IClusterService {
             List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
             if (initialConfirmation) {
                 if (transactionConsensusConfirmed.isEmpty()) {
-                    synchronized (initialConfirmationLock) {
-                        confirmationService.getInitialConfirmationFinished().set(true);
-                        initialConfirmationLock.notifyAll();
+                    synchronized (initialTccConfirmationLock) {
+                        confirmationService.getInitialTccConfirmationFinished().set(true);
+                        initialTccConfirmationLock.notifyAll();
                     }
                 } else {
                     confirmationService.getInitialConfirmationStarted().set(true);

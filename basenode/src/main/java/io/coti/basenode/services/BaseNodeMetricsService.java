@@ -162,7 +162,8 @@ public class BaseNodeMetricsService implements IMetricsService {
                     addQueue("PropagationSubscriber_" + entry.getKey(), Integer.parseInt(entry.getValue()));
                 }
 
-                addQueue("Confirmations", confirmationService.getQueueSize());
+                addQueue("TCC Confirmations", confirmationService.getTccConfirmationQueueSize());
+                addQueue("DCR Confirmations", confirmationService.getDcrConfirmationQueueSize());
                 addQueue("WebSocketMessages", webSocketMessageService.getMessageQueueSize());
 
                 if (metricsDetailed) {

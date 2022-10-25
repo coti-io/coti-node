@@ -21,7 +21,9 @@ public interface INetworkService {
 
     String getRecoveryServerAddress();
 
-    void setRecoveryServerAddress(String recoveryServerAddress);
+    NetworkNodeData getRecoveryServer();
+
+    void setRecoveryServer(NetworkNodeData recoveryServer);
 
     Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType);
 
@@ -72,4 +74,6 @@ public interface INetworkService {
     List<Hash> getNodesHashes(NodeType nodeType);
 
     void setNetworkLastKnownNodeMap(HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap);
+
+    HashMap<Hash, NetworkNodeData> getNetworkLastKnownNodeMap();
 }
