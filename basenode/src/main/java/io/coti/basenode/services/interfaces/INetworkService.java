@@ -75,5 +75,5 @@ public interface INetworkService {
 
     void setNetworkLastKnownNodeMap(HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap);
 
-    HashMap<Hash, NetworkNodeData> getNetworkLastKnownNodeMap();
+    Map<Hash, NetworkNodeData> getNetworkLastKnownNodeMap();
 }

@@ -584,7 +584,7 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public HashMap<Hash, NetworkNodeData> getNetworkLastKnownNodeMap() {
-        return new HashMap<>(networkLastKnownNodeMap);
+    public Map<Hash, NetworkNodeData> getNetworkLastKnownNodeMap() {
+        return Collections.unmodifiableMap(networkLastKnownNodeMap);
     }
 }

@@ -25,6 +25,7 @@ public class TrustChainConfirmationService {
     @Value("${cluster.trust.chain.threshold}")
     private int threshold;
     private ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster;
+    @Getter
     private LinkedList<TransactionData> topologicalOrderedGraph;
     private final Map<Hash, Double> nonZeroSpendTransactionTSValuesMap = new HashMap<>();
     @Getter
@@ -38,10 +39,13 @@ public class TrustChainConfirmationService {
     private ITransactionHelper transactionHelper;
     @Autowired
     private IEventService eventService;
+    @Getter
+    private Map<Hash, Double> transactionTrustChainTrustScoreMap;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
         topologicalOrderedGraph = new LinkedList<>();
+        transactionTrustChainTrustScoreMap = new HashMap<>();
         clusterHelper.sortByTopologicalOrder(this.trustChainConfirmationCluster, topologicalOrderedGraph);
     }
 
@@ -87,6 +91,8 @@ public class TrustChainConfirmationService {
                 monitorTotalTrustScore(transactionData);
             }
         }
+        topologicalOrderedGraph.stream().forEach(
+                transactionData -> transactionTrustChainTrustScoreMap.put(transactionData.getHash(), transactionData.getSenderTrustScore()));
         updateMonitorState();
 
         return trustChainConfirmations;
