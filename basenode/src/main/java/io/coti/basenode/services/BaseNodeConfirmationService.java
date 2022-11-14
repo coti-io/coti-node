@@ -62,11 +62,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         waitingDspConsensusResults = new PriorityBlockingQueue<>(11, Comparator.comparingLong(DspConsensusResult::getIndex));
         resendDcrCounter = 0;
         missingIndexesHandler = new Thread(this::handleMissingIndexes, "Missing Indexes");
+        missingIndexesHandler.start();
         dcrMessageHandlerThread = new Thread(this::updateConfirmedDcrMessages, "Confirmation DCR");
         dcrMessageHandlerThread.start();
         tccInfoMessageHandlerThread = new Thread(this::updateConfirmedTccInfoMessages, "Confirmation TCC");
         tccInfoMessageHandlerThread.start();
-        missingIndexesHandler.start();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 

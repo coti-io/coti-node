@@ -44,6 +44,9 @@ public class ClusterService implements IClusterService {
     private Thread trustChainConfirmedTransactionsThread;
     private boolean initialConfirmation = true;
     private Object initialTccConfirmationLock;
+    private final Object sourcesStarvationCheckLock = new Object();
+    private LinkedList<TransactionData> topologicalOrderedGraph;
+    private Map<Hash, Double> transactionTrustChainTrustScoreMap;
 
     @PostConstruct
     public void init() {
@@ -95,7 +98,9 @@ public class ClusterService implements IClusterService {
     public void checkForTrustChainConfirmedTransaction() {
         while (!Thread.currentThread().isInterrupted()) {
             trustChainConfirmationService.init(trustChainConfirmationCluster);
+            topologicalOrderedGraph = trustChainConfirmationService.getTopologicalOrderedGraph();
             List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
+            transactionTrustChainTrustScoreMap = trustChainConfirmationService.getTransactionTrustChainTrustScoreMap();
             if (initialConfirmation) {
                 if (transactionConsensusConfirmed.isEmpty()) {
                     synchronized (initialTccConfirmationLock) {
@@ -107,12 +112,20 @@ public class ClusterService implements IClusterService {
                 }
             }
             transactionConsensusConfirmed.forEach(tccInfo -> {
-                trustChainConfirmationCluster.remove(tccInfo.getHash());
+                TransactionData transactionData = trustChainConfirmationCluster.remove(tccInfo.getHash());
+                transactionTrustChainTrustScoreMap.remove(tccInfo.getHash());
+                if (transactionData != null) {
+                    topologicalOrderedGraph.remove(transactionData);
+                }
                 confirmationService.setTccToTrue(tccInfo);
                 log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
             });
             initialConfirmation = false;
             try {
+                synchronized (sourcesStarvationCheckLock) {
+                    sourcesStarvationCheckLock.notifyAll();
+                    sourcesStarvationCheckLock.wait();
+                }
                 Thread.sleep(TCC_CONFIRMATION_INTERVAL);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -311,5 +324,20 @@ public class ClusterService implements IClusterService {
     @Override
     public double getRuntimeTrustChainTrustScore(Hash transactionHash) {
         return Optional.ofNullable(trustChainConfirmationCluster.get(transactionHash)).map(TransactionData::getTrustChainTrustScore).orElse((double) 0);
+    }
+
+    @Override
+    public final Object getSourcesStarvationCheckLock() {
+        return sourcesStarvationCheckLock;
+    }
+
+    @Override
+    public Map<Hash, Double> getTransactionTrustChainTrustScoreMap() {
+        return this.transactionTrustChainTrustScoreMap;
+    }
+
+    @Override
+    public LinkedList<TransactionData> getTopologicalOrderedGraph() {
+        return this.topologicalOrderedGraph;
     }
 }
