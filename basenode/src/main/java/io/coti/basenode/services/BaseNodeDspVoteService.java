@@ -95,12 +95,17 @@ public class BaseNodeDspVoteService implements IDspVoteService {
             long endIndex = nodeResendDcrData.getInRangeLastMissedIndex();
             while (startIndex <= endIndex) {
                 TransactionIndexData transactionIndexData = transactionIndexes.getByHash(new Hash(startIndex));
+                if (transactionIndexData == null) {
+                    log.error("Error, there is no TransactionIndexData for index: {}", startIndex);
+                    return;
+                }
                 TransactionData transaction = transactions.getByHash(transactionIndexData.getTransactionHash());
                 if (transaction != null && transaction.getDspConsensusResult() != null) {
                     propagationPublisher.propagate(transaction.getDspConsensusResult(),
                             Collections.singletonList(nodeResendDcrData.getNodeType()));
                 } else {
                     log.error("Error, there is no DSP Consensus Result for transaction: {}", transactionIndexData.getTransactionHash());
+                    return;
                 }
                 startIndex++;
             }

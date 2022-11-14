@@ -3,15 +3,14 @@ package io.coti.zerospend.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IClusterHelper;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.zerospend.data.ZeroSpendTransactionType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -23,28 +22,41 @@ import java.util.stream.Collectors;
 @Service
 public class SourceStarvationService {
 
-    private static final long SOURCE_STARVATION_CHECK_TASK_DELAY = 3000;
     @Autowired
     private IClusterService clusterService;
     @Autowired
     private IClusterHelper clusterHelper;
     @Autowired
     private TransactionCreationService transactionCreationService;
-    @Autowired
-    private Transactions transactions;
 
-    @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)
+    @PostConstruct
+    protected void init() {
+        Thread sourcesStarvationThread = new Thread(this::checkSourcesStarvation, "SOURCES-STARVATION CHECK");
+        sourcesStarvationThread.start();
+    }
+
     public void checkSourcesStarvation() {
-        log.debug("Checking Source Starvation");
-        Instant now = Instant.now();
-        ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
-        LinkedList<TransactionData> topologicalOrderedGraph = new LinkedList<>();
+        while (!Thread.currentThread().isInterrupted()) {
+            Map<Hash, Double> transactionTrustChainTrustScoreMap;
+            LinkedList<TransactionData> topologicalOrderedGraph;
+            try {
+                synchronized (clusterService.getSourcesStarvationCheckLock()) {
+                    clusterService.getSourcesStarvationCheckLock().wait();
+                    transactionTrustChainTrustScoreMap = new HashMap<>(clusterService.getTransactionTrustChainTrustScoreMap());
+                    topologicalOrderedGraph = new LinkedList<>(clusterService.getTopologicalOrderedGraph());
+                    clusterService.getSourcesStarvationCheckLock().notifyAll();
+                }
+                log.debug("Checking Source Starvation");
+                Instant now = Instant.now();
 
-        clusterHelper.sortByTopologicalOrder(trustChainConfirmationCluster, topologicalOrderedGraph);
+                createNewStarvationZeroSpendTransactions(now, topologicalOrderedGraph, transactionTrustChainTrustScoreMap);
 
-        createNewStarvationZeroSpendTransactions(now, topologicalOrderedGraph);
-
-        createNewGenesisZeroSpendTransactions();
+                createNewGenesisZeroSpendTransactions();
+            } catch (InterruptedException e) {
+                log.info("Source Starvation Check was interrupted");
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     private void createNewGenesisZeroSpendTransactions() {
@@ -63,17 +75,17 @@ public class SourceStarvationService {
         }
     }
 
-    private TransactionData findMajorChild(TransactionData parentTransactionData) {
+    private Hash findMajorChildHash(TransactionData parentTransactionData, Map<Hash, Double> transactionTrustChainTrustScoreMap) {
         double maxTrustChainTrustScore = 0;
-        TransactionData majorChild = null;
+        Hash majorChildHash = null;
         for (Hash child : parentTransactionData.getChildrenTransactionHashes()) {
-            TransactionData childTransactionData = transactions.getByHash(child);
-            if (childTransactionData.getTrustChainTrustScore() > maxTrustChainTrustScore) {
-                maxTrustChainTrustScore = childTransactionData.getTrustChainTrustScore();
-                majorChild = childTransactionData;
+            Double childTrustChainTrustScore = transactionTrustChainTrustScoreMap.get(child);
+            if (childTrustChainTrustScore != null && childTrustChainTrustScore > maxTrustChainTrustScore) {
+                maxTrustChainTrustScore = childTrustChainTrustScore;
+                majorChildHash = child;
             }
         }
-        return majorChild;
+        return majorChildHash;
     }
 
     private void pairSourceToRoot(TransactionData sourceTransactionData, ConcurrentHashMap<Hash, TransactionData> sourceToRootMap,
@@ -91,10 +103,10 @@ public class SourceStarvationService {
     }
 
     private boolean mapChildToParent(TransactionData parentTransactionData, ConcurrentHashMap<Hash, TransactionData> vertexMap,
-                                     TransactionData majorChild) {
+                                     Hash majorChildHash) {
         boolean replaceRootIfNeeded = true;
-        if (vertexMap.get(majorChild.getHash()) != null) {
-            TransactionData existingRoot = vertexMap.get(majorChild.getHash());
+        if (vertexMap.get(majorChildHash) != null) {
+            TransactionData existingRoot = vertexMap.get(majorChildHash);
             if (!parentTransactionData.getAttachmentTime().isBefore(existingRoot.getAttachmentTime())) {
                 replaceRootIfNeeded = false;
             }
@@ -104,7 +116,7 @@ public class SourceStarvationService {
 
     private void mapPathUsingMajorChild(TransactionData parentTransactionData,
                                         ConcurrentHashMap<Hash, TransactionData> vertexMap,
-                                        TransactionData majorChild) {
+                                        Hash majorChildHash) {
         TransactionData root = null;
 
         if (!TransactionType.ZeroSpend.equals(parentTransactionData.getType())) {
@@ -112,32 +124,32 @@ public class SourceStarvationService {
         } else if (vertexMap.containsKey(parentTransactionData.getHash())) {
             root = vertexMap.get(parentTransactionData.getHash());
         }
-        if (root != null && mapChildToParent(parentTransactionData, vertexMap, majorChild)) {
-            vertexMap.put(majorChild.getHash(), root);
+        if (root != null && mapChildToParent(parentTransactionData, vertexMap, majorChildHash)) {
+            vertexMap.put(majorChildHash, root);
         }
 
     }
 
     private void pairSourcesWithRoots(LinkedList<TransactionData> topologicalOrderedGraph, ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs,
-                                      List<TransactionData> orphanedStarvationSources) {
+                                      List<TransactionData> orphanedStarvationSources, Map<Hash, Double> transactionTrustChainTrustScoreMap) {
         ConcurrentHashMap<Hash, TransactionData> vertexMap = new ConcurrentHashMap<>();
 
         for (int i = topologicalOrderedGraph.size() - 1; i >= 0; i--) {
             TransactionData parentTransactionData = topologicalOrderedGraph.get(i);
-            TransactionData majorChild = findMajorChild(parentTransactionData);
+            Hash majorChildHash = findMajorChildHash(parentTransactionData, transactionTrustChainTrustScoreMap);
 
-            if (majorChild != null) {
-                mapPathUsingMajorChild(parentTransactionData, vertexMap, majorChild);
+            if (majorChildHash != null) {
+                mapPathUsingMajorChild(parentTransactionData, vertexMap, majorChildHash);
             } else {
                 pairSourceToRoot(parentTransactionData, vertexMap, rootSourcePairs, orphanedStarvationSources);
             }
         }
     }
 
-    private void createNewStarvationZeroSpendTransactions(Instant now, LinkedList<TransactionData> topologicalOrderedGraph) {
+    private void createNewStarvationZeroSpendTransactions(Instant now, LinkedList<TransactionData> topologicalOrderedGraph, Map<Hash, Double> transactionTrustChainTrustScoreMap) {
         ConcurrentHashMap<TransactionData, TransactionData> rootSourcePairs = new ConcurrentHashMap<>();
         List<TransactionData> orphanedStarvationSources = new ArrayList<>();
-        pairSourcesWithRoots(topologicalOrderedGraph, rootSourcePairs, orphanedStarvationSources);
+        pairSourcesWithRoots(topologicalOrderedGraph, rootSourcePairs, orphanedStarvationSources, transactionTrustChainTrustScoreMap);
 
         Set<TransactionData> sourcesAttached = new HashSet<>();
         Set<TransactionData> zeroSpendSourcesAttached = new HashSet<>();
