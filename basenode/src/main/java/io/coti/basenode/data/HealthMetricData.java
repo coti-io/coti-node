@@ -29,7 +29,7 @@ public class HealthMetricData {
     public HealthMetricData() {
         this.lastMetricValue = 0;
         this.lastConditionValue = 0;
-        this.lastHealthState = BaseNodeMonitorService.HealthState.NORMAL;
+        this.lastHealthState = BaseNodeMonitorService.HealthState.NA;
         this.lastCounter = 0;
     }
 

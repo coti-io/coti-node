@@ -56,12 +56,16 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 public class BaseNodeNetworkService implements INetworkService {
 
     protected String recoveryServerAddress;
+    @Value("${network}")
+    protected NetworkType networkType;
+    protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
+    protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
+    protected NetworkNodeData networkNodeData;
+    protected HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
     @Value("${node.manager.public.key:}")
     private String nodeManagerPublicKey;
-    @Value("${network}")
-    protected NetworkType networkType;
     @Value("${validate.server.url:true}")
     private boolean validateServerUrl;
     private String nodeManagerPropagationAddress;
@@ -80,10 +84,6 @@ public class BaseNodeNetworkService implements INetworkService {
     private IPropagationSubscriber propagationSubscriber;
     @Autowired
     private ISslService sslService;
-    protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
-    protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
-    protected NetworkNodeData networkNodeData;
-    protected HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap;
     @Autowired
     private NetworkLastKnownNodesCrypto networkLastKnownNodesCrypto;
 
@@ -479,13 +479,13 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public void setNodeManagerPropagationAddress(String nodeManagerPropagationAddress) {
-        this.nodeManagerPropagationAddress = nodeManagerPropagationAddress;
+    public String getNodeManagerPropagationAddress() {
+        return nodeManagerPropagationAddress;
     }
 
     @Override
-    public String getNodeManagerPropagationAddress() {
-        return nodeManagerPropagationAddress;
+    public void setNodeManagerPropagationAddress(String nodeManagerPropagationAddress) {
+        this.nodeManagerPropagationAddress = nodeManagerPropagationAddress;
     }
 
     @Override
@@ -502,13 +502,6 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public NetworkData getSignedNetworkData() {
-        NetworkData networkData = getNetworkData();
-        networkCrypto.signMessage(networkData);
-        return networkData;
-    }
-
-    @Override
     public void setNetworkData(NetworkData networkData) {
         multipleNodeMaps = networkData.getMultipleNodeMaps();
         singleNodeNetworkDataMap = networkData.getSingleNodeNetworkDataMap();
@@ -521,13 +514,20 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     @Override
-    public void setNetworkNodeData(NetworkNodeData networkNodeData) {
-        this.networkNodeData = networkNodeData;
+    public NetworkData getSignedNetworkData() {
+        NetworkData networkData = getNetworkData();
+        networkCrypto.signMessage(networkData);
+        return networkData;
     }
 
     @Override
     public NetworkNodeData getNetworkNodeData() {
         return networkNodeData;
+    }
+
+    @Override
+    public void setNetworkNodeData(NetworkNodeData networkNodeData) {
+        this.networkNodeData = networkNodeData;
     }
 
     @Override

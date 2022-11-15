@@ -23,11 +23,11 @@ import java.util.Map;
 @Slf4j
 public class NetworkService extends BaseNodeNetworkService {
 
+    private final List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
     @Autowired
     private ICommunicationService communicationService;
     @Autowired
     private ISender sender;
-    private final List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
