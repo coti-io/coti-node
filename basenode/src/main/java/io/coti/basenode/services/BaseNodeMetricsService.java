@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
@@ -14,11 +15,11 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.coti.basenode.http.BaseNodeHealthMetricConstants.*;
 
 @Slf4j
 @Service
@@ -28,10 +29,7 @@ public class BaseNodeMetricsService implements IMetricsService {
     private static final String COMPONENT_TEMPLATE = "componentTemplate";
     private static final String METRIC_TEMPLATE = "metricTemplate";
     private final ArrayList<String> metrics = new ArrayList<>();
-    @Autowired
-    private IReceiver receiver;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
+    private final AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
     private String metricTemplate = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",metric=\"metricTemplate\"}";
     private String metricTemplateSubComponent = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",componentName=\"componentNameTemplate\",metric=\"metricTemplate\"}";
     private String metricQueuesTemplate;
@@ -39,13 +37,6 @@ public class BaseNodeMetricsService implements IMetricsService {
     private String metricBackupsTemplate;
     private String metricDatabaseTemplate;
     private Thread sampleThread;
-    private final AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IConfirmationService confirmationService;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
     @Autowired
     private BaseNodeMonitorService baseNodeMonitorService;
     @Autowired
@@ -62,8 +53,7 @@ public class BaseNodeMetricsService implements IMetricsService {
     private IWebSocketMessageService webSocketMessageService;
     @Autowired
     private IDBRecoveryService dbRecoveryService;
-    @Autowired
-    private IDatabaseConnector databaseConnector;
+
     @Value("${metrics.sample.milisec.interval:0}")
     private int metricsSampleInterval;
     @Value("${detailed.logs:false}")
@@ -113,36 +103,71 @@ public class BaseNodeMetricsService implements IMetricsService {
         }
     }
 
-    private void addQueue(String queueMetric, long value) {
+    private void addQueue(String queueMetric, long value, String snapshotTime) {
         metrics.add(metricQueuesTemplate.replace(METRIC_TEMPLATE, queueMetric)
-                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(snapshotTime));
     }
 
-    private void addTransaction(String transactionMetric, long value) {
+    private void addQueue(String healthMetricLabel) {
+        HealthMetricData healthMetricData = baseNodeMonitorService.getHealthMetrics().get(HealthMetric.getHealthMetric(healthMetricLabel));
+        String snapshotTime = healthMetricData.getSnapshotTime();
+        addQueue(healthMetricLabel, healthMetricData.getLastMetricValue(), snapshotTime);
+        addQueue(healthMetricLabel + "State", healthMetricData.getLastHealthState().ordinal(), snapshotTime);
+    }
+
+    private void addTransaction(String transactionMetric, long value, String snapshotTime) {
         metrics.add(metricTransactionsTemplate.replace(METRIC_TEMPLATE, transactionMetric)
-                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(snapshotTime));
     }
 
-    private void addBackup(String backupMetric, String backupName, long value) {
+    private void addTransaction(String healthMetricLabel) {
+        HealthMetric healthMetric = HealthMetric.getHealthMetric(healthMetricLabel);
+        HealthMetricData healthMetricData = baseNodeMonitorService.getHealthMetrics().get(healthMetric);
+        String snapshotTime = healthMetricData.getSnapshotTime();
+        if (metricsDetailed || !healthMetric.isDetailedLogs()) {
+            addTransaction(healthMetricLabel, healthMetricData.getLastMetricValue(), snapshotTime);
+        }
+        addTransaction(healthMetricLabel + "State", healthMetricData.getLastHealthState().ordinal(), snapshotTime);
+    }
+
+    private void addBackup(String backupMetric, String backupName, long value, String snapshotTime) {
         metrics.add(metricBackupsTemplate.replace(METRIC_TEMPLATE, backupMetric).replace("componentNameTemplate", backupName)
-                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(snapshotTime));
     }
 
-    private void addDatabase(String databaseMetric, long value) {
+    private void addBackup(String healthMetricLabel) {
+        HealthMetric healthMetric = HealthMetric.getHealthMetric(healthMetricLabel);
+        HealthMetricData healthMetricData = baseNodeMonitorService.getHealthMetrics().get(healthMetric);
+        String snapshotTime = healthMetricData.getSnapshotTime();
+        if (healthMetric.getComponentTemplate().equals(COMPONENT_TEMPLATE_BACKUPS)) {
+            String s3FolderName = dbRecoveryService.getS3FolderName();
+            if (s3FolderName != null) {
+                addBackup(healthMetricLabel, s3FolderName, healthMetricData.getLastMetricValue(), snapshotTime);
+            }
+        }
+    }
+
+    private void addDatabase(String databaseMetric, long value, String snapshotTime) {
         metrics.add(metricDatabaseTemplate.replace(METRIC_TEMPLATE, databaseMetric)
-                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(String.valueOf(Instant.now().toEpochMilli())));
+                .concat(" ").concat(String.valueOf(value)).concat(" ").concat(snapshotTime));
+    }
+
+    private void addDatabase(String healthMetricLabel) {
+        HealthMetricData healthMetricData = baseNodeMonitorService.getHealthMetrics().get(HealthMetric.getHealthMetric(healthMetricLabel));
+        String snapshotTime = healthMetricData.getSnapshotTime();
+        addDatabase(healthMetricLabel, healthMetricData.getLastMetricValue(), snapshotTime);
     }
 
     private void addBackups() {
         HashMap<String, HashMap<String, Long>> backupLog = dbRecoveryService.getBackUpLog();
-        for (Map.Entry<String, HashMap<String, Long>> entry : backupLog.entrySet()) {
-            String backupName = entry.getKey();
-            for (Map.Entry<String, Long> subEntry : entry.getValue().entrySet()) {
-                String backupMetric = subEntry.getKey();
-                long value = subEntry.getValue();
-                addBackup(backupMetric, backupName, value);
-            }
-        }
+        addBackup(BACKUP_HOURLY_LABEL);
+        addBackup(BACKUP_EPOCH_LABEL);
+        addBackup(BACKUP_NUMBER_OF_FILES_LABEL);
+        addBackup(BACKUP_SIZE_LABEL);
+        addBackup(BACKUP_ENTIRE_DURATION_LABEL);
+        addBackup(BACKUP_DURATION_LABEL);
+        addBackup(BACKUP_UPLOAD_DURATION_LABEL);
+        addBackup(BACKUP_REMOVAL_DURATION_LABEL);
         if (backupLog.size() > 0) {
             dbRecoveryService.clearBackupLog();
         }
@@ -154,37 +179,34 @@ public class BaseNodeMetricsService implements IMetricsService {
                 if (numberOfNonFetchedSamples.incrementAndGet() > MAX_NUMBER_OF_NON_FETCHED_SAMPLES) {
                     metrics.clear();
                 }
-                addQueue("ZeroMQReceiver", receiver.getQueueSize());
-                addQueue("PropagationPublisher", propagationPublisher.getQueueSize());
 
-                Map<String, String> maps = propagationSubscriber.getQueueSizeMap();
-                for (Map.Entry<String, String> entry : maps.entrySet()) {
-                    addQueue("PropagationSubscriber_" + entry.getKey(), Integer.parseInt(entry.getValue()));
-                }
-
-                addQueue("TCC Confirmations", confirmationService.getTccConfirmationQueueSize());
-                addQueue("DCR Confirmations", confirmationService.getDcrConfirmationQueueSize());
-                addQueue("WebSocketMessages", webSocketMessageService.getMessageQueueSize());
+                addQueue(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL);
+                addQueue(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL);
+                addQueue(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL);
+                addQueue(PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL);
+                addQueue(PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL);
+                addQueue(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL);
+                addQueue(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL);
+                addQueue(CONFIRMATION_QUEUE_SIZE_LABEL);
+                addQueue(WEB_SOCKET_MESSAGES_QUEUE_LENGTH_LABEL);
 
                 if (metricsDetailed) {
-                    addTransaction("Total", transactionHelper.getTotalTransactions());
-                    addTransaction("TrustChainConfirmed", confirmationService.getTrustChainConfirmed());
-                    addTransaction("DspConfirmed", confirmationService.getDspConfirmed());
-                    addTransaction("TotalConfirmed", confirmationService.getTotalConfirmed());
-                    addTransaction("Index", transactionIndexService.getLastTransactionIndexData().getIndex());
-                    addTransaction("RejectedTransactions", rejectedTransactions.size());
+                    addTransaction(TOTAL_TRANSACTIONS_LABEL);
+                    addTransaction(TRUST_CHAIN_CONFIRMED_LABEL);
+                    addTransaction(DSP_CONFIRMED_LABEL);
+                    addTransaction(TOTAL_CONFIRMED_LABEL);
+                    addTransaction(INDEX_LABEL);
+//                    addTransaction("RejectedTransactions", rejectedTransactions.size());
                 }
-                addTransaction("WaitingDspConsensusResultsConfirmed", confirmationService.getWaitingDspConsensusResultsMapSize());
-                addTransaction("WaitingMissingTransactionIndexes", confirmationService.getWaitingMissingTransactionIndexesSize());
-                addTransaction("Sources", clusterService.getTotalSources());
-                addTransaction("TotalPostponedTransactions", transactionService.totalPostponedTransactions());
-                addTransaction("DSPHealthState", baseNodeMonitorService.getDspConfirmedState().ordinal());
-                addTransaction("DSPOutsideNormalCounter", baseNodeMonitorService.getDspOutsideNormalCounter());
-                addTransaction("TCCHealthState", baseNodeMonitorService.getTccConfirmedState().ordinal());
-                addTransaction("TCCWaitingConfirmation", trustChainConfirmationService.getTccWaitingConfirmation());
-                addTransaction("TCCOutsideNormalCounter", trustChainConfirmationService.getTccOutsideNormalCounter());
+                addTransaction(WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL);
+                addTransaction(WAITING_MISSING_TRANSACTION_INDEXES_LABEL);
+                addTransaction(SOURCES_UPPER_BOUND_LABEL);
+                addTransaction(SOURCES_LOWER_BOUND_LABEL);
+                addTransaction(TOTAL_POSTPONED_TRANSACTIONS_LABEL);
+                addTransaction(CONNECTED_TO_RECOVERY_LABEL);
 
-                addDatabase("liveFiles", databaseConnector.getLiveFilesNames().size());
+                addDatabase(LIVE_FILES_SIZE_LABEL);
+
                 addBackups();
             }
             try {
