@@ -195,6 +195,10 @@ public class BaseNodeMonitorService implements IMonitorService {
     private int backupRemovalDurationThresholdWarning;
     @Value("${backupRemovalDuration.threshold.critical:30}")
     private int backupRemovalDurationThresholdCritical;
+    @Value("${rejected.transactions.threshold.warning:10}")
+    private int rejectedTransactionsThresholdWarning;
+    @Value("${rejected.transactions.threshold.critical:0}")
+    private int rejectedTransactionsThresholdCritical;
     private HealthState lastTotalHealthState = HealthState.NORMAL;
 
     public void init() {
@@ -301,6 +305,9 @@ public class BaseNodeMonitorService implements IMonitorService {
         HealthMetric.BACKUP_REMOVAL_DURATION.monitorService = monitorService;
         HealthMetric.BACKUP_REMOVAL_DURATION.dbRecoveryService = dbRecoveryService;
 
+        HealthMetric.REJECTED_TRANSACTIONS.monitorService = monitorService;
+        HealthMetric.REJECTED_TRANSACTIONS.rejectedTransactions = rejectedTransactions;
+
         HealthMetric.TOTAL_TRANSACTIONS.setThresholds(totalTransactionsThresholdWarning, totalTransactionsThresholdCritical);
         HealthMetric.SOURCES_UPPER_BOUND.setThresholds(sourcesUpperBoundThresholdWarning, sourcesUpperBoundThresholdCritical);
         HealthMetric.SOURCES_LOWER_BOUND.setThresholds(sourcesLowerBoundThresholdWarning, sourcesLowerBoundThresholdCritical);
@@ -328,6 +335,14 @@ public class BaseNodeMonitorService implements IMonitorService {
 
         HealthMetric.BACKUP_HOURLY.setThresholds(backupHourlyThresholdWarning, backupHourlyThresholdCritical);
         HealthMetric.BACKUP_EPOCH.setThresholds(backupEpochThresholdWarning, backupEpochThresholdCritical);
+        HealthMetric.BACKUP_NUMBER_OF_FILES.setThresholds(backupNumberOfFilesThresholdWarning, backupNumberOfFilesThresholdCritical);
+        HealthMetric.BACKUP_SIZE.setThresholds(backupSizeThresholdWarning, backupSizeThresholdCritical);
+        HealthMetric.BACKUP_ENTIRE_DURATION.setThresholds(backupEntireDurationThresholdWarning, backupEntireDurationThresholdCritical);
+        HealthMetric.BACKUP_DURATION.setThresholds(backupDurationThresholdWarning, backupDurationThresholdCritical);
+        HealthMetric.BACKUP_UPLOAD_DURATION.setThresholds(backupUploadDurationThresholdWarning, backupUploadDurationThresholdCritical);
+        HealthMetric.BACKUP_REMOVAL_DURATION.setThresholds(backupRemovalDurationThresholdWarning, backupRemovalDurationThresholdCritical);
+
+        HealthMetric.REJECTED_TRANSACTIONS.setThresholds(rejectedTransactionsThresholdWarning, rejectedTransactionsThresholdCritical);
 
         for (HealthMetric value : HealthMetric.values()) {
             healthMetrics.put(value, new HealthMetricData());
@@ -516,6 +531,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             appendOutput(output, HealthMetric.DSP_CONFIRMED);
             appendOutput(output, HealthMetric.TOTAL_CONFIRMED);
             appendOutput(output, HealthMetric.INDEX);
+            appendOutput(output, HealthMetric.REJECTED_TRANSACTIONS);
         }
         appendOutput(output, HealthMetric.SOURCES_UPPER_BOUND);
         appendOutput(output, HealthMetric.SOURCES_LOWER_BOUND);

@@ -99,7 +99,9 @@ public class BaseNodeMetricsService implements IMetricsService {
                 if (numberOfNonFetchedSamples.incrementAndGet() > MAX_NUMBER_OF_NON_FETCHED_SAMPLES) {
                     metrics.clear();
                 }
+
                 baseNodeMonitorService.updateHealthMetrics(metrics, metricTemplateMap);
+
                 if (dbRecoveryService.getBackUpLog().size() > 0) {
                     dbRecoveryService.clearBackupLog();
                 }
