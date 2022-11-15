@@ -5,6 +5,8 @@ import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.basenode.services.HealthMetric;
 import org.springframework.boot.actuate.health.Health;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public interface IMonitorService {
@@ -30,4 +32,6 @@ public interface IMonitorService {
     long getSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey);
 
     void setSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey, long metricValue);
+
+    void updateHealthMetrics(ArrayList<String> metrics, HashMap<String, String> metricTemplateMap);
 }

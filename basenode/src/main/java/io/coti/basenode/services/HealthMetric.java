@@ -5,6 +5,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
+import io.coti.basenode.data.MetricType;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
@@ -20,7 +21,7 @@ import static io.coti.basenode.http.BaseNodeHealthMetricConstants.*;
 public enum HealthMetric implements IHealthMetric {
 
 
-    TOTAL_TRANSACTIONS(TOTAL_TRANSACTIONS_LABEL, true, 0, 0, true, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    TOTAL_TRANSACTIONS(TOTAL_TRANSACTIONS_LABEL, true, MetricType.TRANSACTIONS_METRIC, 0, 0, true) {
         @Override
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, transactionHelper.getTotalNumberOfTransactionsFromLocal());
@@ -36,7 +37,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    SOURCES_UPPER_BOUND(SOURCES_UPPER_BOUND_LABEL, false, 24, 34, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    SOURCES_UPPER_BOUND(SOURCES_UPPER_BOUND_LABEL, false, MetricType.TRANSACTIONS_METRIC, 24, 34, false) {
         @Override
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, clusterService.getTotalSources());
@@ -50,7 +51,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    SOURCES_LOWER_BOUND(SOURCES_LOWER_BOUND_LABEL, false, -8, -6, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    SOURCES_LOWER_BOUND(SOURCES_LOWER_BOUND_LABEL, false, MetricType.TRANSACTIONS_METRIC, -8, -6, false) {
         @Override
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, clusterService.getTotalSources());
@@ -64,7 +65,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    INDEX(INDEX_LABEL, true, 2, 0, true, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    INDEX(INDEX_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 0, true) {
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, transactionIndexService.getLastTransactionIndexData().getIndex());
             monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_LOCAL, transactionHelper.getTotalNumberOfTransactionsFromLocal());
@@ -79,7 +80,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED(WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL, true, 1, 5, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED(WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 1, 5, false) {
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, confirmationService.getWaitingDspConsensusResultsMapSize());
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -92,7 +93,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    DSP_CONFIRMED(DSP_CONFIRMED_LABEL, true, 2, 5, true, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    DSP_CONFIRMED(DSP_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 5, true) {
         public void doSnapshot() {
             HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
             monitorService.setLastMetricValue(this, confirmationService.getDspConfirmed());
@@ -114,7 +115,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    TOTAL_CONFIRMED(TOTAL_CONFIRMED_LABEL, true, 2, 5, true, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    TOTAL_CONFIRMED(TOTAL_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 5, true) {
         public void doSnapshot() {
             HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
             monitorService.setLastMetricValue(this, confirmationService.getTotalConfirmed());
@@ -136,7 +137,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    TRUST_CHAIN_CONFIRMED(TRUST_CHAIN_CONFIRMED_LABEL, true, 5, 10, true, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    TRUST_CHAIN_CONFIRMED(TRUST_CHAIN_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 5, 10, true) {
         public void doSnapshot() {
             HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
             monitorService.setLastMetricValue(this, confirmationService.getTrustChainConfirmed());
@@ -152,7 +153,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, false);
         }
     },
-    WAITING_MISSING_TRANSACTION_INDEXES(WAITING_MISSING_TRANSACTION_INDEXES_LABEL, true, 1, 1, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    WAITING_MISSING_TRANSACTION_INDEXES(WAITING_MISSING_TRANSACTION_INDEXES_LABEL, true, MetricType.TRANSACTIONS_METRIC, 1, 1, false) {
         public void doSnapshot() {
             long waitingMissingTransactionIndexesSize = confirmationService.getWaitingMissingTransactionIndexesSize();
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -166,7 +167,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    TOTAL_POSTPONED_TRANSACTIONS(TOTAL_POSTPONED_TRANSACTIONS_LABEL, true, 2, 4, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    TOTAL_POSTPONED_TRANSACTIONS(TOTAL_POSTPONED_TRANSACTIONS_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 4, false) {
         public void doSnapshot() {
             int totalPostponedTransactions = transactionService.totalPostponedTransactions();
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -180,7 +181,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    PROPAGATION_QUEUE(PROPAGATION_QUEUE_LABEL, false, 64, 0, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    PROPAGATION_QUEUE(PROPAGATION_QUEUE_LABEL, false, MetricType.NA, 64, 0, false) {
         public void doSnapshot() {
             int messageQueueSize = propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION);
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -194,7 +195,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    WEB_SOCKET_MESSAGES_QUEUE_LENGTH(WEB_SOCKET_MESSAGES_QUEUE_LENGTH_LABEL, false, 100, 1000, false, COMPONENT_TEMPLATE_QUEUES) {
+    WEB_SOCKET_MESSAGES_QUEUE_LENGTH(WEB_SOCKET_MESSAGES_QUEUE_LENGTH_LABEL, false, MetricType.QUEUE_METRIC, 100, 1000, false) {
         public void doSnapshot() {
             int messageQueueSize = webSocketMessageService.getMessageQueueSize();
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -208,7 +209,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    CONFIRMATION_QUEUE_SIZE(CONFIRMATION_QUEUE_SIZE_LABEL, false, 100, 0, false, COMPONENT_TEMPLATE_QUEUES) {
+    CONFIRMATION_QUEUE_SIZE(CONFIRMATION_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
         public void doSnapshot() {
             int queueSize = confirmationService.getQueueSize();
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -222,7 +223,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    PERCENTAGE_USED_HEAP_MEMORY(PERCENTAGE_USED_HEAP_MEMORY_LABEL, false, 95, 98, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    PERCENTAGE_USED_HEAP_MEMORY(PERCENTAGE_USED_HEAP_MEMORY_LABEL, false, MetricType.NA, 95, 98, false) {
         public void doSnapshot() {
             double percentageUsedHeap = MemoryUtils.getPercentageUsedHeap();
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -236,7 +237,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    PERCENTAGE_USED_MEMORY(PERCENTAGE_USED_MEMORY_LABEL, false, 85, 95, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    PERCENTAGE_USED_MEMORY(PERCENTAGE_USED_MEMORY_LABEL, false, MetricType.NA, 85, 95, false) {
         public void doSnapshot() {
             double percentageUsed = MemoryUtils.getPercentageUsed();
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -250,7 +251,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    CONNECTED_TO_RECOVERY(CONNECTED_TO_RECOVERY_LABEL, true, 1, 1, false, COMPONENT_TEMPLATE_TRANSACTIONS) {
+    CONNECTED_TO_RECOVERY(CONNECTED_TO_RECOVERY_LABEL, true, MetricType.TRANSACTIONS_METRIC, 1, 1, false) {
         public void doSnapshot() {
             int notConnectedToRecovery = !networkService.isConnectedToRecovery() ? 1 : 0;
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -264,7 +265,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL, false, 5, 0, false, COMPONENT_TEMPLATE_QUEUES) {
+    PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 5, 0, false) {
         public void doSnapshot() {
             String queueName = ZeroMQSubscriberQueue.TRANSACTIONS_STATE.name();
             long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
@@ -279,7 +280,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL, false, 10, 0, false, COMPONENT_TEMPLATE_QUEUES) {
+    PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 10, 0, false) {
         public void doSnapshot() {
             String queueName = ZeroMQSubscriberQueue.NETWORK.name();
             long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
@@ -294,7 +295,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL, false, 40, 0, false, COMPONENT_TEMPLATE_QUEUES) {
+    PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 40, 0, false) {
         public void doSnapshot() {
             String queueName = ZeroMQSubscriberQueue.ADDRESS.name();
             long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
@@ -309,7 +310,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, false, 40, 0, false, COMPONENT_TEMPLATE_QUEUES) {
+    PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 40, 0, false) {
         public void doSnapshot() {
             String queueName = ZeroMQSubscriberQueue.TRANSACTION.name();
             long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
@@ -324,7 +325,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL, false, 10, 0, false, COMPONENT_TEMPLATE_QUEUES) {
+    PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 10, 0, false) {
         public void doSnapshot() {
             String queueName = ZeroMQSubscriberQueue.HEARTBEAT.name();
             long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
@@ -339,7 +340,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    ZERO_MQ_RECEIVER_QUEUE_SIZE(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL, false, 100, 0, false, COMPONENT_TEMPLATE_QUEUES) {
+    ZERO_MQ_RECEIVER_QUEUE_SIZE(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
         public void doSnapshot() {
             long queueSize = receiver.getQueueSize();
             monitorService.setLastMetricValue(this, queueSize);
@@ -353,7 +354,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, false, 100, 0, false, COMPONENT_TEMPLATE_QUEUES) {
+    PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
         public void doSnapshot() {
             long queueSize = propagationPublisher.getQueueSize();
             monitorService.setLastMetricValue(this, queueSize);
@@ -367,7 +368,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    LIVE_FILES_SIZE(LIVE_FILES_SIZE_LABEL, false, 100, 0, false, COMPONENT_TEMPLATE_DATABASE) {
+    LIVE_FILES_SIZE(LIVE_FILES_SIZE_LABEL, false, MetricType.DATABASE_METRIC, 100, 0, false) {
         public void doSnapshot() {
             long liveFilesAmount = databaseConnector.getLiveFilesNames().size();
             monitorService.setLastMetricValue(this, liveFilesAmount);
@@ -381,7 +382,7 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    BACKUP_HOURLY(BACKUP_HOURLY_LABEL, false, 2400, 4800, false, COMPONENT_TEMPLATE_BACKUPS) {
+    BACKUP_HOURLY(BACKUP_HOURLY_LABEL, false, MetricType.BACKUP_METRIC, 2400, 4800, false) {
         public void doSnapshot() {
             long latestBackupStartedTime = dbRecoveryService.getBackupStartedTime();
             HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
@@ -409,7 +410,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         }
     },
-    BACKUP_EPOCH(BACKUP_EPOCH_LABEL, false, 3600, 0, false, COMPONENT_TEMPLATE_BACKUPS) {
+    BACKUP_EPOCH(BACKUP_EPOCH_LABEL, false, MetricType.BACKUP_METRIC, 3600, 0, false) {
         public void doSnapshot() {
             long latestBackupStartedTime = Math.max(0, dbRecoveryService.getBackupStartedTime());
             monitorService.setLastMetricValue(this, latestBackupStartedTime);
@@ -428,7 +429,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         }
     },
-    BACKUP_NUMBER_OF_FILES(BACKUP_NUMBER_OF_FILES_LABEL, false, 1, 1, false, COMPONENT_TEMPLATE_BACKUPS) {
+    BACKUP_NUMBER_OF_FILES(BACKUP_NUMBER_OF_FILES_LABEL, false, MetricType.BACKUP_METRIC, 1, 1, false) {
         public void doSnapshot() {
             long latestBackupStartedTime = Math.max(0, dbRecoveryService.getBackupStartedTime());
             int backupFilesAmount = dbRecoveryService.getLastBackupInfo() != null ? dbRecoveryService.getLastBackupInfo().numberFiles() : 0;
@@ -450,7 +451,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         }
     },
-    BACKUP_SIZE(BACKUP_SIZE_LABEL, false, 0, 0, false, COMPONENT_TEMPLATE_BACKUPS) {
+    BACKUP_SIZE(BACKUP_SIZE_LABEL, false, MetricType.BACKUP_METRIC, 0, 0, false) {
         public void doSnapshot() {
             long latestBackupStartedTime = Math.max(0, dbRecoveryService.getBackupStartedTime());
             long backupSize = dbRecoveryService.getLastBackupInfo() != null ? dbRecoveryService.getLastBackupInfo().size() : 0;
@@ -471,7 +472,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         }
     },
-    BACKUP_ENTIRE_DURATION(BACKUP_ENTIRE_DURATION_LABEL, false, 75, 180, false, COMPONENT_TEMPLATE_BACKUPS) {
+    BACKUP_ENTIRE_DURATION(BACKUP_ENTIRE_DURATION_LABEL, false, MetricType.BACKUP_METRIC, 75, 180, false) {
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, dbRecoveryService.getEntireDuration());
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -488,7 +489,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         }
     },
-    BACKUP_DURATION(BACKUP_DURATION_LABEL, false, 45, 90, false, COMPONENT_TEMPLATE_BACKUPS) {
+    BACKUP_DURATION(BACKUP_DURATION_LABEL, false, MetricType.BACKUP_METRIC, 45, 90, false) {
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, dbRecoveryService.getBackupDuration());
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -505,7 +506,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         }
     },
-    BACKUP_UPLOAD_DURATION(BACKUP_UPLOAD_DURATION_LABEL, false, 20, 60, false, COMPONENT_TEMPLATE_BACKUPS) {
+    BACKUP_UPLOAD_DURATION(BACKUP_UPLOAD_DURATION_LABEL, false, MetricType.BACKUP_METRIC, 20, 60, false) {
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, dbRecoveryService.getUploadDuration());
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -522,7 +523,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         }
     },
-    BACKUP_REMOVAL_DURATION(BACKUP_REMOVAL_DURATION_LABEL, false, 10, 30, false, COMPONENT_TEMPLATE_BACKUPS) {
+    BACKUP_REMOVAL_DURATION(BACKUP_REMOVAL_DURATION_LABEL, false, MetricType.BACKUP_METRIC, 10, 30, false) {
         public void doSnapshot() {
             monitorService.setLastMetricValue(this, dbRecoveryService.getRemovalDuration());
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
@@ -556,8 +557,7 @@ public enum HealthMetric implements IHealthMetric {
     public final String label;
     private final boolean counterBased;
     private final boolean detailedLogs;
-    private final String componentTemplate;
-
+    private final MetricType metricType;
     protected ITransactionHelper transactionHelper;
     @Autowired
     protected IMonitorService monitorService;
@@ -573,17 +573,16 @@ public enum HealthMetric implements IHealthMetric {
     protected IPropagationPublisher propagationPublisher;
     protected IDatabaseConnector databaseConnector;
     protected IDBRecoveryService dbRecoveryService;
-
     private long warningThreshold;
     private long criticalThreshold;
 
-    HealthMetric(String label, boolean counterBased, long warningThreshold, long criticalThreshold, boolean detailedLogs, String componentTemplate) {
+    HealthMetric(String label, boolean counterBased, MetricType metricType, long warningThreshold, long criticalThreshold, boolean detailedLogs) {
         this.label = label;
         this.counterBased = counterBased;
+        this.metricType = metricType;
         this.warningThreshold = warningThreshold;
         this.criticalThreshold = criticalThreshold;
         this.detailedLogs = detailedLogs;
-        this.componentTemplate = componentTemplate;
     }
 
     public static HealthMetric getHealthMetric(String label) {
@@ -622,6 +621,10 @@ public enum HealthMetric implements IHealthMetric {
         }
     }
 
+    public MetricType getMetricType() {
+        return metricType;
+    }
+
     public long getWarningThreshold() {
         return warningThreshold;
     }
@@ -641,10 +644,6 @@ public enum HealthMetric implements IHealthMetric {
 
     public boolean isDetailedLogs() {
         return detailedLogs;
-    }
-
-    public String getComponentTemplate() {
-        return componentTemplate;
     }
 
     @Override
