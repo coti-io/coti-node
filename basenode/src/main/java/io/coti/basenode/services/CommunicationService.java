@@ -32,7 +32,7 @@ public class CommunicationService implements ICommunicationService {
         propagationSubscriber.init();
         propagationSubscriber.setSubscriberNodeType(subscriberNodeType);
         initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Collections.singletonList(NetworkData.class));
-        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, RejectedTransactionData.class));
+        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, RejectedTransactionData.class, TransactionsStateData.class));
         propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(initialPublisherNodeTypeToMessageTypesMap);
     }
 

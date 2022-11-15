@@ -63,9 +63,6 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Value("${sources.upperBound.threshold.critical:34}")
     private int sourcesUpperBoundThresholdCritical;
 
-
-    private long totalTransactionsFromRecovery = 0;
-
     private long prevDspConfirmed = 0;
     private int dspOutsideNormalCounter = 0;
     private HealthState dspConfirmedState = HealthState.NORMAL;
@@ -107,18 +104,13 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     @Override
+    public long getSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey) {
+        return getHealthMetricData(healthMetric).getSpecificLastMetricValue(fieldKey);
+    }
+
+    @Override
     public void setSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey, long metricValue) {
         getHealthMetricData(healthMetric).setSpecificLastMetricValue(fieldKey, metricValue);
-    }
-
-    @Override
-    public long getTotalTransactionsFromRecovery() {
-        return totalTransactionsFromRecovery;
-    }
-
-    @Override
-    public void setTotalTransactionsFromRecovery(long totalTransactionsFromRecovery) {
-        this.totalTransactionsFromRecovery = totalTransactionsFromRecovery;
     }
 
     public int getDspOutsideNormalCounter() {

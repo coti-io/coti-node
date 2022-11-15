@@ -1,8 +1,7 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.communication.interfaces.IPropagationPublisher;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
@@ -11,8 +10,10 @@ import io.coti.zerospend.http.SetIndexesResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,6 +26,8 @@ public class TransactionService extends BaseNodeTransactionService {
     private DspVoteService dspVoteService;
     @Autowired
     private ITransactionHelper transactionHelper;
+    @Autowired
+    private IPropagationPublisher propagationPublisher;
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -57,5 +60,11 @@ public class TransactionService extends BaseNodeTransactionService {
         });
 
         return ResponseEntity.ok().body(new SetIndexesResponse(requestedIndexNumber, indexedTransactionNumber.get()));
+    }
+
+    @Scheduled(initialDelay = 2000, fixedDelay = 5000)
+    public void totalTransactionsAmountFromRecovery() {
+        TransactionsStateData transactionsStateData = new TransactionsStateData(transactionHelper.getTotalTransactions());
+        propagationPublisher.propagate(transactionsStateData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode));
     }
 }
