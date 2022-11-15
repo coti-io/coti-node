@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.model.RejectedTransactions;
+import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -11,14 +12,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Slf4j
 @Service
 public class BaseNodeMonitorService implements IMonitorService {
 
-    public enum HealthState {
-        NORMAL, WARNING, CRITICAL
-    }
-
+    private final Map<HealthMetric, HealthMetricData> healthMetrics = new ConcurrentHashMap<>();
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -50,6 +53,19 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Value("${tcc.threshold.error:10}")
     private int tccThresholdError;
 
+    @Value("${total.transactions.threshold.warning:1}")
+    private int totalTransactionsThresholdWarning;
+    @Value("${total.transactions.threshold.critical:2}")
+    private int totalTransactionsThresholdCritical;
+
+    @Value("${sources.upperBound.threshold.warning:24}")
+    private int sourcesUpperBoundThresholdWarning;
+    @Value("${sources.upperBound.threshold.critical:34}")
+    private int sourcesUpperBoundThresholdCritical;
+
+
+    private long totalTransactionsFromRecovery = 0;
+
     private long prevDspConfirmed = 0;
     private int dspOutsideNormalCounter = 0;
     private HealthState dspConfirmedState = HealthState.NORMAL;
@@ -57,6 +73,52 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
+    }
+
+    @PostConstruct
+    private void initHealthMetrics() {
+        HealthMetric.TOTAL_TRANSACTIONS.setThresholds(totalTransactionsThresholdWarning, totalTransactionsThresholdCritical);
+        HealthMetric.SOURCES_UPPER_BOUND.setThresholds(sourcesUpperBoundThresholdWarning, sourcesUpperBoundThresholdCritical);
+
+        healthMetrics.put(HealthMetric.TOTAL_TRANSACTIONS, new HealthMetricData(
+                0, 0, HealthState.NORMAL, 0));
+        healthMetrics.put(HealthMetric.SOURCES_UPPER_BOUND, new HealthMetricData(
+                0, 0, HealthState.NORMAL, 0));
+    }
+
+    private void updateHealthMetricsSnapshot() {
+        healthMetrics.forEach((healthMetric, metricData) -> healthMetric.doSnapshot()
+        );
+    }
+
+    private void calculateHealthMetrics() {
+        healthMetrics.forEach((healthMetric, metricData) -> healthMetric.calculateHealthMetric()
+        );
+    }
+
+    @Override
+    public HealthMetricData getHealthMetricData(HealthMetric healthMetric) {
+        return Optional.ofNullable(healthMetrics.get(healthMetric)).orElseThrow(() -> new IllegalArgumentException("No matching health metric found"));
+    }
+
+    @Override
+    public void setLastMetricValue(HealthMetric healthMetric, long metricValue) {
+        getHealthMetricData(healthMetric).setLastMetricValue(metricValue);
+    }
+
+    @Override
+    public void setSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey, long metricValue) {
+        getHealthMetricData(healthMetric).setSpecificLastMetricValue(fieldKey, metricValue);
+    }
+
+    @Override
+    public long getTotalTransactionsFromRecovery() {
+        return totalTransactionsFromRecovery;
+    }
+
+    @Override
+    public void setTotalTransactionsFromRecovery(long totalTransactionsFromRecovery) {
+        this.totalTransactionsFromRecovery = totalTransactionsFromRecovery;
     }
 
     public int getDspOutsideNormalCounter() {
@@ -78,6 +140,9 @@ public class BaseNodeMonitorService implements IMonitorService {
             tccConfirmedState = tccConfirmedStateCheck();
             int logLevel = logLevelCheck(dspConfirmedState, tccConfirmedState);
             printLastState(logLevel);
+
+            updateHealthMetricsSnapshot();
+            calculateHealthMetrics();
         }
     }
 
@@ -164,5 +229,9 @@ public class BaseNodeMonitorService implements IMonitorService {
         } else if (logLevel == 2) {
             log.error(logText);
         }
+    }
+
+    public enum HealthState {
+        NORMAL, WARNING, CRITICAL
     }
 }
