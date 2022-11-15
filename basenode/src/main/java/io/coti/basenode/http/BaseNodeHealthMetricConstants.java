@@ -2,11 +2,6 @@ package io.coti.basenode.http;
 
 public class BaseNodeHealthMetricConstants {
 
-    public static final String COMPONENT_TEMPLATE_QUEUES = "queues";
-    public static final String COMPONENT_TEMPLATE_TRANSACTIONS = "transactions";
-    public static final String COMPONENT_TEMPLATE_BACKUPS = "backups";
-    public static final String COMPONENT_TEMPLATE_DATABASE = "database";
-
     public static final String TOTAL_TRANSACTIONS_LABEL = "TotalTransactions";
     public static final String SOURCES_UPPER_BOUND_LABEL = "SourcesUpperBound";
     public static final String SOURCES_LOWER_BOUND_LABEL = "SourcesLowerBound";
@@ -19,6 +14,7 @@ public class BaseNodeHealthMetricConstants {
     public static final String WAITING_MISSING_TRANSACTION_INDEXES_LABEL = "WaitingMissingTransactionIndexes";
     public static final String TOTAL_POSTPONED_TRANSACTIONS_LABEL = "TotalPostponedTransactions";
     public static final String PROPAGATION_QUEUE_LABEL = "PropagationQueue";
+    public static final String REJECTED_TRANSACTIONS_LABEL = "RejectedTransactions";
 
     public static final String WEB_SOCKET_MESSAGES_QUEUE_LENGTH_LABEL = "WebSocketMessagesQueueLength";
     public static final String CONFIRMATION_QUEUE_SIZE_LABEL = "ConfirmationQueueSize";

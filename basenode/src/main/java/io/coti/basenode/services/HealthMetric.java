@@ -7,6 +7,7 @@ import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.MetricType;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -539,6 +540,20 @@ public enum HealthMetric implements IHealthMetric {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
         }
+    },
+    REJECTED_TRANSACTIONS(REJECTED_TRANSACTIONS_LABEL, false, MetricType.TRANSACTIONS_METRIC, 10, 0, true) {
+        @Override
+        public void doSnapshot() {
+            monitorService.setLastMetricValue(this, rejectedTransactions.size());
+            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
+            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
+            calculateHealthValueMetricState(healthMetricData, this);
+        }
     };
 
     protected static final String SNAPSHOT_TOTAL_TRANSACTIONS_FROM_RECOVERY = "SnapshotTotalTransactionsFromRecovery";
@@ -573,6 +588,7 @@ public enum HealthMetric implements IHealthMetric {
     protected IPropagationPublisher propagationPublisher;
     protected IDatabaseConnector databaseConnector;
     protected IDBRecoveryService dbRecoveryService;
+    protected RejectedTransactions rejectedTransactions;
     private long warningThreshold;
     private long criticalThreshold;
 
