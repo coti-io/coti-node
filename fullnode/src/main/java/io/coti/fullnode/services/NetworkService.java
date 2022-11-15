@@ -75,4 +75,9 @@ public class NetworkService extends BaseNodeNetworkService {
         return newNetworkData.getMultipleNodeMaps().get(NodeType.FullNode).get(networkNodeData.getNodeHash()) != null;
     }
 
+    @Override
+    public boolean isConnectedToRecovery() {
+        return !isNotConnectedToDspNodes();
+    }
+
 }

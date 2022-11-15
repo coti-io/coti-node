@@ -577,4 +577,9 @@ public class BaseNodeNetworkService implements INetworkService {
         this.networkLastKnownNodeMap = networkLastKnownNodeMap;
     }
 
+    @Override
+    public boolean isConnectedToRecovery() {
+        return isZeroSpendServerInNetwork();
+    }
+
 }

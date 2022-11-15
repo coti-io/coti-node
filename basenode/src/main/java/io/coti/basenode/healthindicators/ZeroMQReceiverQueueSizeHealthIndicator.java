@@ -6,17 +6,17 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.TOTAL_TRANSACTIONS_LABEL;
+import static io.coti.basenode.http.BaseNodeHealthMetricConstants.ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL;
 
 @Component
-public class TotalTransactionsHealthIndicator implements HealthIndicator {
+public class ZeroMQReceiverQueueSizeHealthIndicator implements HealthIndicator {
 
     @Autowired
     protected IMonitorService monitorService;
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(TOTAL_TRANSACTIONS_LABEL);
+        return monitorService.getHealthBuilder(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL);
     }
 
 }
