@@ -13,9 +13,7 @@ public interface IMonitorService {
 
     void setLastMetricValue(HealthMetric label, long metricValue);
 
+    long getSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey);
+
     void setSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey, long metricValue);
-
-    long getTotalTransactionsFromRecovery();
-
-    void setTotalTransactionsFromRecovery(long totalTransactionsFromRecovery);
 }

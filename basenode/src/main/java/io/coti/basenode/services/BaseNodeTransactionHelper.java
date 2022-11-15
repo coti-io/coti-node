@@ -61,6 +61,9 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     @Autowired
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
 
+    private long totalNumberOfTransactionsFromRecovery = 0;
+    private long totalNumberOfTransactionsFromLocal = 0;
+
     @PostConstruct
     private void init() {
         transactionHashToTransactionStateStackMapping = new ConcurrentHashMap<>();
@@ -584,4 +587,22 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         });
     }
 
+
+    @Override
+    public long getTotalNumberOfTransactionsFromRecovery() {
+        return totalNumberOfTransactionsFromRecovery;
+    }
+
+    @Override
+    public long getTotalNumberOfTransactionsFromLocal() {
+        return totalNumberOfTransactionsFromLocal;
+    }
+
+    @Override
+    public void handleReportedTransactionsState(TransactionsStateData transactionsStateData) {
+        totalNumberOfTransactionsFromLocal = getTotalTransactions();
+        if ( transactionsStateData.getTransactionsAmount() > totalNumberOfTransactionsFromRecovery ) {
+            totalNumberOfTransactionsFromRecovery = transactionsStateData.getTransactionsAmount();
+        }
+    }
 }

@@ -14,8 +14,8 @@ public enum HealthMetric implements IHealthMetric {
     TOTAL_TRANSACTIONS("TotalTransactions", true, 0, 0) {
         @Override
         public void doSnapshot() {
-            monitorService.setLastMetricValue(this, transactionHelper.getTotalTransactions());
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(TOTAL_TRANSACTIONS_FROM_RECOVERY, monitorService.getTotalTransactionsFromRecovery());
+            monitorService.setLastMetricValue(this, transactionHelper.getTotalNumberOfTransactionsFromLocal());
+            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(TOTAL_TRANSACTIONS_FROM_RECOVERY, transactionHelper.getTotalNumberOfTransactionsFromRecovery());
         }
 
         @Override
@@ -45,6 +45,7 @@ public enum HealthMetric implements IHealthMetric {
     protected IClusterService clusterService;
 
     protected static final String TOTAL_TRANSACTIONS_FROM_RECOVERY = "totalTransactionsFromRecovery";
+
     public final String label;
     private final boolean counterBased;
     private long warningThreshold;
