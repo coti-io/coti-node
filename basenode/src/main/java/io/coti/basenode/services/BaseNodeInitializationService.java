@@ -210,10 +210,9 @@ public abstract class BaseNodeInitializationService {
     }
 
     private void waitingInitialConfirmation() throws InterruptedException {
-        Object initialTccConfirmationLock = confirmationService.getInitialTccConfirmationLock();
-        synchronized (initialTccConfirmationLock) {
+        synchronized (confirmationService.getInitialTccConfirmationLock()) {
             while (!confirmationService.getInitialTccConfirmationFinished().get()) {
-                initialTccConfirmationLock.wait(100);
+                confirmationService.getInitialTccConfirmationLock().wait(100);
             }
         }
     }
