@@ -42,10 +42,23 @@ public abstract class BaseNodeInitializationService {
     private static final String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     private static final String LAST_KNOWN_WALLET_ENDPOINT = "/nodes/last";
     private static final String NETWORK_DETAILS_ERROR = "Error at getting network details";
+    private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")
     protected String nodeIp;
+    @Autowired
+    protected INetworkService networkService;
+    @Autowired
+    protected IMonitorService monitorService;
+    @Autowired
+    protected ApplicationContext applicationContext;
+    protected String version;
+    @Autowired
+    protected IMetricsService metricsService;
+    @Autowired
+    protected IEventService eventService;
+    protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
     @Value("${node.manager.ip}")
     private String nodeManagerIp;
     @Value("${node.manager.port}")
@@ -57,8 +70,6 @@ public abstract class BaseNodeInitializationService {
     private String kycServerAddress;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
-    @Autowired
-    protected INetworkService networkService;
     @Autowired
     private IAwsService awsService;
     @Autowired
@@ -75,8 +86,6 @@ public abstract class BaseNodeInitializationService {
     private IConfirmationService confirmationService;
     @Autowired
     private IClusterService clusterService;
-    @Autowired
-    private IMonitorService monitorService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -106,24 +115,15 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private ITransactionSynchronizationService transactionSynchronizationService;
     @Autowired
-    protected ApplicationContext applicationContext;
-    @Autowired
     private BuildProperties buildProperties;
-    protected String version;
     @Autowired
     private ITransactionPropagationCheckService transactionPropagationCheckService;
     @Autowired
     private ICurrencyService currencyService;
     @Autowired
     private IMintingService mintingService;
-    private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
-    @Autowired
-    protected IMetricsService metricsService;
-    @Autowired
-    protected IEventService eventService;
     private Object initialConfirmationLock;
-    protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
     @Autowired
     private INodeFeesService nodeFeesService;
 

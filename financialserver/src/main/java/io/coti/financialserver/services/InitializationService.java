@@ -5,7 +5,6 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
-import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.financialserver.data.ReservedAddress;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +23,7 @@ import java.util.List;
 public class InitializationService extends BaseNodeInitializationService {
 
     private static final int COTI_GENESIS_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Value("${propagation.port}")
     private String propagationPort;
     @Value("${server.port}")
@@ -34,7 +34,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private String seed;
     @Autowired
     private ICommunicationService communicationService;
-    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Autowired
     private DistributionService distributionService;
     @Autowired
@@ -82,7 +81,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FinancialServer, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, BaseNodeMonitorService.HealthState.NORMAL);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FinancialServer, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, monitorService.getLastTotalHealthState());
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;

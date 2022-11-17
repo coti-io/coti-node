@@ -199,7 +199,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     private int rejectedTransactionsThresholdWarning;
     @Value("${rejected.transactions.threshold.critical:0}")
     private int rejectedTransactionsThresholdCritical;
-    private HealthState lastTotalHealthState = HealthState.NORMAL;
+    private HealthState lastTotalHealthState = HealthState.NA;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
