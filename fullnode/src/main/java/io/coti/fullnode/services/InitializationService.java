@@ -5,7 +5,6 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
-import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +22,7 @@ import java.util.List;
 @Slf4j
 public class InitializationService extends BaseNodeInitializationService {
 
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Autowired
     private ICommunicationService communicationService;
     @Value("${server.port}")
@@ -35,7 +35,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private BigDecimal nodeFee;
     @Value("${server.url}")
     private String webServerUrl;
-    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override
@@ -75,7 +74,7 @@ public class InitializationService extends BaseNodeInitializationService {
     protected NetworkNodeData createNodeProperties() {
         FeeData feeData = new FeeData(nodeFee, minimumFee, maximumFee);
         if (networkService.validateFeeData(feeData)) {
-            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, BaseNodeMonitorService.HealthState.NORMAL);
+            NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FullNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, monitorService.getLastTotalHealthState());
             networkNodeData.setFeeData(feeData);
             networkNodeData.setWebServerUrl(webServerUrl);
             return networkNodeData;
