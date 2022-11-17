@@ -3,6 +3,7 @@ package io.coti.zerospend.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.data.TrustChainConfirmationResult;
 import io.coti.basenode.services.interfaces.IClusterHelper;
 import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.zerospend.data.ZeroSpendTransactionType;
@@ -15,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -36,16 +38,14 @@ public class SourceStarvationService {
     }
 
     public void checkSourcesStarvation() {
+        BlockingQueue<TrustChainConfirmationResult> trustChainConfirmationResults = clusterService.getTrustChainConfirmationResults();
         while (!Thread.currentThread().isInterrupted()) {
             Map<Hash, Double> transactionTrustChainTrustScoreMap;
             LinkedList<TransactionData> topologicalOrderedGraph;
             try {
-                synchronized (clusterService.getSourcesStarvationCheckLock()) {
-                    clusterService.getSourcesStarvationCheckLock().wait();
-                    transactionTrustChainTrustScoreMap = new HashMap<>(clusterService.getTransactionTrustChainTrustScoreMap());
-                    topologicalOrderedGraph = new LinkedList<>(clusterService.getTopologicalOrderedGraph());
-                    clusterService.getSourcesStarvationCheckLock().notifyAll();
-                }
+                TrustChainConfirmationResult trustChainConfirmationResult = trustChainConfirmationResults.take();
+                transactionTrustChainTrustScoreMap = new HashMap<>(trustChainConfirmationResult.getTransactionTrustChainTrustScoreMap());
+                topologicalOrderedGraph = new LinkedList<>(trustChainConfirmationResult.getTopologicalOrderedGraph());
                 log.debug("Checking Source Starvation");
                 Instant now = Instant.now();
 
