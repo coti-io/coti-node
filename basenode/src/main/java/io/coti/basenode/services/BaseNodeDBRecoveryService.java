@@ -17,6 +17,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IAwsService;
 import io.coti.basenode.services.interfaces.IDBRecoveryService;
 import io.coti.basenode.services.interfaces.INetworkService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,8 +49,12 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private static final int INDEX_OF_BACKUP_TIMESTAMP_IN_FOLDER_NAME = 1;
     private static final int ALLOWED_NUMBER_OF_BACKUPS = 2;
     private static final String BACK_UP_FOLDER_PREFIX = "/backup-";
+
+    @Getter
     private final AtomicBoolean backupInProgress = new AtomicBoolean(false);
     private final HashMap<String, HashMap<String, Long>> backupLog = new HashMap<>();
+
+    @Getter
     @Value("${db.backup}")
     private boolean backup;
     @Value("${db.backup.manual:false}")
@@ -80,7 +85,24 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private String remoteBackupFolderPath;
     private String backupS3Path;
     private String restoreS3Path;
+    @Getter
     private String s3FolderName;
+
+    @Getter
+    private BackupInfo lastBackupInfo;
+    @Getter
+    private long backupStartedTime;
+    @Getter
+    private long entireDuration;
+    @Getter
+    private long backupDuration;
+    @Getter
+    private long uploadDuration;
+    @Getter
+    private long removalDuration;
+    @Getter
+    private long backupSuccess;
+
 
     @Override
     public void init() {
@@ -155,7 +177,8 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private void generateBackupLog(BackupInfo lastBackupInfo, long backupStartedTime, long entireDuration, long backupDuration,
                                    long uploadDuration, long removalDuration) {
         HashMap<String, Long> metricsList = new HashMap<>();
-        metricsList.put("success", 1L);
+        backupSuccess = 1L;
+        metricsList.put("success", backupSuccess);
         metricsList.put("epoch", backupStartedTime);
         metricsList.put("number_of_files", (long) lastBackupInfo.numberFiles());
         metricsList.put("size", lastBackupInfo.size());
@@ -196,20 +219,20 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private void backupDB() {
         if (backupInProgress.compareAndSet(false, true)) {
             try {
-                long backupStartedTime = java.time.Instant.now().getEpochSecond();
+                backupStartedTime = java.time.Instant.now().getEpochSecond();
                 log.info("Starting DB backup flow");
                 deleteBackup(remoteBackupFolderPath);
-                BackupInfo lastBackupInfo = dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
-                long backupDuration = java.time.Instant.now().getEpochSecond() - lastBackupInfo.timestamp();
+                lastBackupInfo = dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
+                backupDuration = java.time.Instant.now().getEpochSecond() - lastBackupInfo.timestamp();
                 List<String> uploadedBackupFiles = getBackupFiles();
                 long uploadBackupStartedTime = java.time.Instant.now().getEpochSecond();
                 uploadRecentBackupToS3(uploadedBackupFiles);
-                long uploadDuration = java.time.Instant.now().getEpochSecond() - uploadBackupStartedTime;
+                uploadDuration = java.time.Instant.now().getEpochSecond() - uploadBackupStartedTime;
                 long removalBackupStartedTime = java.time.Instant.now().getEpochSecond();
                 removeOlderBackupsFromS3(uploadedBackupFiles);
-                long removalDuration = java.time.Instant.now().getEpochSecond() - removalBackupStartedTime;
+                removalDuration = java.time.Instant.now().getEpochSecond() - removalBackupStartedTime;
                 log.info("Finished DB backup flow");
-                long entireDuration = java.time.Instant.now().getEpochSecond() - backupStartedTime;
+                entireDuration = java.time.Instant.now().getEpochSecond() - backupStartedTime;
                 generateBackupLog(lastBackupInfo, backupStartedTime, entireDuration, backupDuration, uploadDuration, removalDuration);
             } catch (CotiRunTimeException e) {
                 log.error("Backup DB error.");

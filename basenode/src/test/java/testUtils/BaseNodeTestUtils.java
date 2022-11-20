@@ -2,6 +2,7 @@ package testUtils;
 
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetBalancesRequest;
+import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.basenode.services.NodeTypeService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -179,7 +180,7 @@ public class BaseNodeTestUtils {
         String version = VERSION;
         String address = ANY_ADDRESS;
         String httpPort = ANY_PORT;
-        return new NetworkNodeData(nodeType, version, address, httpPort, hash, networkType);
+        return new NetworkNodeData(nodeType, version, address, httpPort, hash, networkType, BaseNodeMonitorService.HealthState.NORMAL);
     }
 
 

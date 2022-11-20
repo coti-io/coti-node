@@ -23,6 +23,7 @@ import java.util.List;
 public class InitializationService extends BaseNodeInitializationService {
 
     private static final int COTI_GENESIS_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Value("${propagation.port}")
     private String propagationPort;
     @Value("${server.port}")
@@ -33,7 +34,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private String seed;
     @Autowired
     private ICommunicationService communicationService;
-    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Autowired
     private DistributionService distributionService;
     @Autowired
@@ -48,7 +48,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class, TransactionsStateData.class));
             communicationService.initSubscriber(NodeType.FinancialServer, publisherNodeTypeToMessageTypesMap);
 
             communicationService.initPublisher(propagationPort, NodeType.FinancialServer);
@@ -81,7 +81,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FinancialServer, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.FinancialServer, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, monitorService.getLastTotalHealthState());
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;

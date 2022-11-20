@@ -54,6 +54,8 @@ public class NodeManagementService implements INodeManagementService {
     private static final String FINANCIAL_SERVER_FOR_WALLET_KEY = "FinancialServer";
     private static final int BLACKLIST_INACTIVITY_NUMBER = 4;
     private static final int BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES = 10;
+    private final Set<Hash> blacklistedNodes = new LinkedHashSet<>();
+    private final LockData nodeHashLockData = new LockData();
     @Autowired
     private IPropagationPublisher propagationPublisher;
     @Autowired
@@ -78,8 +80,6 @@ public class NodeManagementService implements INodeManagementService {
     private String nodeManagerIp;
     @Value("${propagation.port}")
     private String propagationPort;
-    private final Set<Hash> blacklistedNodes = new LinkedHashSet<>();
-    private final LockData nodeHashLockData = new LockData();
 
     @Override
     public void init() {
@@ -544,7 +544,7 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     @Override
-    public Map<String, List<SingleNodeDetailsForWallet>> getNetworkDetailsForWallet() {
+    public Map<String, List<SingleNodeDetailsForWallet>> getNetworkDetailsForWallet(String healthState) {
         Map<String, List<SingleNodeDetailsForWallet>> networkDetailsForWallet = new HashedMap<>();
 
         Map<Hash, NetworkNodeData> fullNodesDetails = networkService.getMapFromFactory(NodeType.FullNode);
@@ -553,6 +553,11 @@ public class NodeManagementService implements INodeManagementService {
                 .map(this::createSingleNodeDetailsForWallet)
                 .filter(singleNodeDetailsForWallet -> stakingService.filterFullNode(singleNodeDetailsForWallet))
                 .collect(Collectors.toList());
+        if (healthState != null) {
+            fullNodesDetailsForWallet = fullNodesDetailsForWallet.stream()
+                    .filter(singleNodeDetailsForWallet -> healthState.equals(singleNodeDetailsForWallet.getReportedHealthState().toString()))
+                    .collect(Collectors.toList());
+        }
         if (selectedNode != null) {
             SingleNodeDetailsForWallet selectedNodeForWallet = createSingleNodeDetailsForWallet(selectedNode);
             fullNodesDetailsForWallet.remove(selectedNodeForWallet);
@@ -585,7 +590,7 @@ public class NodeManagementService implements INodeManagementService {
     }
 
     private SingleNodeDetailsForWallet createSingleNodeDetailsForWallet(NetworkNodeData node) {
-        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl(), node.getVersion());
+        SingleNodeDetailsForWallet singleNodeDetailsForWallet = new SingleNodeDetailsForWallet(node.getHash(), node.getHttpFullAddress(), node.getWebServerUrl(), node.getVersion(), node.getReportedHealthState());
         if (NodeType.FullNode.equals(node.getNodeType())) {
             singleNodeDetailsForWallet.setFeeData(node.getFeeData());
             singleNodeDetailsForWallet.setTrustScore(node.getTrustScore());

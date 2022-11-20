@@ -23,6 +23,7 @@ public class FilterConfig {
         registrationBean.setFilter(adminFilter);
         registrationBean.addUrlPatterns("/admin/*");
         registrationBean.addUrlPatterns("/metrics");
+        registrationBean.addUrlPatterns("/actuator/*");
         registrationBean.setOrder(1);
         return registrationBean;
     }
