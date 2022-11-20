@@ -58,6 +58,11 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     private Set<Hash> noneIndexedTransactionHashes;
     @Autowired
     private INetworkService networkService;
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
+
+    private long totalNumberOfTransactionsFromRecovery = 0;
+    private long totalNumberOfTransactionsFromLocal = 0;
 
     @PostConstruct
     private void init() {
@@ -232,7 +237,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         if (transactionIndexes.getByHash(new Hash(dspConsensusResult.getIndex())) == null) {
             confirmationService.setDspcToTrue(dspConsensusResult);
         }
-
     }
 
     public boolean validateTrustScore(TransactionData transactionData) {
@@ -260,7 +264,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     }
 
     public void startHandleTransaction(TransactionData transactionData) {
-
         transactionHashToTransactionStateStackMapping.put(transactionData.getHash(), new Stack<>());
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(RECEIVED);
     }
@@ -539,6 +542,24 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return false;
+        }
+    }
+
+    @Override
+    public long getTotalNumberOfTransactionsFromRecovery() {
+        return totalNumberOfTransactionsFromRecovery;
+    }
+
+    @Override
+    public long getTotalNumberOfTransactionsFromLocal() {
+        return totalNumberOfTransactionsFromLocal;
+    }
+
+    @Override
+    public void handleReportedTransactionsState(TransactionsStateData transactionsStateData) {
+        totalNumberOfTransactionsFromLocal = getTotalTransactions();
+        if ( transactionsStateData.getTransactionsAmount() > totalNumberOfTransactionsFromRecovery ) {
+            totalNumberOfTransactionsFromRecovery = transactionsStateData.getTransactionsAmount();
         }
     }
 }

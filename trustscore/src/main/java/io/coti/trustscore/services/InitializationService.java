@@ -1,10 +1,7 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
@@ -22,13 +19,13 @@ import java.util.*;
 @Slf4j
 public class InitializationService extends BaseNodeInitializationService {
 
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Autowired
     private ICommunicationService communicationService;
     @Value("${server.port}")
     private String serverPort;
     @Value("${server.url}")
     private String webServerUrl;
-    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override
@@ -39,7 +36,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class, TransactionsStateData.class));
             publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
 
             communicationService.initSubscriber(NodeType.TrustScoreNode, publisherNodeTypeToMessageTypesMap);
@@ -71,7 +68,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, monitorService.getLastTotalHealthState());
         networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;
 

@@ -4,10 +4,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.data.AddressData;
-import io.coti.basenode.data.NetworkData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +32,7 @@ public class CommunicationService implements ICommunicationService {
         propagationSubscriber.init();
         propagationSubscriber.setSubscriberNodeType(subscriberNodeType);
         initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.NodeManager, Collections.singletonList(NetworkData.class));
-        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class));
+        initialPublisherNodeTypeToMessageTypesMap.putIfAbsent(NodeType.DspNode, Arrays.asList(TransactionData.class, AddressData.class, TransactionsStateData.class));
         propagationSubscriber.setPublisherNodeTypeToMessageTypesMap(initialPublisherNodeTypeToMessageTypesMap);
     }
 

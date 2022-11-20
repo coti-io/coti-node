@@ -52,8 +52,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     protected CurrencyNameIndexes currencyNameIndexes;
     @Autowired
-    protected INetworkService networkService;
-    @Autowired
     protected RestTemplate restTemplate;
     @Autowired
     protected ApplicationContext applicationContext;

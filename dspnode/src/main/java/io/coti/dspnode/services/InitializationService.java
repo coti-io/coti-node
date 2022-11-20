@@ -6,6 +6,7 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
+import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.createNetworkNodeData();
             super.getNetwork();
 
-            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class));
+            publisherNodeTypeToMessageTypesMap.put(NodeType.ZeroSpendServer, Arrays.asList(TransactionData.class, DspConsensusResult.class, TransactionsStateData.class));
             publisherNodeTypeToMessageTypesMap.put(NodeType.FinancialServer, Collections.singletonList(TransactionData.class));
 
             communicationService.initSubscriber(NodeType.DspNode, publisherNodeTypeToMessageTypesMap);
@@ -91,7 +92,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, BaseNodeMonitorService.HealthState.NORMAL);
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
         return networkNodeData;
