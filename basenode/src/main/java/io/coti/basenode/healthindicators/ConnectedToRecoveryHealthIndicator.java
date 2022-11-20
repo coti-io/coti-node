@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.CONNECTED_TO_RECOVERY_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.CONNECTED_TO_RECOVERY_LABEL;
 
 @Component
 public class ConnectedToRecoveryHealthIndicator  implements HealthIndicator {

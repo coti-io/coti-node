@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL;
 
 @Component
 public class PropagationSubscriberTransactionQueueSizeHealthIndicator implements HealthIndicator {

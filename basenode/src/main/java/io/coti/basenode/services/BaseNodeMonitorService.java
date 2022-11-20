@@ -22,8 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.DSP_CONFIRMED_LABEL;
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.TRUST_CHAIN_CONFIRMED_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.DSP_CONFIRMED_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TRUST_CHAIN_CONFIRMED_LABEL;
 
 @Slf4j
 @Service

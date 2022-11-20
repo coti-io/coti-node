@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.BACKUP_HOURLY_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.BACKUP_HOURLY_LABEL;
 
 @Component
 public class BackupHourlyHealthIndicator implements HealthIndicator {

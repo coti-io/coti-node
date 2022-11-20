@@ -17,6 +17,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IAwsService;
 import io.coti.basenode.services.interfaces.IDBRecoveryService;
 import io.coti.basenode.services.interfaces.INetworkService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -49,9 +50,11 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private static final int ALLOWED_NUMBER_OF_BACKUPS = 2;
     private static final String BACK_UP_FOLDER_PREFIX = "/backup-";
 
+    @Getter
     private final AtomicBoolean backupInProgress = new AtomicBoolean(false);
     private final HashMap<String, HashMap<String, Long>> backupLog = new HashMap<>();
 
+    @Getter
     @Value("${db.backup}")
     private boolean backup;
     @Value("${db.backup.manual:false}")
@@ -82,14 +85,22 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private String remoteBackupFolderPath;
     private String backupS3Path;
     private String restoreS3Path;
+    @Getter
     private String s3FolderName;
 
+    @Getter
     private BackupInfo lastBackupInfo;
+    @Getter
     private long backupStartedTime;
+    @Getter
     private long entireDuration;
+    @Getter
     private long backupDuration;
+    @Getter
     private long uploadDuration;
+    @Getter
     private long removalDuration;
+    @Getter
     private long backupSuccess;
 
 
@@ -388,53 +399,4 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         return s3Backups;
     }
 
-    @Override
-    public boolean isBackup() {
-        return backup;
-    }
-
-    @Override
-    public AtomicBoolean getBackupInProgress() {
-        return backupInProgress;
-    }
-
-    @Override
-    public BackupInfo getLastBackupInfo() {
-        return lastBackupInfo;
-    }
-
-    @Override
-    public long getBackupStartedTime() {
-        return backupStartedTime;
-    }
-
-    @Override
-    public long getEntireDuration() {
-        return entireDuration;
-    }
-
-    @Override
-    public long getBackupDuration() {
-        return backupDuration;
-    }
-
-    @Override
-    public long getUploadDuration() {
-        return uploadDuration;
-    }
-
-    @Override
-    public long getRemovalDuration() {
-        return removalDuration;
-    }
-
-    @Override
-    public long getBackupSuccess() {
-        return backupSuccess;
-    }
-
-    @Override
-    public String getS3FolderName() {
-        return s3FolderName;
-    }
 }

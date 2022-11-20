@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL;
 
 @Component
 public class WaitingDspConsensusResultsConfirmedHealthIndicator implements HealthIndicator {

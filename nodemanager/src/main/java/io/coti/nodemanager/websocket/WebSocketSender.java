@@ -32,9 +32,9 @@ public class WebSocketSender {
 
     public void notifyNodeHealthState(Hash nodeHash, BaseNodeMonitorService.HealthState healthState) {
         log.debug("Node {} is now reported with health state {} ", nodeHash, healthState);
-        messagingSender.convertAndSend("/topic/healthState/nodes/",
+        messagingSender.convertAndSend("/topic/nodes/health/",
                 new NotifyNodeHealthStateChange(nodeHash, healthState));
-        messagingSender.convertAndSend("/topic/healthState/node/" + nodeHash.toString(),
+        messagingSender.convertAndSend("/topic/node/health/" + nodeHash.toString(),
                 new NotifyNodeHealthStateChange(nodeHash, healthState));
     }
 

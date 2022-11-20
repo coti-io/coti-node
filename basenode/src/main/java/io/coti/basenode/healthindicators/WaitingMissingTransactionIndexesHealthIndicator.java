@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.WAITING_MISSING_TRANSACTION_INDEXES_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.WAITING_MISSING_TRANSACTION_INDEXES_LABEL;
 
 @Component
 public class WaitingMissingTransactionIndexesHealthIndicator implements HealthIndicator {

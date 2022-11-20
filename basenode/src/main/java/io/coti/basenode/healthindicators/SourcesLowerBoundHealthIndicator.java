@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.SOURCES_LOWER_BOUND_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.SOURCES_LOWER_BOUND_LABEL;
 
 @Component
 public class SourcesLowerBoundHealthIndicator implements HealthIndicator {

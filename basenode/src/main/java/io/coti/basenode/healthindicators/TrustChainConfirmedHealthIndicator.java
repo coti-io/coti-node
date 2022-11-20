@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.TRUST_CHAIN_CONFIRMED_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TRUST_CHAIN_CONFIRMED_LABEL;
 
 @Component
 public class TrustChainConfirmedHealthIndicator implements HealthIndicator {
