@@ -12,7 +12,8 @@ public enum ZeroMQSubscriberQueue {
     HEARTBEAT(new HashSet<>(Collections.singletonList(PublisherHeartBeatData.class))),
     NETWORK(new HashSet<>(Collections.singletonList(NetworkData.class))),
     ADDRESS(new HashSet<>(Collections.singletonList(AddressData.class))),
-    TRANSACTION(new HashSet<>(Arrays.asList(RejectedTransactionData.class, TransactionData.class, DspConsensusResult.class)));
+    TRANSACTION(new HashSet<>(Arrays.asList(RejectedTransactionData.class, TransactionData.class, DspConsensusResult.class))),
+    TRANSACTIONS_STATE(new HashSet<>(Collections.singletonList(TransactionsStateData.class)));
 
     private final BlockingQueue<ZeroMQMessageData> queue = new LinkedBlockingQueue<>();
 
@@ -22,7 +23,6 @@ public enum ZeroMQSubscriberQueue {
 
     ZeroMQSubscriberQueue(Set<Class<? extends IPropagatable>> messageTypeSet) {
         messageTypeSet.forEach(messageType -> ZeroMQSubscriberQueues.messageTypeToQueueMap.put(messageType, this));
-
     }
 
     public BlockingQueue<ZeroMQMessageData> getQueue() {

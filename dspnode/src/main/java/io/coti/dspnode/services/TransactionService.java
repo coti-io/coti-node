@@ -258,4 +258,11 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
         }
     }
+
+    @Scheduled(initialDelay = 2000, fixedDelay = 5000)
+    public void totalTransactionsAmountFromRecovery() {
+        TransactionsStateData transactionsStateData = new TransactionsStateData(transactionHelper.getTotalTransactions());
+        propagationPublisher.propagate(transactionsStateData, Collections.singletonList(NodeType.FullNode));
+    }
+
 }

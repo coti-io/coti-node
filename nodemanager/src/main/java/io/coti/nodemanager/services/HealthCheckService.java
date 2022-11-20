@@ -3,11 +3,13 @@ package io.coti.nodemanager.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.LockData;
 import io.coti.basenode.data.NetworkNodeData;
+import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
+import io.coti.nodemanager.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -26,11 +28,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HealthCheckService implements IHealthCheckService {
 
-    private static final String NODE_HASH_END_POINT = "/nodeHash";
+    private static final String NODE_HEALTH_END_POINT = "/health/total/state";
     private static final int RETRY_INTERVAL_IN_SECONDS = 20;
     private static final int MAX_NUM_OF_TRIES = 3;
     private static final int CONNECT_TIMEOUT = 5000;
     private static final int READ_TIMEOUT = 5000;
+    private final Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
+    private final LockData nodeHashLockData = new LockData();
     @Autowired
     private INodeManagementService nodeManagementService;
     @Autowired
@@ -38,8 +42,8 @@ public class HealthCheckService implements IHealthCheckService {
     private RestTemplate restTemplate;
     @Autowired
     private INetworkService networkService;
-    private final Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
-    private final LockData nodeHashLockData = new LockData();
+    @Autowired
+    private WebSocketSender webSocketSender;
 
     @Override
     public void init() {
@@ -78,10 +82,16 @@ public class HealthCheckService implements IHealthCheckService {
                             networkNodeDataToCheck.getHttpFullAddress());
                     TimeUnit.SECONDS.sleep(RETRY_INTERVAL_IN_SECONDS);
                 }
-                Hash nodeHash = restTemplate.getForObject(networkNodeDataToCheck.getHttpFullAddress() + NODE_HASH_END_POINT, Hash.class);
-                if (nodeHash != null) {
-                    log.debug("{} of address {} and port {} is responding to healthcheck.",
-                            networkNodeDataToCheck.getNodeType(), networkNodeDataToCheck.getAddress(), networkNodeDataToCheck.getHttpPort());
+                BaseNodeMonitorService.HealthState reportedHealthState =
+                        restTemplate.getForObject(networkNodeDataToCheck.getHttpFullAddress() + NODE_HEALTH_END_POINT, BaseNodeMonitorService.HealthState.class);
+
+                if (reportedHealthState != null) {
+                    log.debug("{} of address {} and port {} is responding to healthcheck {}.",
+                            networkNodeDataToCheck.getNodeType(), networkNodeDataToCheck.getAddress(), networkNodeDataToCheck.getHttpPort(), reportedHealthState);
+                    if (networkNodeDataToCheck.getReportedHealthState() != reportedHealthState) {
+                        networkNodeDataToCheck.setReportedHealthState(reportedHealthState);
+                        webSocketSender.notifyNodeHealthState(networkNodeDataToCheck.getNodeHash(), reportedHealthState);
+                    }
                     return true;
                 }
             } catch (InterruptedException e) {

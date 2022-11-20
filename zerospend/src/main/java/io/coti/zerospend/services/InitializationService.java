@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 @Service
 public class InitializationService extends BaseNodeInitializationService {
 
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Value("${receiving.port}")
     private String receivingPort;
     @Value("${propagation.port}")
@@ -40,7 +41,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private TransactionCreationService transactionCreationService;
     @Autowired
     private Transactions transactions;
-    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override
@@ -104,7 +104,7 @@ public class InitializationService extends BaseNodeInitializationService {
     }
 
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.ZeroSpendServer, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.ZeroSpendServer, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, monitorService.getLastTotalHealthState());
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
         return networkNodeData;
