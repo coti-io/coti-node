@@ -101,4 +101,9 @@ public interface ITransactionHelper {
 
     boolean validateBaseTransactionPublicKey(BaseTransactionData baseTransactionData, NodeType nodeType);
 
+    long getTotalNumberOfTransactionsFromRecovery();
+
+    long getTotalNumberOfTransactionsFromLocal();
+
+    void handleReportedTransactionsState(TransactionsStateData transactionsStateData);
 }

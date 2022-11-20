@@ -21,7 +21,7 @@ public interface INodeManagementService {
 
     ResponseEntity<String> addNode(NetworkNodeData networkNodeData);
 
-    Map<String, List<SingleNodeDetailsForWallet>> getNetworkDetailsForWallet();
+    Map<String, List<SingleNodeDetailsForWallet>> getNetworkDetailsForWallet(String healthState);
 
     SingleNodeDetailsForWallet getOneNodeDetailsForWallet();
 
