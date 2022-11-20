@@ -17,7 +17,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.*;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.*;
 
 public enum HealthMetric implements IHealthMetric {
 

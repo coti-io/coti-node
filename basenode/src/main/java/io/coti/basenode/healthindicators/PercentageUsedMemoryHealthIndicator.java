@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.PERCENTAGE_USED_MEMORY_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.PERCENTAGE_USED_MEMORY_LABEL;
 
 @Component
 public class PercentageUsedMemoryHealthIndicator implements HealthIndicator {

@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HealthCheckService implements IHealthCheckService {
 
-    private static final String NODE_HEALTH_END_POINT = "/health/state";
+    private static final String NODE_HEALTH_END_POINT = "/health/total/state";
     private static final int RETRY_INTERVAL_IN_SECONDS = 20;
     private static final int MAX_NUM_OF_TRIES = 3;
     private static final int CONNECT_TIMEOUT = 5000;

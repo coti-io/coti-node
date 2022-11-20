@@ -16,7 +16,7 @@ public class NodeHealthController {
     @Autowired
     IMonitorService monitorService;
 
-    @GetMapping(path = "/state")
+    @GetMapping(path = "/total/state")
     public BaseNodeMonitorService.HealthState getNodeHash() {
         return monitorService.getLastTotalHealthState();
     }

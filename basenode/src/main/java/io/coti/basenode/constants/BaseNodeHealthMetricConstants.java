@@ -1,4 +1,4 @@
-package io.coti.basenode.http;
+package io.coti.basenode.constants;
 
 public class BaseNodeHealthMetricConstants {
 

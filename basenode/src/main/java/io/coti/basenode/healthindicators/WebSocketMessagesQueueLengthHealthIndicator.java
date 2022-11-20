@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.WEB_SOCKET_MESSAGES_QUEUE_LENGTH_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.WEB_SOCKET_MESSAGES_QUEUE_LENGTH_LABEL;
 
 @Component
 public class WebSocketMessagesQueueLengthHealthIndicator implements HealthIndicator {

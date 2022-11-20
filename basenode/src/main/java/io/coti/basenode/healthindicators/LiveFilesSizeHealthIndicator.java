@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.http.BaseNodeHealthMetricConstants.LIVE_FILES_SIZE_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.LIVE_FILES_SIZE_LABEL;
 
 @Component
 public class LiveFilesSizeHealthIndicator implements HealthIndicator {
