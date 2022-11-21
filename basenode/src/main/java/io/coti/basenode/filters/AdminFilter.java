@@ -9,6 +9,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Set;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
@@ -40,13 +41,24 @@ public class AdminFilter implements Filter {
 
     private static String getClientIp(HttpServletRequest request) {
 
+        if (log.isDebugEnabled()) {
+            log.debug("{}: RemoteAddr: {}", request.hashCode(), request.getRemoteAddr());
+            Enumeration<String> headerNames = request.getHeaderNames();
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                String headerValue = request.getHeader(headerName);
+                log.debug("{}: {} : {} ", request.hashCode(), headerName, headerValue);
+            }
+        }
+
         String remoteAddr = "";
 
         if (request != null) {
-            remoteAddr = request.getHeader("X-FORWARDED-FOR");
+            remoteAddr = request.getHeader("X-REAL-IP");
             if (remoteAddr == null || remoteAddr.equals("")) {
                 remoteAddr = request.getRemoteAddr();
             }
+            log.debug("remoteAddr: {}", remoteAddr);
         }
 
         return remoteAddr;
