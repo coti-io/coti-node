@@ -36,7 +36,7 @@ public class NetworkService extends BaseNodeNetworkService {
                 getMapFromFactory(NodeType.DspNode).values()));
         addListToSubscription(dspNodesToConnect);
 
-        handleConnectedSingleNodeChange(newNetworkData, NodeType.ZeroSpendServer, NodeType.FinancialServer);
+        handleConnectedSingleNodeChange(newNetworkData, NodeType.ZeroSpendServer);
 
         setNetworkData(newNetworkData);
 

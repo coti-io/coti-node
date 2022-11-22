@@ -56,7 +56,7 @@ public class InitializationService extends BaseNodeInitializationService {
                 log.error("No zerospend server exists in the network got from the node manager, about to exit application");
                 System.exit(SpringApplication.exit(applicationContext));
             }
-            networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
+            networkService.setRecoveryServer(zerospendNetworkNodeData);
             communicationService.initPublisher(propagationPort, NodeType.DspNode);
 
             HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping = new HashMap<>();

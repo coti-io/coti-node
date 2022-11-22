@@ -5,8 +5,6 @@ public class BaseNodeHttpStringConstants {
     public static final String STATUS_SUCCESS = "Success";
     public static final String STATUS_ERROR = "Error";
     public static final String SERVER_ERROR = "Server error";
-    public static final String CREATED_MESSAGE = "Created";
-
     public static final String INVALID_ADDRESS = "Address %s  is invalid";
     public static final String ADDRESS_TRANSACTIONS_SERVER_ERROR = "Address transactions server error";
 
@@ -27,14 +25,6 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_POSTPONED_SERVER_ERROR = "Server error while getting postponed transactions";
     public static final String TRANSACTION_INTERNAL_ERROR_MESSAGE = "Internal error while adding new transaction";
 
-    public static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed!";
-    public static final String INSUFFICIENT_FUNDS_MESSAGE = "Balance for address is insufficient!";
-    public static final String INSUFFICIENT_MINTING_FUNDS_MESSAGE = "Minting balance for address is insufficient!";
-    public static final String NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION = "Not unique token generation attempt!";
-    public static final String ILLEGAL_BASE_TRANSACTIONS_AMOUNT = "Illegal transaction - sum of base transactions must be 0!";
-    public static final String INVALID_TRUST_SCORE_MESSAGE = "Invalid sender trust score!";
-    public static final String EVENT_HARD_FORK_ERROR = "Error with Hard Fork Event";
-
     public static final String API_CLIENT_ERROR = "Api Client Error";
     public static final String API_SERVER_ERROR = "Api Server Error";
 
@@ -43,10 +33,7 @@ public class BaseNodeHttpStringConstants {
     public static final String GENERAL_EXCEPTION_ERROR = "Error In Service";
 
     public static final String UNAUTHORIZED = "Unauthorized";
-    public static final String INVALID_FULL_NODE_FEE = "Invalid full node fee";
     public static final String INVALID_SIGNATURE = "Invalid signature";
-    public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
-    public static final String INVALID_NODE_IP_VERSION = "Invalid node IP version";
     public static final String INVALID_NODE_SERVER_URL = "Invalid node server URL";
     public static final String INVALID_NODE_SERVER_URL_UNKNOWN_HOST = "Invalid node server URL %s: unknown host. Dns record not found";
     public static final String INVALID_NODE_SERVER_URL_EMPTY_HOST = "Invalid node server URL %s: empty host";
@@ -60,8 +47,6 @@ public class BaseNodeHttpStringConstants {
     public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE_EXPIRATION = "Invalid node server URL %s: failed to verify SSL certificate. Certificate is expired";
     public static final String INVALID_NODE_SERVER_URL_SSL_FAILED_TO_VERIFY_CERTIFICATE = "Invalid node server URL %s: failed to verify certificate";
     public static final String INVALID_NODE_IP_FOR_SERVER_URL = "Invalid node server URL %s: host %s is not matching with ip %s. The expected ip is %s";
-    public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
-    public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
     public static final String INVALID_NODE_TYPE = "Unsupported node type : %s";
     public static final String INVALID_TRANSACTION_TIME_FIELD = "Invalid transaction time field. Current node time: %s";
     public static final String INVALID_AMOUNT = "Invalid amount";
@@ -74,18 +59,12 @@ public class BaseNodeHttpStringConstants {
     public static final String ADDRESS_BATCH_UPLOADED = "Address batch uploaded";
     public static final String ADDRESS_BATCH_UPLOAD_ERROR = "Address batch upload error: %s";
 
-    public static final String TRANSACTIONS_NOT_FOUND = "No valid transaction was found";
-    public static final String EMPTY_SEARCH_RESULT = "Search result is empty";
-
-    public static final String NATIVE_COIN_NOT_FOUND = "Native coin not found";
     public static final String DOCUMENT_NOT_FOUND = "Document not found";
 
     public static final String NOT_BACKUP_NODE = "The node is not a backup node";
 
     public static final String DB_MANUAL_BACKUP_SUCCESS = "Successful manual DB backup";
     public static final String DB_MANUAL_BACKUP_NOT_ALLOWED = "Manual DB backup not allowed";
-
-    public static final String CLUSTERSTAMP_MAJOR_NOT_FOUND = "Major cluster stamp not found";
 
     public static final String MULTI_DAG_IS_NOT_SUPPORTED = "The system is not supporting multi DAG.";
 

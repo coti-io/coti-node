@@ -46,8 +46,8 @@ public class NetworkService extends BaseNodeNetworkService {
             List<NetworkNodeData> dspNodesToConnect = new ArrayList<>(CollectionUtils.subtract(newDspNodeMap.values(), connectedDspNodes));
             Collections.shuffle(dspNodesToConnect);
             for (int i = 0; i < dspNodesToConnect.size() && i < 2 - connectedDspNodes.size(); i++) {
-                if (i == 0 && recoveryServerAddress == null) {
-                    recoveryServerAddress = dspNodesToConnect.get(0).getHttpFullAddress();
+                if (i == 0 && recoveryServer == null) {
+                    recoveryServer = dspNodesToConnect.get(0);
                 }
                 communicationService.addSubscription(dspNodesToConnect.get(i).getPropagationFullAddress(), NodeType.DspNode);
                 communicationService.addSender(dspNodesToConnect.get(i).getReceivingFullAddress(), NodeType.DspNode);

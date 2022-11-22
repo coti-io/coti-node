@@ -2,10 +2,7 @@ package io.coti.zerospend.services;
 
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.data.NodeType;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.TransactionDspVote;
+import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.model.Transactions;
@@ -31,8 +28,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private String propagationPort;
     @Value("${server.port}")
     private String serverPort;
-    @Value("${recovery.server.address}")
-    private String recoveryServerAddress;
+    @Value("${recovery.server.hash:}")
+    private String recoveryServerHash;
     @Autowired
     private ICommunicationService communicationService;
     @Autowired
@@ -59,9 +56,8 @@ public class InitializationService extends BaseNodeInitializationService {
             communicationService.initSubscriber(NodeType.ZeroSpendServer, publisherNodeTypeToMessageTypesMap);
 
             HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping = new HashMap<>();
-            classNameToReceiverHandlerMapping.put(
-                    TransactionDspVote.class.getName(), data ->
-                            dspVoteService.receiveDspVote((TransactionDspVote) data));
+            classNameToReceiverHandlerMapping.put(TransactionDspVote.class.getName(), data ->
+                    dspVoteService.receiveDspVote((TransactionDspVote) data));
             communicationService.initReceiver(receivingPort, classNameToReceiverHandlerMapping);
             communicationService.initPublisher(propagationPort, NodeType.ZeroSpendServer);
 
@@ -69,9 +65,7 @@ public class InitializationService extends BaseNodeInitializationService {
             if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
                 networkService.addListToSubscription(new ArrayList<>(Collections.singletonList(networkService.getSingleNodeData(NodeType.FinancialServer))));
             }
-            if (!recoveryServerAddress.isEmpty()) {
-                networkService.setRecoveryServerAddress(recoveryServerAddress);
-            }
+            updateRecoveryServer();
 
             super.initServices();
             messageReceiver.initReceiverHandler();
@@ -89,6 +83,22 @@ public class InitializationService extends BaseNodeInitializationService {
             System.exit(SpringApplication.exit(applicationContext));
         }
 
+    }
+
+    private void updateRecoveryServer() {
+        if (!recoveryServerHash.isEmpty()) {
+            Hash nodeHash = new Hash(recoveryServerHash);
+            if (nodeHash.getBytes().length == 0) {
+                log.error("Recovery server node was not updated due to illegal node hash string.");
+                return;
+            }
+            NetworkNodeData recoveryServer = networkService.getNetworkLastKnownNodeMap().get(nodeHash);
+            if (recoveryServer != null) {
+                networkService.setRecoveryServer(recoveryServer);
+            } else {
+                log.error("Recovery server node was not found in last known nodes map.");
+            }
+        }
     }
 
     protected NetworkNodeData createNodeProperties() {
