@@ -1,5 +1,6 @@
 package io.coti.zerospend.services;
 
+import io.coti.basenode.constants.BaseNodeMessages;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
@@ -55,6 +56,8 @@ public class SourceStarvationService {
             } catch (InterruptedException e) {
                 log.info("Source Starvation Check was interrupted");
                 Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error(BaseNodeMessages.EXCEPTION, e);
             }
         }
     }

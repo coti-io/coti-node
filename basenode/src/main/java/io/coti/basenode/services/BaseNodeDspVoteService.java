@@ -90,7 +90,7 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     @Override
     public void handleDspConsensusResultResend(NodeResendDcrData nodeResendDcrData) {
         try {
-            log.info("Received request for missing dsp consensus results for node: {}", nodeResendDcrData.getHash());
+            log.info("Received request for missing dsp consensus results for node: {}", nodeResendDcrData.getNodeHash());
             long startIndex = nodeResendDcrData.getFirstMissedIndex();
             long endIndex = nodeResendDcrData.getInRangeLastMissedIndex();
             while (startIndex <= endIndex) {
