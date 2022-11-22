@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.constants.BaseNodeMessages;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
@@ -116,6 +117,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 handleDspConsensusResultUpdate(dspConsensusResult);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error(BaseNodeMessages.EXCEPTION, e);
             }
         }
         LinkedList<DspConsensusResult> remainingConfirmedTransactions = new LinkedList<>();
@@ -139,6 +142,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error(BaseNodeMessages.EXCEPTION, e);
             }
         }
         LinkedList<TccInfo> remainingConfirmedTransactions = new LinkedList<>();
@@ -195,11 +200,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         } else {
             DspConsensusResult waitingDspConsensusResult = waitingDspConsensusResults.peek();
             if (waitingDspConsensusResult != null) {
-                synchronized (missingIndexesLock) {
-                    missingIndexesLock.notifyAll();
-                }
                 if (waitingDspConsensusResult.getIndex() == dspConsensusResult.getIndex() + 1) {
                     setDspcToTrue(waitingDspConsensusResults.poll());
+                } else {
+                    synchronized (missingIndexesLock) {
+                        missingIndexesLock.notifyAll();
+                    }
                 }
             }
             return true;
@@ -210,59 +216,62 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 synchronized (missingIndexesLock) {
-                    missingIndexesLock.wait();
+                    missingIndexesLock.wait(1000);
                 }
                 DspConsensusResult firstWaitingDcr = waitingDspConsensusResults.peek();
                 while (firstWaitingDcr != null && !waitingDspConsensusResults.isEmpty()) {
+                    waitForResend(firstWaitingDcr);
                     firstWaitingDcr = monitorRangeAndRequestMissingIndex(firstWaitingDcr);
                 }
             } catch (InterruptedException e) {
+                log.error("BaseNodeConfirmationService::handleMissingIndexes - Was Interrupted");
                 Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error(BaseNodeMessages.EXCEPTION, e);
             }
         }
     }
 
     private DspConsensusResult monitorRangeAndRequestMissingIndex(DspConsensusResult firstWaitingDcr) throws InterruptedException {
-        if (isRangeValidForResend(firstWaitingDcr)) {
-            DspConsensusResult dspConsensusResult = waitingDspConsensusResults.peek();
-            if (dspConsensusResult != null && dspConsensusResult.getIndex() == firstWaitingDcr.getIndex()) {
-                long firstMissedIndex = transactionIndexService.getLastTransactionIndexData().getIndex() + 1;
-                long inRangeLastMissedIndex = firstWaitingDcr.getIndex() - 1;
-                if (firstMissedIndex <= inRangeLastMissedIndex) {
-                    NodeResendDcrData nodeResendDcrData = new NodeResendDcrData(networkService.getNetworkNodeData().getNodeHash(),
-                            networkService.getNetworkNodeData().getNodeType(), firstMissedIndex, inRangeLastMissedIndex);
-                    sender.send(nodeResendDcrData, networkService.getRecoveryServer().getReceivingFullAddress());
-                    resendDcrCounter++;
-                }
-            } else {
-                firstWaitingDcr = dspConsensusResult;
-                resendDcrCounter = 0;
+        DspConsensusResult dspConsensusResult = waitingDspConsensusResults.peek();
+        if (dspConsensusResult != null && dspConsensusResult.getIndex() == firstWaitingDcr.getIndex()) {
+            long firstMissedIndex = transactionIndexService.getLastTransactionIndexData().getIndex() + 1;
+            long inRangeLastMissedIndex = firstWaitingDcr.getIndex() - 1;
+            if (firstMissedIndex <= inRangeLastMissedIndex) {
+                NodeResendDcrData nodeResendDcrData = new NodeResendDcrData(networkService.getNetworkNodeData().getNodeHash(),
+                        networkService.getNetworkNodeData().getNodeType(), firstMissedIndex, inRangeLastMissedIndex);
+                log.info("Sending Resend DCR first index: {} last index: {}, to: {}",
+                        firstMissedIndex, inRangeLastMissedIndex, networkService.getRecoveryServer().getReceivingFullAddress());
+                sender.send(nodeResendDcrData, networkService.getRecoveryServer().getReceivingFullAddress());
+                resendDcrCounter++;
             }
+        } else {
+            firstWaitingDcr = dspConsensusResult;
+            resendDcrCounter = 0;
         }
         return firstWaitingDcr;
     }
 
-    private boolean isRangeValidForResend(DspConsensusResult firstWaitingDcr) throws InterruptedException {
+    private void waitForResend(DspConsensusResult firstWaitingDcr) throws InterruptedException {
         long randomWaitingTimeAcrossNodes = (long) (Math.random() * 5000) + 3000;
         Instant waitingInitialTime = Instant.now();
-        Instant waitingCurrentTime = waitingInitialTime;
-        Instant waitingFinalTime = waitingInitialTime.plusMillis(randomWaitingTimeAcrossNodes);
+        boolean doneWaiting = false;
+        long timeSpentWaiting = 0;
         long lastKnownIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
         DspConsensusResult dspConsensusResult = waitingDspConsensusResults.peek();
-        while (waitingFinalTime.isAfter(waitingCurrentTime) && dspConsensusResult != null &&
+        while (!doneWaiting && dspConsensusResult != null &&
                 firstWaitingDcr.getIndex() == dspConsensusResult.getIndex()) {
             if (lastKnownIndex == transactionIndexService.getLastTransactionIndexData().getIndex()) {
                 synchronized (missingIndexesLock) {
-                    missingIndexesLock.wait(randomWaitingTimeAcrossNodes -
-                            (waitingCurrentTime.toEpochMilli() - waitingInitialTime.toEpochMilli()));
+                    missingIndexesLock.wait(randomWaitingTimeAcrossNodes - timeSpentWaiting);
                 }
-                waitingCurrentTime = Instant.now();
+                timeSpentWaiting = Instant.now().toEpochMilli() - waitingInitialTime.toEpochMilli();
+                doneWaiting = randomWaitingTimeAcrossNodes <= timeSpentWaiting;
             } else {
-                return false;
+                return;
             }
             dspConsensusResult = waitingDspConsensusResults.peek();
         }
-        return true;
     }
 
     private void processConfirmedTransaction(TransactionData transactionData) {
