@@ -37,7 +37,7 @@ public class NetworkService extends BaseNodeNetworkService {
         ));
         addListToSubscription(dspNodesToConnect);
 
-        handleConnectedSingleNodeChange(newNetworkData, NodeType.FinancialServer, NodeType.ZeroSpendServer);
+        handleConnectedSingleNodeChange(newNetworkData, NodeType.FinancialServer);
 
         setNetworkData(newNetworkData);
     }

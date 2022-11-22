@@ -39,8 +39,8 @@ public class NetworkService extends BaseNodeNetworkService {
         dspNodesToConnect.removeIf(dspNode -> dspNode.equals(networkNodeData));
         addListToSubscription(dspNodesToConnect);
 
-        handleConnectedSingleNodeChange(newNetworkData, NodeType.ZeroSpendServer, NodeType.DspNode);
-        handleConnectedSingleNodeChange(newNetworkData, NodeType.FinancialServer, NodeType.DspNode);
+        handleConnectedSingleNodeChange(newNetworkData, NodeType.ZeroSpendServer);
+        handleConnectedSingleNodeChange(newNetworkData, NodeType.FinancialServer);
 
         setNetworkData(newNetworkData);
     }

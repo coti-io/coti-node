@@ -45,7 +45,7 @@ public interface INetworkService {
 
     void handleConnectedDspNodesChange(List<NetworkNodeData> connectedDspNodes, Map<Hash, NetworkNodeData> newDspNodeMap, NodeType nodeType);
 
-    void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType, NodeType connectingNodeType);
+    void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType);
 
     void setNodeManagerPropagationAddress(String nodeManagerPropagationAddress);
 

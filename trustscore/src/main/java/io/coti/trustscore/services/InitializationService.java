@@ -51,6 +51,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
             networkService.setRecoveryServer(zerospendNetworkNodeData);
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
+            communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress(), NodeType.ZeroSpendServer);
             networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
             if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
                 networkService.addListToSubscription(new ArrayList<>(Collections.singletonList(networkService.getSingleNodeData(NodeType.FinancialServer))));

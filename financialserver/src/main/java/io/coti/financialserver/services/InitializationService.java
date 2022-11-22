@@ -62,7 +62,7 @@ public class InitializationService extends BaseNodeInitializationService {
             networkService.setRecoveryServer(zerospendNetworkNodeData);
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
-
+            communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress(), NodeType.ZeroSpendServer);
             nodeFeeTypeList.addAll(Arrays.asList(NodeFeeType.TOKEN_MINTING_FEE, NodeFeeType.TOKEN_GENERATION_FEE));
             super.initServices();
 

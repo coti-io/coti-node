@@ -14,4 +14,5 @@ public class BaseNodeMessages {
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
     public static final String INVALID_NODE_IP_VERSION = "Invalid node IP version";
+    public static final String EXCEPTION = "Exception: ";
 }
