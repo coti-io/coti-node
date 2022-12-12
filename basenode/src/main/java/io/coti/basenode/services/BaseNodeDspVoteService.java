@@ -2,10 +2,9 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.DspConsensusCrypto;
-import io.coti.basenode.data.DspConsensusResult;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.DspConsensusResultException;
+import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
@@ -15,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,6 +34,8 @@ public class BaseNodeDspVoteService implements IDspVoteService {
     private ITransactionPropagationCheckService transactionPropagationCheckService;
     @Autowired
     private Transactions transactions;
+    @Autowired
+    private TransactionIndexes transactionIndexes;
     private Map<Hash, DspConsensusResult> postponedDspConsensusResultsMap;
 
     public void init() {
@@ -85,5 +87,30 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         return postponedDspConsensusResultsMap.get(transactionHash);
     }
 
-
+    @Override
+    public void handleDspConsensusResultResend(NodeResendDcrData nodeResendDcrData) {
+        try {
+            log.info("Received request for missing dsp consensus results for node: {}", nodeResendDcrData.getNodeHash());
+            long startIndex = nodeResendDcrData.getFirstMissedIndex();
+            long endIndex = nodeResendDcrData.getInRangeLastMissedIndex();
+            while (startIndex <= endIndex) {
+                TransactionIndexData transactionIndexData = transactionIndexes.getByHash(new Hash(startIndex));
+                if (transactionIndexData == null) {
+                    log.error("Error, there is no TransactionIndexData for index: {}", startIndex);
+                    return;
+                }
+                TransactionData transaction = transactions.getByHash(transactionIndexData.getTransactionHash());
+                if (transaction != null && transaction.getDspConsensusResult() != null) {
+                    propagationPublisher.propagate(transaction.getDspConsensusResult(),
+                            Collections.singletonList(nodeResendDcrData.getNodeType()));
+                } else {
+                    log.error("Error, there is no DSP Consensus Result for transaction: {}", transactionIndexData.getTransactionHash());
+                    return;
+                }
+                startIndex++;
+            }
+        } catch (Exception e) {
+            log.error("Error occurred in {}: {}", e.getClass().getName(), e.getMessage());
+        }
+    }
 }

@@ -21,7 +21,9 @@ public interface INetworkService {
 
     String getRecoveryServerAddress();
 
-    void setRecoveryServerAddress(String recoveryServerAddress);
+    NetworkNodeData getRecoveryServer();
+
+    void setRecoveryServer(NetworkNodeData recoveryServer);
 
     Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType);
 
@@ -43,7 +45,7 @@ public interface INetworkService {
 
     void handleConnectedDspNodesChange(List<NetworkNodeData> connectedDspNodes, Map<Hash, NetworkNodeData> newDspNodeMap, NodeType nodeType);
 
-    void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType, NodeType connectingNodeType);
+    void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType);
 
     void setNodeManagerPropagationAddress(String nodeManagerPropagationAddress);
 
@@ -72,4 +74,6 @@ public interface INetworkService {
     List<Hash> getNodesHashes(NodeType nodeType);
 
     void setNetworkLastKnownNodeMap(HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap);
+
+    Map<Hash, NetworkNodeData> getNetworkLastKnownNodeMap();
 }

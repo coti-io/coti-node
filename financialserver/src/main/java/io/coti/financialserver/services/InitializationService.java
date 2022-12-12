@@ -59,10 +59,10 @@ public class InitializationService extends BaseNodeInitializationService {
                 log.error("No zerospend server exists in the network got from the node manager. Exiting from the application");
                 System.exit(SpringApplication.exit(applicationContext));
             }
-            networkService.setRecoveryServerAddress(zerospendNetworkNodeData.getHttpFullAddress());
+            networkService.setRecoveryServer(zerospendNetworkNodeData);
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
-
+            communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress(), NodeType.ZeroSpendServer);
             nodeFeeTypeList.addAll(Arrays.asList(NodeFeeType.TOKEN_MINTING_FEE, NodeFeeType.TOKEN_GENERATION_FEE));
             super.initServices();
 

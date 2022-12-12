@@ -1,5 +1,7 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.constants.BaseNodeMessages;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
@@ -10,9 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,21 +37,37 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private Transactions transactions;
     @Autowired
     private IEventService eventService;
-    private BlockingQueue<ConfirmationData> confirmationQueue;
-    private final Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
+    @Autowired
+    private INetworkService networkService;
+    @Autowired
+    private ISender sender;
+    private PriorityBlockingQueue<DspConsensusResult> dcrConfirmationQueue;
+    private PriorityBlockingQueue<TccInfo> tccConfirmationQueue;
+    private PriorityBlockingQueue<DspConsensusResult> waitingDspConsensusResults;
     private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
     private final AtomicLong totalConfirmed = new AtomicLong(0);
     private final AtomicLong trustChainConfirmed = new AtomicLong(0);
     private final AtomicLong dspConfirmed = new AtomicLong(0);
-    private Thread confirmedTransactionsThread;
-    private final Object initialConfirmationLock = new Object();
+    private Thread dcrMessageHandlerThread;
+    private Thread tccInfoMessageHandlerThread;
+    private Thread missingIndexesHandler;
+    private final Object initialTccConfirmationLock = new Object();
+    private final Object missingIndexesLock = new Object();
     private final AtomicBoolean initialConfirmationStarted = new AtomicBoolean(false);
-    private final AtomicBoolean initialConfirmationFinished = new AtomicBoolean(false);
+    private final AtomicBoolean initialTccConfirmationFinished = new AtomicBoolean(false);
+    private int resendDcrCounter;
 
     public void init() {
-        confirmationQueue = new LinkedBlockingQueue<>();
-        confirmedTransactionsThread = new Thread(this::updateConfirmedTransactions, "Confirmation");
-        confirmedTransactionsThread.start();
+        dcrConfirmationQueue = new PriorityBlockingQueue<>(11, Comparator.comparingLong(DspConsensusResult::getIndex));
+        tccConfirmationQueue = new PriorityBlockingQueue<>(11, Comparator.comparing(TccInfo::getTrustChainConsensusTime));
+        waitingDspConsensusResults = new PriorityBlockingQueue<>(11, Comparator.comparingLong(DspConsensusResult::getIndex));
+        resendDcrCounter = 0;
+        missingIndexesHandler = new Thread(this::handleMissingIndexes, "Missing Indexes");
+        missingIndexesHandler.start();
+        dcrMessageHandlerThread = new Thread(this::updateConfirmedDcrMessages, "Confirmation DCR");
+        dcrMessageHandlerThread.start();
+        tccInfoMessageHandlerThread = new Thread(this::updateConfirmedTccInfoMessages, "Confirmation TCC");
+        tccInfoMessageHandlerThread.start();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -93,52 +110,78 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         }
     }
 
-    private void updateConfirmedTransactions() {
+    private void updateConfirmedDcrMessages() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                ConfirmationData confirmationData = confirmationQueue.take();
-                updateConfirmedTransactionHandler(confirmationData);
-                if (initialConfirmationStarted.get() && confirmationQueue.isEmpty() && !initialConfirmationFinished.get()) {
-                    synchronized (initialConfirmationLock) {
-                        initialConfirmationFinished.set(true);
-                        initialConfirmationLock.notifyAll();
+                DspConsensusResult dspConsensusResult = dcrConfirmationQueue.take();
+                handleDspConsensusResultUpdate(dspConsensusResult);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error(BaseNodeMessages.EXCEPTION, e);
+            }
+        }
+        LinkedList<DspConsensusResult> remainingConfirmedTransactions = new LinkedList<>();
+        dcrConfirmationQueue.drainTo(remainingConfirmedTransactions);
+        if (!remainingConfirmedTransactions.isEmpty()) {
+            log.info("Please wait to process {} remaining DSP Consensus Results messages.", remainingConfirmedTransactions.size());
+            remainingConfirmedTransactions.forEach(this::handleDspConsensusResultUpdate);
+        }
+    }
+
+    private void updateConfirmedTccInfoMessages() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                TccInfo tccInfo = tccConfirmationQueue.take();
+                handleTccInfoUpdate(tccInfo);
+                if (initialConfirmationStarted.get() && tccConfirmationQueue.isEmpty() && !initialTccConfirmationFinished.get()) {
+                    synchronized (initialTccConfirmationLock) {
+                        initialTccConfirmationFinished.set(true);
+                        initialTccConfirmationLock.notifyAll();
                     }
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error(BaseNodeMessages.EXCEPTION, e);
             }
         }
-        LinkedList<ConfirmationData> remainingConfirmedTransactions = new LinkedList<>();
-        confirmationQueue.drainTo(remainingConfirmedTransactions);
+        LinkedList<TccInfo> remainingConfirmedTransactions = new LinkedList<>();
+        tccConfirmationQueue.drainTo(remainingConfirmedTransactions);
         if (!remainingConfirmedTransactions.isEmpty()) {
-            log.info("Please wait to process {} remaining confirmed transaction(s)", remainingConfirmedTransactions.size());
-            remainingConfirmedTransactions.forEach(this::updateConfirmedTransactionHandler);
+            log.info("Please wait to process {} remaining TCC Info messages.", remainingConfirmedTransactions.size());
+            remainingConfirmedTransactions.forEach(this::handleTccInfoUpdate);
         }
     }
 
-    private void updateConfirmedTransactionHandler(ConfirmationData confirmationData) {
-        transactions.lockAndGetByHash(confirmationData.getHash(), transactionData -> {
-            if (confirmationData instanceof TccInfo) {
-                transactionData.setTrustChainConsensus(true);
-                transactionData.setTrustChainConsensusTime(((TccInfo) confirmationData).getTrustChainConsensusTime());
-                transactionData.setTrustChainTrustScore(((TccInfo) confirmationData).getTrustChainTrustScore());
-                trustChainConfirmed.incrementAndGet();
-            } else if (confirmationData instanceof DspConsensusResult) {
-                transactionData.setDspConsensusResult((DspConsensusResult) confirmationData);
-                if (!insertNewTransactionIndex(transactionData)) {
-                    return;
-                }
-                if (transactionHelper.isDspConfirmed(transactionData)) {
-                    continueHandleDSPConfirmedTransaction(transactionData);
-                    dspConfirmed.incrementAndGet();
-                }
+    private void handleTccInfoUpdate(TccInfo tccInfo) {
+        transactions.lockAndGetByHash(tccInfo.getHash(), transactionData -> {
+            transactionData.setTrustChainConsensus(true);
+            transactionData.setTrustChainConsensusTime(tccInfo.getTrustChainConsensusTime());
+            transactionData.setTrustChainTrustScore(tccInfo.getTrustChainTrustScore());
+            trustChainConfirmed.incrementAndGet();
+            if (transactionHelper.isConfirmed(transactionData)) {
+                processConfirmedTransaction(transactionData);
+            }
+            transactions.put(transactionData);
+        });
+    }
+
+    private void handleDspConsensusResultUpdate(DspConsensusResult dspConsensusResult) {
+        transactions.lockAndGetByHash(dspConsensusResult.getHash(), transactionData -> {
+            transactionData.setDspConsensusResult(dspConsensusResult);
+            if (!insertNewTransactionIndex(transactionData)) {
+                return;
+            }
+            if (transactionHelper.isDspConfirmed(transactionData)) {
+                continueHandleDSPConfirmedTransaction(transactionData);
+                dspConfirmed.incrementAndGet();
             }
             if (transactionHelper.isConfirmed(transactionData)) {
                 processConfirmedTransaction(transactionData);
             }
             transactions.put(transactionData);
         });
-
     }
 
     protected boolean insertNewTransactionIndex(TransactionData transactionData) {
@@ -149,16 +192,85 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         Boolean isNewTransactionIndexInserted = optionalInsertNewTransactionIndex.get();
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
         if (Boolean.FALSE.equals(isNewTransactionIndexInserted)) {
-            waitingDspConsensusResults.put(dspConsensusResult.getIndex(), dspConsensusResult);
+            waitingDspConsensusResults.put(dspConsensusResult);
+            synchronized (missingIndexesLock) {
+                missingIndexesLock.notifyAll();
+            }
             return false;
         } else {
-            long index = dspConsensusResult.getIndex() + 1;
-            while (waitingDspConsensusResults.containsKey(index)) {
-                setDspcToTrue(waitingDspConsensusResults.get(index));
-                waitingDspConsensusResults.remove(index);
-                index++;
+            DspConsensusResult waitingDspConsensusResult = waitingDspConsensusResults.peek();
+            if (waitingDspConsensusResult != null) {
+                if (waitingDspConsensusResult.getIndex() == dspConsensusResult.getIndex() + 1) {
+                    setDspcToTrue(waitingDspConsensusResults.poll());
+                } else {
+                    synchronized (missingIndexesLock) {
+                        missingIndexesLock.notifyAll();
+                    }
+                }
             }
             return true;
+        }
+    }
+
+    private void handleMissingIndexes() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                synchronized (missingIndexesLock) {
+                    missingIndexesLock.wait(1000);
+                }
+                DspConsensusResult firstWaitingDcr = waitingDspConsensusResults.peek();
+                while (firstWaitingDcr != null && !waitingDspConsensusResults.isEmpty()) {
+                    waitForResend(firstWaitingDcr);
+                    firstWaitingDcr = monitorRangeAndRequestMissingIndex(firstWaitingDcr);
+                }
+            } catch (InterruptedException e) {
+                log.error("BaseNodeConfirmationService::handleMissingIndexes - Was Interrupted");
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.error(BaseNodeMessages.EXCEPTION, e);
+            }
+        }
+    }
+
+    private DspConsensusResult monitorRangeAndRequestMissingIndex(DspConsensusResult firstWaitingDcr) throws InterruptedException {
+        DspConsensusResult dspConsensusResult = waitingDspConsensusResults.peek();
+        if (dspConsensusResult != null && dspConsensusResult.getIndex() == firstWaitingDcr.getIndex()) {
+            long firstMissedIndex = transactionIndexService.getLastTransactionIndexData().getIndex() + 1;
+            long inRangeLastMissedIndex = firstWaitingDcr.getIndex() - 1;
+            if (firstMissedIndex <= inRangeLastMissedIndex) {
+                NodeResendDcrData nodeResendDcrData = new NodeResendDcrData(networkService.getNetworkNodeData().getNodeHash(),
+                        networkService.getNetworkNodeData().getNodeType(), firstMissedIndex, inRangeLastMissedIndex);
+                log.info("Sending Resend DCR first index: {} last index: {}, to: {}",
+                        firstMissedIndex, inRangeLastMissedIndex, networkService.getRecoveryServer().getReceivingFullAddress());
+                sender.send(nodeResendDcrData, networkService.getRecoveryServer().getReceivingFullAddress());
+                resendDcrCounter++;
+            }
+        } else {
+            firstWaitingDcr = dspConsensusResult;
+            resendDcrCounter = 0;
+        }
+        return firstWaitingDcr;
+    }
+
+    private void waitForResend(DspConsensusResult firstWaitingDcr) throws InterruptedException {
+        long randomWaitingTimeAcrossNodes = (long) (Math.random() * 5000) + 3000;
+        Instant waitingInitialTime = Instant.now();
+        boolean doneWaiting = false;
+        long timeSpentWaiting = 0;
+        long lastKnownIndex = transactionIndexService.getLastTransactionIndexData().getIndex();
+        DspConsensusResult dspConsensusResult = waitingDspConsensusResults.peek();
+        while (!doneWaiting && dspConsensusResult != null &&
+                firstWaitingDcr.getIndex() == dspConsensusResult.getIndex()) {
+            if (lastKnownIndex == transactionIndexService.getLastTransactionIndexData().getIndex()) {
+                synchronized (missingIndexesLock) {
+                    missingIndexesLock.wait(randomWaitingTimeAcrossNodes - timeSpentWaiting);
+                }
+                timeSpentWaiting = Instant.now().toEpochMilli() - waitingInitialTime.toEpochMilli();
+                doneWaiting = randomWaitingTimeAcrossNodes <= timeSpentWaiting;
+            } else {
+                return;
+            }
+            dspConsensusResult = waitingDspConsensusResults.peek();
         }
     }
 
@@ -282,20 +394,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Override
     public void setTccToTrue(TccInfo tccInfo) {
-        try {
-            confirmationQueue.put(tccInfo);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        tccConfirmationQueue.put(tccInfo);
     }
 
     @Override
     public void setDspcToTrue(DspConsensusResult dspConsensusResult) {
-        try {
-            confirmationQueue.put(dspConsensusResult);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        dcrConfirmationQueue.put(dspConsensusResult);
     }
 
     @Override
@@ -315,9 +419,13 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
-        confirmedTransactionsThread.interrupt();
+        missingIndexesHandler.interrupt();
+        dcrMessageHandlerThread.interrupt();
+        tccInfoMessageHandlerThread.interrupt();
         try {
-            confirmedTransactionsThread.join();
+            missingIndexesHandler.join();
+            dcrMessageHandlerThread.join();
+            tccInfoMessageHandlerThread.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
@@ -336,13 +444,18 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     @Override
-    public int getQueueSize() {
-        return confirmationQueue.size();
+    public int getTccConfirmationQueueSize() {
+        return tccConfirmationQueue.size();
     }
 
     @Override
-    public Object getInitialConfirmationLock() {
-        return initialConfirmationLock;
+    public int getDcrConfirmationQueueSize() {
+        return dcrConfirmationQueue.size();
+    }
+
+    @Override
+    public Object getInitialTccConfirmationLock() {
+        return initialTccConfirmationLock;
     }
 
     @Override
@@ -351,11 +464,16 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     @Override
-    public AtomicBoolean getInitialConfirmationFinished() {
-        return initialConfirmationFinished;
+    public AtomicBoolean getInitialTccConfirmationFinished() {
+        return initialTccConfirmationFinished;
     }
 
     protected void continueHandleTokenChanges(TransactionData transactionData) {
         // implemented by the sub classes
+    }
+
+    @Override
+    public int getResendDcrCounter() {
+        return resendDcrCounter;
     }
 }

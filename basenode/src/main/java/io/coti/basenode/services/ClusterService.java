@@ -1,10 +1,7 @@
 package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
-import io.coti.basenode.data.Event;
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TccInfo;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -43,18 +42,18 @@ public class ClusterService implements IClusterService {
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private Thread trustChainConfirmedTransactionsThread;
     private boolean initialConfirmation = true;
-    private Object initialConfirmationLock;
+    private BlockingQueue<TrustChainConfirmationResult> trustChainConfirmationResults;
+
 
     @PostConstruct
     public void init() {
-        initialConfirmationLock = confirmationService.getInitialConfirmationLock();
         trustChainConfirmationCluster = new ConcurrentHashMap<>();
         sourceSetsByTrustScore = new ArrayList<>();
         sourceMap = new HashMap<>();
         for (int i = 0; i <= 100; i++) {
             sourceSetsByTrustScore.add(Sets.newHashSet());
         }
-
+        trustChainConfirmationResults = new ArrayBlockingQueue<>(11);
         trustChainConfirmedTransactionsThread = new Thread(this::checkForTrustChainConfirmedTransaction, "CLUSTER-SERVICE TCC CHECK");
         log.info("{} is up", this.getClass().getSimpleName());
     }
@@ -94,24 +93,36 @@ public class ClusterService implements IClusterService {
 
     public void checkForTrustChainConfirmedTransaction() {
         while (!Thread.currentThread().isInterrupted()) {
+            LinkedList<TransactionData> topologicalOrderedGraph;
+            Map<Hash, Double> transactionTrustChainTrustScoreMap;
+
             trustChainConfirmationService.init(trustChainConfirmationCluster);
+            topologicalOrderedGraph = trustChainConfirmationService.getTopologicalOrderedGraph();
             List<TccInfo> transactionConsensusConfirmed = trustChainConfirmationService.getTrustChainConfirmedTransactions();
+            transactionTrustChainTrustScoreMap = trustChainConfirmationService.getTransactionTrustChainTrustScoreMap();
             if (initialConfirmation) {
                 if (transactionConsensusConfirmed.isEmpty()) {
-                    synchronized (initialConfirmationLock) {
-                        confirmationService.getInitialConfirmationFinished().set(true);
-                        initialConfirmationLock.notifyAll();
+                    synchronized (confirmationService.getInitialTccConfirmationLock()) {
+                        confirmationService.getInitialTccConfirmationFinished().set(true);
+                        confirmationService.getInitialTccConfirmationLock().notifyAll();
                     }
                 } else {
                     confirmationService.getInitialConfirmationStarted().set(true);
                 }
             }
             transactionConsensusConfirmed.forEach(tccInfo -> {
-                trustChainConfirmationCluster.remove(tccInfo.getHash());
+                TransactionData transactionData = trustChainConfirmationCluster.remove(tccInfo.getHash());
+                transactionTrustChainTrustScoreMap.remove(tccInfo.getHash());
+                if (transactionData != null) {
+                    topologicalOrderedGraph.remove(transactionData);
+                }
                 confirmationService.setTccToTrue(tccInfo);
                 log.debug("TCC has been reached for transaction {}!!", tccInfo.getHash());
             });
             initialConfirmation = false;
+
+            trustChainConfirmationResults.clear();
+            trustChainConfirmationResults.add(new TrustChainConfirmationResult(transactionTrustChainTrustScoreMap, topologicalOrderedGraph));
             try {
                 Thread.sleep(TCC_CONFIRMATION_INTERVAL);
             } catch (InterruptedException e) {
@@ -311,5 +322,10 @@ public class ClusterService implements IClusterService {
     @Override
     public double getRuntimeTrustChainTrustScore(Hash transactionHash) {
         return Optional.ofNullable(trustChainConfirmationCluster.get(transactionHash)).map(TransactionData::getTrustChainTrustScore).orElse((double) 0);
+    }
+
+    @Override
+    public BlockingQueue<TrustChainConfirmationResult> getTrustChainConfirmationResults() {
+        return trustChainConfirmationResults;
     }
 }

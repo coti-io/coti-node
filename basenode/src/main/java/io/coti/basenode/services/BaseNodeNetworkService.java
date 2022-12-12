@@ -55,7 +55,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 @Service
 public class BaseNodeNetworkService implements INetworkService {
 
-    protected String recoveryServerAddress;
+    protected NetworkNodeData recoveryServer;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
     @Value("${node.manager.public.key:}")
@@ -168,11 +168,15 @@ public class BaseNodeNetworkService implements INetworkService {
     }
 
     public String getRecoveryServerAddress() {
-        return recoveryServerAddress;
+        return recoveryServer.getHttpFullAddress();
     }
 
-    public void setRecoveryServerAddress(String recoveryServerAddress) {
-        this.recoveryServerAddress = recoveryServerAddress;
+    public NetworkNodeData getRecoveryServer() {
+        return recoveryServer;
+    }
+
+    public void setRecoveryServer(NetworkNodeData recoveryServer) {
+        this.recoveryServer = recoveryServer;
     }
 
     public Map<Hash, NetworkNodeData> getMapFromFactory(NodeType nodeType) {
@@ -418,8 +422,9 @@ public class BaseNodeNetworkService implements INetworkService {
                     communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
                     communicationService.addSender(newDspNode.getReceivingFullAddress(), NodeType.DspNode);
                 }
-                if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress()) && !newDspNode.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
-                    recoveryServerAddress = newDspNode.getHttpFullAddress();
+                if (recoveryServer != null && recoveryServer.getHttpFullAddress().equals(dspNode.getHttpFullAddress())
+                        && !newDspNode.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
+                    recoveryServer = newDspNode;
                 }
                 dspNode.clone(newDspNode);
             }
@@ -433,23 +438,20 @@ public class BaseNodeNetworkService implements INetworkService {
         if (nodeType.equals(NodeType.FullNode)) {
             communicationService.removeSender(dspNode.getReceivingFullAddress(), NodeType.DspNode);
         }
-        if (recoveryServerAddress != null && recoveryServerAddress.equals(dspNode.getHttpFullAddress())) {
-            recoveryServerAddress = null;
+        if (recoveryServer != null && recoveryServer.getHttpFullAddress().equals(dspNode.getHttpFullAddress())) {
+            recoveryServer = null;
         }
     }
 
     @Override
-    public void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType, NodeType connectingNodeType) {
+    public void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType) {
         NetworkNodeData newSingleNodeData = newNetworkData.getSingleNodeNetworkDataMap().get(singleNodeType);
         NetworkNodeData currentSingleNodeData = getSingleNodeData(singleNodeType);
         if (newSingleNodeData != null) {
             if (newSingleNodeData.getPropagationPort() != null) {
                 handleSingleNodeWithDifferentPropagationPort(singleNodeType, newSingleNodeData, currentSingleNodeData);
             }
-            handleConnectedZeroSpendServer(singleNodeType, connectingNodeType, newSingleNodeData, currentSingleNodeData);
-            if (recoveryServerAddress != null && (currentSingleNodeData == null || recoveryServerAddress.equals(currentSingleNodeData.getHttpFullAddress()))) {
-                recoveryServerAddress = newSingleNodeData.getHttpFullAddress();
-            }
+            handleConnectedZeroSpendServer(singleNodeType, newSingleNodeData, currentSingleNodeData);
             setSingleNodeData(singleNodeType, newSingleNodeData);
         }
     }
@@ -465,15 +467,19 @@ public class BaseNodeNetworkService implements INetworkService {
         }
     }
 
-    private void handleConnectedZeroSpendServer(NodeType singleNodeType, NodeType connectingNodeType, NetworkNodeData newSingleNodeData, NetworkNodeData currentSingleNodeData) {
-        if (singleNodeType.equals(NodeType.ZeroSpendServer) && connectingNodeType.equals(NodeType.DspNode) && newSingleNodeData.getReceivingPort() != null) {
-            if (currentSingleNodeData != null && currentSingleNodeData.getReceivingPort() != null &&
-                    !(newSingleNodeData.getReceivingPort().equals(currentSingleNodeData.getReceivingPort()) && newSingleNodeData.getAddress().equals(currentSingleNodeData.getAddress()))) {
-                communicationService.removeSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
-                communicationService.addSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
-            }
-            if (currentSingleNodeData == null) {
-                communicationService.addSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
+    private void handleConnectedZeroSpendServer(NodeType singleNodeType, NetworkNodeData newSingleNodeData, NetworkNodeData currentSingleNodeData) {
+        if (singleNodeType.equals(NodeType.ZeroSpendServer)) {
+            if (newSingleNodeData.getReceivingPort() != null) {
+                recoveryServer = newSingleNodeData;
+                if (currentSingleNodeData == null) {
+                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
+                } else if (!(newSingleNodeData.getReceivingPort().equals(currentSingleNodeData.getReceivingPort()) ||
+                        newSingleNodeData.getAddress().equals(currentSingleNodeData.getAddress()))) {
+                    communicationService.removeSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
+                    communicationService.addSender(newSingleNodeData.getReceivingFullAddress(), singleNodeType);
+                }
+            } else {
+                log.error("ReceivingPort is missing in ZeroSpendServer network data.");
             }
         }
     }
@@ -577,4 +583,8 @@ public class BaseNodeNetworkService implements INetworkService {
         this.networkLastKnownNodeMap = networkLastKnownNodeMap;
     }
 
+    @Override
+    public Map<Hash, NetworkNodeData> getNetworkLastKnownNodeMap() {
+        return Collections.unmodifiableMap(networkLastKnownNodeMap);
+    }
 }
