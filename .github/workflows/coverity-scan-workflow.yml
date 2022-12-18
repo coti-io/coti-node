@@ -27,10 +27,11 @@ jobs:
           fetch-depth: 0
 
       - name: Build with cov-build
-        run: cov-build --dir cov-int mvn initialize && mvn clean compile && mvn package -DskipTests
+        run: mvn initialize && cov-build --dir cov-int mvn clean package -DskipTests
 
       - name: Submit the result to Coverity Scan
         run: |
+          tail cov-int/build-log.txt
           tar czvf cov-int.tar.gz cov-int
           curl \
             --form token=$TOKEN \
