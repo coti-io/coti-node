@@ -2,8 +2,10 @@ package io.coti.storagenode.http;
 
 import io.coti.basenode.http.Response;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class AddEntityJsonResponse extends Response {
     private String details;
 

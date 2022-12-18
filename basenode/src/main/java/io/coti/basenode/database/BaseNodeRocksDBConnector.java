@@ -346,8 +346,8 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
 
     @Override
     public boolean putBatch(WriteBatch writeBatch) {
-        try {
-            db.write(new WriteOptions(), writeBatch);
+        try (WriteOptions writeOptions = new WriteOptions()) {
+            db.write(writeOptions, writeBatch);
             return true;
         } catch (RocksDBException e) {
             log.error("Error at putting by batch to db", e);
