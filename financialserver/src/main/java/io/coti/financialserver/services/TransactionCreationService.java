@@ -69,9 +69,6 @@ public class TransactionCreationService {
         //     transactionCryptoCreator.signBaseTransactions(chargebackTransaction)
         transactionCrypto.signMessage(chargebackTransaction);
 
-        DspConsensusResult dspConsensusResult = new DspConsensusResult(chargebackTransaction.getHash());
-        dspConsensusResult.setDspConsensus(true);
-
         transactionHelper.attachTransactionToCluster(chargebackTransaction);
         transactionIndexService.insertNewTransactionIndex(chargebackTransaction);
 
