@@ -587,4 +587,9 @@ public class BaseNodeNetworkService implements INetworkService {
     public Map<Hash, NetworkNodeData> getNetworkLastKnownNodeMap() {
         return Collections.unmodifiableMap(networkLastKnownNodeMap);
     }
+
+    @Override
+    public boolean isConnectedToRecovery() {
+        return isZeroSpendServerInNetwork();
+    }
 }

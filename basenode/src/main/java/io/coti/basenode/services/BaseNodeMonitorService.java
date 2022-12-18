@@ -61,7 +61,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     private IDatabaseConnector databaseConnector;
     @Autowired
     private IDBRecoveryService dbRecoveryService;
-    @Value("${allow.transaction.monitoring}")
+    @Value("${allow.transaction.monitoring:false}")
     private boolean allowTransactionMonitoring;
     @Value("${detailed.logs:false}")
     private boolean allowTransactionMonitoringDetailed;
@@ -116,9 +116,13 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Value("${webSocketMessages.queueLengthQueue.threshold.critical:1000}")
     private int webSocketMessagesQueueLengthCritical;
     @Value("${confirmation.queueSize.threshold.warning:100}")
-    private int confirmationQueueSizeWarning;
+    private int dcrConfirmationQueueSizeWarning;
     @Value("${confirmation.queueSize.threshold.critical:0}")
-    private int confirmationQueueSizeCritical;
+    private int dcrConfirmationQueueSizeCritical;
+    @Value("${tcc.confirmation.queueSize.threshold.warning:100}")
+    private int tccConfirmationQueueSizeWarning;
+    @Value("${tcc.confirmation.queueSize.threshold.critical:0}")
+    private int tccConfirmationQueueSizeCritical;
     @Value("${percentage.usedHeapMemory.threshold.warning:95}")
     private int percentageUsedHeapMemoryWarning;
     @Value("${percentage.usedHeapMemory.threshold.critical:98}")
@@ -207,105 +211,75 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @PostConstruct
     private void initHealthMetrics() {
-        HealthMetric.TOTAL_TRANSACTIONS.monitorService = monitorService;
+        for (HealthMetric hm : HealthMetric.values()) {
+            hm.monitorService = this;
+        }
         HealthMetric.TOTAL_TRANSACTIONS.transactionHelper = transactionHelper;
 
-        HealthMetric.SOURCES_UPPER_BOUND.monitorService = monitorService;
         HealthMetric.SOURCES_UPPER_BOUND.clusterService = clusterService;
 
-        HealthMetric.SOURCES_LOWER_BOUND.monitorService = monitorService;
         HealthMetric.SOURCES_LOWER_BOUND.clusterService = clusterService;
 
-        HealthMetric.INDEX.monitorService = monitorService;
         HealthMetric.INDEX.transactionHelper = transactionHelper;
         HealthMetric.INDEX.transactionIndexService = transactionIndexService;
 
-        HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED.monitorService = monitorService;
         HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED.confirmationService = confirmationService;
 
-        HealthMetric.DSP_CONFIRMED.monitorService = monitorService;
         HealthMetric.DSP_CONFIRMED.confirmationService = confirmationService;
         HealthMetric.DSP_CONFIRMED.transactionHelper = transactionHelper;
 
-        HealthMetric.TOTAL_CONFIRMED.monitorService = monitorService;
         HealthMetric.TOTAL_CONFIRMED.confirmationService = confirmationService;
 
-        HealthMetric.TRUST_CHAIN_CONFIRMED.monitorService = monitorService;
         HealthMetric.TRUST_CHAIN_CONFIRMED.trustChainConfirmationService = trustChainConfirmationService;
         HealthMetric.TRUST_CHAIN_CONFIRMED.confirmationService = confirmationService;
 
-        HealthMetric.WAITING_MISSING_TRANSACTION_INDEXES.monitorService = monitorService;
         HealthMetric.WAITING_MISSING_TRANSACTION_INDEXES.confirmationService = confirmationService;
 
-        HealthMetric.TOTAL_POSTPONED_TRANSACTIONS.monitorService = monitorService;
         HealthMetric.TOTAL_POSTPONED_TRANSACTIONS.transactionService = transactionService;
 
-        HealthMetric.PROPAGATION_QUEUE.monitorService = monitorService;
         HealthMetric.PROPAGATION_QUEUE.propagationSubscriber = propagationSubscriber;
 
-        HealthMetric.WEB_SOCKET_MESSAGES_QUEUE_LENGTH.monitorService = monitorService;
         HealthMetric.WEB_SOCKET_MESSAGES_QUEUE_LENGTH.webSocketMessageService = webSocketMessageService;
 
-        HealthMetric.CONFIRMATION_QUEUE_SIZE.monitorService = monitorService;
-        HealthMetric.CONFIRMATION_QUEUE_SIZE.confirmationService = confirmationService;
+        HealthMetric.DCR_CONFIRMATION_QUEUE_SIZE.confirmationService = confirmationService;
 
-        HealthMetric.PERCENTAGE_USED_HEAP_MEMORY.monitorService = monitorService;
+        HealthMetric.TCC_CONFIRMATION_QUEUE_SIZE.confirmationService = confirmationService;
 
-        HealthMetric.PERCENTAGE_USED_MEMORY.monitorService = monitorService;
-
-        HealthMetric.CONNECTED_TO_RECOVERY.monitorService = monitorService;
         HealthMetric.CONNECTED_TO_RECOVERY.networkService = networkService;
 
-        HealthMetric.PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE.monitorService = monitorService;
         HealthMetric.PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
 
-        HealthMetric.PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE.monitorService = monitorService;
         HealthMetric.PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
 
-        HealthMetric.PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE.monitorService = monitorService;
         HealthMetric.PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
 
-        HealthMetric.PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE.monitorService = monitorService;
         HealthMetric.PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
 
-        HealthMetric.PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE.monitorService = monitorService;
         HealthMetric.PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
 
-        HealthMetric.ZERO_MQ_RECEIVER_QUEUE_SIZE.monitorService = monitorService;
         HealthMetric.ZERO_MQ_RECEIVER_QUEUE_SIZE.receiver = receiver;
 
-        HealthMetric.PROPAGATION_PUBLISHER_QUEUE_SIZE.monitorService = monitorService;
         HealthMetric.PROPAGATION_PUBLISHER_QUEUE_SIZE.propagationPublisher = propagationPublisher;
 
-        HealthMetric.LIVE_FILES_SIZE.monitorService = monitorService;
         HealthMetric.LIVE_FILES_SIZE.databaseConnector = databaseConnector;
 
-        HealthMetric.BACKUP_HOURLY.monitorService = monitorService;
         HealthMetric.BACKUP_HOURLY.dbRecoveryService = dbRecoveryService;
 
-        HealthMetric.BACKUP_EPOCH.monitorService = monitorService;
         HealthMetric.BACKUP_EPOCH.dbRecoveryService = dbRecoveryService;
 
-        HealthMetric.BACKUP_NUMBER_OF_FILES.monitorService = monitorService;
         HealthMetric.BACKUP_NUMBER_OF_FILES.dbRecoveryService = dbRecoveryService;
         HealthMetric.BACKUP_NUMBER_OF_FILES.databaseConnector = databaseConnector;
 
-        HealthMetric.BACKUP_SIZE.monitorService = monitorService;
         HealthMetric.BACKUP_SIZE.dbRecoveryService = dbRecoveryService;
 
-        HealthMetric.BACKUP_ENTIRE_DURATION.monitorService = monitorService;
         HealthMetric.BACKUP_ENTIRE_DURATION.dbRecoveryService = dbRecoveryService;
 
-        HealthMetric.BACKUP_DURATION.monitorService = monitorService;
         HealthMetric.BACKUP_DURATION.dbRecoveryService = dbRecoveryService;
 
-        HealthMetric.BACKUP_UPLOAD_DURATION.monitorService = monitorService;
         HealthMetric.BACKUP_UPLOAD_DURATION.dbRecoveryService = dbRecoveryService;
 
-        HealthMetric.BACKUP_REMOVAL_DURATION.monitorService = monitorService;
         HealthMetric.BACKUP_REMOVAL_DURATION.dbRecoveryService = dbRecoveryService;
 
-        HealthMetric.REJECTED_TRANSACTIONS.monitorService = monitorService;
         HealthMetric.REJECTED_TRANSACTIONS.rejectedTransactions = rejectedTransactions;
 
         HealthMetric.TOTAL_TRANSACTIONS.setThresholds(totalTransactionsThresholdWarning, totalTransactionsThresholdCritical);
@@ -319,7 +293,8 @@ public class BaseNodeMonitorService implements IMonitorService {
         HealthMetric.TOTAL_POSTPONED_TRANSACTIONS.setThresholds(totalPostponedTransactionsIndexesThresholdWarning, totalPostponedTransactionsIndexesThresholdCritical);
         HealthMetric.PROPAGATION_QUEUE.setThresholds(propagationQueueThresholdWarning, propagationQueueThresholdCritical);
         HealthMetric.WEB_SOCKET_MESSAGES_QUEUE_LENGTH.setThresholds(webSocketMessagesQueueLengthWarning, webSocketMessagesQueueLengthCritical);
-        HealthMetric.CONFIRMATION_QUEUE_SIZE.setThresholds(confirmationQueueSizeWarning, confirmationQueueSizeCritical);
+        HealthMetric.DCR_CONFIRMATION_QUEUE_SIZE.setThresholds(dcrConfirmationQueueSizeWarning, dcrConfirmationQueueSizeCritical);
+        HealthMetric.TCC_CONFIRMATION_QUEUE_SIZE.setThresholds(tccConfirmationQueueSizeWarning, tccConfirmationQueueSizeCritical);
         HealthMetric.PERCENTAGE_USED_HEAP_MEMORY.setThresholds(percentageUsedHeapMemoryWarning, percentageUsedHeapMemoryCritical);
         HealthMetric.PERCENTAGE_USED_MEMORY.setThresholds(percentageUsedMemoryWarning, percentageUsedMemoryCritical);
         HealthMetric.CONNECTED_TO_RECOVERY.setThresholds(connectedToRecoveryThresholdWarning, connectedToRecoveryThresholdCritical);
@@ -361,7 +336,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     private void calculateTotalHealthState() {
         HealthState calculatedTotalHealthState = HealthState.NORMAL;
-        for (Map.Entry<HealthMetric, HealthMetricData> entry : monitorService.getHealthMetrics().entrySet()) {
+        for (Map.Entry<HealthMetric, HealthMetricData> entry : getHealthMetrics().entrySet()) {
             HealthMetricData metricData = entry.getValue();
             if (metricData.getLastHealthState().ordinal() > calculatedTotalHealthState.ordinal()) {
                 calculatedTotalHealthState = metricData.getLastHealthState();
@@ -397,7 +372,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @Override
     public HealthMetricData getHealthMetricData(String label) {
-        return monitorService.getHealthMetrics().get(HealthMetric.getHealthMetric(label));
+        return getHealthMetrics().get(HealthMetric.getHealthMetric(label));
     }
 
     public HealthMetric getHealthMetric(String label) {
@@ -536,14 +511,15 @@ public class BaseNodeMonitorService implements IMonitorService {
         appendOutput(output, HealthMetric.SOURCES_UPPER_BOUND);
         appendOutput(output, HealthMetric.SOURCES_LOWER_BOUND);
 
-        appendOutput(output, "DSPHealthState", monitorService.getHealthMetricData(DSP_CONFIRMED_LABEL).getLastHealthState().toString());
-        appendOutput(output, "TCCHealthState", monitorService.getHealthMetricData(TRUST_CHAIN_CONFIRMED_LABEL).getLastHealthState().toString());
+        appendOutput(output, "DSPHealthState", getHealthMetricData(DSP_CONFIRMED_LABEL).getLastHealthState().toString());
+        appendOutput(output, "TCCHealthState", getHealthMetricData(TRUST_CHAIN_CONFIRMED_LABEL).getLastHealthState().toString());
 
         appendOutput(output, HealthMetric.TOTAL_POSTPONED_TRANSACTIONS);
         appendOutput(output, HealthMetric.PROPAGATION_QUEUE);
         appendOutput(output, HealthMetric.WEB_SOCKET_MESSAGES_QUEUE_LENGTH);
         appendOutput(output, HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED);
-        appendOutput(output, HealthMetric.CONFIRMATION_QUEUE_SIZE);
+        appendOutput(output, HealthMetric.DCR_CONFIRMATION_QUEUE_SIZE);
+        appendOutput(output, HealthMetric.TCC_CONFIRMATION_QUEUE_SIZE);
         appendOutput(output, HealthMetric.PERCENTAGE_USED_HEAP_MEMORY);
         appendOutput(output, HealthMetric.PERCENTAGE_USED_MEMORY);
         appendOutput(output, HealthMetric.CONNECTED_TO_RECOVERY);
