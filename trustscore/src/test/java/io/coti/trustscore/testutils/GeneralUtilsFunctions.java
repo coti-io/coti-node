@@ -15,7 +15,7 @@ public class GeneralUtilsFunctions {
         String hexa = "";
         for (int i = 0; i < lengthOfHash; i++) {
             int randomNum = ThreadLocalRandom.current().nextInt(0, 15 + 1);
-            hexa += hexaOptions[randomNum];
+            hexa = hexa.concat(hexaOptions[randomNum]);
         }
         return new Hash(hexa);
     }

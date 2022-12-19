@@ -13,6 +13,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +51,7 @@ public class DisputeData implements IEntity, ISignable, ISignValidatable, IDispu
         updateTime = Instant.now();
         arbitratorHashes = new ArrayList<>();
 
-        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(consumerHash.getBytes(), creationTime.toString().getBytes());
+        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(consumerHash.getBytes(), creationTime.toString().getBytes(StandardCharsets.UTF_8));
         hash = CryptoHelper.cryptoHash(concatDateAndUserHashBytes);
     }
 

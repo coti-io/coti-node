@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -105,7 +106,7 @@ public class CryptoHelperTests {
     public void signingWithPrivateKeyTest() throws InvalidKeySpecException, NoSuchAlgorithmException {
 
         String hexPrivateKey = "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e";
-        byte[] msgToSign = "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e".getBytes();
+        byte[] msgToSign = "1731ceb7b1d3a9c78d6a3009ca7021569eeb6a4ece86f0b744afbc3fabf82f8e".getBytes(StandardCharsets.UTF_8);
         SignatureData signatureData = CryptoHelper.signBytes(msgToSign, hexPrivateKey);
 
         String publicKey = CryptoHelper.getPublicKeyFromPrivateKey(hexPrivateKey);

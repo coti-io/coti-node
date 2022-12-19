@@ -5,6 +5,7 @@ import io.coti.basenode.data.SignatureData;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class CurrencyTypeRegistrationCrypto extends SignatureCrypto<CurrencyTypeRegistrationData> {
@@ -26,6 +27,6 @@ public class CurrencyTypeRegistrationCrypto extends SignatureCrypto<CurrencyType
 
     public static byte[] getMessageInBytes(CurrencyTypeRegistrationData currencyTypeRegistrationData) {
         SignatureData signatureData = currencyTypeRegistrationData.getSignature();
-        return signatureData.getR().concat(signatureData.getS()).getBytes();
+        return signatureData.getR().concat(signatureData.getS()).getBytes(StandardCharsets.UTF_8);
     }
 }

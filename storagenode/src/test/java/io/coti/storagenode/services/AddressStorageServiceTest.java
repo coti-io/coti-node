@@ -160,7 +160,7 @@ public class AddressStorageServiceTest {
     private ResponseEntity<IResponse> generateExpectedResponse(List<Boolean> inStorage, AddressData... addresses) {
         Map<Hash, AddressData> hashToAddressDataMap = new HashMap<>();
         AtomicInteger index = new AtomicInteger(0);
-        Arrays.stream(addresses).forEach(addressData -> hashToAddressDataMap.put(addressData.getHash(), inStorage.get(index.getAndIncrement()) == Boolean.TRUE ? addressData : null));
+        Arrays.stream(addresses).forEach(addressData -> hashToAddressDataMap.put(addressData.getHash(), inStorage.get(index.getAndIncrement()).equals(Boolean.TRUE) ? addressData : null));
         GetHistoryAddressesResponse getHistoryAddressesResponse = new GetHistoryAddressesResponse(hashToAddressDataMap);
         getHistoryAddressesResponseCrypto.signMessage(getHistoryAddressesResponse);
 
@@ -186,10 +186,7 @@ public class AddressStorageServiceTest {
     }
 
     private List<Boolean> generateInStorageList(Boolean... inStorageList) {
-        List<Boolean> inStorageListReturn = new ArrayList<>();
-        Arrays.stream(inStorageList).forEach(bool -> inStorageListReturn.add(bool));
-        return inStorageListReturn;
-
+        return new ArrayList<>(Arrays.asList(inStorageList));
     }
 
     private void mockGetMultiObjectsFromDb(boolean fromColdStorage, ElasticSearchData objectType, List<Boolean> inStorage, AddressData... addresses) {
@@ -199,7 +196,7 @@ public class AddressStorageServiceTest {
         Arrays.stream(addresses).forEach(addressData -> {
 
             hashes.add(addressData.getHash());
-            objectsFromDBMap.put(addressData.getHash(), inStorage.get(index.getAndIncrement()) == Boolean.TRUE ? jacksonSerializer.serializeAsString(addressData) : null);
+            objectsFromDBMap.put(addressData.getHash(), inStorage.get(index.getAndIncrement()).equals(Boolean.TRUE) ? jacksonSerializer.serializeAsString(addressData) : null);
         });
         when(objectService.getMultiObjectsFromDb(hashes, false, objectType)).thenReturn(objectsFromDBMap);
     }

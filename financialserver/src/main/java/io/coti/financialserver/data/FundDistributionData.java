@@ -9,6 +9,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -58,8 +59,8 @@ public class FundDistributionData implements IEntity {
     }
 
     public void setHash() {
-        byte[] distributionPoolInBytes = distributionPoolFund.getText().getBytes();
-        byte[] sourceInBytes = source.getBytes();
+        byte[] distributionPoolInBytes = distributionPoolFund.getText().getBytes(StandardCharsets.UTF_8);
+        byte[] sourceInBytes = source.getBytes(StandardCharsets.UTF_8);
         byte[] receiverAddressInBytes = receiverAddress.getBytes();
         byte[] concatDataFields = ByteBuffer.allocate(distributionPoolInBytes.length + sourceInBytes.length + receiverAddressInBytes.length).
                 put(distributionPoolInBytes).put(sourceInBytes).put(receiverAddressInBytes).array();

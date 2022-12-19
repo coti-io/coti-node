@@ -19,6 +19,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +97,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes(StandardCharsets.UTF_8));
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -150,7 +151,7 @@ public class TrustChainConfirmationServiceTest {
         // Before Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(false);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes(StandardCharsets.UTF_8));
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -256,7 +257,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes(StandardCharsets.UTF_8));
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -300,7 +301,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes(StandardCharsets.UTF_8));
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -331,7 +332,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(false);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes(StandardCharsets.UTF_8));
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();

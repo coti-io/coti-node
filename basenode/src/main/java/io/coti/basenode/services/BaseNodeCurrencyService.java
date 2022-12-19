@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -163,7 +164,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
                     currencyData = getCurrencyDataInstance(tokenGenerationServiceData, createTime, originatorCurrencyData, transactionData);
                     if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
-                        CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+                        CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes(StandardCharsets.UTF_8)));
                         Hash previousCurrencyHash = previousCurrencyNameIndexData.getCurrencyHash();
                         removeUserCurrencyIndexByCurrencyHash(previousCurrencyHash);
                         currencies.deleteByHash(previousCurrencyHash);

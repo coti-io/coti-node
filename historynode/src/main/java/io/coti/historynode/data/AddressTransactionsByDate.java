@@ -5,6 +5,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,7 +29,7 @@ public class AddressTransactionsByDate implements IEntity {
     private void initHashByDate() {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
         LocalDate localDate = LocalDate.of(ldt.getYear(), ldt.getMonth(), ldt.getDayOfMonth());
-        this.hash = CryptoHelper.cryptoHash(localDate.toString().getBytes());
+        this.hash = CryptoHelper.cryptoHash(localDate.toString().getBytes(StandardCharsets.UTF_8));
     }
 
 }
