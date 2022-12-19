@@ -7,6 +7,8 @@ COTI Node
 [![GitHub Issues](https://img.shields.io/github/issues/coti-io/coti-node.svg)](https://github.com/coti-io/coti-node/issues)
 [![Current Version](https://img.shields.io/badge/version-3.2.0--SNAPSHOT-yellow.svg)](https://github.com/coti-io/coti-node/)
 [![Docker Publish](https://github.com/coti-io/coti-node/actions/workflows/publish.yml/badge.svg)](https://github.com/coti-io/coti-node/actions/workflows/publish.yml)
+[![GitHub Coverity Scan](https://github.com/coti-io/coti-node/actions/workflows/coverity-scan-workflow.yml/badge.svg)](https://github.com/coti-io/coti-node/actions/workflows/coverity-scan-workflow.yml)
+[![Coverity](https://scan.coverity.com/projects/25275/badge.svg)](https://scan.coverity.com/projects/coti-io-coti-node)
 [![Discord Server](https://img.shields.io/discord/386571547508473876.svg)](https://discord.me/coti)
 
 ---
