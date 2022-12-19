@@ -12,6 +12,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +32,7 @@ public class TokenSaleDistributionData implements IEntity, ISignValidatable {
     private Hash hash;
 
     public void init() {
-        byte[] hashConcatenatedBytes = ArrayUtils.addAll(ByteBuffer.allocate(Long.BYTES).putLong(creationDate.toEpochMilli()).array(), tokenDistributionDataEntries.toString().getBytes());
+        byte[] hashConcatenatedBytes = ArrayUtils.addAll(ByteBuffer.allocate(Long.BYTES).putLong(creationDate.toEpochMilli()).array(), tokenDistributionDataEntries.toString().getBytes(StandardCharsets.UTF_8));
         hash = CryptoHelper.cryptoHash(hashConcatenatedBytes);
     }
 

@@ -230,7 +230,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private void initiateColumnFamilyDescriptors(List<String> dbColumnFamilies, List<ColumnFamilyDescriptor> columnFamilyDescriptors) {
         List<String> columnFamilyNamesToInit = Optional.ofNullable(dbColumnFamilies).orElse(columnFamilyClassNames);
         columnFamilyNamesToInit.forEach(columnFamilyName -> columnFamilyDescriptors.add(
-                new ColumnFamilyDescriptor(columnFamilyName.getBytes(), columnFamilyOptions)));
+                new ColumnFamilyDescriptor(columnFamilyName.getBytes(StandardCharsets.UTF_8), columnFamilyOptions)));
     }
 
     @Override

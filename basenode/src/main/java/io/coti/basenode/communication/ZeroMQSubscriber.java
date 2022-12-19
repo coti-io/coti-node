@@ -152,11 +152,13 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private void addToMessageQueue() throws ClassNotFoundException {
         try {
             String channel = propagationSubscriber.recvStr();
-            log.debug("Received a new message on channel: {}", channel);
-            String[] channelArray = channel.split("-");
-            Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
-            byte[] message = propagationSubscriber.recv();
-            ZeroMQSubscriberQueue.getQueue(propagatedMessageType).put(new ZeroMQMessageData(channel, message));
+            if (channel != null) {
+                log.debug("Received a new message on channel: {}", channel);
+                String[] channelArray = channel.split("-");
+                Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
+                byte[] message = propagationSubscriber.recv();
+                ZeroMQSubscriberQueue.getQueue(propagatedMessageType).put(new ZeroMQMessageData(channel, message));
+            }
         } catch (InterruptedException e) {
             log.info("ZMQ subscriber propagation receiver interrupted");
             Thread.currentThread().interrupt();
@@ -211,21 +213,23 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
         String channel = zeroMQMessageData.getChannel();
         byte[] message = zeroMQMessageData.getMessage();
         IPropagatable messageData = serializer.deserialize(message);
-        String[] channelArray = channel.split("-");
-        Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
-        if (propagatedMessageType.equals(PublisherHeartBeatData.class)) {
-            String serverAddress = ((PublisherHeartBeatData) messageData).getServerAddress();
-            updatePublisherLastConnectionTime(serverAddress);
-        } else {
-            String serverAddress = channelArray[1];
-            NodeType publisherNodeType = NodeType.valueOf(channelArray[2]);
-            updatePublisherLastConnectionTime(serverAddress);
-            publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType -> {
+        if (messageData != null) {
+            String[] channelArray = channel.split("-");
+            Class<? extends IPropagatable> propagatedMessageType = (Class<? extends IPropagatable>) Class.forName(channelArray[0]);
+            if (propagatedMessageType.equals(PublisherHeartBeatData.class)) {
+                String serverAddress = ((PublisherHeartBeatData) messageData).getServerAddress();
+                updatePublisherLastConnectionTime(serverAddress);
+            } else {
+                String serverAddress = channelArray[1];
+                NodeType publisherNodeType = NodeType.valueOf(channelArray[2]);
+                updatePublisherLastConnectionTime(serverAddress);
+                publisherNodeTypeToMessageTypesMap.get(publisherNodeType).forEach(messageType -> {
 
-                if (messageType.equals(propagatedMessageType)) {
-                    handleMessageData(messageData, propagatedMessageType, publisherNodeType);
-                }
-            });
+                    if (messageType.equals(propagatedMessageType)) {
+                        handleMessageData(messageData, propagatedMessageType, publisherNodeType);
+                    }
+                });
+            }
         }
     }
 

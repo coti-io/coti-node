@@ -20,6 +20,9 @@ public class UpdateDistributionAmountRequest {
     private BigDecimal distributionAmount;
 
     public void setDistributionDate(String distributionDate) {
-        this.distributionDate = LocalDate.parse(distributionDate).atStartOfDay();
+        LocalDate localDate = LocalDate.parse(distributionDate);
+        if (localDate != null) {
+            this.distributionDate = localDate.atStartOfDay();
+        }
     }
 }

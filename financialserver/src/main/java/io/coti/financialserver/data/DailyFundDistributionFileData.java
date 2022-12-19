@@ -6,6 +6,7 @@ import io.coti.basenode.data.interfaces.IEntity;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -29,6 +30,6 @@ public class DailyFundDistributionFileData implements IEntity {
     public void initHashByDate() {
         LocalDateTime ldt = LocalDateTime.ofInstant(date, ZoneOffset.UTC);
         this.hash = CryptoHelper.cryptoHash((ldt.getYear() + ldt.getMonth().toString() +
-                ldt.getDayOfMonth()).getBytes());
+                ldt.getDayOfMonth()).getBytes(StandardCharsets.UTF_8));
     }
 }
