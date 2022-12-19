@@ -11,6 +11,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,7 @@ public class FundDistributionFileData implements IEntity, ISignable, ISignValida
 
     public void init() {
         this.creationTime = Instant.now();
-        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(fileName.getBytes(), creationTime.toString().getBytes());
+        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(fileName.getBytes(), creationTime.toString().getBytes(StandardCharsets.UTF_8));
         this.hash = CryptoHelper.cryptoHash(concatDateAndUserHashBytes);
     }
 

@@ -14,7 +14,7 @@ public class TransactionSenderCrypto extends SignatureValidationCrypto<Transacti
     @Override
     public byte[] getSignatureMessage(TransactionData transactionData) {
         byte[] transactionHashInBytes = transactionData.getHash().getBytes();
-        byte[] transactionTypeInBytes = transactionData.getType().toString().getBytes();
+        byte[] transactionTypeInBytes = transactionData.getType().toString().getBytes(StandardCharsets.UTF_8);
         byte[] createTimeInBytes = ByteBuffer.allocate(Long.BYTES).putLong(transactionData.getCreateTime().toEpochMilli()).array();
         byte[] transactionDescriptionInBytes = transactionData.getTransactionDescription().getBytes(StandardCharsets.UTF_8);
 

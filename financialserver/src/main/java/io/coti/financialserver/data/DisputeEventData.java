@@ -6,6 +6,7 @@ import io.coti.basenode.data.interfaces.IEntity;
 import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import lombok.Data;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 @Data
@@ -23,7 +24,7 @@ public class DisputeEventData implements IEntity {
 
     public void init() {
         this.creationTime = Instant.now();
-        this.hash = CryptoHelper.cryptoHash(creationTime.toString().getBytes());
+        this.hash = CryptoHelper.cryptoHash(creationTime.toString().getBytes(StandardCharsets.UTF_8));
     }
 
 }

@@ -6,6 +6,7 @@ import io.coti.financialserver.data.DisputeUpdateItemData;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class DisputeUpdateItemCrypto extends SignatureCrypto<DisputeUpdateItemData> {
@@ -20,7 +21,7 @@ public class DisputeUpdateItemCrypto extends SignatureCrypto<DisputeUpdateItemDa
             disputeUpdateItemData.getItemIds().forEach(itemIdsBuffer::putLong);
             itemIdsInBytes = itemIdsBuffer.array();
         }
-        byte[] statusInBytes = disputeUpdateItemData.getStatus().toString().getBytes();
+        byte[] statusInBytes = disputeUpdateItemData.getStatus().toString().getBytes(StandardCharsets.UTF_8);
 
         int byteBufferLength = disputeHashInBytes.length + itemIdsInBytes.length + statusInBytes.length;
         ByteBuffer disputeUpdateDataBuffer = ByteBuffer.allocate(byteBufferLength)

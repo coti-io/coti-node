@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
@@ -172,7 +173,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
                     columnFamilyHandle.close();
                     classNameToColumnFamilyHandleMapping.remove(columnFamilyName);
                     if (create) {
-                        columnFamilyHandle = db.createColumnFamily(new ColumnFamilyDescriptor(columnFamilyName.getBytes(), columnFamilyOptions));
+                        columnFamilyHandle = db.createColumnFamily(new ColumnFamilyDescriptor(columnFamilyName.getBytes(StandardCharsets.UTF_8), columnFamilyOptions));
                         classNameToColumnFamilyHandleMapping.put(columnFamilyName, columnFamilyHandle);
                         log.info("Column family {} reset", columnFamilyName);
                     } else {

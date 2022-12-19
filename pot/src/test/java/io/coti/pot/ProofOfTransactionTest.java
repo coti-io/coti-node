@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
 
+import java.nio.charset.StandardCharsets;
+
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ProofOfTransactionTest {
     private ProofOfTrust pow;
     private final byte[] targetDifficulty = parseHexBinary("00F00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
-    private final byte[] transactionData = "hello world".getBytes();
+    private final byte[] transactionData = "hello world".getBytes(StandardCharsets.UTF_8);
 
     @BeforeEach
     public void setUp() {

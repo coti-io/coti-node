@@ -6,6 +6,7 @@ import io.coti.financialserver.data.DisputeCommentData;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class DisputeCommentCrypto extends SignatureCrypto<DisputeCommentData> {
@@ -20,7 +21,7 @@ public class DisputeCommentCrypto extends SignatureCrypto<DisputeCommentData> {
             commentData.getItemIds().forEach(itemIdsBuffer::putLong);
             itemIdsInBytes = itemIdsBuffer.array();
         }
-        byte[] commentInBytes = commentData.getComment().getBytes();
+        byte[] commentInBytes = commentData.getComment().getBytes(StandardCharsets.UTF_8);
 
         int byteBufferLength = disputeHashInBytes.length + itemIdsInBytes.length + commentInBytes.length;
 

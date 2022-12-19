@@ -11,6 +11,7 @@ import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 
 import javax.validation.constraints.NotNull;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class DisputeCommentData implements IDisputeEvent, IEntity, ISignable, IS
 
     public void init() {
         this.creationTime = Instant.now();
-        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(userHash.getBytes(), creationTime.toString().getBytes());
+        byte[] concatDateAndUserHashBytes = ArrayUtils.addAll(userHash.getBytes(), creationTime.toString().getBytes(StandardCharsets.UTF_8));
         this.hash = CryptoHelper.cryptoHash(concatDateAndUserHashBytes);
     }
 

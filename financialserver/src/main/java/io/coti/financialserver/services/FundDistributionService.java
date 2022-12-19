@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -297,9 +298,9 @@ public class FundDistributionService {
                             amount, createTime, transactionTime, source);
 
             byte[] receiverAddressInBytes = receiverAddress.getBytes();
-            byte[] distributionPoolInBytes = distributionPool.getBytes();
-            byte[] amountInBytes = amount.stripTrailingZeros().toPlainString().getBytes();
-            byte[] sourceInBytes = source.getBytes();
+            byte[] distributionPoolInBytes = distributionPool.getBytes(StandardCharsets.UTF_8);
+            byte[] amountInBytes = amount.stripTrailingZeros().toPlainString().getBytes(StandardCharsets.UTF_8);
+            byte[] sourceInBytes = source.getBytes(StandardCharsets.UTF_8);
 
             byte[] entryDataInBytes = ByteBuffer.allocate(Long.BYTES + receiverAddressInBytes.length + distributionPoolInBytes.length
                             + amountInBytes.length + Long.BYTES + Long.BYTES + sourceInBytes.length)
