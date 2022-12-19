@@ -540,11 +540,11 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     private void printToLogByLevel(int logLevel, String logText) {
-        if (logLevel == 0) {
+        if (logLevel == 1) {
             log.info(logText);
-        } else if (logLevel == 1) {
-            log.warn(logText);
         } else if (logLevel == 2) {
+            log.warn(logText);
+        } else if (logLevel == 3) {
             log.error(logText);
         }
     }

@@ -24,7 +24,7 @@ public enum HealthMetric implements IHealthMetric {
     TOTAL_TRANSACTIONS(TOTAL_TRANSACTIONS_LABEL, true, MetricType.TRANSACTIONS_METRIC, 0, 0, true) {
         @Override
         public void doSnapshot() {
-            monitorService.setLastMetricValue(this, transactionHelper.getTotalNumberOfTransactionsFromLocal());
+            monitorService.setLastMetricValue(this, transactionHelper.getTotalTransactions());
             monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_RECOVERY, transactionHelper.getTotalNumberOfTransactionsFromRecovery());
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
         }
