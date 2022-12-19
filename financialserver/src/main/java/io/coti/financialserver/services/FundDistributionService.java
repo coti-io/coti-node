@@ -516,7 +516,7 @@ public class FundDistributionService {
 
     private Hash getHashOfDate(LocalDateTime localDateTime) {
         return CryptoHelper.cryptoHash((localDateTime.getYear() + localDateTime.getMonth().toString() +
-                localDateTime.getDayOfMonth()).getBytes());
+                localDateTime.getDayOfMonth()).getBytes(StandardCharsets.UTF_8));
     }
 
     private void createPendingFailedTransactions(List<FundDistributionFileEntryResultData> fundDistributionFileEntryResultDataList, AtomicLong createdTransactionNumber, AtomicLong failedTransactionNumber) {

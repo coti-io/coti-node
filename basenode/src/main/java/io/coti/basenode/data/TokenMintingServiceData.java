@@ -7,6 +7,7 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 @Data
@@ -31,6 +32,6 @@ public class TokenMintingServiceData implements ITokenServiceData, ISignValidata
 
     @Override
     public byte[] getMessageInBytes() {
-        return signature.getR().concat(signature.getS()).getBytes();
+        return signature.getR().concat(signature.getS()).getBytes(StandardCharsets.UTF_8);
     }
 }

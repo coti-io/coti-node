@@ -120,12 +120,12 @@ public class DspVoteService extends BaseNodeDspVoteService {
 
     @Scheduled(fixedDelay = 1000)
     private void sumAndSaveVotes() {
-        for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntrySet :
+        for (Map.Entry<Hash, List<DspVote>> transactionHashToVotesListEntry :
                 transactionHashToVotesListMapping.entrySet()) {
-            Hash transactionHash = transactionHashToVotesListEntrySet.getKey();
+            Hash transactionHash = transactionHashToVotesListEntry.getKey();
             try {
                 synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
-                    List<DspVote> dspVotes = transactionHashToVotesListEntrySet.getValue();
+                    List<DspVote> dspVotes = transactionHashToVotesListEntry.getValue();
                     if (dspVotes != null && !dspVotes.isEmpty()) {
                         TransactionVoteData currentTransactionVoteData = transactionVotes.getByHash(transactionHash);
                         Map<Hash, DspVote> mapHashToDspVote = currentTransactionVoteData.getDspHashToVoteMapping();

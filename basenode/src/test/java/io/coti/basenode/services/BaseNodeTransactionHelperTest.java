@@ -22,6 +22,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -230,7 +231,7 @@ public class BaseNodeTransactionHelperTest {
         dspConsensusResult.setDspConsensus(true);
         transactionData.setDspConsensusResult(dspConsensusResult);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes(StandardCharsets.UTF_8));
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         clusterService.addTransactionToTrustChainConfirmationCluster(transactionData);

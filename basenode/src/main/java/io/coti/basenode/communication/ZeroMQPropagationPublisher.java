@@ -15,6 +15,7 @@ import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -132,7 +133,7 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
 
     private void publish(ZeroMQMessageData messageData) {
         synchronized (this) {
-            propagator.sendMore(messageData.getChannel().getBytes());
+            propagator.sendMore(messageData.getChannel().getBytes(StandardCharsets.UTF_8));
             propagator.send(messageData.getMessage());
         }
     }

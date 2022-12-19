@@ -190,7 +190,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                     CurrencyData newCurrencyData = getCurrencyDataInstance(tokenGenerationServiceData, createTime, originatorCurrencyData, transactionData);
                     currencies.put(newCurrencyData);
                     if (!newCurrencyData.getName().equals(currencyData.getName())) {
-                        currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+                        currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes(StandardCharsets.UTF_8)));
                         currencyNameIndexes.put(new CurrencyNameIndexData(newCurrencyData.getName(), newCurrencyData.getHash()));
                     }
                     if (!currencyData.getOriginatorHash().equals(newCurrencyData.getOriginatorHash())) {

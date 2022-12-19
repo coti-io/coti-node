@@ -17,7 +17,10 @@ public class DisputeItemStatusChangeEventData implements IDisputeEvent, IEntity 
     public DisputeItemStatusChangeEventData(DisputeData disputeData, Long itemId) {
         this.disputeHash = disputeData.getHash();
         this.itemId = itemId;
-        this.disputeItemStatus = disputeData.getDisputeItem(itemId).getStatus();
+        DisputeItemData disputeItemData = disputeData.getDisputeItem(itemId);
+        if (disputeItemData != null) {
+            this.disputeItemStatus = disputeItemData.getStatus();
+        }
         this.transactionHash = disputeData.getTransactionHash();
     }
 

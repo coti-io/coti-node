@@ -113,12 +113,14 @@ public abstract class Collection<T extends IEntity> {
 
     public void forEachWithLastIteration(BiConsumer<T, Boolean> biConsumer) {
         try (RocksIterator iterator = getIterator()) {
-            iterator.seekToFirst();
-            while (iterator.isValid()) {
-                T deserialized = getDeserializedValue(iterator);
-                iterator.next();
-                boolean isLastIteration = !iterator.isValid();
-                biConsumer.accept(deserialized, isLastIteration);
+            if (iterator != null) {
+                iterator.seekToFirst();
+                while (iterator.isValid()) {
+                    T deserialized = getDeserializedValue(iterator);
+                    iterator.next();
+                    boolean isLastIteration = !iterator.isValid();
+                    biConsumer.accept(deserialized, isLastIteration);
+                }
             }
         }
     }
@@ -162,10 +164,12 @@ public abstract class Collection<T extends IEntity> {
 
     public void deleteAll() {
         try (RocksIterator iterator = databaseConnector.getIterator(columnFamilyName)) {
-            iterator.seekToFirst();
-            while (iterator.isValid()) {
-                databaseConnector.delete(columnFamilyName, iterator.key());
-                iterator.next();
+            if (iterator != null) {
+                iterator.seekToFirst();
+                while (iterator.isValid()) {
+                    databaseConnector.delete(columnFamilyName, iterator.key());
+                    iterator.next();
+                }
             }
         }
     }

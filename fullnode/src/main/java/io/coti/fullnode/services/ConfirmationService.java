@@ -27,8 +27,10 @@ public class ConfirmationService extends BaseNodeConfirmationService {
     @Override
     protected void continueHandleTokenChanges(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
-        TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
-        Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
-        webSocketSender.notifyTokenChange(tokenHash);
+        if (tokenMintingFeeBaseTransactionData != null) {
+            TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
+            Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
+            webSocketSender.notifyTokenChange(tokenHash);
+        }
     }
 }
