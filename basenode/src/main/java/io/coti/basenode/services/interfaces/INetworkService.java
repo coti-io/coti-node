@@ -76,4 +76,6 @@ public interface INetworkService {
     void setNetworkLastKnownNodeMap(HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap);
 
     Map<Hash, NetworkNodeData> getNetworkLastKnownNodeMap();
+
+    boolean isConnectedToRecovery();
 }

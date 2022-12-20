@@ -10,7 +10,6 @@ import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 
 import java.time.Instant;
@@ -25,7 +24,7 @@ public enum HealthMetric implements IHealthMetric {
     TOTAL_TRANSACTIONS(TOTAL_TRANSACTIONS_LABEL, true, MetricType.TRANSACTIONS_METRIC, 0, 0, true) {
         @Override
         public void doSnapshot() {
-            monitorService.setLastMetricValue(this, transactionHelper.getTotalNumberOfTransactionsFromLocal());
+            monitorService.setLastMetricValue(this, transactionHelper.getTotalTransactions());
             monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_RECOVERY, transactionHelper.getTotalNumberOfTransactionsFromRecovery());
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
         }
@@ -210,9 +209,23 @@ public enum HealthMetric implements IHealthMetric {
             HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
         }
     },
-    CONFIRMATION_QUEUE_SIZE(CONFIRMATION_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
+    DCR_CONFIRMATION_QUEUE_SIZE(DCR_CONFIRMATION_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
         public void doSnapshot() {
-            int queueSize = confirmationService.getQueueSize();
+            int queueSize = confirmationService.getDcrConfirmationQueueSize();
+            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            monitorService.setLastMetricValue(this, queueSize);
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
+            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
+            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+        }
+    },
+    TCC_CONFIRMATION_QUEUE_SIZE(TCC_CONFIRMATION_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
+        public void doSnapshot() {
+            int queueSize = confirmationService.getTccConfirmationQueueSize();
             monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
             monitorService.setLastMetricValue(this, queueSize);
         }
@@ -574,7 +587,6 @@ public enum HealthMetric implements IHealthMetric {
     private final boolean detailedLogs;
     private final MetricType metricType;
     protected ITransactionHelper transactionHelper;
-    @Autowired
     protected IMonitorService monitorService;
     protected IClusterService clusterService;
     protected TransactionIndexService transactionIndexService;
@@ -616,6 +628,8 @@ public enum HealthMetric implements IHealthMetric {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
             } else if (healthMetricData.getLastCounter() >= healthMetric.warningThreshold) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
+            } else if (BaseNodeMonitorService.HealthState.NA.equals(healthMetricData.getLastHealthState())) {
+                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
             }
         } else {
             if (updateCounter) {
