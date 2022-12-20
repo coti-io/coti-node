@@ -76,7 +76,7 @@ public abstract class BaseNodeInitializationService {
     @Autowired
     private IClusterService clusterService;
     @Autowired
-    private IMonitorService monitorService;
+    protected IMonitorService monitorService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
