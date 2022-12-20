@@ -32,8 +32,6 @@ public class BaseNodeMonitorService implements IMonitorService {
     private static final String METRIC_TEMPLATE = "metricTemplate";
     private final Map<HealthMetric, HealthMetricData> healthMetrics = new ConcurrentHashMap<>();
     @Autowired
-    protected IMonitorService monitorService;
-    @Autowired
     protected INetworkService networkService;
     @Autowired
     private ITransactionHelper transactionHelper;
@@ -287,6 +285,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         HealthMetric.SOURCES_LOWER_BOUND.setThresholds(sourcesLowerBoundThresholdWarning, sourcesLowerBoundThresholdCritical);
         HealthMetric.INDEX.setThresholds(indexThresholdWarning, indexThresholdCritical);
         HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED.setThresholds(waitingDSPConsensusThresholdWarning, waitingDSPConsensusThresholdCritical);
+        HealthMetric.WAITING_MISSING_TRANSACTION_INDEXES.setThresholds(waitingMissingTransactionsIndexesThresholdWarning, waitingMissingTransactionsIndexesThresholdCritical);
         HealthMetric.DSP_CONFIRMED.setThresholds(dspOutsideNormalThresholdWarning, dspOutsideNormalThresholdCritical);
         HealthMetric.TOTAL_CONFIRMED.setThresholds(totalConfirmedOutsideNormalThresholdWarning, totalConfirmedOutsideNormalThresholdCritical);
         HealthMetric.TRUST_CHAIN_CONFIRMED.setThresholds(tccOutsideNormalThresholdWarning, tccOutsideNormalThresholdCritical);
@@ -346,13 +345,12 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     private String createHealthStateOutputAsString(StringBuilder output) {
-        if (getLastTotalHealthState() == HealthState.NORMAL) {
-            appendOutput(output, " TotalHealthState ", HealthState.NORMAL.toString());
-        } else {
+        appendOutput(output, " TotalHealthState ", getLastTotalHealthState().toString());
+        if (getLastTotalHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
             for (Map.Entry<HealthMetric, HealthMetricData> entry : healthMetrics.entrySet()) {
                 HealthMetricData metricData = entry.getValue();
                 HealthMetric healthMetric = entry.getKey();
-                if (metricData.getLastHealthState() != HealthState.NORMAL) {
+                if (metricData.getLastHealthState() != HealthState.NORMAL && metricData.getLastHealthState() != HealthState.NA) {
                     output.append(healthMetric.label).append(" state = ").append(metricData.getLastHealthState().toString());
                     if (healthMetric.isCounterBased()) {
                         output.append(", counter = ").append(metricData.getLastCounter()).append(", ");
