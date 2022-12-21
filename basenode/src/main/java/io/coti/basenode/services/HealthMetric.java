@@ -115,7 +115,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    TOTAL_CONFIRMED(TOTAL_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 5, true) {
+    TOTAL_CONFIRMED(TOTAL_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 5, true, false) {
         public void doSnapshot() {
             HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
             monitorService.setLastMetricValue(this, confirmationService.getTotalConfirmed());
@@ -582,10 +582,10 @@ public enum HealthMetric implements IHealthMetric {
     protected static final String LATEST_BACKUP_STARTED_TIME = "latestBackupStartedTime";
     protected static final String LIVE_FILES_AMOUNT = "liveFilesAmount";
 
-    public final String label;
-    private final boolean counterBased;
-    private final boolean detailedLogs;
-    private final MetricType metricType;
+    public String label;
+    private boolean counterBased;
+    private boolean detailedLogs;
+    private MetricType metricType;
     protected ITransactionHelper transactionHelper;
     protected IMonitorService monitorService;
     protected IClusterService clusterService;
@@ -603,15 +603,28 @@ public enum HealthMetric implements IHealthMetric {
     protected RejectedTransactions rejectedTransactions;
     private long warningThreshold;
     private long criticalThreshold;
+    private boolean includeInTotalHealthState = true;
 
     HealthMetric(String label, boolean counterBased, MetricType metricType, long warningThreshold, long criticalThreshold, boolean detailedLogs) {
-        this.label = label;
-        this.counterBased = counterBased;
-        this.metricType = metricType;
-        this.warningThreshold = warningThreshold;
-        this.criticalThreshold = criticalThreshold;
-        this.detailedLogs = detailedLogs;
+        setHealthMetricBaseProperties(label, counterBased, metricType, warningThreshold, criticalThreshold, detailedLogs);
     }
+
+    HealthMetric(String label, boolean counterBased, MetricType metricType, long warningThreshold, long criticalThreshold, boolean detailedLogs,
+                 boolean includeInTotalHealthState) {
+        setHealthMetricBaseProperties(label, counterBased, metricType, warningThreshold, criticalThreshold, detailedLogs);
+        this.includeInTotalHealthState = includeInTotalHealthState;
+    }
+
+    private void setHealthMetricBaseProperties(String _label, boolean _counterBased, MetricType _metricType, long _warningThreshold,
+                                               long _criticalThreshold, boolean _detailedLogs) {
+        label = _label;
+        counterBased = _counterBased;
+        metricType = _metricType;
+        warningThreshold = _warningThreshold;
+        criticalThreshold = _criticalThreshold;
+        detailedLogs = _detailedLogs;
+    }
+
 
     public static HealthMetric getHealthMetric(String label) {
         return Arrays.stream(HealthMetric.values()).filter(metric -> label.equalsIgnoreCase(metric.label))
