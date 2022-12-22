@@ -5,6 +5,7 @@ import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.basenode.services.HealthMetric;
 import org.springframework.boot.actuate.health.Health;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +26,9 @@ public interface IMonitorService {
 
     Map<HealthMetric, HealthMetricData> getHealthMetrics();
 
-    void setLastMetricValue(HealthMetric label, long metricValue);
+    void setMetricValue(HealthMetric label, long metricValue);
 
-    void setSnapshotTime(HealthMetric healthMetric, String snapshotTime);
+    void setSnapshotTime(HealthMetric healthMetric, Instant snapshotTime);
 
     long getSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey);
 
