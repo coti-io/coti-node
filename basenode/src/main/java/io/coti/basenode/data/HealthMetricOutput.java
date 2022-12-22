@@ -9,7 +9,7 @@ public class HealthMetricOutput {
     private String label;
     private Long value;
 
-    public HealthMetricOutput (HealthMetricOutputType type, String label, long value) {
+    public HealthMetricOutput(HealthMetricOutputType type, String label, long value) {
         this.type = type;
         this.label = label;
         this.value = value;

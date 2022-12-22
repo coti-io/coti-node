@@ -13,7 +13,7 @@ import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.NUMBER_OF
 public class BackupNumberOfFilesHealthIndicator implements HealthIndicator {
 
     @Autowired
-    protected IMonitorService monitorService;
+    private IMonitorService monitorService;
 
     @Override
     public Health health() {
