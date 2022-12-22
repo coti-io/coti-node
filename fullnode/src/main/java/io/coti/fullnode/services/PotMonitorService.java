@@ -1,6 +1,5 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.services.BaseNodeMonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,15 +9,10 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class MonitorService extends BaseNodeMonitorService {
+public class PotMonitorService {
 
     @Autowired
     private PotService potService;
-
-    @Override
-    public void lastState() {
-        // implemented by sub classes
-    }
 
     @Scheduled(initialDelay = 1000, fixedDelay = 60000)
     public void lastPot() {

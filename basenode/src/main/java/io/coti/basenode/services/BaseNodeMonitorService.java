@@ -202,9 +202,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @PostConstruct
     private void initHealthMetrics() {
-        for (HealthMetric hm : HealthMetric.values()) {
-            hm.monitorService = this;
-        }
+        HealthMetric.monitorService = this;
         HealthMetric.transactionHelper = transactionHelper;
         HealthMetric.clusterService = clusterService;
         HealthMetric.transactionIndexService = transactionIndexService;
@@ -274,7 +272,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     private void calculateTotalHealthState() {
         HealthState calculatedTotalHealthState = HealthState.NORMAL;
-        for (Map.Entry<HealthMetric, HealthMetricData> entry : getHealthMetrics().entrySet()) {
+        for (Map.Entry<HealthMetric, HealthMetricData> entry : healthMetrics.entrySet()) {
             HealthMetricData metricData = entry.getValue();
             if (metricData.getLastHealthState().ordinal() > calculatedTotalHealthState.ordinal()) {
                 calculatedTotalHealthState = metricData.getLastHealthState();
@@ -291,7 +289,7 @@ public class BaseNodeMonitorService implements IMonitorService {
                 HealthMetricData metricData = entry.getValue();
                 HealthMetric healthMetric = entry.getKey();
                 if (metricData.getLastHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
-                    output.append(healthMetric.label).append(" state = ").append(metricData.getLastHealthState().toString());
+                    output.append(healthMetric.getLabel()).append(" state = ").append(metricData.getLastHealthState().toString());
                     if (healthMetric.isCounterBased()) {
                         output.append(", counter = ").append(metricData.getDegradingCounter());
                     } else {
@@ -310,16 +308,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @Override
     public HealthMetricData getHealthMetricData(String label) {
-        return getHealthMetrics().get(HealthMetric.getHealthMetric(label));
-    }
-
-    public HealthMetric getHealthMetric(String label) {
-        return HealthMetric.getHealthMetric(label);
-    }
-
-    @Override
-    public Map<HealthMetric, HealthMetricData> getHealthMetrics() {
-        return healthMetrics;
+        return healthMetrics.get(HealthMetric.getHealthMetricByLabel(label));
     }
 
     @Override
@@ -334,44 +323,27 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     @Override
-    public long getSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey) {
-        return getHealthMetricData(healthMetric).getSpecificLastMetricValue(fieldKey);
-    }
-
-    @Override
-    public void setSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey, long metricValue) {
-
-    }
-
-//    @Override
-//    public void setSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey, HealthMetricOutput healthMetricOutput) {
-//        getHealthMetricData(healthMetric).setSpecificLastMetricValue(fieldKey, healthMetricOutput);
-//    }
-
-    @Override
     public void updateHealthMetrics(ArrayList<String> metrics, HashMap<String, String> metricTemplateMap) {
         for (HealthMetric healthMetric : HealthMetric.values()) {
 
             for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
                 if (healthMetricOutput.getType().equals(HealthMetricOutputType.ALL)) {
-                    addMetric(healthMetric.getHealthMetricData().getSnapshotTime(), healthMetric.getMetricClass(),
-                            healthMetricOutput.getLabel(), healthMetric.getHealthMetricData().getLastHealthState().ordinal(),
-                            healthMetricOutput.getValue(), healthMetric.isDetailedLogs(), metrics, metricTemplateMap);
+                    addMetric(healthMetric, healthMetricOutput.getLabel(), metrics, metricTemplateMap);
                 }
             }
 
-            if (healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
-                    healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.INFLUX)) {
-                addMetric(healthMetric.getHealthMetricData().getSnapshotTime(), healthMetric.getMetricClass(),
-                        healthMetric.label, healthMetric.getHealthMetricData().getLastHealthState().ordinal(),
-                        healthMetric.getHealthMetricData().getMetricValue(), healthMetric.isDetailedLogs(), metrics, metricTemplateMap);
+            if (isToAddInfluxOutput(healthMetric.getHealthMetricOutputType())) {
+                addMetric(healthMetric, healthMetric.getLabel(), metrics, metricTemplateMap);
             }
         }
     }
 
-    private void addMetric(Instant snapshotTime, MetricClass metricClass, String metricLabel, int metricHealthScore,
-                           long metricValue, boolean isDetailedLogs, ArrayList<String> metrics,
-                           HashMap<String, String> metricTemplateMap) {
+    private void addMetric(HealthMetric healthMetric, String metricLabel, ArrayList<String> metrics, HashMap<String, String> metricTemplateMap) {
+        Instant snapshotTime = healthMetric.getHealthMetricData().getSnapshotTime();
+        MetricClass metricClass = healthMetric.getMetricClass();
+        int metricHealthScore = healthMetric.getHealthMetricData().getLastHealthState().ordinal();
+        long metricValue = healthMetric.getHealthMetricData().getMetricValue();
+        boolean isDetailedLogs = healthMetric.isDetailedLogs();
         String metricTemplateVal = metricTemplateMap.get(metricClass.name());
 
         if (metricsDetailed || !isDetailedLogs) {
@@ -408,7 +380,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             builder.up();
         }
         builder.withDetail("State", healthMetricData.getLastHealthState());
-        HealthMetric healthMetric = getHealthMetric(label);
+        HealthMetric healthMetric = HealthMetric.getHealthMetricByLabel(label);
         long warningThreshold = healthMetric.getWarningThreshold();
         long criticalThreshold = healthMetric.getCriticalThreshold();
         HashMap<String, Long> configMap = new HashMap<>();
@@ -418,8 +390,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         if (criticalThreshold >= warningThreshold) {
             configMap.put("CriticalThreshold", criticalThreshold);
         }
-        if (!healthMetric.isDetailedLogs() || allowTransactionMonitoringDetailed) {
-            //builder.withDetail("ConditionResultValue", healthMetricData.getLastConditionValue());
+        if (healthMetric.isDetailedLogs() && allowTransactionMonitoringDetailed) {
             builder.withDetail("SnapshotValue", healthMetricData.getMetricValue());
             if (healthMetric.isCounterBased()) {
                 builder.withDetail("Counter", healthMetricData.getDegradingCounter());
@@ -436,7 +407,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
-    public void lastState() {
+    private void lastState() {
         if (allowTransactionMonitoring) {
             updateHealthMetricsSnapshot();
             calculateHealthMetrics();
@@ -448,38 +419,41 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     private void printLastState(int logLevel) {
-        String outputText = createOutputAsString(allowTransactionMonitoringDetailed);
+        StringBuilder output = allowTransactionMonitoringDetailed ? createDetailedOutputAsString() : new StringBuilder();
+        String outputText = createHealthStateOutputAsString(output);
         printToLogByLevel(logLevel, outputText);
     }
 
-    private String createOutputAsString(boolean isDetailedLog) {
+    private StringBuilder createDetailedOutputAsString() {
         StringBuilder output = new StringBuilder();
-
         for (HealthMetric healthMetric : HealthMetric.values()) {
-            if (isDetailedLog || !healthMetric.isDetailedLogs())
-            {
-                for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
-                    if (healthMetricOutput.getType().equals(HealthMetricOutputType.ALL) ||
-                            healthMetricOutput.getType().equals(HealthMetricOutputType.CONSOLE)) {
-                        appendOutput(output, healthMetricOutput.getLabel(), healthMetricOutput.getValue());
-                    }
-                }
-
-                if ((healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
-                        healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.CONSOLE))) {
-                    appendOutput(output, healthMetric.label, healthMetric.getHealthMetricData().getMetricValue());
+            if (!healthMetric.isDetailedLogs()) {
+                continue;
+            }
+            for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
+                if (isToAddConsoleOutput(healthMetricOutput.getType())) {
+                    appendOutput(output, healthMetricOutput.getLabel(), healthMetricOutput.getValue());
                 }
             }
-        }
 
-        return createHealthStateOutputAsString(output);
+            if (isToAddConsoleOutput(healthMetric.getHealthMetricOutputType())) {
+                appendOutput(output, healthMetric.getLabel(), healthMetric.getHealthMetricData().getMetricValue());
+            }
+        }
+        return output;
+    }
+
+    private static boolean isToAddConsoleOutput(HealthMetricOutputType healthMetricOutputType) {
+        return healthMetricOutputType.equals(HealthMetricOutputType.ALL) ||
+                healthMetricOutputType.equals(HealthMetricOutputType.CONSOLE);
+    }
+
+    private static boolean isToAddInfluxOutput(HealthMetricOutputType healthMetricOutputType) {
+        return healthMetricOutputType.equals(HealthMetricOutputType.ALL) ||
+                healthMetricOutputType.equals(HealthMetricOutputType.INFLUX);
     }
 
     private void appendOutput(StringBuilder output, String name, long value) {
-        output.append(name).append(" = ").append(value).append(", ");
-    }
-
-    private void appendOutput(StringBuilder output, String name, String value) {
         output.append(name).append(" = ").append(value).append(", ");
     }
 

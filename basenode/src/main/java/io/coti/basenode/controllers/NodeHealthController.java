@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class NodeHealthController {
 
     @Autowired
-    IMonitorService monitorService;
+    private IMonitorService monitorService;
 
     @GetMapping(path = "/total/state")
     public BaseNodeMonitorService.HealthState getNodeHash() {

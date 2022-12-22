@@ -16,9 +16,8 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.model.UserCurrencyIndexes;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IEventService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Autowired
     private UserCurrencyIndexes userCurrencyIndexes;
     @Autowired
-    protected IEventService baseNodeEventService;
+    protected IEventService eventService;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -123,7 +122,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public boolean isCurrencyHashAllowed(Hash currencyHash) {
-        return baseNodeEventService.eventHappened(Event.MULTI_DAG) ||
+        return eventService.eventHappened(Event.MULTI_DAG) ||
                 currencyHash == null;
     }
 
@@ -216,13 +215,21 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     private void removeFromUserCurrencyIndexes(Hash originatorHash, Hash currencyHash) {
-        UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
-        if (userCurrencyIndexData != null) {
-            Set<Hash> tokenHashSet = userCurrencyIndexData.getTokenHashes();
-            tokenHashSet.remove(currencyHash);
-            if (tokenHashSet.isEmpty()) {
-                userCurrencyIndexes.deleteByHash(originatorHash);
+        try {
+            synchronized (originatorHashLockData.addLockToLockMap(originatorHash)) {
+                UserCurrencyIndexData userCurrencyIndexData = userCurrencyIndexes.getByHash(originatorHash);
+                if (userCurrencyIndexData != null) {
+                    Set<Hash> tokenHashSet = userCurrencyIndexData.getTokenHashes();
+                    tokenHashSet.remove(currencyHash);
+                    if (tokenHashSet.isEmpty()) {
+                        userCurrencyIndexes.deleteByHash(originatorHash);
+                    } else {
+                        userCurrencyIndexes.put(userCurrencyIndexData);
+                    }
+                }
             }
+        } finally {
+            originatorHashLockData.removeLockFromLocksMap(originatorHash);
         }
     }
 
@@ -379,6 +386,26 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
+    public void revertCurrencyUnconfirmedRecord(TransactionData transactionData) {
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
+
+        OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
+        Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
+        Hash currencyNameHash = CryptoHelper.cryptoHash(originatorCurrencyData.getName().getBytes());
+        try {
+            synchronized (currencyLockData.addLockToLockMap(currencyHash)) {
+                synchronized (currencyNameLockData.addLockToLockMap(currencyNameHash)) {
+                    currencies.deleteByHash(currencyHash);
+                    currencyNameIndexes.deleteByHash(currencyNameHash);
+                    removeFromUserCurrencyIndexes(originatorCurrencyData.getOriginatorHash(), currencyHash);
+                }
+            }
+        } finally {
+            currencyNameLockData.removeLockFromLocksMap(currencyNameHash);
+            currencyLockData.removeLockFromLocksMap(currencyHash);
+        }
+    }
+
     public void addConfirmedCurrency(TransactionData transactionData) {
         TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
@@ -427,7 +454,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             if (!getUserTokensRequestCrypto.verifySignature(getUserTokensRequest)) {
@@ -452,7 +479,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = getTokenDetailsRequest.getCurrencyHash();
@@ -465,7 +492,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenSymbolDetails(GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(getTokenSymbolDetailsRequest.getSymbol());
@@ -515,7 +542,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public ResponseEntity<IResponse> getTokenHistory(GetTokenHistoryRequest getTokenHistoryRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!eventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = getTokenHistoryRequest.getCurrencyHash();

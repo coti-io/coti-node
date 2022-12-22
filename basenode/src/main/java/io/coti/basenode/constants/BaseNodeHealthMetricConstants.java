@@ -10,6 +10,7 @@ public class BaseNodeHealthMetricConstants {
     public static final String DSP_CONFIRMED_LABEL_DELTA = "DSPConfirmedDelta";
     public static final String TOTAL_CONFIRMED_LABEL = "Confirmed";
     public static final String TRUST_CHAIN_CONFIRMED_LABEL = "TccConfirmed";
+    public static final String NUM_TCC_LOOP_NO_CHANGE_LABEL = "NumberOfTimesTrustScoreNotChanged";
     public static final String WAITING_MISSING_TRANSACTION_INDEXES_LABEL = "WaitingMissingTransactionIndexes";
     public static final String TOTAL_POSTPONED_TRANSACTIONS_LABEL = "TotalPostponedTransactions";
     public static final String TRANSACTION_PROPAGATION_QUEUE_LABEL = "TransactionPropagationQueue";
