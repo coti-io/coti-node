@@ -5,7 +5,8 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
-import io.coti.basenode.data.MetricType;
+import io.coti.basenode.data.HealthMetricOutputType;
+import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
@@ -18,554 +19,442 @@ import java.util.Map;
 
 import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.*;
 
+
 public enum HealthMetric implements IHealthMetric {
 
-
-    TOTAL_TRANSACTIONS(TOTAL_TRANSACTIONS_LABEL, true, MetricType.TRANSACTIONS_METRIC, 0, 0, true) {
+    TOTAL_TRANSACTIONS_DELTA(TOTAL_TRANSACTIONS_DELTA_LABEL, true, MetricClass.TRANSACTIONS_METRIC, 0, 0, true, HealthMetricOutputType.INFLUX) {
         @Override
         public void doSnapshot() {
-            monitorService.setLastMetricValue(this, transactionHelper.getTotalTransactions());
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_RECOVERY, transactionHelper.getTotalNumberOfTransactionsFromRecovery());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            long conditionValue = healthMetricData.getSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_RECOVERY) - healthMetricData.getLastMetricValue();
-            healthMetricData.setLastConditionValue(conditionValue);
-            calculateHealthCounterMetricState(healthMetricData, this, true);
-        }
-    },
-    SOURCES_UPPER_BOUND(SOURCES_UPPER_BOUND_LABEL, false, MetricType.TRANSACTIONS_METRIC, 24, 34, false) {
-        @Override
-        public void doSnapshot() {
-            monitorService.setLastMetricValue(this, clusterService.getTotalSources());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            calculateHealthValueMetricState(healthMetricData, this);
-        }
-    },
-    SOURCES_LOWER_BOUND(SOURCES_LOWER_BOUND_LABEL, false, MetricType.TRANSACTIONS_METRIC, -8, -6, false) {
-        @Override
-        public void doSnapshot() {
-            monitorService.setLastMetricValue(this, clusterService.getTotalSources());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(-healthMetricData.getLastMetricValue());
-            calculateHealthValueMetricState(healthMetricData, this);
-        }
-    },
-    INDEX(INDEX_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 0, true) {
-        public void doSnapshot() {
-            monitorService.setLastMetricValue(this, transactionIndexService.getLastTransactionIndexData().getIndex());
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_LOCAL, transactionHelper.getTotalNumberOfTransactionsFromLocal());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            long conditionValue = healthMetricData.getSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_LOCAL) - healthMetricData.getLastMetricValue() - 1;
-            healthMetricData.setLastConditionValue(conditionValue);
-            calculateHealthCounterMetricState(healthMetricData, this, true);
-        }
-    },
-    WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED(WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 1, 5, false) {
-        public void doSnapshot() {
-            monitorService.setLastMetricValue(this, confirmationService.getWaitingDspConsensusResultsMapSize());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            calculateHealthCounterMetricState(healthMetricData, this, true);
-        }
-    },
-    DSP_CONFIRMED(DSP_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 5, true) {
-        public void doSnapshot() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            monitorService.setLastMetricValue(this, confirmationService.getDspConfirmed());
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_DSP_CONFIRMED, healthMetricData.getLastMetricValue());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            healthMetricData.setSpecificLastMetricValue(SNAPSHOT_PREVIOUS_DSP_CONFIRMED, healthMetricData.getSpecificLastMetricValue(SNAPSHOT_DSP_CONFIRMED));
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_LOCAL, transactionHelper.getTotalTransactions());
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (healthMetricData.getSpecificLastMetricValue(SNAPSHOT_TOTAL_TRANSACTIONS_FROM_LOCAL).equals(healthMetricData.getSpecificLastMetricValue(SNAPSHOT_DSP_CONFIRMED))
-                    || !healthMetricData.getSpecificLastMetricValue(SNAPSHOT_DSP_CONFIRMED).equals(healthMetricData.getSpecificLastMetricValue(SNAPSHOT_PREVIOUS_DSP_CONFIRMED))) {
-                healthMetricData.setLastConditionValue(0);
+            long totalTransactions = transactionHelper.getTotalTransactions();
+            HealthMetricData healthMetricData = this.getHealthMetricData();
+            healthMetricData.addValue("Transactions", HealthMetricOutputType.ALL, "Transactions", totalTransactions);
+            long totalTransactionsFromRecoveryServer = transactionHelper.getTotalNumberOfTransactionsFromRecovery();
+            if (totalTransactionsFromRecoveryServer > 0) {
+                healthMetricData.addValue("TotalNumberOfTransactionsFromRecovery", HealthMetricOutputType.ALL, "TotalNumberOfTransactionsFromRecovery", totalTransactionsFromRecoveryServer);
+                baseDoSnapshot(this, totalTransactions - totalTransactionsFromRecoveryServer);
             } else {
-                healthMetricData.setLastConditionValue(1);
+                baseDoSnapshot(this, (long)-1);
             }
-            calculateHealthCounterMetricState(healthMetricData, this, true);
-        }
-    },
-    TOTAL_CONFIRMED(TOTAL_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 5, true) {
-        public void doSnapshot() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            monitorService.setLastMetricValue(this, confirmationService.getTotalConfirmed());
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_TOTAL_CONFIRMED, healthMetricData.getLastMetricValue());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            healthMetricData.setSpecificLastMetricValue(SNAPSHOT_PREVIOUS_TOTAL_CONFIRMED, healthMetricData.getSpecificLastMetricValue(SNAPSHOT_TOTAL_CONFIRMED));
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_TCC_CONFIRMED, confirmationService.getTrustChainConfirmed());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (healthMetricData.getSpecificLastMetricValue(SNAPSHOT_TCC_CONFIRMED).equals(healthMetricData.getSpecificLastMetricValue(SNAPSHOT_TOTAL_CONFIRMED))
-                    || !healthMetricData.getSpecificLastMetricValue(SNAPSHOT_TOTAL_CONFIRMED).equals(healthMetricData.getSpecificLastMetricValue(SNAPSHOT_PREVIOUS_TOTAL_CONFIRMED))) {
-                healthMetricData.setLastConditionValue(0);
+            if (monitorService.getHealthMetricData(this).getMetricValue() > -1) {
+                baseCalculateHealthCounterMetricState(this);
             } else {
-                healthMetricData.setLastConditionValue(1);
+                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
-            calculateHealthCounterMetricState(healthMetricData, this, true);
         }
     },
-    TRUST_CHAIN_CONFIRMED(TRUST_CHAIN_CONFIRMED_LABEL, true, MetricType.TRANSACTIONS_METRIC, 5, 10, true) {
+    NUM_TCC_LOOP_NO_CHANGE("NUM_TCC_LOOP_NO_CHANGE", false, MetricClass.TRANSACTIONS_METRIC, 5, 10, true, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            monitorService.setLastMetricValue(this, confirmationService.getTrustChainConfirmed());
-            int tccOutsideNormalCounter = trustChainConfirmationService.getTccOutsideNormalCounter();
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            healthMetricData.setLastCounter(tccOutsideNormalCounter);
+            this.getHealthMetricData().addValue(TRUST_CHAIN_CONFIRMED_LABEL, HealthMetricOutputType.ALL, TRUST_CHAIN_CONFIRMED_LABEL, confirmationService.getTrustChainConfirmed());
+            baseDoSnapshot(this, trustChainConfirmationService.getNumberOfTimesTrustScoreNotChanged());
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            calculateHealthValueMetricState(this);
+        }
+    },
+    DSP_CONFIRMED_DELTA(DSP_CONFIRMED_LABEL_DELTA, true, MetricClass.TRANSACTIONS_METRIC, 2, 5, true, HealthMetricOutputType.INFLUX) {
+        public void doSnapshot() {
+            long dspConfirmed = confirmationService.getDspConfirmed();
+            long totalTransactions = transactionHelper.getTotalTransactions();
+            this.getHealthMetricData().addValue("DspConfirmed", HealthMetricOutputType.ALL, "DspConfirmed", dspConfirmed);
+            baseDoSnapshot(this, totalTransactions - dspConfirmed);
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            baseCalculateHealthCounterMetricState(this);
+        }
+    },
+    TOTAL_CONFIRMED(TOTAL_CONFIRMED_LABEL, true, MetricClass.TRANSACTIONS_METRIC, 0, 0, true, false, HealthMetricOutputType.ALL) {
+        public void doSnapshot() {
+            baseDoSnapshot(this, confirmationService.getTotalConfirmed());
         }
 
         @Override
         public void calculateHealthMetric() {
             HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastCounter());
-            calculateHealthCounterMetricState(healthMetricData, this, false);
+            healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
         }
     },
-    WAITING_MISSING_TRANSACTION_INDEXES(WAITING_MISSING_TRANSACTION_INDEXES_LABEL, true, MetricType.TRANSACTIONS_METRIC, 1, 1, false) {
+    SOURCES_UPPER_BOUND(SOURCES_UPPER_BOUND_LABEL, false, MetricClass.TRANSACTIONS_METRIC, 24, 34, false, HealthMetricOutputType.INFLUX) {
+        @Override
         public void doSnapshot() {
-            long waitingMissingTransactionIndexesSize = confirmationService.getWaitingMissingTransactionIndexesSize();
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, waitingMissingTransactionIndexesSize);
+            Long sources = clusterService.getTotalSources();
+            this.getHealthMetricData().addValue("Sources", HealthMetricOutputType.ALL, "Sources", sources);
+            baseDoSnapshot(this, sources);
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            calculateHealthCounterMetricState(healthMetricData, this, true);
+            calculateHealthValueMetricState(this);
         }
     },
-    TOTAL_POSTPONED_TRANSACTIONS(TOTAL_POSTPONED_TRANSACTIONS_LABEL, true, MetricType.TRANSACTIONS_METRIC, 2, 4, false) {
+    SOURCES_LOWER_BOUND(SOURCES_LOWER_BOUND_LABEL, false, MetricClass.TRANSACTIONS_METRIC, -8, -6, false, HealthMetricOutputType.INFLUX) {
+        @Override
         public void doSnapshot() {
-            int totalPostponedTransactions = transactionService.totalPostponedTransactions();
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, totalPostponedTransactions);
+            baseDoSnapshot(this, clusterService.getTotalSources() * -1);
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            calculateHealthCounterMetricState(healthMetricData, this, true);
+            calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_QUEUE(PROPAGATION_QUEUE_LABEL, false, MetricType.NA, 64, 0, false) {
+    INDEX_DELTA(INDEX_DELTA_LABEL, true, MetricClass.TRANSACTIONS_METRIC, 2, 4, true, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            int messageQueueSize = propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, messageQueueSize);
+            long index = transactionIndexService.getLastTransactionIndexData().getIndex();
+            this.getHealthMetricData().addValue("Index", HealthMetricOutputType.ALL, "Index", index);
+            baseDoSnapshot(this, (transactionHelper.getTotalTransactions() - index) - 1);
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            baseCalculateHealthCounterMetricState(this);
         }
     },
-    WEB_SOCKET_MESSAGES_QUEUE_LENGTH(WEB_SOCKET_MESSAGES_QUEUE_LENGTH_LABEL, false, MetricType.QUEUE_METRIC, 100, 1000, false) {
+    WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED(WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL, true, MetricClass.TRANSACTIONS_METRIC, 1, 5, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            int messageQueueSize = webSocketMessageService.getMessageQueueSize();
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, messageQueueSize);
+            baseDoSnapshot(this, (long) confirmationService.getWaitingDspConsensusResultsMapSize());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            baseCalculateHealthCounterMetricState(this);
         }
     },
-    DCR_CONFIRMATION_QUEUE_SIZE(DCR_CONFIRMATION_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
+    WAITING_MISSING_TRANSACTION_INDEXES(WAITING_MISSING_TRANSACTION_INDEXES_LABEL, true, MetricClass.TRANSACTIONS_METRIC, 1, 1, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            int queueSize = confirmationService.getDcrConfirmationQueueSize();
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, queueSize);
+            baseDoSnapshot(this, (long) confirmationService.getWaitingMissingTransactionIndexesSize());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            baseCalculateHealthCounterMetricState(this);
         }
     },
-    TCC_CONFIRMATION_QUEUE_SIZE(TCC_CONFIRMATION_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
+    TOTAL_POSTPONED_TRANSACTIONS(TOTAL_POSTPONED_TRANSACTIONS_LABEL, true, MetricClass.TRANSACTIONS_METRIC, 2, 4, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            int queueSize = confirmationService.getTccConfirmationQueueSize();
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, queueSize);
+            baseDoSnapshot(this, (long) transactionService.totalPostponedTransactions());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            baseCalculateHealthCounterMetricState(this);
         }
     },
-    PERCENTAGE_USED_HEAP_MEMORY(PERCENTAGE_USED_HEAP_MEMORY_LABEL, false, MetricType.NA, 95, 98, false) {
+    WEB_SOCKET_MESSAGES_QUEUE(WEB_SOCKET_MESSAGES_QUEUE_LABEL, false, MetricClass.QUEUE_METRIC, 100, 1000, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            double percentageUsedHeap = MemoryUtils.getPercentageUsedHeap();
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, (long) percentageUsedHeap);
+            baseDoSnapshot(this, (long) webSocketMessageService.getMessageQueueSize());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            baseCalculateHealthCounterMetricState(this);
         }
     },
-    PERCENTAGE_USED_MEMORY(PERCENTAGE_USED_MEMORY_LABEL, false, MetricType.NA, 85, 95, false) {
+    DCR_CONFIRMATION_QUEUE_SIZE(DCR_CONFIRMATION_QUEUE_SIZE_LABEL, false, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            double percentageUsed = MemoryUtils.getPercentageUsed();
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, (long) percentageUsed);
+            baseDoSnapshot(this, (long) confirmationService.getDcrConfirmationQueueSize());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            baseCalculateHealthCounterMetricState(this);
         }
     },
-    CONNECTED_TO_RECOVERY(CONNECTED_TO_RECOVERY_LABEL, true, MetricType.TRANSACTIONS_METRIC, 1, 1, false) {
+    TCC_CONFIRMATION_QUEUE(TCC_CONFIRMATION_QUEUE_LABEL, false, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.ALL) {
+        public void doSnapshot() {
+            baseDoSnapshot(this, (long) confirmationService.getTccConfirmationQueueSize());
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            baseCalculateHealthCounterMetricState(this);
+        }
+    },
+    PERCENTAGE_USED_HEAP_MEMORY(PERCENTAGE_USED_HEAP_MEMORY_LABEL, false, MetricClass.NA, 95, 98, false, HealthMetricOutputType.ALL) {
+        public void doSnapshot() {
+            baseDoSnapshot(this, (long) MemoryUtils.getPercentageUsedHeap());
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            calculateHealthValueMetricState(this);
+        }
+    },
+    PERCENTAGE_USED_MEMORY(PERCENTAGE_USED_MEMORY_LABEL, false, MetricClass.NA, 85, 95, false, HealthMetricOutputType.ALL) {
+        public void doSnapshot() {
+            baseDoSnapshot(this, (long) MemoryUtils.getPercentageUsed());
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            calculateHealthValueMetricState(this);
+        }
+    },
+    CONNECTED_TO_RECOVERY(CONNECTED_TO_RECOVERY_LABEL, true, MetricClass.TRANSACTIONS_METRIC, 1, 1, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             int notConnectedToRecovery = !networkService.isConnectedToRecovery() ? 1 : 0;
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-            monitorService.setLastMetricValue(this, notConnectedToRecovery);
+            baseDoSnapshot(this, (long) notConnectedToRecovery);
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            calculateHealthCounterMetricState(healthMetricData, this, true);
+            calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 5, 0, false) {
+    TRANSACTION_PROPAGATION_QUEUE(TRANSACTION_PROPAGATION_QUEUE_LABEL, false, MetricClass.NA, 64, 0, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            String queueName = ZeroMQSubscriberQueue.TRANSACTIONS_STATE.name();
-            long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
-            monitorService.setLastMetricValue(this, queueSize);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION));
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            baseCalculateHealthCounterMetricState(this);
         }
     },
-    PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 10, 0, false) {
+    PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL, false, MetricClass.QUEUE_METRIC, 5, 0, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            String queueName = ZeroMQSubscriberQueue.NETWORK.name();
-            long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
-            monitorService.setLastMetricValue(this, queueSize);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTIONS_STATE));
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 40, 0, false) {
+    PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL, false, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            String queueName = ZeroMQSubscriberQueue.ADDRESS.name();
-            long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
-            monitorService.setLastMetricValue(this, queueSize);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.NETWORK));
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 40, 0, false) {
+    PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL, false, MetricClass.QUEUE_METRIC, 40, 0, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            String queueName = ZeroMQSubscriberQueue.TRANSACTION.name();
-            long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
-            monitorService.setLastMetricValue(this, queueSize);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.ADDRESS));
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            calculateHealthValueMetricState(this);
+
         }
     },
-    PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 10, 0, false) {
+    PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, false, MetricClass.QUEUE_METRIC, 40, 0, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            String queueName = ZeroMQSubscriberQueue.HEARTBEAT.name();
-            long queueSize = Integer.parseInt(propagationSubscriber.getQueueSizeMap().get(queueName));
-            monitorService.setLastMetricValue(this, queueSize);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION));
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            calculateHealthValueMetricState(this);
         }
     },
-    ZERO_MQ_RECEIVER_QUEUE_SIZE(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
+    PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL, false, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            long queueSize = receiver.getQueueSize();
-            monitorService.setLastMetricValue(this, queueSize);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.HEARTBEAT));
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, false, MetricType.QUEUE_METRIC, 100, 0, false) {
+    ZERO_MQ_RECEIVER_QUEUE_SIZE(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL, false, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            long queueSize = propagationPublisher.getQueueSize();
-            monitorService.setLastMetricValue(this, queueSize);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, (long) receiver.getQueueSize());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            calculateHealthValueMetricState(this);
         }
     },
-    LIVE_FILES_SIZE(LIVE_FILES_SIZE_LABEL, false, MetricType.DATABASE_METRIC, 100, 0, false) {
+    PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, false, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
-            long liveFilesAmount = databaseConnector.getLiveFilesNames().size();
-            monitorService.setLastMetricValue(this, liveFilesAmount);
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, (long) propagationPublisher.getQueueSize());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            calculateHealthValueMetricState(this);
         }
     },
-    BACKUP_HOURLY(BACKUP_HOURLY_LABEL, false, MetricType.BACKUP_METRIC, 2400, 4800, false) {
+    LIVE_FILES_SIZE(LIVE_FILES_SIZE_LABEL, false, MetricClass.DATABASE_METRIC, 100, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            long latestBackupStartedTime = dbRecoveryService.getBackupStartedTime();
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            long prevBackupStartedTime = Math.max(0, healthMetricData.getSpecificLastMetricValue(LATEST_BACKUP_STARTED_TIME));
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(PREVIOUS_BACKUP_STARTED_TIME, prevBackupStartedTime);
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(LATEST_BACKUP_STARTED_TIME, latestBackupStartedTime);
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                baseDoSnapshot(this, (long) databaseConnector.getLiveFilesNames().size());
+            }
+        }
 
-            if (latestBackupStartedTime > prevBackupStartedTime) {
-                monitorService.setLastMetricValue(this, dbRecoveryService.getBackupSuccess());
+        @Override
+        public void calculateHealthMetric() {
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                calculateHealthValueMetricState(this);
             } else {
-                monitorService.setLastMetricValue(this, 0);
-            }
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_IN_SECONDS, java.time.Instant.now().getEpochSecond());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (dbRecoveryService.isBackup()) {
-                healthMetricData.setLastConditionValue(healthMetricData.getSpecificLastMetricValue(SNAPSHOT_IN_SECONDS) - healthMetricData.getSpecificLastMetricValue(LATEST_BACKUP_STARTED_TIME));
-                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
-            } else {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
         }
     },
-    BACKUP_EPOCH(BACKUP_EPOCH_LABEL, false, MetricType.BACKUP_METRIC, 3600, 0, false) {
+    //    BACKUP_HOURLY(BACKUP_HOURLY_LABEL, false, MetricClass.BACKUP_METRIC, 2400, 4800, false) {
+//        public void doSnapshot() {
+//            long latestBackupStartedTime = dbRecoveryService.getBackupStartedTime();
+//            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
+//            long prevBackupStartedTime = Math.max(0, healthMetricData.getSpecificLastMetricValue(LATEST_BACKUP_STARTED_TIME));
+//            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(PREVIOUS_BACKUP_STARTED_TIME, prevBackupStartedTime);
+//            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(LATEST_BACKUP_STARTED_TIME, latestBackupStartedTime);
+//
+//            if (latestBackupStartedTime > prevBackupStartedTime) {
+//                monitorService.setMetricValue(this, dbRecoveryService.getBackupSuccess());
+//            } else {
+//                monitorService.setMetricValue(this, 0);
+//            }
+//            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_IN_SECONDS, java.time.Instant.now().getEpochSecond());
+//            monitorService.setSnapshotTime(this, Instant.now());
+//        }
+//
+//        @Override
+//        public void calculateHealthMetric() {
+//            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
+//            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+//                healthMetricData.setLastConditionValue(healthMetricData.getSpecificLastMetricValue(SNAPSHOT_IN_SECONDS) - healthMetricData.getSpecificLastMetricValue(LATEST_BACKUP_STARTED_TIME));
+//                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+//            } else {
+//                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+//            }
+//        }
+//    },
+    LAST_BACKUP_ELAPSED(LAST_BACKUP_ELAPSED_LABEL, false, MetricClass.BACKUP_METRIC, 3600, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            long latestBackupStartedTime = Math.max(0, dbRecoveryService.getBackupStartedTime());
-            monitorService.setLastMetricValue(this, latestBackupStartedTime);
-            monitorService.getHealthMetricData(this).setSpecificLastMetricValue(SNAPSHOT_IN_SECONDS, java.time.Instant.now().getEpochSecond());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                long backupStartedTime = dbRecoveryService.getBackupStartedTime();
+                this.getHealthMetricData().addValue("backupTime", HealthMetricOutputType.INFLUX, "backupStartedTime", backupStartedTime);
+                baseDoSnapshot(this, java.time.Instant.now().getEpochSecond() - backupStartedTime);
+            }
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (dbRecoveryService.isBackup()) {
-                healthMetricData.setLastConditionValue(healthMetricData.getSpecificLastMetricValue(SNAPSHOT_IN_SECONDS) - healthMetricData.getLastMetricValue());
-                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                HealthMetric.calculateHealthValueMetricState(this);
             } else {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
         }
     },
-    BACKUP_NUMBER_OF_FILES(BACKUP_NUMBER_OF_FILES_LABEL, false, MetricType.BACKUP_METRIC, 1, 1, false) {
+    NUMBER_OF_LIVE_FILES_NOT_BACKED_UP(NUMBER_OF_LIVE_FILES_NOT_BACKED_UP_LABEL, false, MetricClass.BACKUP_METRIC, 1, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            long latestBackupStartedTime = Math.max(0, dbRecoveryService.getBackupStartedTime());
-            int backupFilesAmount = dbRecoveryService.getLastBackupInfo() != null ? dbRecoveryService.getLastBackupInfo().numberFiles() : 0;
-            if (latestBackupStartedTime > 0) {
-                monitorService.setLastMetricValue(this, backupFilesAmount);
-                monitorService.getHealthMetricData(this).setSpecificLastMetricValue(LIVE_FILES_AMOUNT, databaseConnector.getLiveFilesNames().size());
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                long numberOfBackedFiles = dbRecoveryService.getLastBackupInfo().numberFiles();
+                long numberOfLiveFiles = databaseConnector.getLiveFilesNames().size();
+                this.getHealthMetricData().addValue("BackupNumberOfFiles", HealthMetricOutputType.INFLUX, "BackupNumberOfFiles", numberOfBackedFiles);
+                baseDoSnapshot(this, numberOfLiveFiles - numberOfBackedFiles);
             }
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (dbRecoveryService.isBackup()) {
-                healthMetricData.setLastConditionValue(healthMetricData.getSpecificLastMetricValue(LIVE_FILES_AMOUNT) - healthMetricData.getLastMetricValue());
-                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                HealthMetric.calculateHealthValueMetricState(this);
             } else {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
         }
     },
-    BACKUP_SIZE(BACKUP_SIZE_LABEL, false, MetricType.BACKUP_METRIC, 0, 0, false) {
+    BACKUP_SIZE(BACKUP_SIZE_LABEL, false, MetricClass.BACKUP_METRIC, 0, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            long latestBackupStartedTime = Math.max(0, dbRecoveryService.getBackupStartedTime());
-            long backupSize = dbRecoveryService.getLastBackupInfo() != null ? dbRecoveryService.getLastBackupInfo().size() : 0;
-            if (latestBackupStartedTime > 0) {
-                monitorService.setLastMetricValue(this, backupSize);
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                baseDoSnapshot(this, dbRecoveryService.getLastBackupInfo().size());
             }
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (dbRecoveryService.isBackup()) {
-                healthMetricData.setLastConditionValue(-healthMetricData.getLastMetricValue());
-                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+        }
+    },
+    BACKUP_ENTIRE_DURATION(BACKUP_ENTIRE_DURATION_LABEL, false, MetricClass.BACKUP_METRIC, 75, 180, false, HealthMetricOutputType.INFLUX) {
+        public void doSnapshot() {
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                baseDoSnapshot(this, dbRecoveryService.getEntireDuration());
+            }
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                HealthMetric.calculateHealthValueMetricState(this);
             } else {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
         }
     },
-    BACKUP_ENTIRE_DURATION(BACKUP_ENTIRE_DURATION_LABEL, false, MetricType.BACKUP_METRIC, 75, 180, false) {
+    BACKUP_DURATION(BACKUP_DURATION_LABEL, false, MetricClass.BACKUP_METRIC, 45, 90, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            monitorService.setLastMetricValue(this, dbRecoveryService.getEntireDuration());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                baseDoSnapshot(this, dbRecoveryService.getBackupDuration());
+            }
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (dbRecoveryService.isBackup()) {
-                healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                HealthMetric.calculateHealthValueMetricState(this);
             } else {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
         }
     },
-    BACKUP_DURATION(BACKUP_DURATION_LABEL, false, MetricType.BACKUP_METRIC, 45, 90, false) {
+    BACKUP_UPLOAD_DURATION(BACKUP_UPLOAD_DURATION_LABEL, false, MetricClass.BACKUP_METRIC, 20, 60, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            monitorService.setLastMetricValue(this, dbRecoveryService.getBackupDuration());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                baseDoSnapshot(this, dbRecoveryService.getUploadDuration());
+            }
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (dbRecoveryService.isBackup()) {
-                healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                HealthMetric.calculateHealthValueMetricState(this);
             } else {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
         }
     },
-    BACKUP_UPLOAD_DURATION(BACKUP_UPLOAD_DURATION_LABEL, false, MetricType.BACKUP_METRIC, 20, 60, false) {
+    BACKUP_REMOVAL_DURATION(BACKUP_REMOVAL_DURATION_LABEL, false, MetricClass.BACKUP_METRIC, 10, 30, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            monitorService.setLastMetricValue(this, dbRecoveryService.getUploadDuration());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                baseDoSnapshot(this, dbRecoveryService.getRemovalDuration());
+            }
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (dbRecoveryService.isBackup()) {
-                healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
+            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+                HealthMetric.calculateHealthValueMetricState(this);
             } else {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
             }
         }
     },
-    BACKUP_REMOVAL_DURATION(BACKUP_REMOVAL_DURATION_LABEL, false, MetricType.BACKUP_METRIC, 10, 30, false) {
+    REJECTED_TRANSACTIONS(REJECTED_TRANSACTIONS_LABEL, false, MetricClass.TRANSACTIONS_METRIC, 10, 0, true, HealthMetricOutputType.INFLUX) {
+        @Override
         public void doSnapshot() {
-            monitorService.setLastMetricValue(this, dbRecoveryService.getRemovalDuration());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
+            baseDoSnapshot(this, rejectedTransactions.size());
         }
 
         @Override
         public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            if (dbRecoveryService.isBackup()) {
-                healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-                HealthMetric.calculateHealthValueMetricState(healthMetricData, this);
-            } else {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
-            }
-        }
-    },
-    REJECTED_TRANSACTIONS(REJECTED_TRANSACTIONS_LABEL, false, MetricType.TRANSACTIONS_METRIC, 10, 0, true) {
-        @Override
-        public void doSnapshot() {
-            monitorService.setLastMetricValue(this, rejectedTransactions.size());
-            monitorService.setSnapshotTime(this, String.valueOf(Instant.now().toEpochMilli()));
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastConditionValue(healthMetricData.getLastMetricValue());
-            calculateHealthValueMetricState(healthMetricData, this);
+            HealthMetric.calculateHealthValueMetricState(this);
         }
     };
 
@@ -581,78 +470,105 @@ public enum HealthMetric implements IHealthMetric {
     protected static final String PREVIOUS_BACKUP_STARTED_TIME = "previousBackupStartedTime";
     protected static final String LATEST_BACKUP_STARTED_TIME = "latestBackupStartedTime";
     protected static final String LIVE_FILES_AMOUNT = "liveFilesAmount";
-
-    public final String label;
-    private final boolean counterBased;
-    private final boolean detailedLogs;
-    private final MetricType metricType;
-    protected ITransactionHelper transactionHelper;
-    protected IMonitorService monitorService;
-    protected IClusterService clusterService;
-    protected TransactionIndexService transactionIndexService;
-    protected IConfirmationService confirmationService;
-    protected TrustChainConfirmationService trustChainConfirmationService;
-    protected ITransactionService transactionService;
-    protected IPropagationSubscriber propagationSubscriber;
-    protected IWebSocketMessageService webSocketMessageService;
-    protected INetworkService networkService;
-    protected IReceiver receiver;
-    protected IPropagationPublisher propagationPublisher;
-    protected IDatabaseConnector databaseConnector;
-    protected IDBRecoveryService dbRecoveryService;
-    protected RejectedTransactions rejectedTransactions;
+    protected static IMonitorService monitorService;
+    public String label;
+    protected static ITransactionHelper transactionHelper;
+    protected static IClusterService clusterService;
+    protected static TransactionIndexService transactionIndexService;
+    protected static IConfirmationService confirmationService;
+    protected static TrustChainConfirmationService trustChainConfirmationService;
+    protected static ITransactionService transactionService;
+    protected static IPropagationSubscriber propagationSubscriber;
+    protected static IWebSocketMessageService webSocketMessageService;
+    protected static INetworkService networkService;
+    protected static IReceiver receiver;
+    protected static IPropagationPublisher propagationPublisher;
+    protected static IDatabaseConnector databaseConnector;
+    protected static IDBRecoveryService dbRecoveryService;
+    protected static RejectedTransactions rejectedTransactions;
+    private boolean counterBased;
+    private boolean detailedLogs;
+    private HealthMetricOutputType healthMetricOutputType;
+    private MetricClass metricClass;
     private long warningThreshold;
     private long criticalThreshold;
+    private boolean includeInTotalHealthState = true;
 
-    HealthMetric(String label, boolean counterBased, MetricType metricType, long warningThreshold, long criticalThreshold, boolean detailedLogs) {
-        this.label = label;
-        this.counterBased = counterBased;
-        this.metricType = metricType;
-        this.warningThreshold = warningThreshold;
-        this.criticalThreshold = criticalThreshold;
-        this.detailedLogs = detailedLogs;
+    HealthMetric(String label, boolean counterBased, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs, HealthMetricOutputType healthMetricOutputType) {
+        setHealthMetricBaseProperties(label, counterBased, metricClass, warningThreshold, criticalThreshold, detailedLogs, healthMetricOutputType);
+    }
+
+    HealthMetric(String label, boolean counterBased, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs, boolean includeInTotalHealthState, HealthMetricOutputType healthMetricOutputType) {
+        setHealthMetricBaseProperties(label, counterBased, metricClass, warningThreshold, criticalThreshold, detailedLogs, healthMetricOutputType);
+        this.includeInTotalHealthState = includeInTotalHealthState;
+    }
+
+    private static void baseCalculateHealthCounterMetricState(HealthMetric healthMetric) {
+        HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
+        calculateHealthCounterMetricState(healthMetricData, healthMetric, true);
+    }
+
+    private static synchronized void baseDoSnapshot(HealthMetric healthMetric, Long metricValue) {
+        monitorService.setMetricValue(healthMetric, metricValue);
+        monitorService.setSnapshotTime(healthMetric, Instant.now());
     }
 
     public static HealthMetric getHealthMetric(String label) {
-        return Arrays.stream(HealthMetric.values()).filter(metric -> label.equalsIgnoreCase(metric.label))
-                .findFirst().orElseThrow(() -> new IllegalArgumentException("No metric found"));
+        return Arrays.stream(HealthMetric.values()).filter(metric -> label.equalsIgnoreCase(metric.label)).findFirst().orElseThrow(() -> new IllegalArgumentException("No metric found"));
+    }
+
+    private static boolean healthIsDegrading(HealthMetricData healthMetricData) {
+        return Math.abs(healthMetricData.getMetricValue()) > Math.abs(healthMetricData.getPreviousMetricValue());
     }
 
     private static void calculateHealthCounterMetricState(HealthMetricData healthMetricData, HealthMetric healthMetric, boolean updateCounter) {
-        if (healthMetricData.getLastConditionValue() > 0) {
-            if (updateCounter) {
-                healthMetricData.setLastCounter(healthMetricData.getLastCounter() + 1);
+        if (healthMetricData.getMetricValue() != 0) {
+            if (updateCounter && healthIsDegrading(healthMetricData)) {
+                healthMetricData.increaseDegradingCounter();
             }
-            if (healthMetricData.getLastCounter() >= healthMetric.criticalThreshold &&
-                    healthMetric.criticalThreshold >= healthMetric.warningThreshold) {
+            if (healthMetricData.getDegradingCounter() >= healthMetric.criticalThreshold && healthMetric.criticalThreshold >= healthMetric.warningThreshold) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
-            } else if (healthMetricData.getLastCounter() >= healthMetric.warningThreshold) {
+            } else if (healthMetricData.getDegradingCounter() >= healthMetric.warningThreshold) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
             } else if (BaseNodeMonitorService.HealthState.NA.equals(healthMetricData.getLastHealthState())) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
             }
         } else {
             if (updateCounter) {
-                healthMetricData.setLastCounter(0);
+                healthMetricData.setDegradingCounter(0);
             }
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
         }
     }
 
-    private static void calculateHealthValueMetricState(HealthMetricData healthMetricData, HealthMetric healthMetric) {
-        long lastConditionValue = healthMetricData.getLastConditionValue();
-        if (lastConditionValue >= healthMetric.criticalThreshold &&
-                healthMetric.criticalThreshold >= healthMetric.warningThreshold) {
+    private static void calculateHealthValueMetricState(HealthMetric healthMetric) {
+        HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
+        long currentMetricValue = healthMetricData.getMetricValue();
+        if (currentMetricValue >= healthMetric.criticalThreshold && healthMetric.criticalThreshold >= healthMetric.warningThreshold) {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
-        } else if (lastConditionValue >= healthMetric.warningThreshold) {
+        } else if (currentMetricValue >= healthMetric.warningThreshold) {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
         } else {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
         }
     }
 
-    public MetricType getMetricType() {
-        return metricType;
+    private void setHealthMetricBaseProperties(String _label, boolean _counterBased, MetricClass _metricClass, long _warningThreshold, long _criticalThreshold, boolean _detailedLogs, HealthMetricOutputType _healthMetricOutputType) {
+        setHealthMetricBaseProperties(_label, _counterBased, _metricClass, _warningThreshold, _criticalThreshold, _detailedLogs);
+        this.healthMetricOutputType = _healthMetricOutputType;
+    }
+
+    private void setHealthMetricBaseProperties(String _label, boolean _counterBased, MetricClass _metricClass, long _warningThreshold, long _criticalThreshold, boolean _detailedLogs) {
+        label = _label;
+        counterBased = _counterBased;
+        metricClass = _metricClass;
+        warningThreshold = _warningThreshold;
+        criticalThreshold = _criticalThreshold;
+        detailedLogs = _detailedLogs;
+    }
+
+    public MetricClass getMetricType() {
+        return metricClass;
     }
 
     public long getWarningThreshold() {
@@ -694,13 +610,20 @@ public enum HealthMetric implements IHealthMetric {
         } else {
             builder.up();
         }
-        builder.withDetail(this.label, healthMetricData.getLastHealthState()).withDetail("State", healthMetricData.getLastHealthState())
-                .withDetail("conditionValue", healthMetricData.getLastConditionValue());
+        builder.withDetail(this.label, healthMetricData.getLastHealthState()).withDetail("State", healthMetricData.getLastHealthState()).withDetail("conditionValue", healthMetricData.getMetricValue());
         if (this.isCounterBased()) {
-            builder.withDetail("Counter", healthMetricData.getLastCounter());
+            builder.withDetail("Counter", healthMetricData.getDegradingCounter());
         }
         healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.toString()));
         return builder.build();
+    }
+
+    public HealthMetricOutputType getHealthMetricOutputType() {
+        return healthMetricOutputType;
+    }
+
+    public MetricClass getMetricClass() {
+        return metricClass;
     }
 
 }

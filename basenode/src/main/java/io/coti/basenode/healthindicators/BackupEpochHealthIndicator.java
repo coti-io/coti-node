@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.BACKUP_EPOCH_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.LAST_BACKUP_ELAPSED_LABEL;
 
 @Component
 public class BackupEpochHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class BackupEpochHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(BACKUP_EPOCH_LABEL);
+        return monitorService.getHealthBuilder(LAST_BACKUP_ELAPSED_LABEL);
     }
 
 }
