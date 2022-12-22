@@ -12,7 +12,7 @@ import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.WAITING_D
 public class WaitingDspConsensusResultsConfirmedHealthIndicator implements HealthIndicator {
 
     @Autowired
-    protected IMonitorService monitorService;
+    private IMonitorService monitorService;
 
     @Override
     public Health health() {

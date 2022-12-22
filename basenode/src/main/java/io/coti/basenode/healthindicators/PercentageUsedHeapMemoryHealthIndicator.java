@@ -12,7 +12,7 @@ import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.PERCENTAG
 public class PercentageUsedHeapMemoryHealthIndicator implements HealthIndicator {
 
     @Autowired
-    protected IMonitorService monitorService;
+    private IMonitorService monitorService;
 
     @Override
     public Health health() {
