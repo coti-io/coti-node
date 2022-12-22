@@ -12,7 +12,7 @@ import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.LAST_BACK
 public class BackupEpochHealthIndicator implements HealthIndicator {
 
     @Autowired
-    protected IMonitorService monitorService;
+    private IMonitorService monitorService;
 
     @Override
     public Health health() {

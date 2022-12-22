@@ -21,7 +21,7 @@ public class HealthMetricData {
     private Map<String, HealthMetricOutput> additionalValues = new HashMap<>();
 
 
-    public HealthMetricData(long metricValue, long previousMetricValue, long lastConditionValue, BaseNodeMonitorService.HealthState lastHealthState, int degradingCounter, Instant snapshotTime) {
+    public HealthMetricData(long metricValue, long previousMetricValue, BaseNodeMonitorService.HealthState lastHealthState, int degradingCounter, Instant snapshotTime) {
         this.metricValue = metricValue;
         this.previousMetricValue = previousMetricValue;
         this.lastHealthState = lastHealthState;
@@ -34,10 +34,6 @@ public class HealthMetricData {
         this.previousMetricValue = 0;
         this.lastHealthState = BaseNodeMonitorService.HealthState.NA;
         this.degradingCounter = 0;
-    }
-
-    public void addValue(String metricLabel) {
-
     }
 
     public void setSpecificLastMetricValue(String fieldKey, HealthMetricOutput healthMetricOutput) {
@@ -55,8 +51,8 @@ public class HealthMetricData {
     public void addValue(String metricName, HealthMetricOutputType healthMetricOutputType, String metricLabel, long metricValue) {
         HealthMetricOutput healthMetricOutput = additionalValues.get(metricName);
         if (healthMetricOutput == null) {
-            healthMetricOutput = new HealthMetricOutput(healthMetricOutputType, metricLabel,metricValue);
-            additionalValues.put(metricName,healthMetricOutput);
+            healthMetricOutput = new HealthMetricOutput(healthMetricOutputType, metricLabel, metricValue);
+            additionalValues.put(metricName, healthMetricOutput);
         } else {
             healthMetricOutput.setType(healthMetricOutputType);
             healthMetricOutput.setLabel(metricLabel);

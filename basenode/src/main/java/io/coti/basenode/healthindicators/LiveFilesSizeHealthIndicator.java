@@ -12,7 +12,7 @@ import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.LIVE_FILE
 public class LiveFilesSizeHealthIndicator implements HealthIndicator {
 
     @Autowired
-    protected IMonitorService monitorService;
+    private IMonitorService monitorService;
 
     @Override
     public Health health() {

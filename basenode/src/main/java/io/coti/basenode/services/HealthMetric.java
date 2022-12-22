@@ -14,7 +14,7 @@ import io.coti.basenode.utilities.MemoryUtils;
 import org.springframework.boot.actuate.health.Health;
 
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.*;
@@ -30,10 +30,10 @@ public enum HealthMetric implements IHealthMetric {
             healthMetricData.addValue("Transactions", HealthMetricOutputType.ALL, "Transactions", totalTransactions);
             long totalTransactionsFromRecoveryServer = transactionHelper.getTotalNumberOfTransactionsFromRecovery();
             if (totalTransactionsFromRecoveryServer > 0) {
-                healthMetricData.addValue("TotalNumberOfTransactionsFromRecovery", HealthMetricOutputType.ALL, "TotalNumberOfTransactionsFromRecovery", totalTransactionsFromRecoveryServer);
+                healthMetricData.addValue("TotalNumberOfTransactionsFromRecovery", HealthMetricOutputType.INFLUX, "TotalNumberOfTransactionsFromRecovery", totalTransactionsFromRecoveryServer);
                 baseDoSnapshot(this, totalTransactions - totalTransactionsFromRecoveryServer);
             } else {
-                baseDoSnapshot(this, (long)-1);
+                baseDoSnapshot(this, (long) -1);
             }
         }
 
@@ -46,7 +46,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         }
     },
-    NUM_TCC_LOOP_NO_CHANGE("NUM_TCC_LOOP_NO_CHANGE", false, MetricClass.TRANSACTIONS_METRIC, 5, 10, true, HealthMetricOutputType.INFLUX) {
+    NUM_TCC_LOOP_NO_CHANGE(NUM_TCC_LOOP_NO_CHANGE_LABEL, false, MetricClass.TRANSACTIONS_METRIC, 5, 10, true, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             this.getHealthMetricData().addValue(TRUST_CHAIN_CONFIRMED_LABEL, HealthMetricOutputType.ALL, TRUST_CHAIN_CONFIRMED_LABEL, confirmationService.getTrustChainConfirmed());
             baseDoSnapshot(this, trustChainConfirmationService.getNumberOfTimesTrustScoreNotChanged());
@@ -84,7 +84,7 @@ public enum HealthMetric implements IHealthMetric {
     SOURCES_UPPER_BOUND(SOURCES_UPPER_BOUND_LABEL, false, MetricClass.TRANSACTIONS_METRIC, 24, 34, false, HealthMetricOutputType.INFLUX) {
         @Override
         public void doSnapshot() {
-            Long sources = clusterService.getTotalSources();
+            long sources = clusterService.getTotalSources();
             this.getHealthMetricData().addValue("Sources", HealthMetricOutputType.ALL, "Sources", sources);
             baseDoSnapshot(this, sources);
         }
@@ -458,20 +458,7 @@ public enum HealthMetric implements IHealthMetric {
         }
     };
 
-    protected static final String SNAPSHOT_TOTAL_TRANSACTIONS_FROM_RECOVERY = "SnapshotTotalTransactionsFromRecovery";
-    protected static final String SNAPSHOT_TOTAL_TRANSACTIONS_FROM_LOCAL = "SnapshotTotalTransactionsFromLocal";
-    protected static final String SNAPSHOT_PREVIOUS_DSP_CONFIRMED = "SnapshotPreviousDSPConfirmed";
-    protected static final String SNAPSHOT_DSP_CONFIRMED = "SnapshotDSPConfirmed";
-    protected static final String SNAPSHOT_PREVIOUS_TOTAL_CONFIRMED = "SnapshotPreviousTotalConfirmed";
-    protected static final String SNAPSHOT_TOTAL_CONFIRMED = "SnapshotTotalConfirmed";
-    protected static final String SNAPSHOT_TCC_CONFIRMED = "SnapshotTccConfirmed";
-    protected static final String SNAPSHOT_CONFIRMED = "SnapshotConfirmed";
-    protected static final String SNAPSHOT_IN_SECONDS = "SnapshotInSeconds";
-    protected static final String PREVIOUS_BACKUP_STARTED_TIME = "previousBackupStartedTime";
-    protected static final String LATEST_BACKUP_STARTED_TIME = "latestBackupStartedTime";
-    protected static final String LIVE_FILES_AMOUNT = "liveFilesAmount";
     protected static IMonitorService monitorService;
-    public String label;
     protected static ITransactionHelper transactionHelper;
     protected static IClusterService clusterService;
     protected static TransactionIndexService transactionIndexService;
@@ -486,6 +473,7 @@ public enum HealthMetric implements IHealthMetric {
     protected static IDatabaseConnector databaseConnector;
     protected static IDBRecoveryService dbRecoveryService;
     protected static RejectedTransactions rejectedTransactions;
+    private String label;
     private boolean counterBased;
     private boolean detailedLogs;
     private HealthMetricOutputType healthMetricOutputType;
@@ -493,6 +481,13 @@ public enum HealthMetric implements IHealthMetric {
     private long warningThreshold;
     private long criticalThreshold;
     private boolean includeInTotalHealthState = true;
+    private static final Map<String, HealthMetric> BY_LABEL = new HashMap<>();
+
+    static {
+        for (HealthMetric hm : values()) {
+            BY_LABEL.put(hm.label, hm);
+        }
+    }
 
     HealthMetric(String label, boolean counterBased, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs, HealthMetricOutputType healthMetricOutputType) {
         setHealthMetricBaseProperties(label, counterBased, metricClass, warningThreshold, criticalThreshold, detailedLogs, healthMetricOutputType);
@@ -501,6 +496,15 @@ public enum HealthMetric implements IHealthMetric {
     HealthMetric(String label, boolean counterBased, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs, boolean includeInTotalHealthState, HealthMetricOutputType healthMetricOutputType) {
         setHealthMetricBaseProperties(label, counterBased, metricClass, warningThreshold, criticalThreshold, detailedLogs, healthMetricOutputType);
         this.includeInTotalHealthState = includeInTotalHealthState;
+    }
+
+    public static HealthMetric getHealthMetricByLabel(String label) {
+        HealthMetric value = BY_LABEL.get(label);
+        if (value != null) {
+            return value;
+        } else {
+            throw new IllegalArgumentException("No metric found");
+        }
     }
 
     private static void baseCalculateHealthCounterMetricState(HealthMetric healthMetric) {
@@ -513,8 +517,8 @@ public enum HealthMetric implements IHealthMetric {
         monitorService.setSnapshotTime(healthMetric, Instant.now());
     }
 
-    public static HealthMetric getHealthMetric(String label) {
-        return Arrays.stream(HealthMetric.values()).filter(metric -> label.equalsIgnoreCase(metric.label)).findFirst().orElseThrow(() -> new IllegalArgumentException("No metric found"));
+    public String getLabel() {
+        return this.label;
     }
 
     private static boolean healthIsDegrading(HealthMetricData healthMetricData) {
@@ -553,18 +557,18 @@ public enum HealthMetric implements IHealthMetric {
         }
     }
 
-    private void setHealthMetricBaseProperties(String _label, boolean _counterBased, MetricClass _metricClass, long _warningThreshold, long _criticalThreshold, boolean _detailedLogs, HealthMetricOutputType _healthMetricOutputType) {
-        setHealthMetricBaseProperties(_label, _counterBased, _metricClass, _warningThreshold, _criticalThreshold, _detailedLogs);
-        this.healthMetricOutputType = _healthMetricOutputType;
+    private void setHealthMetricBaseProperties(String label, boolean counterBased, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs, HealthMetricOutputType healthMetricOutputType) {
+        setHealthMetricBaseProperties(label, counterBased, metricClass, warningThreshold, criticalThreshold, detailedLogs);
+        this.healthMetricOutputType = healthMetricOutputType;
     }
 
-    private void setHealthMetricBaseProperties(String _label, boolean _counterBased, MetricClass _metricClass, long _warningThreshold, long _criticalThreshold, boolean _detailedLogs) {
-        label = _label;
-        counterBased = _counterBased;
-        metricClass = _metricClass;
-        warningThreshold = _warningThreshold;
-        criticalThreshold = _criticalThreshold;
-        detailedLogs = _detailedLogs;
+    private void setHealthMetricBaseProperties(String label, boolean counterBased, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs) {
+        this.label = label;
+        this.counterBased = counterBased;
+        this.metricClass = metricClass;
+        this.warningThreshold = warningThreshold;
+        this.criticalThreshold = criticalThreshold;
+        this.detailedLogs = detailedLogs;
     }
 
     public MetricClass getMetricType() {
@@ -595,11 +599,6 @@ public enum HealthMetric implements IHealthMetric {
     @Override
     public HealthMetricData getHealthMetricData() {
         return monitorService.getHealthMetricData(this);
-    }
-
-    @Override
-    public Map<HealthMetric, HealthMetricData> getHealthMetrics() {
-        return monitorService.getHealthMetrics();
     }
 
     @Override
