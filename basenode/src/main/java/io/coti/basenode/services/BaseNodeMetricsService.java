@@ -1,7 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.data.MetricType;
+import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,10 +66,10 @@ public class BaseNodeMetricsService implements IMetricsService {
         metricTemplate = metricTemplate.replace("nodeTemplate", hostName);
         metricTemplateSubComponent = metricTemplateSubComponent.replace("nodeTemplate", hostName);
 
-        metricTemplateMap.put(MetricType.QUEUE_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "queues"));
-        metricTemplateMap.put(MetricType.TRANSACTIONS_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "transactions"));
-        metricTemplateMap.put(MetricType.BACKUP_METRIC.name(), metricTemplateSubComponent.replace(COMPONENT_TEMPLATE, "backups"));
-        metricTemplateMap.put(MetricType.DATABASE_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "database"));
+        metricTemplateMap.put(MetricClass.QUEUE_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "queues"));
+        metricTemplateMap.put(MetricClass.TRANSACTIONS_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "transactions"));
+        metricTemplateMap.put(MetricClass.BACKUP_METRIC.name(), metricTemplateSubComponent.replace(COMPONENT_TEMPLATE, "backups"));
+        metricTemplateMap.put(MetricClass.DATABASE_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "database"));
 
         sampleThread = new Thread(this::getMetricsSample, "MetricsSample");
         sampleThread.start();

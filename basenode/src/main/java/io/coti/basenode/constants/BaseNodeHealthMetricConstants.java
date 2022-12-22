@@ -2,19 +2,19 @@ package io.coti.basenode.constants;
 
 public class BaseNodeHealthMetricConstants {
 
-    public static final String TOTAL_TRANSACTIONS_LABEL = "TotalTransactions";
+    public static final String TOTAL_TRANSACTIONS_DELTA_LABEL = "TotalTransactionsDelta";
     public static final String SOURCES_UPPER_BOUND_LABEL = "SourcesUpperBound";
     public static final String SOURCES_LOWER_BOUND_LABEL = "SourcesLowerBound";
-    public static final String INDEX_LABEL = "Index";
+    public static final String INDEX_DELTA_LABEL = "IndexDelta";
     public static final String WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL = "WaitingDspConsensusResultsConfirmed";
-    public static final String DSP_CONFIRMED_LABEL = "DSPConfirmed";
-    public static final String TOTAL_CONFIRMED_LABEL = "TotalConfirmed";
-    public static final String TRUST_CHAIN_CONFIRMED_LABEL = "TrustChainConfirmed";
+    public static final String DSP_CONFIRMED_LABEL_DELTA = "DSPConfirmedDelta";
+    public static final String TOTAL_CONFIRMED_LABEL = "Confirmed";
+    public static final String TRUST_CHAIN_CONFIRMED_LABEL = "TccConfirmed";
     public static final String WAITING_MISSING_TRANSACTION_INDEXES_LABEL = "WaitingMissingTransactionIndexes";
     public static final String TOTAL_POSTPONED_TRANSACTIONS_LABEL = "TotalPostponedTransactions";
-    public static final String PROPAGATION_QUEUE_LABEL = "PropagationQueue";
-    public static final String WEB_SOCKET_MESSAGES_QUEUE_LENGTH_LABEL = "WebSocketMessagesQueueLength";
-    public static final String TCC_CONFIRMATION_QUEUE_SIZE_LABEL = "TccConfirmationQueueSize";
+    public static final String TRANSACTION_PROPAGATION_QUEUE_LABEL = "TransactionPropagationQueue";
+    public static final String WEB_SOCKET_MESSAGES_QUEUE_LABEL = "WebSocketMessagesQueue";
+    public static final String TCC_CONFIRMATION_QUEUE_LABEL = "TccConfirmationQueue";
     public static final String DCR_CONFIRMATION_QUEUE_SIZE_LABEL = "DcrConfirmationQueueSize";
     public static final String PERCENTAGE_USED_HEAP_MEMORY_LABEL = "PercentageUsedHeapMemory";
     public static final String PERCENTAGE_USED_MEMORY_LABEL = "PercentageUsedMemory";
@@ -28,8 +28,8 @@ public class BaseNodeHealthMetricConstants {
     public static final String PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL = "PropagationPublisherQueueSize";
     public static final String LIVE_FILES_SIZE_LABEL = "LiveFilesSize";
     public static final String BACKUP_HOURLY_LABEL = "BackupHourly";
-    public static final String BACKUP_EPOCH_LABEL = "BackupEpoch";
-    public static final String BACKUP_NUMBER_OF_FILES_LABEL = "BackupNumberOfFiles";
+    public static final String LAST_BACKUP_ELAPSED_LABEL = "LastBackupElapsedSeconds";
+    public static final String NUMBER_OF_LIVE_FILES_NOT_BACKED_UP_LABEL = "NumberOfLivesFilesNotBackedUp";
     public static final String BACKUP_SIZE_LABEL = "BackupSize";
     public static final String BACKUP_ENTIRE_DURATION_LABEL = "BackupEntireDuration";
     public static final String BACKUP_DURATION_LABEL = "BackupDuration";

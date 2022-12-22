@@ -62,7 +62,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     protected ITransactionPropagationCheckService transactionPropagationCheckService;
 
     private long totalNumberOfTransactionsFromRecovery = 0;
-    private long totalNumberOfTransactionsFromLocal = 0;
 
     @PostConstruct
     private void init() {
@@ -551,15 +550,9 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     }
 
     @Override
-    public long getTotalNumberOfTransactionsFromLocal() {
-        return totalNumberOfTransactionsFromLocal;
-    }
-
-    @Override
     public void handleReportedTransactionsState(TransactionsStateData transactionsStateData) {
-        totalNumberOfTransactionsFromLocal = getTotalTransactions();
-        if ( transactionsStateData.getTransactionsAmount() > totalNumberOfTransactionsFromRecovery ) {
-            totalNumberOfTransactionsFromRecovery = transactionsStateData.getTransactionsAmount();
-        }
+
+        totalNumberOfTransactionsFromRecovery = transactionsStateData.getTransactionsAmount();
+        HealthMetric.TOTAL_TRANSACTIONS_DELTA.doSnapshot();
     }
 }

@@ -4,7 +4,9 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
-import io.coti.basenode.data.MetricType;
+import io.coti.basenode.data.HealthMetricOutput;
+import io.coti.basenode.data.HealthMetricOutputType;
+import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.services.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
@@ -15,14 +17,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.DSP_CONFIRMED_LABEL;
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TRUST_CHAIN_CONFIRMED_LABEL;
 
 @Slf4j
 @Service
@@ -205,86 +205,36 @@ public class BaseNodeMonitorService implements IMonitorService {
         for (HealthMetric hm : HealthMetric.values()) {
             hm.monitorService = this;
         }
-        HealthMetric.TOTAL_TRANSACTIONS.transactionHelper = transactionHelper;
+        HealthMetric.transactionHelper = transactionHelper;
+        HealthMetric.clusterService = clusterService;
+        HealthMetric.transactionIndexService = transactionIndexService;
+        HealthMetric.confirmationService = confirmationService;
+        HealthMetric.trustChainConfirmationService = trustChainConfirmationService;
+        HealthMetric.transactionService = transactionService;
+        HealthMetric.propagationSubscriber = propagationSubscriber;
+        HealthMetric.webSocketMessageService = webSocketMessageService;
+        HealthMetric.networkService = networkService;
+        HealthMetric.receiver = receiver;
+        HealthMetric.databaseConnector = databaseConnector;
+        HealthMetric.dbRecoveryService = dbRecoveryService;
+        HealthMetric.propagationPublisher = propagationPublisher;
 
-        HealthMetric.SOURCES_UPPER_BOUND.clusterService = clusterService;
-
-        HealthMetric.SOURCES_LOWER_BOUND.clusterService = clusterService;
-
-        HealthMetric.INDEX.transactionHelper = transactionHelper;
-        HealthMetric.INDEX.transactionIndexService = transactionIndexService;
-
-        HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED.confirmationService = confirmationService;
-
-        HealthMetric.DSP_CONFIRMED.confirmationService = confirmationService;
-        HealthMetric.DSP_CONFIRMED.transactionHelper = transactionHelper;
-
-        HealthMetric.TOTAL_CONFIRMED.confirmationService = confirmationService;
-
-        HealthMetric.TRUST_CHAIN_CONFIRMED.trustChainConfirmationService = trustChainConfirmationService;
-        HealthMetric.TRUST_CHAIN_CONFIRMED.confirmationService = confirmationService;
-
-        HealthMetric.WAITING_MISSING_TRANSACTION_INDEXES.confirmationService = confirmationService;
-
-        HealthMetric.TOTAL_POSTPONED_TRANSACTIONS.transactionService = transactionService;
-
-        HealthMetric.PROPAGATION_QUEUE.propagationSubscriber = propagationSubscriber;
-
-        HealthMetric.WEB_SOCKET_MESSAGES_QUEUE_LENGTH.webSocketMessageService = webSocketMessageService;
-
-        HealthMetric.DCR_CONFIRMATION_QUEUE_SIZE.confirmationService = confirmationService;
-
-        HealthMetric.TCC_CONFIRMATION_QUEUE_SIZE.confirmationService = confirmationService;
-
-        HealthMetric.CONNECTED_TO_RECOVERY.networkService = networkService;
-
-        HealthMetric.PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
-
-        HealthMetric.PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
-
-        HealthMetric.PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
-
-        HealthMetric.PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
-
-        HealthMetric.PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE.propagationSubscriber = propagationSubscriber;
-
-        HealthMetric.ZERO_MQ_RECEIVER_QUEUE_SIZE.receiver = receiver;
-
-        HealthMetric.PROPAGATION_PUBLISHER_QUEUE_SIZE.propagationPublisher = propagationPublisher;
-
-        HealthMetric.LIVE_FILES_SIZE.databaseConnector = databaseConnector;
-
-        HealthMetric.BACKUP_HOURLY.dbRecoveryService = dbRecoveryService;
-
-        HealthMetric.BACKUP_EPOCH.dbRecoveryService = dbRecoveryService;
-
-        HealthMetric.BACKUP_NUMBER_OF_FILES.dbRecoveryService = dbRecoveryService;
-        HealthMetric.BACKUP_NUMBER_OF_FILES.databaseConnector = databaseConnector;
-
-        HealthMetric.BACKUP_SIZE.dbRecoveryService = dbRecoveryService;
-
-        HealthMetric.BACKUP_ENTIRE_DURATION.dbRecoveryService = dbRecoveryService;
-
-        HealthMetric.BACKUP_DURATION.dbRecoveryService = dbRecoveryService;
-
-        HealthMetric.BACKUP_UPLOAD_DURATION.dbRecoveryService = dbRecoveryService;
-
-        HealthMetric.BACKUP_REMOVAL_DURATION.dbRecoveryService = dbRecoveryService;
-
-        HealthMetric.TOTAL_TRANSACTIONS.setThresholds(totalTransactionsThresholdWarning, totalTransactionsThresholdCritical);
+        // todo we should iterate over the names of the healthmetric and looking for class varaiblaes contins that name , then diff warning , critical and
+        // then to populate updated values
+        HealthMetric.TOTAL_TRANSACTIONS_DELTA.setThresholds(totalTransactionsThresholdWarning, totalTransactionsThresholdCritical);
         HealthMetric.SOURCES_UPPER_BOUND.setThresholds(sourcesUpperBoundThresholdWarning, sourcesUpperBoundThresholdCritical);
         HealthMetric.SOURCES_LOWER_BOUND.setThresholds(sourcesLowerBoundThresholdWarning, sourcesLowerBoundThresholdCritical);
-        HealthMetric.INDEX.setThresholds(indexThresholdWarning, indexThresholdCritical);
+        HealthMetric.INDEX_DELTA.setThresholds(indexThresholdWarning, indexThresholdCritical);
         HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED.setThresholds(waitingDSPConsensusThresholdWarning, waitingDSPConsensusThresholdCritical);
         HealthMetric.WAITING_MISSING_TRANSACTION_INDEXES.setThresholds(waitingMissingTransactionsIndexesThresholdWarning, waitingMissingTransactionsIndexesThresholdCritical);
-        HealthMetric.DSP_CONFIRMED.setThresholds(dspOutsideNormalThresholdWarning, dspOutsideNormalThresholdCritical);
+        HealthMetric.DSP_CONFIRMED_DELTA.setThresholds(dspOutsideNormalThresholdWarning, dspOutsideNormalThresholdCritical);
         HealthMetric.TOTAL_CONFIRMED.setThresholds(totalConfirmedOutsideNormalThresholdWarning, totalConfirmedOutsideNormalThresholdCritical);
-        HealthMetric.TRUST_CHAIN_CONFIRMED.setThresholds(tccOutsideNormalThresholdWarning, tccOutsideNormalThresholdCritical);
+        HealthMetric.NUM_TCC_LOOP_NO_CHANGE.setThresholds(tccOutsideNormalThresholdWarning, tccOutsideNormalThresholdCritical);
         HealthMetric.TOTAL_POSTPONED_TRANSACTIONS.setThresholds(totalPostponedTransactionsIndexesThresholdWarning, totalPostponedTransactionsIndexesThresholdCritical);
-        HealthMetric.PROPAGATION_QUEUE.setThresholds(propagationQueueThresholdWarning, propagationQueueThresholdCritical);
-        HealthMetric.WEB_SOCKET_MESSAGES_QUEUE_LENGTH.setThresholds(webSocketMessagesQueueLengthWarning, webSocketMessagesQueueLengthCritical);
+        HealthMetric.TRANSACTION_PROPAGATION_QUEUE.setThresholds(propagationQueueThresholdWarning, propagationQueueThresholdCritical);
+        HealthMetric.WEB_SOCKET_MESSAGES_QUEUE.setThresholds(webSocketMessagesQueueLengthWarning, webSocketMessagesQueueLengthCritical);
         HealthMetric.DCR_CONFIRMATION_QUEUE_SIZE.setThresholds(dcrConfirmationQueueSizeWarning, dcrConfirmationQueueSizeCritical);
-        HealthMetric.TCC_CONFIRMATION_QUEUE_SIZE.setThresholds(tccConfirmationQueueSizeWarning, tccConfirmationQueueSizeCritical);
+        HealthMetric.TCC_CONFIRMATION_QUEUE.setThresholds(tccConfirmationQueueSizeWarning, tccConfirmationQueueSizeCritical);
         HealthMetric.PERCENTAGE_USED_HEAP_MEMORY.setThresholds(percentageUsedHeapMemoryWarning, percentageUsedHeapMemoryCritical);
         HealthMetric.PERCENTAGE_USED_MEMORY.setThresholds(percentageUsedMemoryWarning, percentageUsedMemoryCritical);
         HealthMetric.CONNECTED_TO_RECOVERY.setThresholds(connectedToRecoveryThresholdWarning, connectedToRecoveryThresholdCritical);
@@ -298,9 +248,9 @@ public class BaseNodeMonitorService implements IMonitorService {
         HealthMetric.PROPAGATION_PUBLISHER_QUEUE_SIZE.setThresholds(propagationPublisherQueueThresholdWarning, propagationPublisherQueueThresholdCritical);
         HealthMetric.LIVE_FILES_SIZE.setThresholds(liveFilesSizeThresholdWarning, liveFilesSizeThresholdCritical);
 
-        HealthMetric.BACKUP_HOURLY.setThresholds(backupHourlyThresholdWarning, backupHourlyThresholdCritical);
-        HealthMetric.BACKUP_EPOCH.setThresholds(backupEpochThresholdWarning, backupEpochThresholdCritical);
-        HealthMetric.BACKUP_NUMBER_OF_FILES.setThresholds(backupNumberOfFilesThresholdWarning, backupNumberOfFilesThresholdCritical);
+        //HealthMetric.BACKUP_HOURLY.setThresholds(backupHourlyThresholdWarning, backupHourlyThresholdCritical);
+        HealthMetric.LAST_BACKUP_ELAPSED.setThresholds(backupEpochThresholdWarning, backupEpochThresholdCritical);
+        HealthMetric.NUMBER_OF_LIVE_FILES_NOT_BACKED_UP.setThresholds(backupNumberOfFilesThresholdWarning, backupNumberOfFilesThresholdCritical);
         HealthMetric.BACKUP_SIZE.setThresholds(backupSizeThresholdWarning, backupSizeThresholdCritical);
         HealthMetric.BACKUP_ENTIRE_DURATION.setThresholds(backupEntireDurationThresholdWarning, backupEntireDurationThresholdCritical);
         HealthMetric.BACKUP_DURATION.setThresholds(backupDurationThresholdWarning, backupDurationThresholdCritical);
@@ -334,17 +284,18 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     private String createHealthStateOutputAsString(StringBuilder output) {
-        appendOutput(output, " TotalHealthState ", getLastTotalHealthState().toString());
+        output.append(" TotalHealthState ").append(" = ").append(getLastTotalHealthState().toString());
         if (getLastTotalHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
+            output.append(",");
             for (Map.Entry<HealthMetric, HealthMetricData> entry : healthMetrics.entrySet()) {
                 HealthMetricData metricData = entry.getValue();
                 HealthMetric healthMetric = entry.getKey();
-                if (metricData.getLastHealthState() != HealthState.NORMAL && metricData.getLastHealthState() != HealthState.NA) {
+                if (metricData.getLastHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
                     output.append(healthMetric.label).append(" state = ").append(metricData.getLastHealthState().toString());
                     if (healthMetric.isCounterBased()) {
-                        output.append(", counter = ").append(metricData.getLastCounter()).append(", ");
+                        output.append(", counter = ").append(metricData.getDegradingCounter());
                     } else {
-                        output.append(", value = ").append(metricData.getLastMetricValue()).append(", ");
+                        output.append(", value = ").append(metricData.getMetricValue());
                     }
                 }
             }
@@ -372,12 +323,13 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     @Override
-    public void setLastMetricValue(HealthMetric healthMetric, long metricValue) {
-        getHealthMetricData(healthMetric).setLastMetricValue(metricValue);
+    public void setMetricValue(HealthMetric healthMetric, long metricValue) {
+        getHealthMetricData(healthMetric).setPreviousMetricValue(getHealthMetricData(healthMetric).getMetricValue());
+        getHealthMetricData(healthMetric).setMetricValue(metricValue);
     }
 
     @Override
-    public void setSnapshotTime(HealthMetric healthMetric, String snapshotTime) {
+    public void setSnapshotTime(HealthMetric healthMetric, Instant snapshotTime) {
         getHealthMetricData(healthMetric).setSnapshotTime(snapshotTime);
     }
 
@@ -388,41 +340,56 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @Override
     public void setSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey, long metricValue) {
-        getHealthMetricData(healthMetric).setSpecificLastMetricValue(fieldKey, metricValue);
+
     }
+
+//    @Override
+//    public void setSpecificLastMetricValue(HealthMetric healthMetric, String fieldKey, HealthMetricOutput healthMetricOutput) {
+//        getHealthMetricData(healthMetric).setSpecificLastMetricValue(fieldKey, healthMetricOutput);
+//    }
 
     @Override
     public void updateHealthMetrics(ArrayList<String> metrics, HashMap<String, String> metricTemplateMap) {
         for (HealthMetric healthMetric : HealthMetric.values()) {
-            addMetric(healthMetric.label, metrics, metricTemplateMap);
+
+            for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
+                if (healthMetricOutput.getType().equals(HealthMetricOutputType.ALL)) {
+                    addMetric(healthMetric.getHealthMetricData().getSnapshotTime(), healthMetric.getMetricClass(),
+                            healthMetricOutput.getLabel(), healthMetric.getHealthMetricData().getLastHealthState().ordinal(),
+                            healthMetricOutput.getValue(), healthMetric.isDetailedLogs(), metrics, metricTemplateMap);
+                }
+            }
+
+            if (healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
+                    healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.INFLUX)) {
+                addMetric(healthMetric.getHealthMetricData().getSnapshotTime(), healthMetric.getMetricClass(),
+                        healthMetric.label, healthMetric.getHealthMetricData().getLastHealthState().ordinal(),
+                        healthMetric.getHealthMetricData().getMetricValue(), healthMetric.isDetailedLogs(), metrics, metricTemplateMap);
+            }
         }
     }
 
-    private void addMetric(String healthMetricLabel, ArrayList<String> metrics, HashMap<String, String> metricTemplateMap) {
-        HealthMetric healthMetric = HealthMetric.getHealthMetric(healthMetricLabel);
-        HealthMetricData healthMetricData = getHealthMetrics().get(healthMetric);
-        String snapshotTime = healthMetricData.getSnapshotTime();
-        MetricType metricType = healthMetric.getMetricType();
-        if (metricType == MetricType.NA) {
-            return;
+    private void addMetric(Instant snapshotTime, MetricClass metricClass, String metricLabel, int metricHealthScore,
+                           long metricValue, boolean isDetailedLogs, ArrayList<String> metrics,
+                           HashMap<String, String> metricTemplateMap) {
+        String metricTemplateVal = metricTemplateMap.get(metricClass.name());
+
+        if (metricsDetailed || !isDetailedLogs) {
+            addMetric(metrics, metricTemplateVal, metricClass, metricLabel, metricValue, snapshotTime);
         }
-        String metricTemplateVal = metricTemplateMap.get(metricType.name());
-        if (metricsDetailed || !healthMetric.isDetailedLogs()) {
-            addMetric(metrics, metricTemplateVal, metricType, healthMetricLabel, healthMetricData.getLastMetricValue(), snapshotTime);
-        }
-        addMetric(metrics, metricTemplateVal, metricType, healthMetricLabel + "State", healthMetricData.getLastHealthState().ordinal(), snapshotTime);
+        addMetric(metrics, metricTemplateVal, metricClass, metricLabel + "State", metricHealthScore, snapshotTime);
     }
 
-    private void addMetric(ArrayList<String> metrics, String metricTemplate, MetricType metricType, String healthMetricLabel, long lastMetricValue, String snapshotTime) {
-        if (metricType == MetricType.BACKUP_METRIC) {
+    private void addMetric(ArrayList<String> metrics, String metricTemplate, MetricClass metricClass, String healthMetricLabel, long lastMetricValue, Instant snapshotTime) {
+        if (metricClass == MetricClass.BACKUP_METRIC) {
             String s3FolderName = dbRecoveryService.getS3FolderName();
             if (s3FolderName != null) {
                 metrics.add(metricTemplate.replace(METRIC_TEMPLATE, healthMetricLabel).replace("componentNameTemplate", s3FolderName)
-                        .concat(" ").concat(String.valueOf(lastMetricValue)).concat(" ").concat(snapshotTime));
+                        .concat(" ").concat(String.valueOf(lastMetricValue)).concat(" ").concat(String.valueOf(snapshotTime)));
             }
         } else {
             metrics.add(metricTemplate.replace(METRIC_TEMPLATE, healthMetricLabel)
-                    .concat(" ").concat(String.valueOf(lastMetricValue)).concat(" ").concat(snapshotTime));
+                    .concat(" ").concat(String.valueOf(lastMetricValue)).concat(" ").concat(String.valueOf(snapshotTime)));
         }
     }
 
@@ -430,12 +397,12 @@ public class BaseNodeMonitorService implements IMonitorService {
     public Health getHealthBuilder(String label) {
         Health.Builder builder = new Health.Builder();
         HealthMetricData healthMetricData = getHealthMetricData(label);
-        if (healthMetricData.getLastHealthState().ordinal() == BaseNodeMonitorService.HealthState.NA.ordinal()) {
+        if (healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
             builder.unknown();
             return builder.build();
         }
 
-        if (healthMetricData.getLastHealthState().ordinal() == BaseNodeMonitorService.HealthState.CRITICAL.ordinal()) {
+        if (healthMetricData.getLastHealthState().ordinal() == HealthState.CRITICAL.ordinal()) {
             builder.down();
         } else {
             builder.up();
@@ -452,10 +419,10 @@ public class BaseNodeMonitorService implements IMonitorService {
             configMap.put("CriticalThreshold", criticalThreshold);
         }
         if (!healthMetric.isDetailedLogs() || allowTransactionMonitoringDetailed) {
-            builder.withDetail("ConditionResultValue", healthMetricData.getLastConditionValue());
-            builder.withDetail("SnapshotValue", healthMetricData.getLastMetricValue());
+            //builder.withDetail("ConditionResultValue", healthMetricData.getLastConditionValue());
+            builder.withDetail("SnapshotValue", healthMetricData.getMetricValue());
             if (healthMetric.isCounterBased()) {
-                builder.withDetail("Counter", healthMetricData.getLastCounter());
+                builder.withDetail("Counter", healthMetricData.getDegradingCounter());
             }
             healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.toString()));
         }
@@ -487,34 +454,25 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     private String createOutputAsString(boolean isDetailedLog) {
         StringBuilder output = new StringBuilder();
-        if (isDetailedLog) {
-            appendOutput(output, HealthMetric.TOTAL_TRANSACTIONS);
-            appendOutput(output, HealthMetric.TRUST_CHAIN_CONFIRMED);
-            appendOutput(output, HealthMetric.DSP_CONFIRMED);
-            appendOutput(output, HealthMetric.TOTAL_CONFIRMED);
-            appendOutput(output, HealthMetric.INDEX);
+
+        for (HealthMetric healthMetric : HealthMetric.values()) {
+            if (isDetailedLog || !healthMetric.isDetailedLogs())
+            {
+                for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
+                    if (healthMetricOutput.getType().equals(HealthMetricOutputType.ALL) ||
+                            healthMetricOutput.getType().equals(HealthMetricOutputType.CONSOLE)) {
+                        appendOutput(output, healthMetricOutput.getLabel(), healthMetricOutput.getValue());
+                    }
+                }
+
+                if ((healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
+                        healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.CONSOLE))) {
+                    appendOutput(output, healthMetric.label, healthMetric.getHealthMetricData().getMetricValue());
+                }
+            }
         }
-        appendOutput(output, HealthMetric.SOURCES_UPPER_BOUND);
-        appendOutput(output, HealthMetric.SOURCES_LOWER_BOUND);
-
-        appendOutput(output, "DSPHealthState", getHealthMetricData(DSP_CONFIRMED_LABEL).getLastHealthState().toString());
-        appendOutput(output, "TCCHealthState", getHealthMetricData(TRUST_CHAIN_CONFIRMED_LABEL).getLastHealthState().toString());
-
-        appendOutput(output, HealthMetric.TOTAL_POSTPONED_TRANSACTIONS);
-        appendOutput(output, HealthMetric.PROPAGATION_QUEUE);
-        appendOutput(output, HealthMetric.WEB_SOCKET_MESSAGES_QUEUE_LENGTH);
-        appendOutput(output, HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED);
-        appendOutput(output, HealthMetric.DCR_CONFIRMATION_QUEUE_SIZE);
-        appendOutput(output, HealthMetric.TCC_CONFIRMATION_QUEUE_SIZE);
-        appendOutput(output, HealthMetric.PERCENTAGE_USED_HEAP_MEMORY);
-        appendOutput(output, HealthMetric.PERCENTAGE_USED_MEMORY);
-        appendOutput(output, HealthMetric.CONNECTED_TO_RECOVERY);
 
         return createHealthStateOutputAsString(output);
-    }
-
-    private void appendOutput(StringBuilder output, HealthMetric healthMetric) {
-        appendOutput(output, healthMetric.label, healthMetric.getHealthMetricData().getLastMetricValue());
     }
 
     private void appendOutput(StringBuilder output, String name, long value) {

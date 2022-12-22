@@ -29,7 +29,7 @@ public class TrustChainConfirmationService {
     private LinkedList<TransactionData> topologicalOrderedGraph;
     private final Map<Hash, Double> nonZeroSpendTransactionTSValuesMap = new HashMap<>();
     @Getter
-    private int tccOutsideNormalCounter = 0;
+    private long numberOfTimesTrustScoreNotChanged = 0;
     private boolean trustScoreNotChanged = false;
     @Getter
     private int tccWaitingConfirmation = 0;
@@ -67,7 +67,7 @@ public class TrustChainConfirmationService {
 
     public List<TccInfo> getTrustChainConfirmedTransactions() {
         LinkedList<TccInfo> trustChainConfirmations = new LinkedList<>();
-        tccWaitingConfirmation = 0;
+        //tccWaitingConfirmation = 0;
         trustScoreNotChanged = false;
         for (TransactionData transactionData : topologicalOrderedGraph) {
             setTotalTrustScore(transactionData);
@@ -88,9 +88,9 @@ public class TrustChainConfirmationService {
 
     private void updateMonitorState() {
         if (trustScoreNotChanged) {
-            tccOutsideNormalCounter++;
+            numberOfTimesTrustScoreNotChanged++;
         } else {
-            tccOutsideNormalCounter = 0;
+            numberOfTimesTrustScoreNotChanged = 0;
         }
     }
 
@@ -99,7 +99,7 @@ public class TrustChainConfirmationService {
             return;
         }
 
-        tccWaitingConfirmation++;
+        //tccWaitingConfirmation++;
         if (nonZeroSpendTransactionTSValuesMap.containsKey(transactionData.getHash()) &&
                 nonZeroSpendTransactionTSValuesMap.get(transactionData.getHash()) >= transactionData.getTrustChainTrustScore() &&
                 isWaitingMoreThanMinimum(transactionData)) {

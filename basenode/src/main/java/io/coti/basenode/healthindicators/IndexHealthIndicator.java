@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.INDEX_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.INDEX_DELTA_LABEL;
 
 @Component
 public class IndexHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class IndexHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(INDEX_LABEL);
+        return monitorService.getHealthBuilder(INDEX_DELTA_LABEL);
     }
 
 }
