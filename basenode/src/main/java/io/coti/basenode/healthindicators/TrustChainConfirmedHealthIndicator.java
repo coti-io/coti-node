@@ -6,17 +6,17 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TRUST_CHAIN_CONFIRMED_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.NUM_TCC_LOOP_NO_CHANGE_LABEL;
 
 @Component
 public class TrustChainConfirmedHealthIndicator implements HealthIndicator {
 
     @Autowired
-    protected IMonitorService monitorService;
+    private IMonitorService monitorService;
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(TRUST_CHAIN_CONFIRMED_LABEL);
+        return monitorService.getHealthBuilder(NUM_TCC_LOOP_NO_CHANGE_LABEL);
     }
 
 }

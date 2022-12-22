@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.CONNECTED_TO_RECOVERY_LABEL;
 
 @Component
-public class ConnectedToRecoveryHealthIndicator  implements HealthIndicator {
+public class ConnectedToRecoveryHealthIndicator implements HealthIndicator {
 
     @Autowired
-    protected IMonitorService monitorService;
+    private IMonitorService monitorService;
 
     @Override
     public Health health() {
