@@ -4,40 +4,63 @@ import io.coti.basenode.services.BaseNodeMonitorService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Data
 public class HealthMetricData {
 
-    private long lastMetricValue;
-    private long lastConditionValue;
-    private String snapshotTime;
+    private long metricValue;
+    private long previousMetricValue;
+    private Instant snapshotTime;
     private BaseNodeMonitorService.HealthState lastHealthState;
-    private int lastCounter;
-    private HashMap<String, Long> additionalValues = new HashMap<>();
+    private int degradingCounter;
+    private Map<String, HealthMetricOutput> additionalValues = new HashMap<>();
 
-    public HealthMetricData(long lastMetricValue, long lastConditionValue, BaseNodeMonitorService.HealthState lastHealthState, int lastCounter, String snapshotTime) {
-        this.lastMetricValue = lastMetricValue;
-        this.lastConditionValue = lastConditionValue;
+
+    public HealthMetricData(long metricValue, long previousMetricValue, long lastConditionValue, BaseNodeMonitorService.HealthState lastHealthState, int degradingCounter, Instant snapshotTime) {
+        this.metricValue = metricValue;
+        this.previousMetricValue = previousMetricValue;
         this.lastHealthState = lastHealthState;
-        this.lastCounter = lastCounter;
+        this.degradingCounter = degradingCounter;
         this.snapshotTime = snapshotTime;
     }
 
     public HealthMetricData() {
-        this.lastMetricValue = 0;
-        this.lastConditionValue = 0;
+        this.metricValue = 0;
+        this.previousMetricValue = 0;
         this.lastHealthState = BaseNodeMonitorService.HealthState.NA;
-        this.lastCounter = 0;
+        this.degradingCounter = 0;
     }
 
-    public void setSpecificLastMetricValue(String fieldKey, long metricValue) {
-        this.additionalValues.put(fieldKey, metricValue);
+    public void addValue(String metricLabel) {
+
+    }
+
+    public void setSpecificLastMetricValue(String fieldKey, HealthMetricOutput healthMetricOutput) {
+        this.additionalValues.put(fieldKey, healthMetricOutput);
     }
 
     public Long getSpecificLastMetricValue(String fieldKey) {
-        return Optional.ofNullable(this.additionalValues.get(fieldKey)).orElse(Long.valueOf(-1));
+        return Optional.of(this.additionalValues.get(fieldKey).getValue()).orElse((long) -1);
+    }
+
+    public void increaseDegradingCounter() {
+        this.degradingCounter += 1;
+    }
+
+    public void addValue(String metricName, HealthMetricOutputType healthMetricOutputType, String metricLabel, long metricValue) {
+        HealthMetricOutput healthMetricOutput = additionalValues.get(metricName);
+        if (healthMetricOutput == null) {
+            healthMetricOutput = new HealthMetricOutput(healthMetricOutputType, metricLabel,metricValue);
+            additionalValues.put(metricName,healthMetricOutput);
+        } else {
+            healthMetricOutput.setType(healthMetricOutputType);
+            healthMetricOutput.setLabel(metricLabel);
+            healthMetricOutput.setValue(metricValue);
+        }
     }
 }

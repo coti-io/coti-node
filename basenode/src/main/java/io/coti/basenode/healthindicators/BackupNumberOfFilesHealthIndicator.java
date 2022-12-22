@@ -6,7 +6,8 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.BACKUP_NUMBER_OF_FILES_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.NUMBER_OF_LIVE_FILES_NOT_BACKED_UP_LABEL;
+
 
 @Component
 public class BackupNumberOfFilesHealthIndicator implements HealthIndicator {
@@ -16,7 +17,7 @@ public class BackupNumberOfFilesHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(BACKUP_NUMBER_OF_FILES_LABEL);
+        return monitorService.getHealthBuilder(NUMBER_OF_LIVE_FILES_NOT_BACKED_UP_LABEL);
     }
 
 }

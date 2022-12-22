@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.DSP_CONFIRMED_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.DSP_CONFIRMED_LABEL_DELTA;
 
 @Component
 public class DSPConfirmedHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class DSPConfirmedHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(DSP_CONFIRMED_LABEL);
+        return monitorService.getHealthBuilder(DSP_CONFIRMED_LABEL_DELTA);
     }
 
 }
