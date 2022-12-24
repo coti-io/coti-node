@@ -1,9 +1,9 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
+import io.coti.basenode.data.HealthMetricOutput;
+import io.coti.basenode.data.HealthMetricOutputType;
 import io.coti.basenode.data.MetricClass;
-import io.coti.basenode.model.RejectedTransactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IMetricsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +22,7 @@ public class BaseNodeMetricsService implements IMetricsService {
 
     private static final int MAX_NUMBER_OF_NON_FETCHED_SAMPLES = 50;
     private static final String COMPONENT_TEMPLATE = "componentTemplate";
+    private static final String METRIC_TEMPLATE = "metricTemplate";
     private final ArrayList<String> metrics = new ArrayList<>();
     private final AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
     private final HashMap<String, String> metricTemplateMap = new HashMap<>();
@@ -30,21 +31,6 @@ public class BaseNodeMetricsService implements IMetricsService {
     private Thread sampleThread;
     @Autowired
     private BaseNodeMonitorService baseNodeMonitorService;
-    @Autowired
-    private TrustChainConfirmationService trustChainConfirmationService;
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private ITransactionService transactionService;
-    @Autowired
-    private RejectedTransactions rejectedTransactions;
-    @Autowired
-    private IPropagationSubscriber propagationSubscriber;
-    @Autowired
-    private IWebSocketMessageService webSocketMessageService;
-    @Autowired
-    private IDBRecoveryService dbRecoveryService;
-
     @Value("${metrics.sample.milisec.interval:0}")
     private int metricsSampleInterval;
     @Value("${detailed.logs:false}")
@@ -73,6 +59,7 @@ public class BaseNodeMetricsService implements IMetricsService {
         metricTemplateMap.put(MetricClass.TRANSACTIONS_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "transactions"));
         metricTemplateMap.put(MetricClass.BACKUP_METRIC.name(), metricTemplateSubComponent.replace(COMPONENT_TEMPLATE, "backups"));
         metricTemplateMap.put(MetricClass.DATABASE_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "database"));
+        metricTemplateMap.put(MetricClass.SYSTEM_METRIC.name(), metricTemplate.replace(COMPONENT_TEMPLATE, "system"));
 
         sampleThread = new Thread(this::getMetricsSample, "MetricsSample");
         sampleThread.start();
@@ -95,22 +82,53 @@ public class BaseNodeMetricsService implements IMetricsService {
 
     public void getMetricsSample() {
         while (!Thread.currentThread().isInterrupted()) {
-            synchronized (metrics) {
-                if (numberOfNonFetchedSamples.incrementAndGet() > MAX_NUMBER_OF_NON_FETCHED_SAMPLES) {
-                    metrics.clear();
-                }
-
-                baseNodeMonitorService.updateHealthMetrics(metrics, metricTemplateMap);
-
-                if (dbRecoveryService.getBackUpLog().size() > 0) {
-                    dbRecoveryService.clearBackupLog();
-                }
-            }
             try {
+                synchronized (metrics) {
+                    if (numberOfNonFetchedSamples.incrementAndGet() > MAX_NUMBER_OF_NON_FETCHED_SAMPLES) {
+                        metrics.clear();
+                    }
+                    for (HealthMetric healthMetric : HealthMetric.values()) {
+
+                        for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
+                            if (healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
+                                    healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.INFLUX)) {
+                                addMetric(healthMetric, healthMetricOutput.getLabel(),
+                                        healthMetricOutput.getValue(), metrics, metricTemplateMap);
+                            }
+                        }
+
+                        if (healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
+                                healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.INFLUX)) {
+                            addMetric(healthMetric, healthMetric.getLabel(),
+                                    healthMetric.getHealthMetricData().getMetricValue(), metrics, metricTemplateMap);
+                        }
+                    }
+                }
                 Thread.sleep(metricsSampleInterval);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            } catch (Exception e1) {
+                log.error(String.valueOf(e1));
             }
         }
     }
+
+    private void addMetric(HealthMetric healthMetric, String metricLabel, long metricValue, ArrayList<String> metrics,
+                           HashMap<String, String> metricTemplateMap) {
+        String metricTemplateVal = metricTemplateMap.get(healthMetric.getMetricClass().name());
+
+        if (!healthMetric.getHealthMetricData().getLastHealthState().equals(BaseNodeMonitorService.HealthState.NA)) {
+            if (metricsDetailed || !healthMetric.isDetailedLogs()) {
+                addMetric(metrics, metricTemplateVal, healthMetric, metricLabel, metricValue);
+            }
+            addMetric(metrics, metricTemplateVal, healthMetric, metricLabel + "State", healthMetric.getHealthMetricData().getLastHealthState().ordinal());
+        }
+    }
+
+    private void addMetric(ArrayList<String> metrics, String metricTemplate, HealthMetric healthMetric, String healthMetricLabel, long metricValue) {
+        long snapshotTime = healthMetric.getHealthMetricData().getSnapshotTime().toEpochMilli();
+        metrics.add(metricTemplate.replace(METRIC_TEMPLATE, healthMetricLabel)
+                .concat(" ").concat(String.valueOf(metricValue)).concat(" ").concat(String.valueOf(snapshotTime)));
+    }
+
 }

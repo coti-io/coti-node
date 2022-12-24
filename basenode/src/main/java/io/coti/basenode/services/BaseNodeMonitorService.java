@@ -6,7 +6,6 @@ import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutput;
 import io.coti.basenode.data.HealthMetricOutputType;
-import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class BaseNodeMonitorService implements IMonitorService {
 
-    private static final String METRIC_TEMPLATE = "metricTemplate";
     private final Map<HealthMetric, HealthMetricData> healthMetrics = new ConcurrentHashMap<>();
     @Autowired
     protected INetworkService networkService;
@@ -209,21 +206,10 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @PostConstruct
     private void initHealthMetrics() {
-        HealthMetric.monitorService = this;
-        HealthMetric.transactionHelper = transactionHelper;
-        HealthMetric.clusterService = clusterService;
-        HealthMetric.transactionIndexService = transactionIndexService;
-        HealthMetric.confirmationService = confirmationService;
-        HealthMetric.trustChainConfirmationService = trustChainConfirmationService;
-        HealthMetric.transactionService = transactionService;
-        HealthMetric.propagationSubscriber = propagationSubscriber;
-        HealthMetric.webSocketMessageService = webSocketMessageService;
-        HealthMetric.networkService = networkService;
-        HealthMetric.receiver = receiver;
-        HealthMetric.databaseConnector = databaseConnector;
-        HealthMetric.dbRecoveryService = dbRecoveryService;
-        HealthMetric.rejectedTransactions = rejectedTransactions;
-        HealthMetric.propagationPublisher = propagationPublisher;
+
+        HealthMetric.setAutowireds(this, transactionHelper, clusterService, transactionIndexService, confirmationService,
+                trustChainConfirmationService, transactionService, propagationSubscriber, webSocketMessageService,
+                networkService, receiver, databaseConnector, dbRecoveryService, rejectedTransactions, propagationPublisher);
 
         // todo we should iterate over the names of the healthmetric and looking for class varaiblaes contins that name , then diff warning , critical and
         // then to populate updated values
@@ -254,7 +240,6 @@ public class BaseNodeMonitorService implements IMonitorService {
         HealthMetric.PROPAGATION_PUBLISHER_QUEUE_SIZE.setThresholds(propagationPublisherQueueThresholdWarning, propagationPublisherQueueThresholdCritical);
         HealthMetric.LIVE_FILES_SIZE.setThresholds(liveFilesSizeThresholdWarning, liveFilesSizeThresholdCritical);
 
-        //HealthMetric.BACKUP_HOURLY.setThresholds(backupHourlyThresholdWarning, backupHourlyThresholdCritical);
         HealthMetric.LAST_BACKUP_ELAPSED.setThresholds(backupEpochThresholdWarning, backupEpochThresholdCritical);
         HealthMetric.NUMBER_OF_LIVE_FILES_NOT_BACKED_UP.setThresholds(backupNumberOfFilesThresholdWarning, backupNumberOfFilesThresholdCritical);
         HealthMetric.BACKUP_SIZE.setThresholds(backupSizeThresholdWarning, backupSizeThresholdCritical);
@@ -300,11 +285,10 @@ public class BaseNodeMonitorService implements IMonitorService {
                 HealthMetric healthMetric = entry.getKey();
                 if (metricData.getLastHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
                     output.append(healthMetric.getLabel()).append(" state = ").append(metricData.getLastHealthState().toString());
-                    if (healthMetric.isCounterBased()) {
+                    if (metricData.getDegradingCounter() > 0) {
                         output.append(", counter = ").append(metricData.getDegradingCounter());
-                    } else {
-                        output.append(", value = ").append(metricData.getMetricValue());
                     }
+                    output.append(", value = ").append(metricData.getMetricValue());
                 }
             }
         }
@@ -313,7 +297,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @Override
     public HealthMetricData getHealthMetricData(HealthMetric healthMetric) {
-        return Optional.ofNullable(healthMetrics.get(healthMetric)).orElseThrow(() -> new IllegalArgumentException("No matching health metric found"));
+        return Optional.ofNullable(healthMetrics.get(healthMetric)).orElseThrow(() -> new IllegalArgumentException("No matching health metric found: ".concat(healthMetric.getLabel())));
     }
 
     @Override
@@ -333,50 +317,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     @Override
-    public void updateHealthMetrics(ArrayList<String> metrics, HashMap<String, String> metricTemplateMap) {
-        for (HealthMetric healthMetric : HealthMetric.values()) {
-
-            for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
-                if (healthMetricOutput.getType().equals(HealthMetricOutputType.ALL)) {
-                    addMetric(healthMetric, healthMetricOutput.getLabel(), metrics, metricTemplateMap);
-                }
-            }
-
-            if (isToAddInfluxOutput(healthMetric.getHealthMetricOutputType())) {
-                addMetric(healthMetric, healthMetric.getLabel(), metrics, metricTemplateMap);
-            }
-        }
-    }
-
-    private void addMetric(HealthMetric healthMetric, String metricLabel, ArrayList<String> metrics, HashMap<String, String> metricTemplateMap) {
-        Instant snapshotTime = healthMetric.getHealthMetricData().getSnapshotTime();
-        MetricClass metricClass = healthMetric.getMetricClass();
-        int metricHealthScore = healthMetric.getHealthMetricData().getLastHealthState().ordinal();
-        long metricValue = healthMetric.getHealthMetricData().getMetricValue();
-        boolean isDetailedLogs = healthMetric.isDetailedLogs();
-        String metricTemplateVal = metricTemplateMap.get(metricClass.name());
-
-        if (metricsDetailed || !isDetailedLogs) {
-            addMetric(metrics, metricTemplateVal, metricClass, metricLabel, metricValue, snapshotTime);
-        }
-        addMetric(metrics, metricTemplateVal, metricClass, metricLabel + "State", metricHealthScore, snapshotTime);
-    }
-
-    private void addMetric(ArrayList<String> metrics, String metricTemplate, MetricClass metricClass, String healthMetricLabel, long lastMetricValue, Instant snapshotTime) {
-        if (metricClass == MetricClass.BACKUP_METRIC) {
-            String s3FolderName = dbRecoveryService.getS3FolderName();
-            if (s3FolderName != null) {
-                metrics.add(metricTemplate.replace(METRIC_TEMPLATE, healthMetricLabel).replace("componentNameTemplate", s3FolderName)
-                        .concat(" ").concat(String.valueOf(lastMetricValue)).concat(" ").concat(String.valueOf(snapshotTime)));
-            }
-        } else {
-            metrics.add(metricTemplate.replace(METRIC_TEMPLATE, healthMetricLabel)
-                    .concat(" ").concat(String.valueOf(lastMetricValue)).concat(" ").concat(String.valueOf(snapshotTime)));
-        }
-    }
-
-    @Override
-    public Health getHealthBuilder(String label) {
+    public Health getHealthBuilder(String label) { //todo change from label to actual HealthMetric . add check if allowed to report to actuator
         Health.Builder builder = new Health.Builder();
         HealthMetricData healthMetricData = getHealthMetricData(label);
         if (healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
@@ -400,12 +341,13 @@ public class BaseNodeMonitorService implements IMonitorService {
         if (criticalThreshold >= warningThreshold) {
             configMap.put("CriticalThreshold", criticalThreshold);
         }
-        if (healthMetric.isDetailedLogs() && allowTransactionMonitoringDetailed) {
-            builder.withDetail("SnapshotValue", healthMetricData.getMetricValue());
-            if (healthMetric.isCounterBased()) {
+        if (!healthMetric.isDetailedLogs() || allowTransactionMonitoringDetailed) {
+            builder.withDetail("PreviousMetricValue", healthMetricData.getPreviousMetricValue());
+            builder.withDetail("MetricValue", healthMetricData.getMetricValue());
+            if (healthMetricData.getDegradingCounter() > 0) {
                 builder.withDetail("Counter", healthMetricData.getDegradingCounter());
             }
-            healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.toString()));
+            healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
         }
         builder.withDetail("Configuration", configMap);
         return builder.build();
@@ -429,38 +371,27 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     private void printLastState(int logLevel) {
-        StringBuilder output = allowTransactionMonitoringDetailed ? createDetailedOutputAsString() : new StringBuilder();
-        String outputText = createHealthStateOutputAsString(output);
-        printToLogByLevel(logLevel, outputText);
+        String output = createOutputAsString(allowTransactionMonitoringDetailed);
+        printToLogByLevel(logLevel, output);
     }
 
-    private StringBuilder createDetailedOutputAsString() {
+    private String createOutputAsString(boolean isDetailedLog) {
         StringBuilder output = new StringBuilder();
         for (HealthMetric healthMetric : HealthMetric.values()) {
-            if (!healthMetric.isDetailedLogs()) {
-                continue;
-            }
-            for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
-                if (isToAddConsoleOutput(healthMetricOutput.getType())) {
-                    appendOutput(output, healthMetricOutput.getLabel(), healthMetricOutput.getValue());
+            if (isDetailedLog || !healthMetric.isDetailedLogs()) {
+                for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
+                    if (healthMetricOutput.getType().equals(HealthMetricOutputType.ALL) ||
+                            healthMetricOutput.getType().equals(HealthMetricOutputType.CONSOLE)) {
+                        appendOutput(output, healthMetricOutput.getLabel(), healthMetricOutput.getValue());
+                    }
+                }
+                if ((healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
+                        healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.CONSOLE))) {
+                    appendOutput(output, healthMetric.getLabel(), healthMetric.getHealthMetricData().getMetricValue());
                 }
             }
-
-            if (isToAddConsoleOutput(healthMetric.getHealthMetricOutputType())) {
-                appendOutput(output, healthMetric.getLabel(), healthMetric.getHealthMetricData().getMetricValue());
-            }
         }
-        return output;
-    }
-
-    private static boolean isToAddConsoleOutput(HealthMetricOutputType healthMetricOutputType) {
-        return healthMetricOutputType.equals(HealthMetricOutputType.ALL) ||
-                healthMetricOutputType.equals(HealthMetricOutputType.CONSOLE);
-    }
-
-    private static boolean isToAddInfluxOutput(HealthMetricOutputType healthMetricOutputType) {
-        return healthMetricOutputType.equals(HealthMetricOutputType.ALL) ||
-                healthMetricOutputType.equals(HealthMetricOutputType.INFLUX);
+        return createHealthStateOutputAsString(output);
     }
 
     private void appendOutput(StringBuilder output, String name, long value) {
