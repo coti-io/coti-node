@@ -5,5 +5,5 @@ public enum MetricClass {
     DATABASE_METRIC,
     TRANSACTIONS_METRIC,
     QUEUE_METRIC,
-    NA
+    SYSTEM_METRIC
 }

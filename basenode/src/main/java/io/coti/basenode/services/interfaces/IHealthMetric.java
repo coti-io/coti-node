@@ -1,14 +1,12 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.HealthMetricData;
-import org.springframework.boot.actuate.health.Health;
 
 public interface IHealthMetric {
-    public void doSnapshot();
+    void doSnapshot();
 
-    public void calculateHealthMetric();
+    void calculateHealthMetric();
 
-    public HealthMetricData getHealthMetricData();
+    HealthMetricData getHealthMetricData();
 
-    public Health getHealthBuilder(Health.Builder builder);
 }
