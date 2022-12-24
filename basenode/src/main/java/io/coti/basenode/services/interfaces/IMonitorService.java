@@ -6,8 +6,6 @@ import io.coti.basenode.services.HealthMetric;
 import org.springframework.boot.actuate.health.Health;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 public interface IMonitorService {
 
@@ -25,5 +23,4 @@ public interface IMonitorService {
 
     void setSnapshotTime(HealthMetric healthMetric, Instant snapshotTime);
 
-    void updateHealthMetrics(ArrayList<String> metrics, HashMap<String, String> metricTemplateMap);
 }
