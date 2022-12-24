@@ -28,7 +28,6 @@ public class BaseNodeHealthMetricConstants {
     public static final String ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL = "ZeroMQReceiverQueueSize";
     public static final String PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL = "PropagationPublisherQueueSize";
     public static final String LIVE_FILES_SIZE_LABEL = "LiveFilesSize";
-    public static final String BACKUP_HOURLY_LABEL = "BackupHourly";
     public static final String LAST_BACKUP_ELAPSED_LABEL = "LastBackupElapsedSeconds";
     public static final String NUMBER_OF_LIVE_FILES_NOT_BACKED_UP_LABEL = "NumberOfLivesFilesNotBackedUp";
     public static final String BACKUP_SIZE_LABEL = "BackupSize";

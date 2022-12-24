@@ -56,7 +56,8 @@ public class TransactionResponseData implements ITransactionResponseData {
                     Class<? extends BaseTransactionResponseData> baseTransactionResponseDataClass = BaseTransactionResponseClass.valueOf(BaseTransactionName.getName(baseTransactionData.getClass()).name()).getResponseClass();
                     Constructor<? extends BaseTransactionResponseData> constructor = baseTransactionResponseDataClass.getConstructor(BaseTransactionData.class);
                     baseTransactions.add(constructor.newInstance(baseTransactionData));
-                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException |
+                        InstantiationException e) {
                     log.error("Transaction response error", e);
                     throw new TransactionException(TRANSACTION_RESPONSE_ERROR);
                 }
