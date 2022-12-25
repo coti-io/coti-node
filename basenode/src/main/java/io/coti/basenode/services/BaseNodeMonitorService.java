@@ -217,7 +217,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         HealthMetric.SOURCES_UPPER_BOUND.setThresholds(sourcesUpperBoundThresholdWarning, sourcesUpperBoundThresholdCritical);
         HealthMetric.SOURCES_LOWER_BOUND.setThresholds(sourcesLowerBoundThresholdWarning, sourcesLowerBoundThresholdCritical);
         HealthMetric.INDEX_DELTA.setThresholds(indexThresholdWarning, indexThresholdCritical);
-        HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED.setThresholds(waitingDSPConsensusThresholdWarning, waitingDSPConsensusThresholdCritical);
+        HealthMetric.WAITING_DCR_QUEUE.setThresholds(waitingDSPConsensusThresholdWarning, waitingDSPConsensusThresholdCritical);
         HealthMetric.WAITING_MISSING_TRANSACTION_INDEXES.setThresholds(waitingMissingTransactionsIndexesThresholdWarning, waitingMissingTransactionsIndexesThresholdCritical);
         HealthMetric.DSP_CONFIRMED_DELTA.setThresholds(dspOutsideNormalThresholdWarning, dspOutsideNormalThresholdCritical);
         HealthMetric.TOTAL_CONFIRMED.setThresholds(totalConfirmedOutsideNormalThresholdWarning, totalConfirmedOutsideNormalThresholdCritical);
@@ -277,20 +277,23 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     private String createHealthStateOutputAsString(StringBuilder output) {
-        output.append(" TotalHealthState ").append(" = ").append(getLastTotalHealthState().toString());
+        output.append("TotalHealthState").append(" = ").append(getLastTotalHealthState().toString());
         if (getLastTotalHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
-            output.append(",");
+            output.append(", ");
             for (Map.Entry<HealthMetric, HealthMetricData> entry : healthMetrics.entrySet()) {
                 HealthMetricData metricData = entry.getValue();
                 HealthMetric healthMetric = entry.getKey();
                 if (metricData.getLastHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
-                    output.append(healthMetric.getLabel()).append(" state = ").append(metricData.getLastHealthState().toString());
+                    output.append(healthMetric.getLabel()).append(" is ").append(metricData.getLastHealthState().toString());
                     if (metricData.getDegradingCounter() > 0) {
-                        output.append(", counter = ").append(metricData.getDegradingCounter());
+                        output.append(" (counter = ").append(metricData.getDegradingCounter());
+                        output.append(", value = ").append(metricData.getMetricValue()).append("), ");
+                    } else {
+                        output.append("(value = ").append(metricData.getMetricValue()).append("), ");
                     }
-                    output.append(", value = ").append(metricData.getMetricValue());
                 }
             }
+            output.deleteCharAt(output.lastIndexOf(","));
         }
         return output.toString();
     }

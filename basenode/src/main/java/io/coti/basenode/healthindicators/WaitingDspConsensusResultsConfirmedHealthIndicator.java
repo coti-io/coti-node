@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.WAITING_DCR_QUEUE_LABEL;
 
 @Component
 public class WaitingDspConsensusResultsConfirmedHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class WaitingDspConsensusResultsConfirmedHealthIndicator implements Healt
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL);
+        return monitorService.getHealthBuilder(WAITING_DCR_QUEUE_LABEL);
     }
 
 }

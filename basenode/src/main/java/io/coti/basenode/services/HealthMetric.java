@@ -27,10 +27,10 @@ public enum HealthMetric implements IHealthMetric {
         public void doSnapshot() {
             long totalTransactions = transactionHelper.getTotalTransactions();
             HealthMetricData healthMetricData = this.getHealthMetricData();
-            healthMetricData.addValue("Transactions", HealthMetricOutputType.ALL, "Transactions", totalTransactions);
+            healthMetricData.addValue(TOTAL_TRANSACTIONS_LABEL, HealthMetricOutputType.ALL, TOTAL_TRANSACTIONS_LABEL, totalTransactions);
             long totalTransactionsFromRecoveryServer = transactionHelper.getTotalNumberOfTransactionsFromRecovery();
             if (totalTransactionsFromRecoveryServer > 0) {
-                healthMetricData.addValue("TotalNumberOfTransactionsFromRecovery", HealthMetricOutputType.INFLUX, "TotalNumberOfTransactionsFromRecovery", totalTransactionsFromRecoveryServer);
+                healthMetricData.addValue(TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, HealthMetricOutputType.INFLUX, TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, totalTransactionsFromRecoveryServer);
                 baseDoSnapshot(this, totalTransactions - totalTransactionsFromRecoveryServer);
             } else {
                 baseDoSnapshot(this, (long) -1);
@@ -61,7 +61,7 @@ public enum HealthMetric implements IHealthMetric {
         public void doSnapshot() {
             long dspConfirmed = confirmationService.getDspConfirmed();
             long totalTransactions = transactionHelper.getTotalTransactions();
-            this.getHealthMetricData().addValue("DspConfirmed", HealthMetricOutputType.ALL, "DspConfirmed", dspConfirmed);
+            this.getHealthMetricData().addValue(DSP_CONFIRMED_LABEL, HealthMetricOutputType.ALL, DSP_CONFIRMED_LABEL, dspConfirmed);
             baseDoSnapshot(this, totalTransactions - dspConfirmed);
         }
 
@@ -81,11 +81,23 @@ public enum HealthMetric implements IHealthMetric {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
         }
     },
+    INDEX_DELTA(INDEX_DELTA_LABEL, MetricClass.TRANSACTIONS_METRIC, 2, 4, true, HealthMetricOutputType.INFLUX) {
+        public void doSnapshot() {
+            long index = transactionIndexService.getLastTransactionIndexData().getIndex();
+            this.getHealthMetricData().addValue(INDEX_LABEL, HealthMetricOutputType.ALL, INDEX_LABEL, index);
+            baseDoSnapshot(this, (transactionHelper.getTotalTransactions() - index) - 1);
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            baseCalculateHealthCounterMetricState(this);
+        }
+    },
     SOURCES_UPPER_BOUND(SOURCES_UPPER_BOUND_LABEL, MetricClass.TRANSACTIONS_METRIC, 24, 34, false, HealthMetricOutputType.INFLUX) {
         @Override
         public void doSnapshot() {
             long sources = clusterService.getTotalSources();
-            this.getHealthMetricData().addValue("Sources", HealthMetricOutputType.ALL, "Sources", sources);
+            this.getHealthMetricData().addValue(SOURCES_LABEL, HealthMetricOutputType.ALL, SOURCES_LABEL, sources);
             baseDoSnapshot(this, sources);
         }
 
@@ -105,11 +117,9 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(this);
         }
     },
-    INDEX_DELTA(INDEX_DELTA_LABEL, MetricClass.TRANSACTIONS_METRIC, 2, 4, true, HealthMetricOutputType.INFLUX) {
+    DCR_CONFIRMATION_QUEUE_SIZE(DCR_CONFIRMATION_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
-            long index = transactionIndexService.getLastTransactionIndexData().getIndex();
-            this.getHealthMetricData().addValue("Index", HealthMetricOutputType.ALL, "Index", index);
-            baseDoSnapshot(this, (transactionHelper.getTotalTransactions() - index) - 1);
+            baseDoSnapshot(this, (long) confirmationService.getDcrConfirmationQueueSize());
         }
 
         @Override
@@ -117,9 +127,19 @@ public enum HealthMetric implements IHealthMetric {
             baseCalculateHealthCounterMetricState(this);
         }
     },
-    WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED(WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 5, false, HealthMetricOutputType.ALL) {
+    WAITING_DCR_QUEUE(WAITING_DCR_QUEUE_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 5, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) confirmationService.getWaitingDspConsensusResultsMapSize());
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            baseCalculateHealthCounterMetricState(this);
+        }
+    },
+    TCC_CONFIRMATION_QUEUE(TCC_CONFIRMATION_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.INFLUX) {
+        public void doSnapshot() {
+            baseDoSnapshot(this, (long) confirmationService.getTccConfirmationQueueSize());
         }
 
         @Override
@@ -150,26 +170,6 @@ public enum HealthMetric implements IHealthMetric {
     WEB_SOCKET_MESSAGES_QUEUE(WEB_SOCKET_MESSAGES_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 1000, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) webSocketMessageService.getMessageQueueSize());
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            baseCalculateHealthCounterMetricState(this);
-        }
-    },
-    DCR_CONFIRMATION_QUEUE_SIZE(DCR_CONFIRMATION_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.INFLUX) {
-        public void doSnapshot() {
-            baseDoSnapshot(this, (long) confirmationService.getDcrConfirmationQueueSize());
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            baseCalculateHealthCounterMetricState(this);
-        }
-    },
-    TCC_CONFIRMATION_QUEUE(TCC_CONFIRMATION_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.ALL) {
-        public void doSnapshot() {
-            baseDoSnapshot(this, (long) confirmationService.getTccConfirmationQueueSize());
         }
 
         @Override
@@ -208,7 +208,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(this);
         }
     },
-    TRANSACTION_PROPAGATION_QUEUE(TRANSACTION_PROPAGATION_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 64, 0, false, HealthMetricOutputType.ALL) {
+    TRANSACTION_PROPAGATION_QUEUE(TRANSACTION_PROPAGATION_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 64, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION));
         }
@@ -218,7 +218,7 @@ public enum HealthMetric implements IHealthMetric {
             baseCalculateHealthCounterMetricState(this);
         }
     },
-    PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 5, 0, false, HealthMetricOutputType.ALL) {
+    PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 5, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTIONS_STATE));
         }
@@ -228,7 +228,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.ALL) {
+    PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.NETWORK));
         }
@@ -238,7 +238,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 40, 0, false, HealthMetricOutputType.ALL) {
+    PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 40, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.ADDRESS));
         }
@@ -249,7 +249,7 @@ public enum HealthMetric implements IHealthMetric {
 
         }
     },
-    PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 40, 0, false, HealthMetricOutputType.ALL) {
+    PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 40, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION));
         }
@@ -259,7 +259,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.ALL) {
+    PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.HEARTBEAT));
         }
@@ -269,7 +269,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(this);
         }
     },
-    ZERO_MQ_RECEIVER_QUEUE_SIZE(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.ALL) {
+    ZERO_MQ_RECEIVER_QUEUE_SIZE(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) receiver.getQueueSize());
         }
@@ -279,7 +279,7 @@ public enum HealthMetric implements IHealthMetric {
             calculateHealthValueMetricState(this);
         }
     },
-    PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.ALL) {
+    PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationPublisher.getQueueSize());
         }
@@ -309,7 +309,7 @@ public enum HealthMetric implements IHealthMetric {
         public void doSnapshot() {
             if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
                 long backupStartedTime = dbRecoveryService.getBackupStartedTime();
-                this.getHealthMetricData().addValue("backupStartedTime", HealthMetricOutputType.INFLUX, "backupStartedTime", backupStartedTime);
+                this.getHealthMetricData().addValue(BACKUP_STARTED_TIME_LABEL, HealthMetricOutputType.INFLUX, BACKUP_STARTED_TIME_LABEL, backupStartedTime);
                 baseDoSnapshot(this, java.time.Instant.now().getEpochSecond() - backupStartedTime);
 
                 if (dbRecoveryService.getBackUpLog().size() > 0) {
@@ -332,7 +332,7 @@ public enum HealthMetric implements IHealthMetric {
             if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
                 long numberOfBackedFiles = dbRecoveryService.getLastBackupInfo().numberFiles();
                 long numberOfLiveFiles = databaseConnector.getLiveFilesNames().size();
-                this.getHealthMetricData().addValue("BackupNumberOfFiles", HealthMetricOutputType.INFLUX, "BackupNumberOfFiles", numberOfBackedFiles);
+                this.getHealthMetricData().addValue(BACKED_UP_NUMBER_OF_FILES_LABEL, HealthMetricOutputType.INFLUX, BACKED_UP_NUMBER_OF_FILES_LABEL, numberOfBackedFiles);
                 baseDoSnapshot(this, numberOfLiveFiles - numberOfBackedFiles);
             }
         }
