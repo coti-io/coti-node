@@ -353,6 +353,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
         }
         builder.withDetail("Configuration", configMap);
+        builder.withDetail("Description", healthMetric.getDescription());
         return builder.build();
     }
 
