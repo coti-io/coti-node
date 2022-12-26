@@ -15,7 +15,7 @@ public class BaseNodeHealthMetricConstants {
     public static final String DSP_CONFIRMED_LABEL = "DspConfirmed";
     public static final String TOTAL_CONFIRMED_LABEL = "Confirmed";
     public static final String TRUST_CHAIN_CONFIRMED_LABEL = "TccConfirmed";
-    public static final String NUM_TCC_LOOP_NO_CHANGE_LABEL = "NumberOfTimesTrustScoreNotChanged";
+    public static final String NUMBER_OF_TIMES_TCC_NOT_CHANGED_LABEL = "NumberOfTimesTrustScoreNotChanged";
     public static final String WAITING_MISSING_TRANSACTION_INDEXES_LABEL = "WaitingMissingTransactionIndexes";
     public static final String TOTAL_POSTPONED_TRANSACTIONS_LABEL = "PostponedTransactions";
     public static final String REJECTED_TRANSACTIONS_LABEL = "RejectedTransactions";

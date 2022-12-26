@@ -51,7 +51,7 @@ public enum HealthMetric implements IHealthMetric {
             return "The difference between amount of transactions declared by recovery node and total amount of transactions registered locally";
         }
     },
-    NUM_TCC_LOOP_NO_CHANGE(NUM_TCC_LOOP_NO_CHANGE_LABEL, MetricClass.TRANSACTIONS_METRIC, 5, 10, true, HealthMetricOutputType.INFLUX) {
+    NUMBER_OF_TIMES_TCC_NOT_CHANGED(NUMBER_OF_TIMES_TCC_NOT_CHANGED_LABEL, MetricClass.TRANSACTIONS_METRIC, 5, 10, true, HealthMetricOutputType.INFLUX) {
         public void doSnapshot() {
             this.getHealthMetricData().addValue(TRUST_CHAIN_CONFIRMED_LABEL, HealthMetricOutputType.ALL, TRUST_CHAIN_CONFIRMED_LABEL, confirmationService.getTrustChainConfirmed());
             baseDoSnapshot(this, trustChainConfirmationService.getNumberOfTimesTrustScoreNotChanged());
@@ -495,7 +495,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Amount of succesful backups in period";
+            return "Amount of successful backups in period";
         }
     },
     BACKUP_ENTIRE_DURATION(BACKUP_ENTIRE_DURATION_LABEL, MetricClass.BACKUP_METRIC, 75, 180, false, HealthMetricOutputType.INFLUX) {

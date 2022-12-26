@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.PERCENTAGE_USED_HEAP_MEMORY_LABEL;
+import static io.coti.basenode.services.HealthMetric.PERCENTAGE_USED_HEAP_MEMORY;
 
 @Component
 public class PercentageUsedHeapMemoryHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class PercentageUsedHeapMemoryHealthIndicator implements HealthIndicator 
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(PERCENTAGE_USED_HEAP_MEMORY_LABEL);
+        return monitorService.getHealthBuilder(PERCENTAGE_USED_HEAP_MEMORY);
     }
 
 }

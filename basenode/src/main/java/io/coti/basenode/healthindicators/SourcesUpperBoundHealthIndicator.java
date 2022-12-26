@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.SOURCES_UPPER_BOUND_LABEL;
+import static io.coti.basenode.services.HealthMetric.SOURCES_UPPER_BOUND;
 
 @Component
 public class SourcesUpperBoundHealthIndicator implements HealthIndicator {
@@ -18,6 +18,6 @@ public class SourcesUpperBoundHealthIndicator implements HealthIndicator {
     public Health health() {
 
 
-        return monitorService.getHealthBuilder(SOURCES_UPPER_BOUND_LABEL);
+        return monitorService.getHealthBuilder(SOURCES_UPPER_BOUND);
     }
 }

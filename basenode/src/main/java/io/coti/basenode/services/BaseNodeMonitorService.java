@@ -221,7 +221,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         HealthMetric.WAITING_MISSING_TRANSACTION_INDEXES.setThresholds(waitingMissingTransactionsIndexesThresholdWarning, waitingMissingTransactionsIndexesThresholdCritical);
         HealthMetric.DSP_CONFIRMED_DELTA.setThresholds(dspOutsideNormalThresholdWarning, dspOutsideNormalThresholdCritical);
         HealthMetric.TOTAL_CONFIRMED.setThresholds(totalConfirmedOutsideNormalThresholdWarning, totalConfirmedOutsideNormalThresholdCritical);
-        HealthMetric.NUM_TCC_LOOP_NO_CHANGE.setThresholds(tccOutsideNormalThresholdWarning, tccOutsideNormalThresholdCritical);
+        HealthMetric.NUMBER_OF_TIMES_TCC_NOT_CHANGED.setThresholds(tccOutsideNormalThresholdWarning, tccOutsideNormalThresholdCritical);
         HealthMetric.TOTAL_POSTPONED_TRANSACTIONS.setThresholds(totalPostponedTransactionsIndexesThresholdWarning, totalPostponedTransactionsIndexesThresholdCritical);
         HealthMetric.TRANSACTION_PROPAGATION_QUEUE.setThresholds(propagationQueueThresholdWarning, propagationQueueThresholdCritical);
         HealthMetric.WEB_SOCKET_MESSAGES_QUEUE.setThresholds(webSocketMessagesQueueLengthWarning, webSocketMessagesQueueLengthCritical);
@@ -320,9 +320,9 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     @Override
-    public Health getHealthBuilder(String label) { //todo change from label to actual HealthMetric . add check if allowed to report to actuator
+    public Health getHealthBuilder(HealthMetric healthMetric) { //todo change from label to actual HealthMetric . add check if allowed to report to actuator
         Health.Builder builder = new Health.Builder();
-        HealthMetricData healthMetricData = getHealthMetricData(label);
+        HealthMetricData healthMetricData = getHealthMetricData(healthMetric);
         if (healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
             builder.unknown();
             return builder.build();
@@ -334,7 +334,6 @@ public class BaseNodeMonitorService implements IMonitorService {
             builder.up();
         }
         builder.withDetail("State", healthMetricData.getLastHealthState());
-        HealthMetric healthMetric = HealthMetric.getHealthMetricByLabel(label);
         long warningThreshold = healthMetric.getWarningThreshold();
         long criticalThreshold = healthMetric.getCriticalThreshold();
         HashMap<String, Long> configMap = new HashMap<>();
