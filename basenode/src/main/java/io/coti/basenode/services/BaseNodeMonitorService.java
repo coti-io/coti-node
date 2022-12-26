@@ -210,11 +210,11 @@ public class BaseNodeMonitorService implements IMonitorService {
         HealthMetric.SOURCES_UPPER_BOUND.setThresholds(sourcesUpperBoundThresholdWarning, sourcesUpperBoundThresholdCritical);
         HealthMetric.SOURCES_LOWER_BOUND.setThresholds(sourcesLowerBoundThresholdWarning, sourcesLowerBoundThresholdCritical);
         HealthMetric.INDEX_DELTA.setThresholds(indexThresholdWarning, indexThresholdCritical);
-        HealthMetric.WAITING_DSP_CONSENSUS_RESULTS_CONFIRMED.setThresholds(waitingDSPConsensusThresholdWarning, waitingDSPConsensusThresholdCritical);
+        HealthMetric.WAITING_DCR_QUEUE.setThresholds(waitingDSPConsensusThresholdWarning, waitingDSPConsensusThresholdCritical);
         HealthMetric.WAITING_MISSING_TRANSACTION_INDEXES.setThresholds(waitingMissingTransactionsIndexesThresholdWarning, waitingMissingTransactionsIndexesThresholdCritical);
         HealthMetric.DSP_CONFIRMED_DELTA.setThresholds(dspOutsideNormalThresholdWarning, dspOutsideNormalThresholdCritical);
         HealthMetric.TOTAL_CONFIRMED.setThresholds(totalConfirmedOutsideNormalThresholdWarning, totalConfirmedOutsideNormalThresholdCritical);
-        HealthMetric.NUM_TCC_LOOP_NO_CHANGE.setThresholds(tccOutsideNormalThresholdWarning, tccOutsideNormalThresholdCritical);
+        HealthMetric.NUMBER_OF_TIMES_TCC_NOT_CHANGED.setThresholds(tccOutsideNormalThresholdWarning, tccOutsideNormalThresholdCritical);
         HealthMetric.TOTAL_POSTPONED_TRANSACTIONS.setThresholds(totalPostponedTransactionsIndexesThresholdWarning, totalPostponedTransactionsIndexesThresholdCritical);
         HealthMetric.TRANSACTION_PROPAGATION_QUEUE.setThresholds(propagationQueueThresholdWarning, propagationQueueThresholdCritical);
         HealthMetric.WEB_SOCKET_MESSAGES_QUEUE.setThresholds(webSocketMessagesQueueLengthWarning, webSocketMessagesQueueLengthCritical);
@@ -268,20 +268,23 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     private String createHealthStateOutputAsString(StringBuilder output) {
-        output.append(" TotalHealthState ").append(" = ").append(getLastTotalHealthState().toString());
+        output.append("TotalHealthState").append(" = ").append(getLastTotalHealthState().toString());
         if (getLastTotalHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
-            output.append(",");
+            output.append(", ");
             for (Map.Entry<HealthMetric, HealthMetricData> entry : healthMetrics.entrySet()) {
                 HealthMetricData metricData = entry.getValue();
                 HealthMetric healthMetric = entry.getKey();
                 if (metricData.getLastHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
-                    output.append(healthMetric.getLabel()).append(" state = ").append(metricData.getLastHealthState().toString());
+                    output.append(healthMetric.getLabel()).append(" is ").append(metricData.getLastHealthState().toString());
                     if (metricData.getDegradingCounter() > 0) {
-                        output.append(", counter = ").append(metricData.getDegradingCounter());
+                        output.append(" (counter = ").append(metricData.getDegradingCounter());
+                        output.append(", value = ").append(metricData.getMetricValue()).append("), ");
+                    } else {
+                        output.append("(value = ").append(metricData.getMetricValue()).append("), ");
                     }
-                    output.append(", value = ").append(metricData.getMetricValue());
                 }
             }
+            output.deleteCharAt(output.lastIndexOf(","));
         }
         return output.toString();
     }
@@ -308,9 +311,9 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     @Override
-    public Health getHealthBuilder(String label) { //todo change from label to actual HealthMetric . add check if allowed to report to actuator
+    public Health getHealthBuilder(HealthMetric healthMetric) { //todo change from label to actual HealthMetric . add check if allowed to report to actuator
         Health.Builder builder = new Health.Builder();
-        HealthMetricData healthMetricData = getHealthMetricData(label);
+        HealthMetricData healthMetricData = getHealthMetricData(healthMetric);
         if (healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
             builder.unknown();
             return builder.build();
@@ -322,7 +325,6 @@ public class BaseNodeMonitorService implements IMonitorService {
             builder.up();
         }
         builder.withDetail("State", healthMetricData.getLastHealthState());
-        HealthMetric healthMetric = HealthMetric.getHealthMetricByLabel(label);
         long warningThreshold = healthMetric.getWarningThreshold();
         long criticalThreshold = healthMetric.getCriticalThreshold();
         HashMap<String, Long> configMap = new HashMap<>();
@@ -341,6 +343,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
         }
         builder.withDetail("Configuration", configMap);
+        builder.withDetail("Description", healthMetric.getDescription());
         return builder.build();
     }
 

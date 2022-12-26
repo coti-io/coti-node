@@ -6,17 +6,17 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TCC_CONFIRMATION_QUEUE_LABEL;
+import static io.coti.basenode.services.HealthMetric.DCR_CONFIRMATION_QUEUE_SIZE;
 
 @Component
-public class TccConfirmationQueueSizeHealthIndicator implements HealthIndicator {
+public class DcrConfirmationQueueSizeHealthIndicator implements HealthIndicator {
 
     @Autowired
     private IMonitorService monitorService;
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(TCC_CONFIRMATION_QUEUE_LABEL);
+        return monitorService.getHealthBuilder(DCR_CONFIRMATION_QUEUE_SIZE);
     }
 
 }
