@@ -11,7 +11,7 @@ public interface IMonitorService {
 
     void init();
 
-    Health getHealthBuilder(String label);
+    Health getHealthBuilder(HealthMetric healthMetric);
 
     BaseNodeMonitorService.HealthState getLastTotalHealthState();
 

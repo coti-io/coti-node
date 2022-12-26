@@ -9,4 +9,5 @@ public interface IHealthMetric {
 
     HealthMetricData getHealthMetricData();
 
+    String getDescription();
 }
