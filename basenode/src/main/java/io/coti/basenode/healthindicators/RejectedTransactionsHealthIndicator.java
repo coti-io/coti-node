@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.REJECTED_TRANSACTIONS_LABEL;
+import static io.coti.basenode.services.HealthMetric.REJECTED_TRANSACTIONS;
 
 @Component
 public class RejectedTransactionsHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class RejectedTransactionsHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(REJECTED_TRANSACTIONS_LABEL);
+        return monitorService.getHealthBuilder(REJECTED_TRANSACTIONS);
     }
 
 }
