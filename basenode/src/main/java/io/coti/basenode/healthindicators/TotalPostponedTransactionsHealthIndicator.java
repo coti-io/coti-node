@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TOTAL_POSTPONED_TRANSACTIONS_LABEL;
+import static io.coti.basenode.services.HealthMetric.TOTAL_POSTPONED_TRANSACTIONS;
 
 @Component
 public class TotalPostponedTransactionsHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class TotalPostponedTransactionsHealthIndicator implements HealthIndicato
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(TOTAL_POSTPONED_TRANSACTIONS_LABEL);
+        return monitorService.getHealthBuilder(TOTAL_POSTPONED_TRANSACTIONS);
     }
 
 }

@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TOTAL_CONFIRMED_LABEL;
+import static io.coti.basenode.services.HealthMetric.TOTAL_CONFIRMED;
 
 @Component
 public class TotalConfirmedHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class TotalConfirmedHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(TOTAL_CONFIRMED_LABEL);
+        return monitorService.getHealthBuilder(TOTAL_CONFIRMED);
     }
 
 }

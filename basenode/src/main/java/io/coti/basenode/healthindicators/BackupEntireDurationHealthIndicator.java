@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.BACKUP_ENTIRE_DURATION_LABEL;
+import static io.coti.basenode.services.HealthMetric.BACKUP_ENTIRE_DURATION;
 
 @Component
 public class BackupEntireDurationHealthIndicator implements HealthIndicator {
@@ -16,7 +16,7 @@ public class BackupEntireDurationHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(BACKUP_ENTIRE_DURATION_LABEL);
+        return monitorService.getHealthBuilder(BACKUP_ENTIRE_DURATION);
     }
 
 }
