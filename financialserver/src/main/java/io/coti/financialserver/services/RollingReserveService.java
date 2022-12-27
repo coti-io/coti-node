@@ -52,7 +52,7 @@ public class RollingReserveService {
     private TransactionCreationService transactionCreationService;
     @Autowired
     private RecourseClaims recourseClaims;
-    @Value("${financialserver.seed}")
+    @Value("${financialserver.seed.key}")
     private String seed;
     @Autowired
     private MerchantRollingReserveCrypto merchantRollingReserveCrypto;
