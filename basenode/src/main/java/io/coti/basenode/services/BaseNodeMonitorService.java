@@ -146,13 +146,8 @@ public class BaseNodeMonitorService implements IMonitorService {
         Health.Builder builder = new Health.Builder();
         HealthMetricData healthMetricData = getHealthMetricData(healthMetric);
 
-        if (!(healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
-                healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.EXTERNAL))) {
-            builder.unknown();
-            return builder.build();
-        }
-
-        if (healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
+        if (!HealthMetric.isToAddExternalMetric(healthMetric.getHealthMetricOutputType()) ||
+                healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
             builder.unknown();
             return builder.build();
         }
@@ -212,13 +207,11 @@ public class BaseNodeMonitorService implements IMonitorService {
         for (HealthMetric healthMetric : HealthMetric.values()) {
             if (isDetailedLog || !healthMetric.isDetailedLogs()) {
                 for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
-                    if (healthMetricOutput.getType().equals(HealthMetricOutputType.ALL) ||
-                            healthMetricOutput.getType().equals(HealthMetricOutputType.CONSOLE)) {
+                    if (HealthMetric.isToAddConsoleMetric(healthMetricOutput.getType())) {
                         appendOutput(output, healthMetricOutput.getLabel(), healthMetricOutput.getValue());
                     }
                 }
-                if ((healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
-                        healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.CONSOLE))) {
+                if (HealthMetric.isToAddConsoleMetric(healthMetric.getHealthMetricOutputType())) {
                     appendOutput(output, healthMetric.getLabel(), healthMetric.getHealthMetricData().getMetricValue());
                 }
             }

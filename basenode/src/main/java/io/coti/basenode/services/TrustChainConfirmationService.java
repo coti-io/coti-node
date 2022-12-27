@@ -76,7 +76,6 @@ public class TrustChainConfirmationService {
 
     public List<TccInfo> getTrustChainConfirmedTransactions() {
         LinkedList<TccInfo> trustChainConfirmations = new LinkedList<>();
-        //tccWaitingConfirmation = 0;
         trustScoreNotChanged = false;
         for (TransactionData transactionData : topologicalOrderedGraph) {
             setTotalTrustScore(transactionData);
@@ -111,7 +110,6 @@ public class TrustChainConfirmationService {
             return;
         }
 
-        //tccWaitingConfirmation++;
         if (nonZeroSpendTransactionTSValuesMap.containsKey(transactionData.getHash()) &&
                 nonZeroSpendTransactionTSValuesMap.get(transactionData.getHash()) >= transactionData.getTrustChainTrustScore() &&
                 isWaitingMoreThanMinimum(transactionData)) {

@@ -50,14 +50,13 @@ public class TransactionResponseData implements ITransactionResponseData {
         type = transactionData.getType();
         baseTransactions = new ArrayList<>();
         if (transactionData.getBaseTransactions() != null) {
-            transactionData.getBaseTransactions().forEach(baseTransactionData ->
-            {
+            transactionData.getBaseTransactions().forEach(baseTransactionData -> {
                 try {
                     Class<? extends BaseTransactionResponseData> baseTransactionResponseDataClass = BaseTransactionResponseClass.valueOf(BaseTransactionName.getName(baseTransactionData.getClass()).name()).getResponseClass();
                     Constructor<? extends BaseTransactionResponseData> constructor = baseTransactionResponseDataClass.getConstructor(BaseTransactionData.class);
                     baseTransactions.add(constructor.newInstance(baseTransactionData));
                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException |
-                        InstantiationException e) {
+                         InstantiationException e) {
                     log.error("Transaction response error", e);
                     throw new TransactionException(TRANSACTION_RESPONSE_ERROR);
                 }

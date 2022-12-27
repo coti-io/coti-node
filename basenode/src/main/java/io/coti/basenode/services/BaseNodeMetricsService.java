@@ -5,7 +5,6 @@ import io.coti.basenode.data.HealthMetricOutputType;
 import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.services.interfaces.IMetricsService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -29,8 +28,6 @@ public class BaseNodeMetricsService implements IMetricsService {
     private String metricTemplate = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",metric=\"metricTemplate\"}";
     private String metricTemplateSubComponent = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",componentName=\"componentNameTemplate\",metric=\"metricTemplate\"}";
     private Thread sampleThread;
-    @Autowired
-    private BaseNodeMonitorService baseNodeMonitorService;
     @Value("${metrics.sample.milisec.interval:0}")
     private int metricsSampleInterval;
     @Value("${detailed.logs:false}")
@@ -90,15 +87,13 @@ public class BaseNodeMetricsService implements IMetricsService {
                     for (HealthMetric healthMetric : HealthMetric.values()) {
 
                         for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
-                            if (healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
-                                    healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.EXTERNAL)) {
+                            if (HealthMetric.isToAddExternalMetric(healthMetricOutput.getType())) {
                                 addMetric(healthMetric, healthMetricOutput.getLabel(),
                                         healthMetricOutput.getValue(), metrics, metricTemplateMap);
                             }
                         }
 
-                        if (healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
-                                healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.EXTERNAL)) {
+                        if (HealthMetric.isToAddExternalMetric(healthMetric.getHealthMetricOutputType())) {
                             addMetric(healthMetric, healthMetric.getLabel(),
                                     healthMetric.getHealthMetricData().getMetricValue(), metrics, metricTemplateMap);
                         }

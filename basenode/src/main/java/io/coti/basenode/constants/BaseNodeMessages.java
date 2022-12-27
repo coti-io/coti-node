@@ -9,10 +9,12 @@ public class BaseNodeMessages {
     public static final String EVENT_HARD_FORK_ERROR = "Error with Hard Fork Event";
     public static final String NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION = "Not unique token generation attempt!";
     public static final String INVALID_TRUST_SCORE_MESSAGE = "Invalid sender trust score!";
-
     public static final String INVALID_NETWORK_TYPE = "Network type should be %s. Invalid network type %s";
     public static final String INVALID_NODE_REGISTRATION_SIGNATURE = "Invalid node registration signature";
     public static final String INVALID_NODE_REGISTRAR = "Invalid node registrar";
     public static final String INVALID_NODE_IP_VERSION = "Invalid node IP version";
     public static final String EXCEPTION = "Exception: ";
+
+    private BaseNodeMessages() {
+    }
 }

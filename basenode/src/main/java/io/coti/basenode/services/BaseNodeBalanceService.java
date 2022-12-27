@@ -6,7 +6,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.exceptions.BalanceException;
 import io.coti.basenode.http.*;
-import io.coti.basenode.http.data.AddressBalance;
+import io.coti.basenode.http.data.AddressBalanceData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
@@ -104,14 +104,14 @@ public class BaseNodeBalanceService implements IBalanceService {
         if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
             return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
         }
-        Map<Hash, Map<Hash, AddressBalance>> addressToTokenBalances = new HashMap<>();
+        Map<Hash, Map<Hash, AddressBalanceData>> addressToTokenBalances = new HashMap<>();
         getTokenBalancesRequest.getAddresses().forEach(address -> {
             Map<Hash, BigDecimal> addressToPreBalanceMap = preBalanceMap.get(address);
             if (addressToPreBalanceMap != null) {
                 addressToPreBalanceMap.forEach((currencyHash, preBalance) -> {
                     if (!currencyService.isNativeCurrency(currencyHash)) {
                         addressToTokenBalances.putIfAbsent(address, new HashMap<>());
-                        addressToTokenBalances.get(address).putIfAbsent(currencyHash, new AddressBalance(getBalance(address, currencyHash), preBalance));
+                        addressToTokenBalances.get(address).putIfAbsent(currencyHash, new AddressBalanceData(getBalance(address, currencyHash), preBalance));
                     }
                 });
             }
