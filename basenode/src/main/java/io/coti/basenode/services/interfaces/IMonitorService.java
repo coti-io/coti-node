@@ -17,9 +17,7 @@ public interface IMonitorService {
 
     HealthMetricData getHealthMetricData(HealthMetric healthMetric);
 
-    HealthMetricData getHealthMetricData(String label);
-
-    void setMetricValue(HealthMetric label, long metricValue);
+    void setMetricValue(HealthMetric healthMetric, long metricValue);
 
     void setSnapshotTime(HealthMetric healthMetric, Instant snapshotTime);
 
