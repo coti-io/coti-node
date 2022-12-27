@@ -30,7 +30,7 @@ public class InitializationService extends BaseNodeInitializationService {
     private String serverPort;
     @Value("${server.url}")
     private String webServerUrl;
-    @Value("${financialserver.seed}")
+    @Value("${financialserver.seed.key}")
     private String seed;
     @Autowired
     private ICommunicationService communicationService;

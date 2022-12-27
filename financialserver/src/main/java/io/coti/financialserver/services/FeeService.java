@@ -30,7 +30,7 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 @Service
 public class FeeService {
 
-    @Value("${financialserver.seed}")
+    @Value("${financialserver.seed.key}")
     private String seed;
     @Autowired
     private ICurrencyService currencyService;
