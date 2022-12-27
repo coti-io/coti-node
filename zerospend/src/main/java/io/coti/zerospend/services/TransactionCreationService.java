@@ -49,7 +49,7 @@ public class TransactionCreationService {
     private IEventService eventService;
     @Autowired
     private IClusterService clusterService;
-    @Value("${zerospend.seed}")
+    @Value("${zerospend.seed.key}")
     private String seed;
 
     public TransactionData createNewStarvationZeroSpendTransaction(TransactionData transactionData) {

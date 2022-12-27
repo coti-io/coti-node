@@ -2,7 +2,7 @@ package io.coti.basenode.data;
 
 public enum HealthMetricOutputType {
     CONSOLE,
-    INFLUX,
+    EXTERNAL,
     ALL,
     NONE;
 
