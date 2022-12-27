@@ -1,7 +1,7 @@
 package io.coti.basenode.http;
 
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.http.data.AddressBalance;
+import io.coti.basenode.http.data.AddressBalanceData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -13,13 +13,13 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 public class GetBalancesResponse extends BaseResponse {
 
-    private Map<String, AddressBalance> addressesBalance;
+    private Map<String, AddressBalanceData> addressesBalance;
 
     public GetBalancesResponse() {
         addressesBalance = new HashMap<>();
     }
 
     public void addAddressBalanceToResponse(Hash address, BigDecimal balance, BigDecimal preBalance) {
-        addressesBalance.put(address.toHexString(), new AddressBalance(balance, preBalance));
+        addressesBalance.put(address.toHexString(), new AddressBalanceData(balance, preBalance));
     }
 }
