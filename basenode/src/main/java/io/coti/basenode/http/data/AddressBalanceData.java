@@ -6,12 +6,12 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-public class AddressBalance implements Serializable {
+public class AddressBalanceData implements Serializable {
 
     private BigDecimal addressBalance;
     private BigDecimal addressPreBalance;
 
-    public AddressBalance(BigDecimal addressBalance, BigDecimal addressPreBalance) {
+    public AddressBalanceData(BigDecimal addressBalance, BigDecimal addressPreBalance) {
         this.addressBalance = addressBalance;
         this.addressPreBalance = addressPreBalance;
     }
