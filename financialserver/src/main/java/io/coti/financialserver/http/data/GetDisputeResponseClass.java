@@ -21,7 +21,7 @@ public enum GetDisputeResponseClass {
                 Constructor<? extends GetDisputeResponseData> constructor = getDisputeResponseClass.getConstructor(DisputeData.class, Hash.class);
                 return constructor.newInstance(disputeData, userHash);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException |
-                    InstantiationException e) {
+                     InstantiationException e) {
                 log.error("Error at getting new instance for GetDisputeResponseClass", e);
                 return null;
             }
@@ -54,7 +54,7 @@ public enum GetDisputeResponseClass {
             Constructor<? extends GetDisputeResponseData> constructor = getDisputeResponseClass.getConstructor(DisputeData.class);
             return constructor.newInstance(disputeData);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException |
-                InstantiationException e) {
+                 InstantiationException e) {
             log.error("Error at getting new instance for GetDisputeResponseClass", e);
             return null;
         }
