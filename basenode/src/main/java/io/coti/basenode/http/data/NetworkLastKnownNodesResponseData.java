@@ -5,6 +5,7 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
+import io.coti.basenode.http.data.interfaces.IResponseData;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 
 @Data
 @Slf4j
-public class NetworkLastKnownNodesResponseData implements ISignable, ISignValidatable {
+public class NetworkLastKnownNodesResponseData implements ISignable, ISignValidatable, IResponseData {
 
     private static final long serialVersionUID = 3804637865403728215L;
     private HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap;
