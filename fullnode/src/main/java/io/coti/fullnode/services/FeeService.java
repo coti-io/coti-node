@@ -41,7 +41,7 @@ public class FeeService {
     private BigDecimal maximumFee;
     @Value("${fee.percentage}")
     private BigDecimal feePercentage;
-    @Value("${fullnode.seed}")
+    @Value("${fullnode.seed.key}")
     private String seed;
     @Value("${regular.token.fullnode.fee}")
     private BigDecimal regularTokenFullnodeFee;

@@ -23,7 +23,7 @@ public class DistributionService {
     public static final int INITIAL_AMOUNT_FOR_INCENTIVES = 900000000;
     public static final int INITIAL_AMOUNT_FOR_TEAM = 300000000;
     public static final int INITIAL_AMOUNT_FOR_ADVISORS = 200000000;
-    @Value("${financialserver.seed}")
+    @Value("${financialserver.seed.key}")
     private String seed;
     @Autowired
     private InitialFunds initialFunds;

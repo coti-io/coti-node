@@ -10,4 +10,8 @@ public interface IHealthMetric {
     HealthMetricData getHealthMetricData();
 
     String getDescription();
+
+    void setWarningThreshold(long l);
+
+    void setCriticalThreshold(long l);
 }

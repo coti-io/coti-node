@@ -91,14 +91,14 @@ public class BaseNodeMetricsService implements IMetricsService {
 
                         for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
                             if (healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
-                                    healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.INFLUX)) {
+                                    healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.EXTERNAL)) {
                                 addMetric(healthMetric, healthMetricOutput.getLabel(),
                                         healthMetricOutput.getValue(), metrics, metricTemplateMap);
                             }
                         }
 
                         if (healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.ALL) ||
-                                healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.INFLUX)) {
+                                healthMetric.getHealthMetricOutputType().equals(HealthMetricOutputType.EXTERNAL)) {
                             addMetric(healthMetric, healthMetric.getLabel(),
                                     healthMetric.getHealthMetricData().getMetricValue(), metrics, metricTemplateMap);
                         }

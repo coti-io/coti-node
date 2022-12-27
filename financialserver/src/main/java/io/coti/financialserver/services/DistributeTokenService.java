@@ -34,7 +34,7 @@ import static io.coti.financialserver.http.HttpStringConstants.DUPLICATE_FUND_NA
 @Service
 public class DistributeTokenService {
 
-    @Value("${financialserver.seed}")
+    @Value("${financialserver.seed.key}")
     private String seed;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
