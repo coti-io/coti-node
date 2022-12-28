@@ -22,14 +22,14 @@ public interface IDBRecoveryService {
 
     BackupInfo getLastBackupInfo();
 
-    long getBackupStartedTime();
+    long getLastBackupStartedTime();
 
-    long getEntireDuration();
+    long getLastEntireDuration();
 
-    long getBackupDuration();
+    long getLastBackupDuration();
 
-    long getUploadDuration();
+    long getLastUploadDuration();
 
-    long getRemovalDuration();
+    long getLastRemovalDuration();
 
 }

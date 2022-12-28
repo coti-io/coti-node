@@ -89,17 +89,17 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     @Getter
     private BackupInfo lastBackupInfo;
     @Getter
-    private long backupStartedTime;
+    private long lastBackupStartedTime;
     @Getter
-    private long entireDuration;
+    private long lastEntireDuration;
     @Getter
-    private long backupDuration;
+    private long lastBackupDuration;
     @Getter
-    private long uploadDuration;
+    private long lastUploadDuration;
     @Getter
-    private long removalDuration;
+    private long lastRemovalDuration;
     @Getter
-    private long backupSuccess;
+    private long lastBackupSuccess;
 
 
     @Override
@@ -200,20 +200,20 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private void backupDB() {
         if (backupInProgress.compareAndSet(false, true)) {
             try {
-                backupStartedTime = java.time.Instant.now().getEpochSecond();
+                lastBackupStartedTime = java.time.Instant.now().getEpochSecond();
                 log.info("Starting DB backup flow");
                 deleteBackup(remoteBackupFolderPath);
                 lastBackupInfo = dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
-                backupDuration = java.time.Instant.now().getEpochSecond() - lastBackupInfo.timestamp();
+                lastBackupDuration = java.time.Instant.now().getEpochSecond() - lastBackupInfo.timestamp();
                 List<String> uploadedBackupFiles = getBackupFiles();
                 long uploadBackupStartedTime = java.time.Instant.now().getEpochSecond();
                 uploadRecentBackupToS3(uploadedBackupFiles);
-                uploadDuration = java.time.Instant.now().getEpochSecond() - uploadBackupStartedTime;
+                lastUploadDuration = java.time.Instant.now().getEpochSecond() - uploadBackupStartedTime;
                 long removalBackupStartedTime = java.time.Instant.now().getEpochSecond();
                 removeOlderBackupsFromS3(uploadedBackupFiles);
-                removalDuration = java.time.Instant.now().getEpochSecond() - removalBackupStartedTime;
+                lastRemovalDuration = java.time.Instant.now().getEpochSecond() - removalBackupStartedTime;
                 log.info("Finished DB backup flow");
-                entireDuration = java.time.Instant.now().getEpochSecond() - backupStartedTime;
+                lastEntireDuration = java.time.Instant.now().getEpochSecond() - lastBackupStartedTime;
             } catch (CotiRunTimeException e) {
                 log.error("Backup DB error.");
                 e.logMessage();
