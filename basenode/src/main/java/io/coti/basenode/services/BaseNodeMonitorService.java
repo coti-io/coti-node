@@ -17,7 +17,6 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.HashMap;
@@ -37,6 +36,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     protected INetworkService networkService;
     @Autowired
     MonitorConfigurationProperties monitorConfigurationProperties;
+    Thread lastStateThread;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -68,8 +68,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Value("${detailed.logs:false}")
     private boolean allowTransactionMonitoringDetailed;
     private HealthState lastTotalHealthState = HealthState.NA;
-    @Value("${metrics.sample.milisec.interval:0}")
-    private int metricsSampleInterval;
+    @Value("${monitor.metrics.milisec.interval:1000}")
+    private int monitorMetricsInterval;
     @Value("${one.line.status:true}")
     private boolean oneLineState;
 
@@ -77,15 +77,18 @@ public class BaseNodeMonitorService implements IMonitorService {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
-    @PostConstruct
-    private void initHealthMetrics() throws InvocationTargetException, IllegalAccessException {
-        if (metricsSampleInterval == 0) {
-            log.info("Not using metrics endpoint, {} initialization stopped...", this.getClass().getSimpleName());
+    public boolean monitoringStarted() {
+        return lastStateThread != null && lastStateThread.isAlive();
+    }
+
+    public void initNodeMonitor() {
+        if (monitorMetricsInterval == 0) {
+            log.info("Not using monitor endpoint, {} initialization stopped...", this.getClass().getSimpleName());
             return;
         }
-        if (metricsSampleInterval < 1000) {
-            log.error("Monitor samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
-            metricsSampleInterval = 0;
+        if (monitorMetricsInterval < 1000) {
+            log.error("Monitor Metric Interval are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
+            monitorMetricsInterval = 0;
             return;
         }
 
@@ -93,15 +96,17 @@ public class BaseNodeMonitorService implements IMonitorService {
                 trustChainConfirmationService, transactionService, propagationSubscriber, webSocketMessageService,
                 networkService, receiver, databaseConnector, dbRecoveryService, rejectedTransactions, propagationPublisher);
 
-        monitorConfigurationProperties.updateThresholds(HealthMetric.values());
-        for (HealthMetric value : HealthMetric.values()) {
-            healthMetrics.put(value, new HealthMetricData());
-        }
-    }
+        try {
+            monitorConfigurationProperties.updateThresholds(HealthMetric.values());
+            for (HealthMetric value : HealthMetric.values()) {
+                healthMetrics.put(value, new HealthMetricData());
+            }
 
-    public void initNodeMonitor() {
-        Thread lastStateThread = new Thread(this::lastState, "NodeMonitorService");
-        lastStateThread.start();
+            lastStateThread = new Thread(this::lastState, "NodeMonitorService");
+            lastStateThread.start();
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            log.error(e.toString());
+        }
     }
 
     private void updateHealthMetricsSnapshot() {
@@ -215,7 +220,7 @@ public class BaseNodeMonitorService implements IMonitorService {
                 if (allowTransactionMonitoring) {
                     lockAndCalculateLastState();
                 }
-                Thread.sleep(metricsSampleInterval);
+                Thread.sleep(monitorMetricsInterval);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e1) {
