@@ -5,7 +5,6 @@ import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutput;
-import io.coti.basenode.data.HealthMetricOutputType;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
@@ -65,6 +64,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Value("${detailed.logs:false}")
     private boolean allowTransactionMonitoringDetailed;
     private HealthState lastTotalHealthState = HealthState.NA;
+    @Value("${metrics.sample.milisec.interval:0}")
+    private int metricsSampleInterval;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
@@ -80,6 +81,14 @@ public class BaseNodeMonitorService implements IMonitorService {
         for (HealthMetric value : HealthMetric.values()) {
             healthMetrics.put(value, new HealthMetricData());
         }
+
+        if (metricsSampleInterval < 1000) {
+            log.error("Monitor samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
+            metricsSampleInterval = 0;
+            return;
+        }
+        Thread lastStateThread = new Thread(this::lastState, "lastStateMonitor");
+        lastStateThread.start();
     }
 
     private void updateHealthMetricsSnapshot() {
@@ -185,19 +194,27 @@ public class BaseNodeMonitorService implements IMonitorService {
         return lastTotalHealthState;
     }
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     private void lastState() {
-        if (allowTransactionMonitoring) {
-            updateHealthMetricsSnapshot();
-            calculateHealthMetrics();
-            calculateTotalHealthState();
-
-            int logLevel = lastTotalHealthState.ordinal();
-            printLastState(logLevel);
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                if (allowTransactionMonitoring) {
+                    updateHealthMetricsSnapshot();
+                    calculateHealthMetrics();
+                    calculateTotalHealthState();
+                }
+                Thread.sleep(metricsSampleInterval);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e1) {
+                log.error(String.valueOf(e1));
+            }
         }
+
     }
 
-    private void printLastState(int logLevel) {
+    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
+    private void printLastState() {
+        int logLevel = lastTotalHealthState.ordinal();
         String output = createOutputAsString(allowTransactionMonitoringDetailed);
         printToLogByLevel(logLevel, output);
     }
