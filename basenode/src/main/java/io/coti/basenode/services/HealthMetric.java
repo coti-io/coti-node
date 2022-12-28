@@ -429,20 +429,16 @@ public enum HealthMetric implements IHealthMetric {
     },
     LAST_BACKUP_ELAPSED(LAST_BACKUP_ELAPSED_LABEL, MetricClass.BACKUP_METRIC, 3600, 0, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 long backupStartedTime = dbRecoveryService.getBackupStartedTime();
                 this.getHealthMetricData().addValue(BACKUP_STARTED_TIME_LABEL, HealthMetricOutputType.EXTERNAL, BACKUP_STARTED_TIME_LABEL, backupStartedTime);
                 baseDoSnapshot(this, java.time.Instant.now().getEpochSecond() - backupStartedTime);
-
-                if (dbRecoveryService.getBackUpLog().size() > 0) {
-                    dbRecoveryService.clearBackupLog();
-                }
             }
         }
 
         @Override
         public void calculateHealthMetric() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
                 monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
@@ -456,7 +452,7 @@ public enum HealthMetric implements IHealthMetric {
     },
     NUMBER_OF_LIVE_FILES_NOT_BACKED_UP(NUMBER_OF_LIVE_FILES_NOT_BACKED_UP_LABEL, MetricClass.BACKUP_METRIC, 1, 0, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 long numberOfBackedFiles = dbRecoveryService.getLastBackupInfo().numberFiles();
                 long numberOfLiveFiles = databaseConnector.getLiveFilesNames().size();
                 this.getHealthMetricData().addValue(BACKED_UP_NUMBER_OF_FILES_LABEL, HealthMetricOutputType.EXTERNAL, BACKED_UP_NUMBER_OF_FILES_LABEL, numberOfBackedFiles);
@@ -466,7 +462,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public void calculateHealthMetric() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
                 monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
@@ -480,7 +476,7 @@ public enum HealthMetric implements IHealthMetric {
     },
     BACKUP_SIZE(BACKUP_SIZE_LABEL, MetricClass.BACKUP_METRIC, 0, 0, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 baseDoSnapshot(this, dbRecoveryService.getLastBackupInfo().size());
             }
         }
@@ -497,14 +493,14 @@ public enum HealthMetric implements IHealthMetric {
     },
     BACKUP_ENTIRE_DURATION(BACKUP_ENTIRE_DURATION_LABEL, MetricClass.BACKUP_METRIC, 75, 180, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 baseDoSnapshot(this, dbRecoveryService.getEntireDuration());
             }
         }
 
         @Override
         public void calculateHealthMetric() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
                 monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
@@ -518,14 +514,14 @@ public enum HealthMetric implements IHealthMetric {
     },
     BACKUP_DURATION(BACKUP_DURATION_LABEL, MetricClass.BACKUP_METRIC, 45, 90, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 baseDoSnapshot(this, dbRecoveryService.getBackupDuration());
             }
         }
 
         @Override
         public void calculateHealthMetric() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
                 monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
@@ -539,14 +535,14 @@ public enum HealthMetric implements IHealthMetric {
     },
     BACKUP_UPLOAD_DURATION(BACKUP_UPLOAD_DURATION_LABEL, MetricClass.BACKUP_METRIC, 20, 60, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 baseDoSnapshot(this, dbRecoveryService.getUploadDuration());
             }
         }
 
         @Override
         public void calculateHealthMetric() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
                 monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
@@ -560,14 +556,14 @@ public enum HealthMetric implements IHealthMetric {
     },
     BACKUP_REMOVAL_DURATION(BACKUP_REMOVAL_DURATION_LABEL, MetricClass.BACKUP_METRIC, 10, 30, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 baseDoSnapshot(this, dbRecoveryService.getRemovalDuration());
             }
         }
 
         @Override
         public void calculateHealthMetric() {
-            if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
+            if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
                 monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
@@ -677,6 +673,20 @@ public enum HealthMetric implements IHealthMetric {
         HealthMetric.propagationPublisher = propagationPublisher;
     }
 
+    public static boolean isToAddExternalMetric(HealthMetricOutputType healthMetricOutputType) {
+        return healthMetricOutputType.equals(HealthMetricOutputType.ALL) ||
+                healthMetricOutputType.equals(HealthMetricOutputType.EXTERNAL);
+    }
+
+    public static boolean isToAddConsoleMetric(HealthMetricOutputType healthMetricOutputType) {
+        return healthMetricOutputType.equals(HealthMetricOutputType.ALL) ||
+                healthMetricOutputType.equals(HealthMetricOutputType.CONSOLE);
+    }
+
+    private static boolean newBackupExecuted() {
+        return dbRecoveryService != null && dbRecoveryService.isBackup() && dbRecoveryService.getLastBackupInfo() != null;
+    }
+
     @Override
     public HealthMetricData getHealthMetricData() {
         return monitorService.getHealthMetricData(this);
@@ -690,15 +700,5 @@ public enum HealthMetric implements IHealthMetric {
     @Override
     public void setCriticalThreshold(long l) {
         criticalThreshold = l;
-    }
-
-    public static boolean isToAddExternalMetric(HealthMetricOutputType healthMetricOutputType) {
-        return healthMetricOutputType.equals(HealthMetricOutputType.ALL) ||
-                healthMetricOutputType.equals(HealthMetricOutputType.EXTERNAL);
-    }
-
-    public static boolean isToAddConsoleMetric(HealthMetricOutputType healthMetricOutputType) {
-        return healthMetricOutputType.equals(HealthMetricOutputType.ALL) ||
-                healthMetricOutputType.equals(HealthMetricOutputType.CONSOLE);
     }
 }
