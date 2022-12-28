@@ -73,6 +73,16 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @PostConstruct
     private void initHealthMetrics() throws InvocationTargetException, IllegalAccessException {
+        if (metricsSampleInterval == 0) {
+            log.info("Not using metrics endpoint, {} initialization stopped...", this.getClass().getSimpleName());
+            return;
+        }
+        if (metricsSampleInterval < 1000) {
+            log.error("Monitor samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
+            metricsSampleInterval = 0;
+            return;
+        }
+
         HealthMetric.setAutowireds(this, transactionHelper, clusterService, transactionIndexService, confirmationService,
                 trustChainConfirmationService, transactionService, propagationSubscriber, webSocketMessageService,
                 networkService, receiver, databaseConnector, dbRecoveryService, rejectedTransactions, propagationPublisher);
@@ -82,11 +92,6 @@ public class BaseNodeMonitorService implements IMonitorService {
             healthMetrics.put(value, new HealthMetricData());
         }
 
-        if (metricsSampleInterval < 1000) {
-            log.error("Monitor samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
-            metricsSampleInterval = 0;
-            return;
-        }
         Thread lastStateThread = new Thread(this::lastState, "lastStateMonitor");
         lastStateThread.start();
     }
