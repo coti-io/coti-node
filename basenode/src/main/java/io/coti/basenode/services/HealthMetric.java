@@ -285,21 +285,6 @@ public enum HealthMetric implements IHealthMetric {
             return "Indicates weather the node is connected to recovery server.";
         }
     },
-    TRANSACTION_PROPAGATION_QUEUE(TRANSACTION_PROPAGATION_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 64, 0, false, HealthMetricOutputType.EXTERNAL) {
-        public void doSnapshot() {
-            baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION));
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            baseCalculateHealthCounterMetricState(this);
-        }
-
-        @Override
-        public String getDescription() {
-            return "ZeroMQ Subscriber Queue size for Transactions";
-        }
-    },
     PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 5, 0, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTIONS_STATE));
@@ -346,7 +331,7 @@ public enum HealthMetric implements IHealthMetric {
             return "ZeroMQ Subscriber Queue size for Address";
         }
     },
-    PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 40, 0, false, HealthMetricOutputType.EXTERNAL) {
+    PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) propagationSubscriber.getMessageQueueSize(ZeroMQSubscriberQueue.TRANSACTION));
         }
@@ -358,7 +343,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "The size of the propagation subscriber queue of Transaction";
+            return "ZeroMQ Subscriber Queue size for Transactions";
         }
     },
     PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -430,7 +415,7 @@ public enum HealthMetric implements IHealthMetric {
     LAST_BACKUP_ELAPSED(LAST_BACKUP_ELAPSED_LABEL, MetricClass.BACKUP_METRIC, 3600, 0, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             if (newBackupExecuted()) {
-                long backupStartedTime = dbRecoveryService.getBackupStartedTime();
+                long backupStartedTime = dbRecoveryService.getLastBackupStartedTime();
                 this.getHealthMetricData().addValue(BACKUP_STARTED_TIME_LABEL, HealthMetricOutputType.EXTERNAL, BACKUP_STARTED_TIME_LABEL, backupStartedTime);
                 baseDoSnapshot(this, java.time.Instant.now().getEpochSecond() - backupStartedTime);
             }
@@ -471,7 +456,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "";
+            return "The number of live files that were not backed up";
         }
     },
     BACKUP_SIZE(BACKUP_SIZE_LABEL, MetricClass.BACKUP_METRIC, 0, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -494,7 +479,7 @@ public enum HealthMetric implements IHealthMetric {
     BACKUP_ENTIRE_DURATION(BACKUP_ENTIRE_DURATION_LABEL, MetricClass.BACKUP_METRIC, 75, 180, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             if (newBackupExecuted()) {
-                baseDoSnapshot(this, dbRecoveryService.getEntireDuration());
+                baseDoSnapshot(this, dbRecoveryService.getLastEntireDuration());
             }
         }
 
@@ -515,7 +500,7 @@ public enum HealthMetric implements IHealthMetric {
     BACKUP_DURATION(BACKUP_DURATION_LABEL, MetricClass.BACKUP_METRIC, 45, 90, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             if (newBackupExecuted()) {
-                baseDoSnapshot(this, dbRecoveryService.getBackupDuration());
+                baseDoSnapshot(this, dbRecoveryService.getLastBackupDuration());
             }
         }
 
@@ -536,7 +521,7 @@ public enum HealthMetric implements IHealthMetric {
     BACKUP_UPLOAD_DURATION(BACKUP_UPLOAD_DURATION_LABEL, MetricClass.BACKUP_METRIC, 20, 60, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             if (newBackupExecuted()) {
-                baseDoSnapshot(this, dbRecoveryService.getUploadDuration());
+                baseDoSnapshot(this, dbRecoveryService.getLastUploadDuration());
             }
         }
 
@@ -557,7 +542,7 @@ public enum HealthMetric implements IHealthMetric {
     BACKUP_REMOVAL_DURATION(BACKUP_REMOVAL_DURATION_LABEL, MetricClass.BACKUP_METRIC, 10, 30, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             if (newBackupExecuted()) {
-                baseDoSnapshot(this, dbRecoveryService.getRemovalDuration());
+                baseDoSnapshot(this, dbRecoveryService.getLastRemovalDuration());
             }
         }
 
