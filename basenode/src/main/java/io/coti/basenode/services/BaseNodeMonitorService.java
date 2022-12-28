@@ -5,11 +5,11 @@ import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutput;
-import io.coti.basenode.data.HealthMetricOutputType;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MonitorConfigurationProperties;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,12 +24,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @Service
 public class BaseNodeMonitorService implements IMonitorService {
 
     private final Map<HealthMetric, HealthMetricData> healthMetrics = new ConcurrentHashMap<>();
+    @Getter
+    private final ReentrantReadWriteLock monitorReadWriteLock = new ReentrantReadWriteLock(true);
     @Autowired
     protected INetworkService networkService;
     @Autowired
@@ -65,6 +68,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Value("${detailed.logs:false}")
     private boolean allowTransactionMonitoringDetailed;
     private HealthState lastTotalHealthState = HealthState.NA;
+    @Value("${metrics.sample.milisec.interval:0}")
+    private int metricsSampleInterval;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
@@ -72,6 +77,16 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @PostConstruct
     private void initHealthMetrics() throws InvocationTargetException, IllegalAccessException {
+        if (metricsSampleInterval == 0) {
+            log.info("Not using metrics endpoint, {} initialization stopped...", this.getClass().getSimpleName());
+            return;
+        }
+        if (metricsSampleInterval < 1000) {
+            log.error("Monitor samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
+            metricsSampleInterval = 0;
+            return;
+        }
+
         HealthMetric.setAutowireds(this, transactionHelper, clusterService, transactionIndexService, confirmationService,
                 trustChainConfirmationService, transactionService, propagationSubscriber, webSocketMessageService,
                 networkService, receiver, databaseConnector, dbRecoveryService, rejectedTransactions, propagationPublisher);
@@ -80,6 +95,9 @@ public class BaseNodeMonitorService implements IMonitorService {
         for (HealthMetric value : HealthMetric.values()) {
             healthMetrics.put(value, new HealthMetricData());
         }
+
+        Thread lastStateThread = new Thread(this::lastState, "NodeMonitorService");
+        lastStateThread.start();
     }
 
     private void updateHealthMetricsSnapshot() {
@@ -185,21 +203,48 @@ public class BaseNodeMonitorService implements IMonitorService {
         return lastTotalHealthState;
     }
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     private void lastState() {
-        if (allowTransactionMonitoring) {
-            updateHealthMetricsSnapshot();
-            calculateHealthMetrics();
-            calculateTotalHealthState();
-
-            int logLevel = lastTotalHealthState.ordinal();
-            printLastState(logLevel);
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                if (allowTransactionMonitoring) {
+                    lockAndGetLastState();
+                }
+                Thread.sleep(metricsSampleInterval);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e1) {
+                log.error(String.valueOf(e1));
+            }
         }
     }
 
-    private void printLastState(int logLevel) {
-        String output = createOutputAsString(allowTransactionMonitoringDetailed);
-        printToLogByLevel(logLevel, output);
+    private void lockAndGetLastState() {
+        try {
+            monitorReadWriteLock.writeLock().lock();
+            updateHealthMetricsSnapshot();
+            calculateHealthMetrics();
+            calculateTotalHealthState();
+            dbRecoveryService.clearBackupLog();
+        } catch (Exception e) {
+            log.error(String.valueOf(e));
+            throw e;
+        } finally {
+            monitorReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
+    private void printLastState() {
+        try {
+            monitorReadWriteLock.readLock().lock();
+            int logLevel = lastTotalHealthState.ordinal();
+            String output = createOutputAsString(allowTransactionMonitoringDetailed);
+            printToLogByLevel(logLevel, output);
+        } catch (Exception e) {
+            log.error(e.toString());
+        } finally {
+            monitorReadWriteLock.readLock().unlock();
+        }
     }
 
     private String createOutputAsString(boolean isDetailedLog) {

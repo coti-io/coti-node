@@ -52,8 +52,6 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
     @Getter
     private final AtomicBoolean backupInProgress = new AtomicBoolean(false);
-    private final HashMap<String, HashMap<String, Long>> backupLog = new HashMap<>();
-
     @Getter
     @Value("${db.backup}")
     private boolean backup;
@@ -174,23 +172,6 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         return awsService.listS3Paths(backupBucket, backupS3Path);
     }
 
-    private void generateBackupLog(BackupInfo lastBackupInfo, long backupStartedTime, long entireDuration, long backupDuration,
-                                   long uploadDuration, long removalDuration) {
-        HashMap<String, Long> metricsList = new HashMap<>();
-        backupSuccess = 1L;
-        metricsList.put("success", backupSuccess);
-        metricsList.put("epoch", backupStartedTime);
-        metricsList.put("number_of_files", (long) lastBackupInfo.numberFiles());
-        metricsList.put("size", lastBackupInfo.size());
-        metricsList.put("entire_duration", entireDuration);
-        metricsList.put("backup_duration", backupDuration);
-        metricsList.put("upload_duration", uploadDuration);
-        metricsList.put("removal_duration", removalDuration);
-        synchronized (backupLog) {
-            backupLog.put(s3FolderName, metricsList);
-        }
-    }
-
     @Scheduled(cron = "${db.backup.time}", zone = "UTC")
     private void backupDBCron() {
         if (backup) {
@@ -233,7 +214,6 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 removalDuration = java.time.Instant.now().getEpochSecond() - removalBackupStartedTime;
                 log.info("Finished DB backup flow");
                 entireDuration = java.time.Instant.now().getEpochSecond() - backupStartedTime;
-                generateBackupLog(lastBackupInfo, backupStartedTime, entireDuration, backupDuration, uploadDuration, removalDuration);
             } catch (CotiRunTimeException e) {
                 log.error("Backup DB error.");
                 e.logMessage();
@@ -253,14 +233,11 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     }
 
     @Override
-    public HashMap<String, HashMap<String, Long>> getBackUpLog() {
-        return backupLog;
-    }
-
-    @Override
     public void clearBackupLog() {
-        synchronized (backupLog) {
-            backupLog.clear();
+        while (!backupInProgress.get()) {
+            if (lastBackupInfo != null) {
+                lastBackupInfo = null;
+            }
         }
     }
 
