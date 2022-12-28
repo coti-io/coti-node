@@ -3,8 +3,10 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.HealthMetricOutput;
 import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.services.interfaces.IMetricsService;
+import io.coti.basenode.services.interfaces.IMonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,8 @@ public class BaseNodeMetricsService implements IMetricsService {
     private int metricsSampleInterval;
     @Value("${detailed.logs:false}")
     private boolean metricsDetailed;
+    @Autowired
+    private IMonitorService monitorService;
 
     public void init() {
         if (metricsSampleInterval == 0) {
@@ -85,9 +89,7 @@ public class BaseNodeMetricsService implements IMetricsService {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 synchronized (metrics) {
-                    handleNonFetchedIterations();
-                    ArrayList<String> metricsLines = takeSample();
-                    metrics.add(metricsLines);
+                    lockAndGetSamples();
                 }
                 Thread.sleep(metricsSampleInterval);
             } catch (InterruptedException e) {
@@ -95,6 +97,19 @@ public class BaseNodeMetricsService implements IMetricsService {
             } catch (Exception e1) {
                 log.error(String.valueOf(e1));
             }
+        }
+    }
+
+    private void lockAndGetSamples() {
+        try {
+            monitorService.getMonitorReadWriteLock().readLock();
+            handleNonFetchedIterations();
+            ArrayList<String> metricsLines = takeSample();
+            metrics.add(metricsLines);
+        } catch (Exception e) {
+            log.error(e.toString());
+        } finally {
+            monitorService.getMonitorReadWriteLock().readLock().unlock();
         }
     }
 
