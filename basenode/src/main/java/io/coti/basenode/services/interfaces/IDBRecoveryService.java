@@ -4,7 +4,6 @@ import io.coti.basenode.http.interfaces.IResponse;
 import org.rocksdb.BackupInfo;
 import org.springframework.http.ResponseEntity;
 
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public interface IDBRecoveryService {
@@ -14,8 +13,6 @@ public interface IDBRecoveryService {
     ResponseEntity<IResponse> getBackupBucket();
 
     ResponseEntity<IResponse> manualBackupDB();
-
-    HashMap<String, HashMap<String, Long>> getBackUpLog();
 
     void clearBackupLog();
 
@@ -35,7 +32,4 @@ public interface IDBRecoveryService {
 
     long getRemovalDuration();
 
-    long getBackupSuccess();
-
-    String getS3FolderName();
 }
