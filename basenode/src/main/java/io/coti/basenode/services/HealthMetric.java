@@ -12,6 +12,7 @@ import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 
@@ -602,8 +603,10 @@ public enum HealthMetric implements IHealthMetric {
     @Getter
     private final MetricClass metricClass;
     @Getter
+    @Setter
     private long warningThreshold;
     @Getter
+    @Setter
     private long criticalThreshold;
 
     HealthMetric(String label, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs, HealthMetricOutputType healthMetricOutputType) {
@@ -688,7 +691,8 @@ public enum HealthMetric implements IHealthMetric {
     }
 
     private static boolean newBackupExecuted() {
-        return dbRecoveryService != null && dbRecoveryService.isBackup() && dbRecoveryService.getLastBackupInfo() != null;
+        return dbRecoveryService != null && dbRecoveryService.isBackup() && dbRecoveryService.getLastBackupInfo() != null
+                && !dbRecoveryService.getBackupInProgress().get();
     }
 
     @Override
@@ -696,13 +700,4 @@ public enum HealthMetric implements IHealthMetric {
         return monitorService.getHealthMetricData(this);
     }
 
-    @Override
-    public void setWarningThreshold(long l) {
-        warningThreshold = l;
-    }
-
-    @Override
-    public void setCriticalThreshold(long l) {
-        criticalThreshold = l;
-    }
 }

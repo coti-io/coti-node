@@ -32,7 +32,7 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     private final Map<HealthMetric, HealthMetricData> healthMetrics = new ConcurrentHashMap<>();
     @Getter
-    private final ReentrantReadWriteLock monitorReadWriteLock = new ReentrantReadWriteLock(true);
+    private final ReentrantReadWriteLock monitorReadWriteLock = new ReentrantReadWriteLock(false);
     @Autowired
     protected INetworkService networkService;
     @Autowired
@@ -70,6 +70,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     private HealthState lastTotalHealthState = HealthState.NA;
     @Value("${metrics.sample.milisec.interval:0}")
     private int metricsSampleInterval;
+    @Value("${one.line.status:true}")
+    private boolean oneLineState;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
@@ -95,7 +97,9 @@ public class BaseNodeMonitorService implements IMonitorService {
         for (HealthMetric value : HealthMetric.values()) {
             healthMetrics.put(value, new HealthMetricData());
         }
+    }
 
+    public void initNodeMonitor() {
         Thread lastStateThread = new Thread(this::lastState, "NodeMonitorService");
         lastStateThread.start();
     }
@@ -121,7 +125,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         this.lastTotalHealthState = calculatedTotalHealthState;
     }
 
-    private String createHealthStateOutputAsString(StringBuilder output) {
+    private String createTotalHealthStateOutputAsString(StringBuilder output) {
         output.append("TotalHealthState").append(" = ").append(getLastTotalHealthState().toString());
         if (getLastTotalHealthState().ordinal() > HealthState.NORMAL.ordinal()) {
             output.append(", ");
@@ -164,6 +168,10 @@ public class BaseNodeMonitorService implements IMonitorService {
         Health.Builder builder = new Health.Builder();
         HealthMetricData healthMetricData = getHealthMetricData(healthMetric);
 
+        if (healthMetric.isDetailedLogs() && !allowTransactionMonitoringDetailed) {
+            return null;
+        }
+
         if (!HealthMetric.isToAddExternalMetric(healthMetric.getHealthMetricOutputType()) ||
                 healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
             builder.unknown();
@@ -185,14 +193,12 @@ public class BaseNodeMonitorService implements IMonitorService {
         if (criticalThreshold >= warningThreshold) {
             configMap.put("CriticalThreshold", criticalThreshold);
         }
-        if (!healthMetric.isDetailedLogs() || allowTransactionMonitoringDetailed) {
-            builder.withDetail("PreviousMetricValue", healthMetricData.getPreviousMetricValue());
-            builder.withDetail("MetricValue", healthMetricData.getMetricValue());
-            if (healthMetricData.getDegradingCounter() > 0) {
-                builder.withDetail("Counter", healthMetricData.getDegradingCounter());
-            }
-            healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
+        builder.withDetail("PreviousMetricValue", healthMetricData.getPreviousMetricValue());
+        builder.withDetail("MetricValue", healthMetricData.getMetricValue());
+        if (healthMetricData.getDegradingCounter() > 0) {
+            builder.withDetail("Counter", healthMetricData.getDegradingCounter());
         }
+        healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
         builder.withDetail("Configuration", configMap);
         builder.withDetail("Description", healthMetric.getDescription());
         return builder.build();
@@ -207,7 +213,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 if (allowTransactionMonitoring) {
-                    lockAndGetLastState();
+                    lockAndCalculateLastState();
                 }
                 Thread.sleep(metricsSampleInterval);
             } catch (InterruptedException e) {
@@ -218,7 +224,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         }
     }
 
-    private void lockAndGetLastState() {
+    private void lockAndCalculateLastState() {
         try {
             monitorReadWriteLock.writeLock().lock();
             updateHealthMetricsSnapshot();
@@ -226,7 +232,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             calculateTotalHealthState();
             dbRecoveryService.clearBackupLog();
         } catch (Exception e) {
-            log.error(String.valueOf(e));
+            log.error(e.getMessage());
             throw e;
         } finally {
             monitorReadWriteLock.writeLock().unlock();
@@ -238,17 +244,21 @@ public class BaseNodeMonitorService implements IMonitorService {
         try {
             monitorReadWriteLock.readLock().lock();
             int logLevel = lastTotalHealthState.ordinal();
-            String output = createOutputAsString(allowTransactionMonitoringDetailed);
+            String output = createOutputAsString(allowTransactionMonitoringDetailed, oneLineState);
             printToLogByLevel(logLevel, output);
         } catch (Exception e) {
-            log.error(e.toString());
+            log.error(e.getMessage());
         } finally {
             monitorReadWriteLock.readLock().unlock();
         }
     }
 
-    private String createOutputAsString(boolean isDetailedLog) {
+    private String createOutputAsString(boolean isDetailedLog, boolean oneLineState) {
         StringBuilder output = new StringBuilder();
+        if (oneLineState) {
+            return createTotalHealthStateOutputAsString(output);
+        }
+
         for (HealthMetric healthMetric : HealthMetric.values()) {
             if (isDetailedLog || !healthMetric.isDetailedLogs()) {
                 for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
@@ -261,7 +271,7 @@ public class BaseNodeMonitorService implements IMonitorService {
                 }
             }
         }
-        return createHealthStateOutputAsString(output);
+        return createTotalHealthStateOutputAsString(output);
     }
 
     private void appendOutput(StringBuilder output, String name, long value) {

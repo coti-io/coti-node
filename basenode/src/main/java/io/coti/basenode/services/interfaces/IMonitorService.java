@@ -23,4 +23,6 @@ public interface IMonitorService {
     void setSnapshotTime(HealthMetric healthMetric, Instant snapshotTime);
 
     ReentrantReadWriteLock getMonitorReadWriteLock();
+
+    void initNodeMonitor();
 }

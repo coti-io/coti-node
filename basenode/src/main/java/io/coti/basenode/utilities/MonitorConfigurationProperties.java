@@ -21,18 +21,20 @@ public class MonitorConfigurationProperties {
     Map<String, Integer> critical;
 
     private void setThresholdValues(Map<String, Integer> thresholds, HealthMetric[] healthMetrics, String setThreshold) throws InvocationTargetException, IllegalAccessException {
-        for (String metricName : thresholds.keySet()) {
-            Optional<HealthMetric> optionalHealthMetric = Arrays.stream(healthMetrics).filter(p -> p.name().equals(metricName)).findFirst();
+        if (thresholds == null) {
+            return;
+        }
+        for (Map.Entry<String, Integer> metricEntry : thresholds.entrySet()) {
+            Optional<HealthMetric> optionalHealthMetric = Arrays.stream(healthMetrics).filter(p -> p.name().equals(metricEntry.getKey())).findFirst();
             if (optionalHealthMetric.isPresent()) {
-                Integer thresholdValue = thresholds.get(metricName);
                 Optional<Method> setMethod = Arrays.stream(optionalHealthMetric.get().getDeclaringClass().getDeclaredMethods()).filter(p -> p.getName().equals(setThreshold)).findFirst();
                 if (setMethod.isPresent()) {
-                    setMethod.get().invoke(optionalHealthMetric.get(), thresholdValue);
+                    setMethod.get().invoke(optionalHealthMetric.get(), metricEntry.getValue());
                 } else {
-                    throw new ValueException("Error while setting threshold! Health Metric " + metricName + " does not define method: " + setThreshold);
+                    throw new ValueException("Error while setting threshold! Health Metric " + metricEntry.getKey() + " does not define method: " + setThreshold);
                 }
             } else {
-                throw new ValueException("Error while setting threshold! Health Metric " + metricName + " defined in properties does not exists!");
+                throw new ValueException("Error while setting threshold! Health Metric " + metricEntry.getKey() + " defined in properties does not exists!");
             }
         }
     }
