@@ -1,10 +1,10 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.HealthMetricOutput;
-import io.coti.basenode.data.HealthMetricOutputType;
 import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.services.interfaces.IMetricsService;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +19,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class BaseNodeMetricsService implements IMetricsService {
 
-    private static final int MAX_NUMBER_OF_NON_FETCHED_SAMPLES = 50;
+    private static final int MAX_NUMBER_OF_NON_FETCHED_ITERATIONS = 5;
     private static final String COMPONENT_TEMPLATE = "componentTemplate";
     private static final String METRIC_TEMPLATE = "metricTemplate";
-    private final ArrayList<String> metrics = new ArrayList<>();
-    private final AtomicInteger numberOfNonFetchedSamples = new AtomicInteger(0);
+    private final ArrayList<ArrayList<String>> metrics = new ArrayList<>();
+
+    private final AtomicInteger numberOfNonFetchedIterations = new AtomicInteger(0);
     private final HashMap<String, String> metricTemplateMap = new HashMap<>();
     private String metricTemplate = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",metric=\"metricTemplate\"}";
     private String metricTemplateSubComponent = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",componentName=\"componentNameTemplate\",metric=\"metricTemplate\"}";
@@ -70,8 +71,11 @@ public class BaseNodeMetricsService implements IMetricsService {
             return null;
         }
         synchronized (metrics) {
-            numberOfNonFetchedSamples.set(0);
-            String val = String.join("\n", metrics).concat("\n");
+            String val = "";
+            numberOfNonFetchedIterations.set(0);
+            for (ArrayList<String> singleMetrics : metrics) {
+                val = val.concat(String.join("\n", singleMetrics).concat("\n"));
+            }
             metrics.clear();
             return val;
         }
@@ -81,23 +85,9 @@ public class BaseNodeMetricsService implements IMetricsService {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 synchronized (metrics) {
-                    if (numberOfNonFetchedSamples.incrementAndGet() > MAX_NUMBER_OF_NON_FETCHED_SAMPLES) {
-                        metrics.clear();
-                    }
-                    for (HealthMetric healthMetric : HealthMetric.values()) {
-
-                        for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
-                            if (HealthMetric.isToAddExternalMetric(healthMetricOutput.getType())) {
-                                addMetric(healthMetric, healthMetricOutput.getLabel(),
-                                        healthMetricOutput.getValue(), metrics, metricTemplateMap);
-                            }
-                        }
-
-                        if (HealthMetric.isToAddExternalMetric(healthMetric.getHealthMetricOutputType())) {
-                            addMetric(healthMetric, healthMetric.getLabel(),
-                                    healthMetric.getHealthMetricData().getMetricValue(), metrics, metricTemplateMap);
-                        }
-                    }
+                    handleNonFetchedIterations();
+                    ArrayList<String> metricsLines = takeSample();
+                    metrics.add(metricsLines);
                 }
                 Thread.sleep(metricsSampleInterval);
             } catch (InterruptedException e) {
@@ -105,6 +95,33 @@ public class BaseNodeMetricsService implements IMetricsService {
             } catch (Exception e1) {
                 log.error(String.valueOf(e1));
             }
+        }
+    }
+
+    @NotNull
+    private ArrayList<String> takeSample() {
+        ArrayList<String> metricsLines = new ArrayList<>();
+        for (HealthMetric healthMetric : HealthMetric.values()) {
+
+            for (HealthMetricOutput healthMetricOutput : healthMetric.getHealthMetricData().getAdditionalValues().values()) {
+                if (HealthMetric.isToAddExternalMetric(healthMetricOutput.getType())) {
+                    addMetric(healthMetric, healthMetricOutput.getLabel(),
+                            healthMetricOutput.getValue(), metricsLines, metricTemplateMap);
+                }
+            }
+
+            if (HealthMetric.isToAddExternalMetric(healthMetric.getHealthMetricOutputType())) {
+                addMetric(healthMetric, healthMetric.getLabel(),
+                        healthMetric.getHealthMetricData().getMetricValue(), metricsLines, metricTemplateMap);
+            }
+        }
+        return metricsLines;
+    }
+
+    private void handleNonFetchedIterations() {
+        if (numberOfNonFetchedIterations.incrementAndGet() > MAX_NUMBER_OF_NON_FETCHED_ITERATIONS) {
+            metrics.remove(0);
+            numberOfNonFetchedIterations.decrementAndGet();
         }
     }
 
