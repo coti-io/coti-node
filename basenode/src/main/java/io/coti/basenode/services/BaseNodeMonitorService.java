@@ -206,6 +206,7 @@ public class BaseNodeMonitorService implements IMonitorService {
                     updateHealthMetricsSnapshot();
                     calculateHealthMetrics();
                     calculateTotalHealthState();
+                    dbRecoveryService.clearBackupLog();
                 }
                 Thread.sleep(metricsSampleInterval);
             } catch (InterruptedException e) {
