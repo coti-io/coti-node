@@ -43,8 +43,8 @@ public class BaseNodeMetricsService implements IMetricsService {
             log.info("Not using metrics endpoint, {} initialization stopped...", this.getClass().getSimpleName());
             return;
         }
-        if (metricsSampleInterval < 1000) {
-            log.error("Metrics samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
+        if (metricsSampleInterval < 5000) {
+            log.error("Metrics samples are too low (minimum 5000), {} initialization stopped...", this.getClass().getSimpleName());
             metricsSampleInterval = 0;
             return;
         }
@@ -102,7 +102,7 @@ public class BaseNodeMetricsService implements IMetricsService {
 
     private void lockAndGetSamples() {
         try {
-            monitorService.getMonitorReadWriteLock().readLock();
+            monitorService.getMonitorReadWriteLock().readLock().lock();
             handleNonFetchedIterations();
             ArrayList<String> metricsLines = takeSample();
             metrics.add(metricsLines);
