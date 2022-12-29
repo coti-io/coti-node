@@ -2,7 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.HealthMetricOutput;
 import io.coti.basenode.data.MetricClass;
-import io.coti.basenode.services.interfaces.IMetricsService;
+import io.coti.basenode.services.interfaces.IScraperInterface;
 import io.coti.basenode.services.interfaces.IMonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
-public class BaseNodeMetricsService implements IMetricsService {
+public class BaseNodeScraperService implements IScraperInterface {
 
     private static final int MAX_NUMBER_OF_NON_FETCHED_ITERATIONS = 5;
     private static final String COMPONENT_TEMPLATE = "componentTemplate";
@@ -32,20 +32,24 @@ public class BaseNodeMetricsService implements IMetricsService {
     private String metricTemplateSubComponent = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",componentName=\"componentNameTemplate\",metric=\"metricTemplate\"}";
     private Thread sampleThread;
     @Value("${scraper.gather.metrics.millisec.interval:0}")
-    private int metricsSampleInterval;
+    private int metricToScraperInterval;
     @Value("${detailed.logs:false}")
     private boolean metricsDetailed;
     @Autowired
     private IMonitorService monitorService;
 
     public void init() {
-        if (metricsSampleInterval == 0) {
-            log.info("Not using metrics endpoint, {} initialization stopped...", this.getClass().getSimpleName());
+        log.info("{} is up", this.getClass().getSimpleName());
+    }
+
+    public void initMonitor() {
+        if (metricToScraperInterval == 0) {
+            log.info("Not using scraper endpoint, {} initialization stopped...", this.getClass().getSimpleName());
             return;
         }
-        if (metricsSampleInterval < 1000) {
-            log.error("Metrics samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
-            metricsSampleInterval = 0;
+        if (metricToScraperInterval < 1000) {
+            log.error("Scraper interval are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
+            metricToScraperInterval = 0;
             return;
         }
         String hostName = "unknown";
@@ -91,7 +95,7 @@ public class BaseNodeMetricsService implements IMetricsService {
                 synchronized (metrics) {
                     lockAndGetSamples();
                 }
-                Thread.sleep(metricsSampleInterval);
+                Thread.sleep(metricToScraperInterval);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e1) {
