@@ -2,14 +2,13 @@ package io.coti.basenode.utilities;
 
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.services.HealthMetric;
-import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
 import lombok.Setter;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.InputMismatchException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,15 +33,15 @@ public class MonitorConfigurationProperties {
                 if (setMethod.isPresent()) {
                     setMethod.get().invoke(healthMetricData, Long.valueOf(metricEntry.getValue()));
                 } else {
-                    throw new ValueException("Error while setting threshold! Health Metric " + metricEntry.getKey() + " does not define method: " + setThreshold);
+                    throw new InputMismatchException("Error while setting threshold! Health Metric " + metricEntry.getKey() + " does not define method: " + setThreshold);
                 }
             } else {
-                throw new ValueException("Error while setting threshold! Health Metric " + metricEntry.getKey() + " defined in properties does not exists!");
+                throw new InputMismatchException("Error while setting threshold! Health Metric " + metricEntry.getKey() + " defined in properties does not exists!");
             }
         }
     }
 
-    public void updateThresholds(@NotNull Map<HealthMetric, HealthMetricData> healthMetrics) throws InvocationTargetException, IllegalAccessException {
+    public void updateThresholds(Map<HealthMetric, HealthMetricData> healthMetrics) throws InvocationTargetException, IllegalAccessException {
         setThresholdValues(warning, healthMetrics, "setWarningThreshold");
         setThresholdValues(critical, healthMetrics, "setCriticalThreshold");
     }
