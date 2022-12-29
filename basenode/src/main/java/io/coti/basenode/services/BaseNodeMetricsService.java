@@ -31,7 +31,7 @@ public class BaseNodeMetricsService implements IMetricsService {
     private String metricTemplate = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",metric=\"metricTemplate\"}";
     private String metricTemplateSubComponent = "coti_node{host=\"nodeTemplate\",components=\"componentTemplate\",componentName=\"componentNameTemplate\",metric=\"metricTemplate\"}";
     private Thread sampleThread;
-    @Value("${metrics.sample.milisec.interval:0}")
+    @Value("${scraper.gather.metrics.millisec.interval:0}")
     private int metricsSampleInterval;
     @Value("${detailed.logs:false}")
     private boolean metricsDetailed;
@@ -43,8 +43,8 @@ public class BaseNodeMetricsService implements IMetricsService {
             log.info("Not using metrics endpoint, {} initialization stopped...", this.getClass().getSimpleName());
             return;
         }
-        if (metricsSampleInterval < 5000) {
-            log.error("Metrics samples are too low (minimum 5000), {} initialization stopped...", this.getClass().getSimpleName());
+        if (metricsSampleInterval < 1000) {
+            log.error("Metrics samples are too low (minimum 1000), {} initialization stopped...", this.getClass().getSimpleName());
             metricsSampleInterval = 0;
             return;
         }

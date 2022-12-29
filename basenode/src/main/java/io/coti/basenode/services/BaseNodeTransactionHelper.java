@@ -553,9 +553,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     @Override
     public void handleReportedTransactionsState(TransactionsStateData transactionsStateData) {
-        if (monitorService.monitoringStarted()) {
-            totalNumberOfTransactionsFromRecovery = transactionsStateData.getTransactionsAmount();
-            HealthMetric.TOTAL_TRANSACTIONS_DELTA.doSnapshot();
-        }
+        totalNumberOfTransactionsFromRecovery = transactionsStateData.getTransactionsAmount();
     }
 }
