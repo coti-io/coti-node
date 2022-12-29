@@ -617,7 +617,7 @@ public enum HealthMetric implements IHealthMetric {
 
     private static void baseCalculateHealthCounterMetricState(HealthMetric healthMetric) {
         HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
-        calculateHealthCounterMetricState(healthMetricData, healthMetric);
+        calculateHealthCounterMetricState(healthMetricData);
     }
 
     private static synchronized void baseDoSnapshot(HealthMetric healthMetric, Long metricValue) {
@@ -629,7 +629,7 @@ public enum HealthMetric implements IHealthMetric {
         return Math.abs(healthMetricData.getMetricValue()) > Math.abs(healthMetricData.getPreviousMetricValue());
     }
 
-    private static void calculateHealthCounterMetricState(HealthMetricData healthMetricData, HealthMetric healthMetric) {
+    private static void calculateHealthCounterMetricState(HealthMetricData healthMetricData) {
         if (healthMetricData.getMetricValue() != 0) {
             if (healthIsDegrading(healthMetricData)) {
                 healthMetricData.increaseDegradingCounter();
@@ -659,22 +659,22 @@ public enum HealthMetric implements IHealthMetric {
         }
     }
 
-    public static void setAutowireds(BaseNodeMonitorService baseNodeMonitorService, ITransactionHelper transactionHelper, IClusterService clusterService, TransactionIndexService transactionIndexService, IConfirmationService confirmationService, TrustChainConfirmationService trustChainConfirmationService, ITransactionService transactionService, IPropagationSubscriber propagationSubscriber, IWebSocketMessageService webSocketMessageService, INetworkService networkService, IReceiver receiver, IDatabaseConnector databaseConnector, IDBRecoveryService dbRecoveryService, RejectedTransactions rejectedTransactions, IPropagationPublisher propagationPublisher) {
+    public static void setAutowireds(BaseNodeMonitorService baseNodeMonitorService, BaseNodeServiceManager baseNodeServiceManager) {
         HealthMetric.monitorService = baseNodeMonitorService;
-        HealthMetric.transactionHelper = transactionHelper;
-        HealthMetric.clusterService = clusterService;
-        HealthMetric.transactionIndexService = transactionIndexService;
-        HealthMetric.confirmationService = confirmationService;
-        HealthMetric.trustChainConfirmationService = trustChainConfirmationService;
-        HealthMetric.transactionService = transactionService;
-        HealthMetric.propagationSubscriber = propagationSubscriber;
-        HealthMetric.webSocketMessageService = webSocketMessageService;
-        HealthMetric.networkService = networkService;
-        HealthMetric.receiver = receiver;
-        HealthMetric.databaseConnector = databaseConnector;
-        HealthMetric.dbRecoveryService = dbRecoveryService;
-        HealthMetric.rejectedTransactions = rejectedTransactions;
-        HealthMetric.propagationPublisher = propagationPublisher;
+        HealthMetric.transactionHelper = baseNodeServiceManager.getTransactionHelper();
+        HealthMetric.clusterService = baseNodeServiceManager.getClusterService();
+        HealthMetric.transactionIndexService = baseNodeServiceManager.getTransactionIndexService();
+        HealthMetric.confirmationService = baseNodeServiceManager.getConfirmationService();
+        HealthMetric.trustChainConfirmationService = baseNodeServiceManager.getTrustChainConfirmationService();
+        HealthMetric.transactionService = baseNodeServiceManager.getTransactionService();
+        HealthMetric.propagationSubscriber = baseNodeServiceManager.getPropagationSubscriber();
+        HealthMetric.webSocketMessageService = baseNodeServiceManager.getWebSocketMessageService();
+        HealthMetric.networkService = baseNodeServiceManager.getNetworkService();
+        HealthMetric.receiver = baseNodeServiceManager.getReceiver();
+        HealthMetric.databaseConnector = baseNodeServiceManager.getDatabaseConnector();
+        HealthMetric.dbRecoveryService = baseNodeServiceManager.getDbRecoveryService();
+        HealthMetric.rejectedTransactions = baseNodeServiceManager.getRejectedTransactions();
+        HealthMetric.propagationPublisher = baseNodeServiceManager.getPropagationPublisher();
     }
 
     public static boolean isToAddExternalMetric(HealthMetricOutputType healthMetricOutputType) {
