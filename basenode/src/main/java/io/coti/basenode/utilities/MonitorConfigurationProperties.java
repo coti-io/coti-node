@@ -1,5 +1,6 @@
 package io.coti.basenode.utilities;
 
+import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.services.HealthMetric;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
 import lombok.Setter;
@@ -20,16 +21,18 @@ public class MonitorConfigurationProperties {
     @Setter
     Map<String, Integer> critical;
 
-    private void setThresholdValues(Map<String, Integer> thresholds, HealthMetric[] healthMetrics, String setThreshold) throws InvocationTargetException, IllegalAccessException {
+    private void setThresholdValues(Map<String, Integer> thresholds, Map<HealthMetric, HealthMetricData> healthMetrics, String setThreshold) throws InvocationTargetException, IllegalAccessException {
         if (thresholds == null) {
             return;
         }
+
         for (Map.Entry<String, Integer> metricEntry : thresholds.entrySet()) {
-            Optional<HealthMetric> optionalHealthMetric = Arrays.stream(healthMetrics).filter(p -> p.name().equals(metricEntry.getKey())).findFirst();
+            Optional<HealthMetric> optionalHealthMetric = healthMetrics.keySet().stream().filter(p -> p.name().equals(metricEntry.getKey())).findFirst();
             if (optionalHealthMetric.isPresent()) {
-                Optional<Method> setMethod = Arrays.stream(optionalHealthMetric.get().getDeclaringClass().getDeclaredMethods()).filter(p -> p.getName().equals(setThreshold)).findFirst();
+                HealthMetricData healthMetricData = healthMetrics.get(optionalHealthMetric.get());
+                Optional<Method> setMethod = Arrays.stream(healthMetricData.getClass().getDeclaredMethods()).filter(p -> p.getName().equals(setThreshold)).findFirst();
                 if (setMethod.isPresent()) {
-                    setMethod.get().invoke(optionalHealthMetric.get(), metricEntry.getValue());
+                    setMethod.get().invoke(healthMetricData, Long.valueOf(metricEntry.getValue()));
                 } else {
                     throw new ValueException("Error while setting threshold! Health Metric " + metricEntry.getKey() + " does not define method: " + setThreshold);
                 }
@@ -39,7 +42,7 @@ public class MonitorConfigurationProperties {
         }
     }
 
-    public void updateThresholds(@NotNull HealthMetric[] healthMetrics) throws InvocationTargetException, IllegalAccessException {
+    public void updateThresholds(@NotNull Map<HealthMetric, HealthMetricData> healthMetrics) throws InvocationTargetException, IllegalAccessException {
         setThresholdValues(warning, healthMetrics, "setWarningThreshold");
         setThresholdValues(critical, healthMetrics, "setCriticalThreshold");
     }

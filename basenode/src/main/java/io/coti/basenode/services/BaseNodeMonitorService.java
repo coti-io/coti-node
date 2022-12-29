@@ -97,10 +97,10 @@ public class BaseNodeMonitorService implements IMonitorService {
                 networkService, receiver, databaseConnector, dbRecoveryService, rejectedTransactions, propagationPublisher);
 
         try {
-            monitorConfigurationProperties.updateThresholds(HealthMetric.values());
-            for (HealthMetric value : HealthMetric.values()) {
-                healthMetrics.put(value, new HealthMetricData());
+            for (HealthMetric healthMetric : HealthMetric.values()) {
+                healthMetrics.put(healthMetric, new HealthMetricData(healthMetric));
             }
+            monitorConfigurationProperties.updateThresholds(healthMetrics);
 
             lastStateThread = new Thread(this::lastState, "NodeMonitorService");
             lastStateThread.start();
@@ -189,8 +189,8 @@ public class BaseNodeMonitorService implements IMonitorService {
             builder.up();
         }
         builder.withDetail("State", healthMetricData.getLastHealthState());
-        long warningThreshold = healthMetric.getWarningThreshold();
-        long criticalThreshold = healthMetric.getCriticalThreshold();
+        long warningThreshold = healthMetricData.getWarningThreshold();
+        long criticalThreshold = healthMetricData.getCriticalThreshold();
         HashMap<String, Long> configMap = new HashMap<>();
         if (warningThreshold != criticalThreshold) {
             configMap.put("WarningThreshold", warningThreshold);

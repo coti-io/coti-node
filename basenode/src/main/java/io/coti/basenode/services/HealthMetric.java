@@ -12,7 +12,6 @@ import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.Instant;
 
@@ -603,17 +602,15 @@ public enum HealthMetric implements IHealthMetric {
     @Getter
     private final MetricClass metricClass;
     @Getter
-    @Setter
-    private long warningThreshold;
+    private final long defaultWarningThreshold;
     @Getter
-    @Setter
-    private long criticalThreshold;
+    private final long defaultCriticalThreshold;
 
-    HealthMetric(String label, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs, HealthMetricOutputType healthMetricOutputType) {
+    HealthMetric(String label, MetricClass metricClass, long defaultWarningThreshold, long defaultCriticalThreshold, boolean detailedLogs, HealthMetricOutputType healthMetricOutputType) {
         this.label = label;
         this.metricClass = metricClass;
-        this.warningThreshold = warningThreshold;
-        this.criticalThreshold = criticalThreshold;
+        this.defaultWarningThreshold = defaultWarningThreshold;
+        this.defaultCriticalThreshold = defaultCriticalThreshold;
         this.detailedLogs = detailedLogs;
         this.healthMetricOutputType = healthMetricOutputType;
     }
@@ -637,9 +634,9 @@ public enum HealthMetric implements IHealthMetric {
             if (healthIsDegrading(healthMetricData)) {
                 healthMetricData.increaseDegradingCounter();
             }
-            if (healthMetricData.getDegradingCounter() >= healthMetric.criticalThreshold && healthMetric.criticalThreshold >= healthMetric.warningThreshold) {
+            if (healthMetricData.getDegradingCounter() >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
-            } else if (healthMetricData.getDegradingCounter() >= healthMetric.warningThreshold) {
+            } else if (healthMetricData.getDegradingCounter() >= healthMetricData.getWarningThreshold()) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
             } else if (BaseNodeMonitorService.HealthState.NA.equals(healthMetricData.getLastHealthState())) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
@@ -653,9 +650,9 @@ public enum HealthMetric implements IHealthMetric {
     private static void calculateHealthValueMetricState(HealthMetric healthMetric) {
         HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
         long currentMetricValue = healthMetricData.getMetricValue();
-        if (currentMetricValue >= healthMetric.criticalThreshold && healthMetric.criticalThreshold >= healthMetric.warningThreshold) {
+        if (currentMetricValue >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
-        } else if (currentMetricValue >= healthMetric.warningThreshold) {
+        } else if (currentMetricValue >= healthMetricData.getWarningThreshold()) {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
         } else {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);

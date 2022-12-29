@@ -5,7 +5,6 @@ import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.basenode.services.HealthMetric;
 import org.springframework.boot.actuate.health.Health;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
