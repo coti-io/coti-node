@@ -35,13 +35,6 @@ public class HealthMetricData {
         this.snapshotTime = snapshotTime;
     }
 
-//    public HealthMetricData() {
-//        this.metricValue = 0;
-//        this.previousMetricValue = 0;
-//        this.lastHealthState = BaseNodeMonitorService.HealthState.NA;
-//        this.degradingCounter = 0;
-//    }
-
     public HealthMetricData(HealthMetric healthMetric) {
         this.metricValue = 0;
         this.previousMetricValue = 0;

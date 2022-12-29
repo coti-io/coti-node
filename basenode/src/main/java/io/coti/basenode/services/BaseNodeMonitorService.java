@@ -1,13 +1,8 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutput;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.services.interfaces.*;
-import io.coti.basenode.utilities.MonitorConfigurationProperties;
+import io.coti.basenode.services.interfaces.IMonitorService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,36 +25,10 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     private final Map<HealthMetric, HealthMetricData> healthMetrics = new ConcurrentHashMap<>();
     @Getter
-    private final ReentrantReadWriteLock monitorReadWriteLock = new ReentrantReadWriteLock(false);
-    @Autowired
-    protected INetworkService networkService;
-    @Autowired
-    private MonitorConfigurationProperties monitorConfigurationProperties;
+    private final ReentrantReadWriteLock monitorReadWriteLock = new ReentrantReadWriteLock(true);
     private Thread sampleHealthStateThread;
     @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IConfirmationService confirmationService;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
-    @Autowired
-    private TrustChainConfirmationService trustChainConfirmationService;
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private ITransactionService transactionService;
-    @Autowired
-    private IPropagationSubscriber propagationSubscriber;
-    @Autowired
-    private IWebSocketMessageService webSocketMessageService;
-    @Autowired
-    private IReceiver receiver;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private IDatabaseConnector databaseConnector;
-    @Autowired
-    private IDBRecoveryService dbRecoveryService;
+    private BaseNodeServiceManager baseNodeServiceManager;
     @Value("${allow.transaction.monitoring:false}")
     private boolean allowTransactionMonitoring;
     @Value("${detailed.logs:false}")
@@ -89,15 +58,13 @@ public class BaseNodeMonitorService implements IMonitorService {
             return;
         }
 
-        HealthMetric.setAutowireds(this, transactionHelper, clusterService, transactionIndexService, confirmationService,
-                trustChainConfirmationService, transactionService, propagationSubscriber, webSocketMessageService,
-                networkService, receiver, databaseConnector, dbRecoveryService, rejectedTransactions, propagationPublisher);
+        HealthMetric.setAutowireds(this, baseNodeServiceManager);
 
         try {
             for (HealthMetric healthMetric : HealthMetric.values()) {
                 healthMetrics.put(healthMetric, new HealthMetricData(healthMetric));
             }
-            monitorConfigurationProperties.updateThresholds(healthMetrics);
+            baseNodeServiceManager.getMonitorConfigurationProperties().updateThresholds(healthMetrics);
 
             sampleHealthStateThread = new Thread(this::sampleHealthState, "NodeMonitorService");
             sampleHealthStateThread.start();
@@ -232,7 +199,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             updateHealthMetricsSnapshot();
             calculateHealthMetrics();
             calculateTotalHealthState();
-            dbRecoveryService.clearBackupLog();
+            baseNodeServiceManager.getDbRecoveryService().clearBackupLog();
         } catch (Exception e) {
             log.error(e.getMessage());
             throw e;
