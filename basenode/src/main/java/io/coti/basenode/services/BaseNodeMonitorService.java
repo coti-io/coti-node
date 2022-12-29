@@ -35,8 +35,8 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Autowired
     protected INetworkService networkService;
     @Autowired
-    MonitorConfigurationProperties monitorConfigurationProperties;
-    Thread lastStateThread;
+    private MonitorConfigurationProperties monitorConfigurationProperties;
+    private Thread sampleHealthStateThread;
     @Autowired
     private ITransactionHelper transactionHelper;
     @Autowired
@@ -68,7 +68,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Value("${detailed.logs:false}")
     private boolean allowTransactionMonitoringDetailed;
     private HealthState lastTotalHealthState = HealthState.NA;
-    @Value("${monitor.metrics.milisec.interval:1000}")
+    @Value("${health.state.sample.millisec.interval:1000}")
     private int monitorMetricsInterval;
     @Value("${one.line.status:true}")
     private boolean oneLineState;
@@ -78,7 +78,7 @@ public class BaseNodeMonitorService implements IMonitorService {
     }
 
     public boolean monitoringStarted() {
-        return lastStateThread != null && lastStateThread.isAlive();
+        return sampleHealthStateThread != null && sampleHealthStateThread.isAlive();
     }
 
     public void initNodeMonitor() {
@@ -102,8 +102,8 @@ public class BaseNodeMonitorService implements IMonitorService {
             }
             monitorConfigurationProperties.updateThresholds(healthMetrics);
 
-            lastStateThread = new Thread(this::lastState, "NodeMonitorService");
-            lastStateThread.start();
+            sampleHealthStateThread = new Thread(this::sampleHealthState, "NodeMonitorService");
+            sampleHealthStateThread.start();
         } catch (InvocationTargetException | IllegalAccessException e) {
             log.error(e.toString());
         }
@@ -214,7 +214,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         return lastTotalHealthState;
     }
 
-    private void lastState() {
+    private void sampleHealthState() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 if (allowTransactionMonitoring) {
