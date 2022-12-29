@@ -234,10 +234,8 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
     @Override
     public void clearBackupLog() {
-        while (!backupInProgress.get()) {
-            if (lastBackupInfo != null) {
-                lastBackupInfo = null;
-            }
+        if (isBackup() && !backupInProgress.get() && lastBackupInfo != null) {
+            lastBackupInfo = null;
         }
     }
 

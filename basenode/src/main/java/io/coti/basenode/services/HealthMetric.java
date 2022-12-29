@@ -584,15 +584,15 @@ public enum HealthMetric implements IHealthMetric {
     @Getter
     private final MetricClass metricClass;
     @Getter
-    private long warningThreshold;
+    private final long defaultWarningThreshold;
     @Getter
-    private long criticalThreshold;
+    private final long defaultCriticalThreshold;
 
-    HealthMetric(String label, MetricClass metricClass, long warningThreshold, long criticalThreshold, boolean detailedLogs, HealthMetricOutputType healthMetricOutputType) {
+    HealthMetric(String label, MetricClass metricClass, long defaultWarningThreshold, long defaultCriticalThreshold, boolean detailedLogs, HealthMetricOutputType healthMetricOutputType) {
         this.label = label;
         this.metricClass = metricClass;
-        this.warningThreshold = warningThreshold;
-        this.criticalThreshold = criticalThreshold;
+        this.defaultWarningThreshold = defaultWarningThreshold;
+        this.defaultCriticalThreshold = defaultCriticalThreshold;
         this.detailedLogs = detailedLogs;
         this.healthMetricOutputType = healthMetricOutputType;
     }
@@ -616,9 +616,9 @@ public enum HealthMetric implements IHealthMetric {
             if (healthIsDegrading(healthMetricData)) {
                 healthMetricData.increaseDegradingCounter();
             }
-            if (healthMetricData.getDegradingCounter() >= healthMetric.criticalThreshold && healthMetric.criticalThreshold >= healthMetric.warningThreshold) {
+            if (healthMetricData.getDegradingCounter() >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
-            } else if (healthMetricData.getDegradingCounter() >= healthMetric.warningThreshold) {
+            } else if (healthMetricData.getDegradingCounter() >= healthMetricData.getWarningThreshold()) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
             } else if (BaseNodeMonitorService.HealthState.NA.equals(healthMetricData.getLastHealthState())) {
                 healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
@@ -632,9 +632,9 @@ public enum HealthMetric implements IHealthMetric {
     private static void calculateHealthValueMetricState(HealthMetric healthMetric) {
         HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
         long currentMetricValue = healthMetricData.getMetricValue();
-        if (currentMetricValue >= healthMetric.criticalThreshold && healthMetric.criticalThreshold >= healthMetric.warningThreshold) {
+        if (currentMetricValue >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
-        } else if (currentMetricValue >= healthMetric.warningThreshold) {
+        } else if (currentMetricValue >= healthMetricData.getWarningThreshold()) {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
         } else {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
@@ -669,7 +669,8 @@ public enum HealthMetric implements IHealthMetric {
     }
 
     private static boolean newBackupExecuted() {
-        return dbRecoveryService != null && dbRecoveryService.isBackup() && dbRecoveryService.getLastBackupInfo() != null;
+        return dbRecoveryService != null && dbRecoveryService.isBackup() && dbRecoveryService.getLastBackupInfo() != null
+                && !dbRecoveryService.getBackupInProgress().get();
     }
 
     @Override
@@ -677,13 +678,4 @@ public enum HealthMetric implements IHealthMetric {
         return monitorService.getHealthMetricData(this);
     }
 
-    @Override
-    public void setWarningThreshold(long l) {
-        warningThreshold = l;
-    }
-
-    @Override
-    public void setCriticalThreshold(long l) {
-        criticalThreshold = l;
-    }
 }

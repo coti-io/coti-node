@@ -29,6 +29,9 @@ import static io.coti.basenode.data.TransactionState.*;
 public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     public static final int CURRENCY_SCALE = 8;
+    private final AtomicLong totalTransactions = new AtomicLong(0);
+    @Autowired
+    protected ITransactionPropagationCheckService transactionPropagationCheckService;
     @Autowired
     private AddressTransactionsHistories addressTransactionsHistories;
     @Autowired
@@ -54,12 +57,11 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     @Autowired
     private ITransactionHelper transactionHelper;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
-    private final AtomicLong totalTransactions = new AtomicLong(0);
     private Set<Hash> noneIndexedTransactionHashes;
     @Autowired
     private INetworkService networkService;
     @Autowired
-    protected ITransactionPropagationCheckService transactionPropagationCheckService;
+    private IMonitorService monitorService;
 
     private long totalNumberOfTransactionsFromRecovery = 0;
 
@@ -551,8 +553,9 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     @Override
     public void handleReportedTransactionsState(TransactionsStateData transactionsStateData) {
-
-        totalNumberOfTransactionsFromRecovery = transactionsStateData.getTransactionsAmount();
-        HealthMetric.TOTAL_TRANSACTIONS_DELTA.doSnapshot();
+        if (monitorService.monitoringStarted()) {
+            totalNumberOfTransactionsFromRecovery = transactionsStateData.getTransactionsAmount();
+            HealthMetric.TOTAL_TRANSACTIONS_DELTA.doSnapshot();
+        }
     }
 }
