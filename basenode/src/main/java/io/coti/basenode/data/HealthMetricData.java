@@ -1,7 +1,9 @@
 package io.coti.basenode.data;
 
 import io.coti.basenode.services.BaseNodeMonitorService;
+import io.coti.basenode.services.HealthMetric;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -19,6 +21,10 @@ public class HealthMetricData {
     private BaseNodeMonitorService.HealthState lastHealthState;
     private int degradingCounter;
     private Map<String, HealthMetricOutput> additionalValues = new HashMap<>();
+    @Getter
+    private Long warningThreshold;
+    @Getter
+    private Long criticalThreshold;
 
 
     public HealthMetricData(long metricValue, long previousMetricValue, BaseNodeMonitorService.HealthState lastHealthState, int degradingCounter, Instant snapshotTime) {
@@ -29,11 +35,20 @@ public class HealthMetricData {
         this.snapshotTime = snapshotTime;
     }
 
-    public HealthMetricData() {
+//    public HealthMetricData() {
+//        this.metricValue = 0;
+//        this.previousMetricValue = 0;
+//        this.lastHealthState = BaseNodeMonitorService.HealthState.NA;
+//        this.degradingCounter = 0;
+//    }
+
+    public HealthMetricData(HealthMetric healthMetric) {
         this.metricValue = 0;
         this.previousMetricValue = 0;
         this.lastHealthState = BaseNodeMonitorService.HealthState.NA;
         this.degradingCounter = 0;
+        this.warningThreshold = healthMetric.getDefaultWarningThreshold();
+        this.criticalThreshold = healthMetric.getDefaultCriticalThreshold();
     }
 
     public void setSpecificLastMetricValue(String fieldKey, HealthMetricOutput healthMetricOutput) {

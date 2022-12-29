@@ -4,6 +4,7 @@ import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
 import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.services.interfaces.IMonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -22,6 +23,8 @@ public class AppReadyConfig {
     private IReceiver zeroMQReceiver;
     @Autowired
     private ISender zeroMQSender;
+    @Autowired
+    private IMonitorService monitorService;
 
     @EventListener(ApplicationReadyEvent.class)
     public void appReady() {
@@ -29,5 +32,6 @@ public class AppReadyConfig {
         propagationSubscriber.initMonitor();
         zeroMQReceiver.initMonitor();
         zeroMQSender.initMonitor();
+        monitorService.initNodeMonitor();
     }
 }
