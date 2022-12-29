@@ -119,7 +119,7 @@ public abstract class BaseNodeInitializationService {
     private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
     @Autowired
-    protected IMetricsService metricsService;
+    protected IScraperInterface scraperService;
     @Autowired
     protected IEventService eventService;
     private Object initialConfirmationLock;
@@ -155,7 +155,7 @@ public abstract class BaseNodeInitializationService {
         networkService.connectToNetwork();
         propagationSubscriber.initPropagationHandler();
         monitorService.init();
-        metricsService.init();
+        scraperService.init();
         nodeFeesService.init(nodeFeeTypeList);
     }
 

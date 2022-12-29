@@ -1,6 +1,6 @@
 package io.coti.basenode.controllers;
 
-import io.coti.basenode.services.interfaces.IMetricsService;
+import io.coti.basenode.services.interfaces.IScraperInterface;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,11 +15,11 @@ import javax.servlet.http.HttpServletRequest;
 public class BaseNodeMetricsController {
 
     @Autowired
-    IMetricsService metricsService;
+    IScraperInterface scraperService;
 
     @GetMapping()
     public String metrics(HttpServletRequest request) {
-        return metricsService.getMetrics(request);
+        return scraperService.getMetrics(request);
     }
 
 }
