@@ -209,9 +209,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
                 }
 
                 originalAmount = outputBaseTransactionData.getOriginalAmount();
-                if (originalCurrencyHash == null) {
-                    originalCurrencyHash = Optional.ofNullable(outputBaseTransactionData.getOriginalCurrencyHash()).orElse(nativeCurrencyHash);
-                }
+                originalCurrencyHash = Optional.ofNullable(outputBaseTransactionData.getOriginalCurrencyHash()).orElse(nativeCurrencyHash);
             }
 
             return skipValidationOfReducedAmount || validateReducedAmount(outputBaseTransactions);
