@@ -29,7 +29,7 @@ public enum HealthMetric implements IHealthMetric {
             long totalTransactionsFromRecoveryServer = transactionHelper.getTotalNumberOfTransactionsFromRecovery();
             if (totalTransactionsFromRecoveryServer > 0) {
                 healthMetricData.addValue(TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, HealthMetricOutputType.EXTERNAL, TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, totalTransactionsFromRecoveryServer);
-                baseDoSnapshot(this, totalTransactions - totalTransactionsFromRecoveryServer);
+                baseDoSnapshot(this, totalTransactionsFromRecoveryServer - totalTransactions);
             } else {
                 baseDoSnapshot(this, (long) -1);
             }
