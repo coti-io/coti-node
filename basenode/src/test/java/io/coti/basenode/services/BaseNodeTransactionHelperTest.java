@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
 import io.coti.basenode.communication.JacksonSerializer;
+import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
 import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.crypto.GetUserTokensRequestCrypto;
@@ -12,15 +13,15 @@ import io.coti.basenode.model.*;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -46,7 +47,7 @@ import static org.mockito.Mockito.*;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @Slf4j
 
 public class BaseNodeTransactionHelperTest {
@@ -115,6 +116,8 @@ public class BaseNodeTransactionHelperTest {
     private UserCurrencyIndexes userCurrencyIndexes;
     @Autowired
     protected BaseNodeEventService baseNodeEventService;
+    @MockBean
+    private ISender sender;
 
     @Test
     public void getTransaction_updateTransactionOnCluster_coverage() {
@@ -122,20 +125,20 @@ public class BaseNodeTransactionHelperTest {
 
         final Set<Hash> trustChainConfirmationTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
         boolean foundTransaction = trustChainConfirmationTransactionHashes.contains(transactionData.getHash());
-        Assert.assertFalse(foundTransaction);
+        Assertions.assertFalse(foundTransaction);
 
         int originalSize = clusterService.getCopyTrustChainConfirmationCluster().size();
         transactionHelper.updateTransactionOnCluster(transactionData);
         TransactionData updatedTransactionData = clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash());
         int updatedAmount = clusterService.getCopyTrustChainConfirmationCluster().size();
-        Assert.assertNotNull(updatedTransactionData);
-        Assert.assertTrue(updatedAmount > originalSize);
+        Assertions.assertNotNull(updatedTransactionData);
+        Assertions.assertTrue(updatedAmount > originalSize);
 
         transactionHelper.updateTransactionOnCluster(transactionData);
         updatedTransactionData = clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash());
         int updatedAmount2 = clusterService.getCopyTrustChainConfirmationCluster().size();
-        Assert.assertNotNull(updatedTransactionData);
-        Assert.assertEquals(updatedAmount, updatedAmount2);
+        Assertions.assertNotNull(updatedTransactionData);
+        Assertions.assertEquals(updatedAmount, updatedAmount2);
     }
 
     @Test
@@ -147,22 +150,22 @@ public class BaseNodeTransactionHelperTest {
         ArrayList<HashSet<Hash>> sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
         long initialSourcesAmount = clusterService.getTotalSources();
         int initialTotalSources = sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum();
-        Assert.assertEquals(initialSourcesAmount, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
+        Assertions.assertEquals(initialSourcesAmount, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
         int sourcesForTxAmount = sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size();
 
-        Assert.assertFalse(trustChainConfirmationTransactionHashes.contains(transactionData.getHash()));
+        Assertions.assertFalse(trustChainConfirmationTransactionHashes.contains(transactionData.getHash()));
 
-        Assert.assertTrue(sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).isEmpty());
-        Assert.assertNull(clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash()));
+        Assertions.assertTrue(sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).isEmpty());
+        Assertions.assertNull(clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash()));
 
         transactionHelper.attachTransactionToCluster(transactionData);
         long totalSources = clusterService.getTotalSources();
         sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
 
-        Assert.assertEquals(initialSourcesAmount + 1, totalSources);
-        Assert.assertEquals(initialTotalSources + 1, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
-        Assert.assertEquals(sourcesForTxAmount + 1, sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size());
-        Assert.assertNotNull(clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash()));
+        Assertions.assertEquals(initialSourcesAmount + 1, totalSources);
+        Assertions.assertEquals(initialTotalSources + 1, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
+        Assertions.assertEquals(sourcesForTxAmount + 1, sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size());
+        Assertions.assertNotNull(clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash()));
     }
 
     @Test
@@ -179,17 +182,17 @@ public class BaseNodeTransactionHelperTest {
         ArrayList<HashSet<Hash>> sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
         long initialSourcesAmount = clusterService.getTotalSources();
         int initialTotalSources = sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum();
-        Assert.assertEquals(initialSourcesAmount, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
+        Assertions.assertEquals(initialSourcesAmount, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
         int sourcesForTxAmount = sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size();
 
         clusterService.addExistingTransactionOnInit(transactionData);
         long totalSources = clusterService.getTotalSources();
         sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
 
-        Assert.assertEquals(initialSourcesAmount + 1, totalSources);
-        Assert.assertEquals(initialTotalSources + 1, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
-        Assert.assertEquals(sourcesForTxAmount + 1, sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size());
-        Assert.assertNotNull(clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash()));
+        Assertions.assertEquals(initialSourcesAmount + 1, totalSources);
+        Assertions.assertEquals(initialTotalSources + 1, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
+        Assertions.assertEquals(sourcesForTxAmount + 1, sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size());
+        Assertions.assertNotNull(clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash()));
     }
 
     @Test
@@ -206,7 +209,7 @@ public class BaseNodeTransactionHelperTest {
         ArrayList<HashSet<Hash>> sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
         long initialSourcesAmount = clusterService.getTotalSources();
         int initialTotalSources = sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum();
-        Assert.assertEquals(initialSourcesAmount, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
+        Assertions.assertEquals(initialSourcesAmount, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
         int sourcesForTxAmount = sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size();
 
         Set<Hash> trustChainUnconfirmedExistingTransactionHashes = new HashSet<>();
@@ -215,10 +218,10 @@ public class BaseNodeTransactionHelperTest {
         long totalSources = clusterService.getTotalSources();
         sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
 
-        Assert.assertEquals(initialSourcesAmount + 1, totalSources);
-        Assert.assertEquals(initialTotalSources + 1, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
-        Assert.assertEquals(sourcesForTxAmount + 1, sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size());
-        Assert.assertNotNull(clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash()));
+        Assertions.assertEquals(initialSourcesAmount + 1, totalSources);
+        Assertions.assertEquals(initialTotalSources + 1, sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum());
+        Assertions.assertEquals(sourcesForTxAmount + 1, sourceSetsByTrustScore.get(transactionData.getRoundedSenderTrustScore()).size());
+        Assertions.assertNotNull(clusterService.getCopyTrustChainConfirmationCluster().get(transactionData.getHash()));
     }
 
     @Test
@@ -228,25 +231,25 @@ public class BaseNodeTransactionHelperTest {
         clusterService.addTransactionToTrustChainConfirmationCluster(transactionData);
         ConcurrentHashMap<Hash, TransactionData> copyTrustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
 
-        Assert.assertNull(copyTrustChainConfirmationCluster.get(transactionData.getHash()));
+        Assertions.assertNull(copyTrustChainConfirmationCluster.get(transactionData.getHash()));
 
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
         dspConsensusResult.setIndexingTime(Instant.now());
         dspConsensusResult.setDspConsensus(true);
         transactionData.setDspConsensusResult(dspConsensusResult);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes());
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         clusterService.addTransactionToTrustChainConfirmationCluster(transactionData);
         copyTrustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
-        Assert.assertNotNull(copyTrustChainConfirmationCluster.get(transactionData.getHash()));
+        Assertions.assertNotNull(copyTrustChainConfirmationCluster.get(transactionData.getHash()));
 
         TransactionData secondTransactionData = TransactionTestUtils.createRandomTransaction();
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(false);
         clusterService.addTransactionToTrustChainConfirmationCluster(secondTransactionData);
         copyTrustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
-        Assert.assertNotNull(copyTrustChainConfirmationCluster.get(secondTransactionData.getHash()));
+        Assertions.assertNotNull(copyTrustChainConfirmationCluster.get(secondTransactionData.getHash()));
     }
 
     @Test
@@ -268,7 +271,7 @@ public class BaseNodeTransactionHelperTest {
 
         transactionHelper.removeAddressTransactionHistory(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
-            Assert.assertEquals(Sets.newConcurrentHashSet(), addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash()).getTransactionsHistory());
+            Assertions.assertEquals(Sets.newConcurrentHashSet(), addressTransactionsHistories.getByHash(baseTransactionData.getAddressHash()).getTransactionsHistory());
         });
     }
 
@@ -278,6 +281,6 @@ public class BaseNodeTransactionHelperTest {
         Set<Hash> noneIndexedTransactionHashes = new HashSet<>(Collections.singleton(transactionData.getHash()));
         ReflectionTestUtils.setField(transactionHelper, "noneIndexedTransactionHashes", noneIndexedTransactionHashes);
         transactionHelper.removeNoneIndexedTransaction(transactionData);
-        Assert.assertEquals(Sets.newConcurrentHashSet(), noneIndexedTransactionHashes);
+        Assertions.assertEquals(Sets.newConcurrentHashSet(), noneIndexedTransactionHashes);
     }
 }

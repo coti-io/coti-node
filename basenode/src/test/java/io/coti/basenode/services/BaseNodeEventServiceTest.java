@@ -12,9 +12,9 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,7 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static io.coti.basenode.utils.TransactionTestUtils.createTransactionIndexData;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,10 +35,8 @@ import static org.mockito.Mockito.when;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith({SpringExtension.class})
 @Slf4j
-
-
 public class BaseNodeEventServiceTest {
     @Autowired
     private IEventService baseNodeEventService;
@@ -77,29 +75,29 @@ public class BaseNodeEventServiceTest {
         TransactionData transactionData = TransactionTestUtils.createHardForkTrustScoreConsensusTransaction();
 
         ResponseEntity<IResponse> eventTransactionDataResponse = baseNodeEventService.getEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, eventTransactionDataResponse.getStatusCode());
-        Assert.assertEquals("Event Not Found", ((Response) eventTransactionDataResponse.getBody()).getMessage());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, eventTransactionDataResponse.getStatusCode());
+        Assertions.assertEquals("Event Not Found", ((Response) eventTransactionDataResponse.getBody()).getMessage());
 
         ResponseEntity<IResponse> confirmedEventTransactionDataResponse = baseNodeEventService.getConfirmedEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, confirmedEventTransactionDataResponse.getStatusCode());
-        Assert.assertEquals("Event Not Found", ((Response) confirmedEventTransactionDataResponse.getBody()).getMessage());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, confirmedEventTransactionDataResponse.getStatusCode());
+        Assertions.assertEquals("Event Not Found", ((Response) confirmedEventTransactionDataResponse.getBody()).getMessage());
 
         boolean addedEvent = baseNodeEventService.checkEventAndUpdateEventsTable(transactionData);
-        Assert.assertTrue(addedEvent);
+        Assertions.assertTrue(addedEvent);
         when(transactions.getByHash(any(Hash.class))).thenReturn(transactionData);
         TransactionIndexData transactionIndexData = createTransactionIndexData(transactionData.getHash(), 7);
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         addedEvent = baseNodeEventService.checkEventAndUpdateEventsTable(transactionData);
-        Assert.assertFalse(addedEvent);
+        Assertions.assertFalse(addedEvent);
 
         eventTransactionDataResponse = baseNodeEventService.getEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
-        Assert.assertEquals(HttpStatus.OK, eventTransactionDataResponse.getStatusCode());
-        Assert.assertEquals(transactionData.getHash().toString(), ((GetTransactionResponse) eventTransactionDataResponse.getBody()).getTransactionData().getHash());
+        Assertions.assertEquals(HttpStatus.OK, eventTransactionDataResponse.getStatusCode());
+        Assertions.assertEquals(transactionData.getHash().toString(), ((GetTransactionResponse) eventTransactionDataResponse.getBody()).getTransactionData().getHash());
 
         confirmedEventTransactionDataResponse = baseNodeEventService.getConfirmedEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, confirmedEventTransactionDataResponse.getStatusCode());
-        Assert.assertEquals("Event Not Found", ((Response) confirmedEventTransactionDataResponse.getBody()).getMessage());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, confirmedEventTransactionDataResponse.getStatusCode());
+        Assertions.assertEquals("Event Not Found", ((Response) confirmedEventTransactionDataResponse.getBody()).getMessage());
 
         transactionData.setTrustChainConsensus(true);
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
@@ -107,8 +105,8 @@ public class BaseNodeEventServiceTest {
         transactionData.setDspConsensusResult(dspConsensusResult);
 
         confirmedEventTransactionDataResponse = baseNodeEventService.getConfirmedEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
-        Assert.assertEquals(HttpStatus.OK, confirmedEventTransactionDataResponse.getStatusCode());
-        Assert.assertEquals(transactionData.getHash().toString(), ((GetTransactionResponse) confirmedEventTransactionDataResponse.getBody()).getTransactionData().getHash());
+        Assertions.assertEquals(HttpStatus.OK, confirmedEventTransactionDataResponse.getStatusCode());
+        Assertions.assertEquals(transactionData.getHash().toString(), ((GetTransactionResponse) confirmedEventTransactionDataResponse.getBody()).getTransactionData().getHash());
     }
 
 }

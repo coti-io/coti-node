@@ -13,16 +13,16 @@ import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
 import io.coti.fullnode.data.UnconfirmedReceivedTransactionHashFullNodeData;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import utils.TestUtils;
 
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.*;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @Slf4j
 public class TransactionServiceTest {
 
@@ -94,7 +94,7 @@ public class TransactionServiceTest {
     @MockBean
     private RejectedTransactions rejectedTransactions;
 
-    @Before
+    @BeforeEach
     public void init() {
         transactionService.init();
     }
@@ -112,7 +112,7 @@ public class TransactionServiceTest {
         ReflectionTestUtils.setField(transactionService, "addressToTransactionsByAttachmentMap", addressToTransactionsByAttachmentMap);
 
         transactionService.removeDataFromMemory(transactionData);
-        Assert.assertEquals(Sets.newConcurrentHashSet(), transactionHashSet);
+        Assertions.assertEquals(Sets.newConcurrentHashSet(), transactionHashSet);
     }
 
     @Test
@@ -132,7 +132,7 @@ public class TransactionServiceTest {
         transactionService.removeTransactionHashFromUnconfirmed(transactionData);
         verify(transactionPropagationCheckService, atLeastOnce()).removeTransactionHashFromUnconfirmed(transactionData.getHash());
         verify(unconfirmedReceivedTransactionHashes, atLeastOnce()).deleteByHash(transactionData.getHash());
-        Assert.assertEquals(new ConcurrentHashMap<>(), unconfirmedReceivedTransactionHashesMap);
+        Assertions.assertEquals(new ConcurrentHashMap<>(), unconfirmedReceivedTransactionHashesMap);
     }
 
     @Test

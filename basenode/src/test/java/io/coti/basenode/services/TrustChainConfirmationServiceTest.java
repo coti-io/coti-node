@@ -9,15 +9,15 @@ import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @Slf4j
 
 public class TrustChainConfirmationServiceTest {
@@ -88,8 +88,9 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) Math.round(trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore()));
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+
+        Assertions.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) Math.round(trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore()));
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
     }
 
     @Test
@@ -98,7 +99,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes());
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -111,16 +112,16 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
         dspConsensusResult.setDspConsensus(true);
         transactionData.setDspConsensusResult(dspConsensusResult);
 
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
-        Assert.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         TransactionData childTransactionData = TransactionTestUtils.createRandomTransaction();
         childTransactionData.setAttachmentTime(Instant.now());
@@ -134,16 +135,16 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
 
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
-        Assert.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         DspConsensusResult childDSPConsensusResult = new DspConsensusResult(transactionData.getHash());
         childDSPConsensusResult.setDspConsensus(true);
         childTransactionData.setDspConsensusResult(childDSPConsensusResult);
 
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
-        Assert.assertTrue(trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore() > MAX_TRUST_SCORE);
-        Assert.assertEquals(1, trustChainConfirmedTransactions.size());
+        Assertions.assertTrue(trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore() > MAX_TRUST_SCORE);
+        Assertions.assertEquals(1, trustChainConfirmedTransactions.size());
     }
 
     @Test
@@ -152,7 +153,7 @@ public class TrustChainConfirmationServiceTest {
         // Before Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(false);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes());
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -165,8 +166,8 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         TransactionData childTransactionData = TransactionTestUtils.createRandomTransaction();
         childTransactionData.setSenderTrustScore(majorityTCCThreshold);
@@ -178,16 +179,16 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         when(transactions.getByHash(childTransactionData.getHash())).thenReturn(childTransactionData);
 
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(transactionData.getRoundedSenderTrustScore() + childTransactionData.getRoundedSenderTrustScore(), (int) Math.round(trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore()));
-        Assert.assertFalse(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(transactionData.getRoundedSenderTrustScore() + childTransactionData.getRoundedSenderTrustScore(), (int) Math.round(trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore()));
+        Assertions.assertFalse(trustChainConfirmedTransactions.isEmpty());
     }
 
     @Test
@@ -196,7 +197,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes());
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -209,8 +210,8 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         TransactionData childTransactionData = TransactionTestUtils.createRandomTransaction();
         childTransactionData.setAttachmentTime(Instant.now());
@@ -229,8 +230,8 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         when(transactions.getByHash(childTransactionData.getHash())).thenReturn(childTransactionData);
         when(transactions.getByHash(grandChildTransactionData.getHash())).thenReturn(grandChildTransactionData);
@@ -238,8 +239,8 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         DspConsensusResult dspConsensusResult = new DspConsensusResult(grandChildTransactionData.getHash());
         dspConsensusResult.setIndexingTime(Instant.now());
@@ -248,8 +249,8 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
     }
 
     @Test
@@ -258,7 +259,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes());
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -271,8 +272,8 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(0, (int) trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
 
         TransactionData childTransactionData = TransactionTestUtils.createRandomTransaction();
         childTransactionData.setAttachmentTime(Instant.now());
@@ -292,8 +293,8 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.init(trustChainConfirmationCluster);
         trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
-        Assert.assertEquals(childTransactionData.getSenderTrustScore(), trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore(), 0);
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertEquals(childTransactionData.getSenderTrustScore(), trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore(), 0);
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
     }
 
     @Test
@@ -302,7 +303,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes());
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -324,7 +325,7 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
         List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
-        Assert.assertEquals(transactionData.getHash(), trustChainConfirmedTransactions.get(0).getHash());
+        Assertions.assertEquals(transactionData.getHash(), trustChainConfirmedTransactions.get(0).getHash());
     }
 
     @Test
@@ -333,7 +334,7 @@ public class TrustChainConfirmationServiceTest {
         // After Event.TRUST_SCORE_CONSENSUS
         when(baseNodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(false);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes());
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
@@ -355,7 +356,7 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
         List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
     }
 
     @Test
@@ -382,7 +383,7 @@ public class TrustChainConfirmationServiceTest {
         trustChainConfirmationService.getTrustChainConfirmedTransactions();
 
         List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
-        Assert.assertTrue(trustChainConfirmedTransactions.isEmpty());
+        Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
     }
 
 }

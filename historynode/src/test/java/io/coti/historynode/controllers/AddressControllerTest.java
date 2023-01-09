@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.historynode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,7 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -26,7 +26,7 @@ import javax.servlet.ServletContext;
 @Slf4j
 @ContextConfiguration(classes = {AddressController.class})
 @TestPropertySource(locations = "classpath:test.properties")
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @WebAppConfiguration
@@ -45,8 +45,8 @@ public class AddressControllerTest {
 
     private ObjectMapper mapper;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    public void setup() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.appContext).build();
         mapper = new ObjectMapper();
     }
@@ -54,9 +54,9 @@ public class AddressControllerTest {
     @Test
     public void givenWac_whenServletContext_thenItProvidesAddressController() {
         ServletContext servletContext = appContext.getServletContext();
-        Assert.assertNotNull(servletContext);
-        Assert.assertTrue(servletContext instanceof MockServletContext);
-        Assert.assertNotNull(appContext.getBean("addressController"));
+        Assertions.assertNotNull(servletContext);
+        Assertions.assertTrue(servletContext instanceof MockServletContext);
+        Assertions.assertNotNull(appContext.getBean("addressController"));
     }
 
 }
