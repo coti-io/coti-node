@@ -3,23 +3,21 @@ package io.coti.basenode.crypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.utils.HashTestUtils;
-import org.hamcrest.core.IsEqual;
-import org.hamcrest.core.IsNot;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.List;
 
 @TestPropertySource(locations = "classpath:test.properties")
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {GetHistoryAddressesRequestCrypto.class, CryptoHelper.class})
 public class AddressesRequestCryptoTest {
 
@@ -41,7 +39,7 @@ public class AddressesRequestCryptoTest {
         byte[] addressesRequestInBytes = addressesRequestBuffer.array();
         byte[] bytes = CryptoHelper.cryptoHash(addressesRequestInBytes).getBytes();
 
-        Assert.assertArrayEquals(bytes, getHistoryAddressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest));
+        Assertions.assertArrayEquals(bytes, getHistoryAddressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest));
     }
 
     @Test
@@ -57,7 +55,7 @@ public class AddressesRequestCryptoTest {
         byte[] addressesRequestInBytes = addressesRequestBuffer.array();
         byte[] bytes = CryptoHelper.cryptoHash(addressesRequestInBytes).getBytes();
 
-        Assert.assertThat(bytes, IsNot.not(IsEqual.equalTo(getHistoryAddressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest))));
+        Assertions.assertNotEquals(bytes, getHistoryAddressesRequestCrypto.getSignatureMessage(getHistoryAddressesRequest));
     }
 
     private int getByteBufferSize(List<Hash> addressHashes) {

@@ -10,14 +10,15 @@ import io.coti.trustscore.services.BucketTransactionService;
 import io.coti.trustscore.services.calculationservices.BucketTransactionsCalculator;
 import io.coti.trustscore.testutils.BucketUtil;
 import io.coti.trustscore.utils.DatesCalculation;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Date;
 import java.util.Map;
@@ -29,15 +30,16 @@ import static io.coti.trustscore.testutils.GeneralUtilsFunctions.isTrustScoreVal
         BucketTransactionsCalculator.class,
         BaseNodeRocksDBConnector.class,
         BucketTransactionService.class,
+        BucketTransactionEventsData.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 
 public class BucketTransactionsCalculatorTest {
 
-    @Before
-    public void setUp() {
+    @BeforeAll
+    public static void setUp() {
         RulesData rulesData = BucketUtil.generateRulesDataObject();
         BucketTransactionsCalculator.init(rulesData);
     }
@@ -49,7 +51,7 @@ public class BucketTransactionsCalculatorTest {
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
 
         TransactionEventsScore transactionEventsScore = bucketTransactionsCalculator.getTransactionEventsScore();
-        Assert.assertEquals(3, transactionEventsScore.getTransactionEventScoreList().size());
+        Assertions.assertEquals(3, transactionEventsScore.getTransactionEventScoreList().size());
     }
 
     @Test
@@ -63,7 +65,7 @@ public class BucketTransactionsCalculatorTest {
 
         bucketTransactionsCalculator.decayScores(bucketTransactionEventsData);
 
-        Assert.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getOldDateNumberOfTransactionsContribution())
+        Assertions.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getOldDateNumberOfTransactionsContribution())
                 && (isTrustScoreValueValid(bucketTransactionEventsData.getOldDateTurnOverContribution()))
                 && (bucketTransactionEventsData.getCurrentDateTurnOverContribution() == 0)
                 && (bucketTransactionEventsData.getCurrentDateTurnOver() == 0)));
@@ -84,7 +86,7 @@ public class BucketTransactionsCalculatorTest {
 
         bucketTransactionsCalculator.decayScores(bucketTransactionEventsData);
 
-        Assert.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getOldMonthBalanceContribution()))
+        Assertions.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getOldMonthBalanceContribution()))
                 && (isTrustScoreValueValid(bucketTransactionEventsData.getCurrentMonthDayToBalanceCountAndContribution()
                 .get(DatesCalculation.setDateOnBeginningOfDay(DatesCalculation.decreaseTodayDateByDays(0))).getContribution()))
         );
@@ -99,7 +101,7 @@ public class BucketTransactionsCalculatorTest {
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
         bucketTransactionsCalculator.setCurrentDayTransactionsScores();
 
-        Assert.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution()))
+        Assertions.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution()))
                 && (isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateTurnOverContribution())));
     }
 
@@ -114,7 +116,7 @@ public class BucketTransactionsCalculatorTest {
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
         bucketTransactionsCalculator.setCurrentDayTransactionsScores();
 
-        Assert.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution()))
+        Assertions.assertTrue((isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateNumberOfTransactionsContribution()))
                 && (isTrustScoreValueValid(bucketTransactionEventsData.getCurrentDateTurnOverContribution())));
     }
 }

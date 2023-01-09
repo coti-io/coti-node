@@ -8,15 +8,15 @@ import io.coti.trustscore.data.Enums.InitialTrustScoreType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.InitialTrustScoreEventsData;
 import io.coti.trustscore.http.InsertEventRequest;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static io.coti.trustscore.testutils.BucketUtil.generateRulesDataObject;
 import static io.coti.trustscore.testutils.GeneralUtilsFunctions.generateRandomHash;
@@ -24,7 +24,7 @@ import static io.coti.trustscore.testutils.GeneralUtilsFunctions.isTrustScoreVal
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 
 @TestPropertySource(locations = "classpath:test.properties")
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @ContextConfiguration(classes = {BucketInitialTrustScoreEventsService.class,
         BaseNodeRocksDBConnector.class
@@ -36,7 +36,7 @@ public class BucketInitialTrustScoreEventsServiceTest {
 
     private BucketInitialTrustScoreEventsData bucketInitialTrustScoreEventsData;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         bucketInitialTrustScoreEventsService.init(generateRulesDataObject());
         bucketInitialTrustScoreEventsData = new BucketInitialTrustScoreEventsData();
@@ -47,7 +47,7 @@ public class BucketInitialTrustScoreEventsServiceTest {
     public void addEventToCalculationsSimpleTest() {
         addInitialTrustScoreEvents();
         double bucketSumScore = bucketInitialTrustScoreEventsService.getBucketSumScore(bucketInitialTrustScoreEventsData);
-        Assert.assertTrue(isTrustScoreValueValid(bucketSumScore));
+        Assertions.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     @Test
@@ -63,7 +63,7 @@ public class BucketInitialTrustScoreEventsServiceTest {
 
         bucketInitialTrustScoreEventsData.setLastUpdate(decreaseTodayDateByDays(2));
         double bucketSumScore = bucketInitialTrustScoreEventsService.getBucketSumScore(bucketInitialTrustScoreEventsData);
-        Assert.assertTrue(isTrustScoreValueValid(bucketSumScore));
+        Assertions.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     private void addInitialTrustScoreEvents() {

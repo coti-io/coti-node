@@ -19,9 +19,6 @@ import static utils.TestConstants.*;
 
 public class TransactionTestUtils {
 
-    @Autowired
-    private static ICurrencyService currencyService;
-
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
     }
@@ -59,7 +56,7 @@ public class TransactionTestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData
                         (HashTestUtils.generateRandomAddressHash(),
-                                currencyService.getNativeCurrencyHash(),
+                                new Hash(NATIVE_CURRENCY_HASH),
                                 new BigDecimal(0),
                                 Instant.now())));
         byte[] bytesToHash = getBaseMessageInBytes(baseTransactions.get(0));

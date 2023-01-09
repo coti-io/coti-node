@@ -16,17 +16,19 @@ import io.coti.basenode.services.interfaces.IEventService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.client.RestTemplate;
+import testUtils.BaseNodeTestUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -43,7 +45,7 @@ import static org.mockito.Mockito.*;
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @Slf4j
 public class BaseNodeCurrencyServiceTest {
 
@@ -84,7 +86,7 @@ public class BaseNodeCurrencyServiceTest {
     @MockBean
     private OriginatorCurrencyData currencyData;
 
-    @Before
+    @BeforeEach
     public void init() {
         baseNodeCurrencyService.init();
     }
@@ -108,24 +110,18 @@ public class BaseNodeCurrencyServiceTest {
         verify(userCurrencyIndexes, atLeastOnce()).deleteByHash(originatorHash);
     }
 
-//    @Test
-//    public void getNativeCurrencyData_addNativeCurrencyIfNeeded_verifyCurrencyExists() {
-//
-//
-//        final CurrencyData nativeCurrencyData = baseNodeCurrencyService.getNativeCurrency();
-//        if (nativeCurrencyData != null) {
-//            Assert.assertEquals(CurrencyType.NATIVE_COIN, nativeCurrencyData.getCurrencyTypeData().getCurrencyType());
-//        } else {
-//            HashSet nativeCurrencyHashes = baseNodeCurrencyService.getCurrencyHashesByCurrencyType(CurrencyType.NATIVE_COIN);
-//            Assert.assertTrue(nativeCurrencyHashes == null || nativeCurrencyHashes.isEmpty());
-//            CurrencyType currencyType = CurrencyType.NATIVE_COIN;
-//            Hash currencyHash = BaseNodeTestUtils.generateRandomHash(136);
-//            CurrencyData currencyData = createCurrencyData("Coti Test name", "Coti Test Symbol", currencyHash);
-//            setAndSignCurrencyDataByType(currencyData, currencyType);
-//            baseNodeCurrencyService.putCurrencyData(currencyData);
-//            Assert.assertEquals(baseNodeCurrencyService.getNativeCurrency(), currencyData);
-//        }
-//    }
+    @Test
+    public void get_native_currency_data_if_null() {
+        Hash calculatedCurrencyHash = OriginatorCurrencyCrypto.calculateHash("COTI");
+        Hash nativeCurrencyHash = baseNodeCurrencyService.getNativeCurrencyHashIfNull(null);
+        Assertions.assertEquals(nativeCurrencyHash, calculatedCurrencyHash);
+    }
+
+    @Test
+    public void is_currency_hash_allowed() {
+        Hash currencyHash = BaseNodeTestUtils.generateRandomHash(136);
+        Assertions.assertFalse(baseNodeCurrencyService.isCurrencyHashAllowed(currencyHash));
+    }
 
 //    @Test
 //    public void getMissingCurrencies_noPreexistingCurrencies_noReturnedCurrencies() {

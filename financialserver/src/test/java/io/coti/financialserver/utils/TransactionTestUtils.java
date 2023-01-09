@@ -1,19 +1,16 @@
-package io.coti.basenode.utils;
+package io.coti.financialserver.utils;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetHistoryAddressesRequest;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.coti.basenode.utils.TestConstants.*;
+import static io.coti.financialserver.utils.TestConstants.*;
 
 public class TransactionTestUtils {
 
@@ -35,33 +32,9 @@ public class TransactionTestUtils {
         return new Hash(hexa.toString());
     }
 
-    public static TransactionData createRandomTransaction() {
-        return createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-    }
-
-    public static TransactionData createHardForkTrustScoreConsensusTransaction() {
-        return createHardForkTrustScoreConsensusTransaction(generateRandomHash(SIZE_OF_HASH));
-    }
-
-    public static TransactionIndexData createTransactionIndexData(Hash hash, int index) {
-        return new TransactionIndexData(hash, index, hash.getBytes());
-    }
-
-    public static TransactionData createRandomTransactionWithSenderAddress() {
-        TransactionData transactionData = createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-        transactionData.setSenderHash(generateRandomHash());
-        return transactionData;
-    }
-
-    public static TransactionData createRandomTransactionWithSenderAddress(Hash hash) {
-        TransactionData transactionData = createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-        transactionData.setSenderHash(hash);
-        return transactionData;
-    }
-
-    private static TransactionData createRandomTransaction(Hash hash) {
+    public static TransactionData createRandomTransactionWithAddress(Hash addressHash) {
+        Hash hash = generateRandomHash(SIZE_OF_HASH);
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>();
-        Hash addressHash = HashTestUtils.generateRandomAddressHash();
         baseTransactions.add(new InputBaseTransactionData(addressHash, new Hash(NATIVE_CURRENCY_HASH),
                 new BigDecimal(-5), Instant.now()));
         baseTransactions.add(new ReceiverBaseTransactionData(addressHash, new Hash(NATIVE_CURRENCY_HASH),
@@ -74,24 +47,6 @@ public class TransactionTestUtils {
                 generateRandomTrustScore(),
                 Instant.now(),
                 TransactionType.Transfer);
-    }
-
-    private static TransactionData createHardForkTrustScoreConsensusTransaction(Hash hash) {
-        ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
-                Collections.singletonList(new EventInputBaseTransactionData
-                        (HashTestUtils.generateRandomAddressHash(),
-                                new Hash(NATIVE_CURRENCY_HASH),
-                                new BigDecimal(0),
-                                Instant.now(),
-                                Event.TRUST_SCORE_CONSENSUS)));
-        byte[] bytesToHash = getBaseMessageInBytes(baseTransactions.get(0));
-        baseTransactions.get(0).setHash(CryptoHelper.cryptoHash(bytesToHash));
-        return new TransactionData(baseTransactions,
-                hash,
-                TRANSACTION_DESCRIPTION,
-                generateRandomTrustScore(),
-                Instant.now(),
-                TransactionType.EventHardFork);
     }
 
     protected static byte[] getBaseMessageInBytes(BaseTransactionData baseTransactionData) {
@@ -110,14 +65,6 @@ public class TransactionTestUtils {
 
     private static Double generateRandomTrustScore() {
         return Math.random() * 100;
-    }
-
-    public static GetHistoryAddressesRequest generateGetAddressesRequest() {
-        List<Hash> hashes = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            hashes.add(generateRandomHash());
-        }
-        return new GetHistoryAddressesRequest(hashes);
     }
 
 }

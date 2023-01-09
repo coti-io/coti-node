@@ -12,9 +12,6 @@ import java.time.Instant;
 @Slf4j
 public class CurrencyServiceTestUtils {
 
-    @Autowired
-    private static ICurrencyService currencyService;
-
     public static CurrencyData createCurrencyData(String name, String symbol, Hash hash) {
         CurrencyData currencyData = new CurrencyData();
         currencyData.setName(name);
