@@ -5,15 +5,13 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.utils.AddressTestUtils;
 import io.coti.basenode.utils.HashTestUtils;
-import org.hamcrest.core.IsEqual;
-import org.hamcrest.core.IsNot;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
@@ -22,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @TestPropertySource(locations = "classpath:test.properties")
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {GetHistoryAddressesResponseCrypto.class, CryptoHelper.class})
 public class AddressesResponseCryptoTest {
 
@@ -52,7 +50,7 @@ public class AddressesResponseCryptoTest {
 
         byte[] addressesResponseInBytes = addressesResponseBuffer.array();
         byte[] bytes = CryptoHelper.cryptoHash(addressesResponseInBytes).getBytes();
-        Assert.assertArrayEquals(bytes, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponse));
+        Assertions.assertArrayEquals(bytes, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponse));
     }
 
     @Test
@@ -79,7 +77,7 @@ public class AddressesResponseCryptoTest {
 
         byte[] addressesResponseInBytesOne = addressesResponseBufferOne.array();
         byte[] bytesOne = CryptoHelper.cryptoHash(addressesResponseInBytesOne).getBytes();
-        Assert.assertArrayEquals(bytesOne, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne));
+        Assertions.assertArrayEquals(bytesOne, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne));
 
         //------------------------------
 
@@ -100,8 +98,8 @@ public class AddressesResponseCryptoTest {
 
         byte[] addressesResponseInBytesTwo = addressesResponseBufferTwo.array();
         byte[] bytesTwo = CryptoHelper.cryptoHash(addressesResponseInBytesTwo).getBytes();
-        Assert.assertArrayEquals(bytesTwo, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseTwo));
-        Assert.assertThat(bytesTwo, IsNot.not(IsEqual.equalTo(getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne))));
+        Assertions.assertArrayEquals(bytesTwo, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseTwo));
+        Assertions.assertNotEquals(bytesTwo, getHistoryAddressesResponseCrypto.getSignatureMessage(getHistoryAddressesResponseOne));
     }
 
     private int getByteBufferSize(Map<Hash, AddressData> addressHashesToAddresses) {
