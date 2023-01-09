@@ -14,17 +14,17 @@ import io.coti.basenode.services.interfaces.IPotService;
 import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import testUtils.AddressTestUtils;
 
 import java.util.*;
@@ -38,11 +38,16 @@ import static org.mockito.Mockito.when;
         JacksonSerializer.class, BaseNodeValidationService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith({SpringExtension.class})
 public class AddressStorageServiceTest {
 
     private final int NUMBER_OF_ADDRESSES = 4;
-
+    @Autowired
+    protected JacksonSerializer jacksonSerializer;
+    AddressData addressDataInStorage1 = AddressTestUtils.generateRandomAddressData();
+    AddressData addressDataInStorage2 = AddressTestUtils.generateRandomAddressData();
+    AddressData addressDataNotInStorage1 = AddressTestUtils.generateRandomAddressData();
+    AddressData addressDataNotInStorage2 = AddressTestUtils.generateRandomAddressData();
     @Autowired
     private AddressStorageService addressStorageService;
     @Autowired
@@ -51,8 +56,6 @@ public class AddressStorageServiceTest {
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
     @MockBean
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
-    @Autowired
-    protected JacksonSerializer jacksonSerializer;
     @MockBean
     private ObjectService objectService;
     @MockBean
@@ -60,9 +63,9 @@ public class AddressStorageServiceTest {
     //
     @MockBean
     private NodeCryptoHelper nodeCryptoHelper;
-
     @MockBean
     private Transactions transactions;
+    //
     @MockBean
     private ITransactionHelper transactionHelper;
     @MockBean
@@ -71,18 +74,11 @@ public class AddressStorageServiceTest {
     private TransactionSenderCrypto transactionSenderCrypto;
     @MockBean
     private IPotService potService;
-    //
 
-    @Before
+    @BeforeEach
     public void init() {
 
     }
-
-    AddressData addressDataInStorage1 = AddressTestUtils.generateRandomAddressData();
-    AddressData addressDataInStorage2 = AddressTestUtils.generateRandomAddressData();
-
-    AddressData addressDataNotInStorage1 = AddressTestUtils.generateRandomAddressData();
-    AddressData addressDataNotInStorage2 = AddressTestUtils.generateRandomAddressData();
 
     /**
      * Test request received with bad signature.
@@ -98,7 +94,7 @@ public class AddressStorageServiceTest {
         ResponseEntity<IResponse> actualResponse = addressStorageService.retrieveMultipleObjectsFromStorage(getHistoryAddressesRequest);
         SerializableResponse expectedResponse = new SerializableResponse(INVALID_SIGNATURE, STATUS_ERROR);
 
-        Assert.assertEquals(expectedResponse, actualResponse.getBody());
+        Assertions.assertEquals(expectedResponse, actualResponse.getBody());
     }
 
     /**
@@ -168,11 +164,11 @@ public class AddressStorageServiceTest {
     }
 
     private void checkResponseEquality(ResponseEntity<IResponse> expectedResponse, ResponseEntity<IResponse> actualResponse) {
-        Assert.assertEquals(expectedResponse.getStatusCode(), actualResponse.getStatusCode());
+        Assertions.assertEquals(expectedResponse.getStatusCode(), actualResponse.getStatusCode());
 
         Map<Hash, AddressData> expectedAddressHashesToAddresses = ((GetHistoryAddressesResponse) expectedResponse.getBody()).getAddressHashesToAddresses();
         Map<Hash, AddressData> actualAddressHashesToAddresses = ((GetHistoryAddressesResponse) actualResponse.getBody()).getAddressHashesToAddresses();
-        Assert.assertEquals(expectedAddressHashesToAddresses.size(), actualAddressHashesToAddresses.size());
+        Assertions.assertEquals(expectedAddressHashesToAddresses.size(), actualAddressHashesToAddresses.size());
 
         Iterator iterExpected = expectedAddressHashesToAddresses.entrySet().iterator();
         Iterator iterActual = actualAddressHashesToAddresses.entrySet().iterator();
@@ -180,8 +176,8 @@ public class AddressStorageServiceTest {
             Map.Entry<Hash, AddressData> expectedEntry = (Map.Entry<Hash, AddressData>) iterExpected.next();
             Map.Entry<Hash, AddressData> actualEntry = (Map.Entry<Hash, AddressData>) iterActual.next();
 
-            Assert.assertEquals(expectedEntry.getValue(), actualEntry.getValue());
-            Assert.assertEquals(expectedEntry.getKey(), actualEntry.getKey());
+            Assertions.assertEquals(expectedEntry.getValue(), actualEntry.getValue());
+            Assertions.assertEquals(expectedEntry.getKey(), actualEntry.getKey());
         }
     }
 

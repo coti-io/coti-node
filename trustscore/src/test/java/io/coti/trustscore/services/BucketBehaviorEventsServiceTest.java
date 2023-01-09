@@ -7,15 +7,15 @@ import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.BehaviorEventsData;
 import io.coti.trustscore.http.InsertEventRequest;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Date;
 import java.util.Map;
@@ -27,7 +27,7 @@ import static io.coti.trustscore.utils.DatesCalculation.addToDateByDays;
 import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 
 @TestPropertySource(locations = "classpath:test.properties")
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @ContextConfiguration(classes = {BucketBehaviorEventsService.class,
         BaseNodeRocksDBConnector.class
@@ -39,7 +39,7 @@ public class BucketBehaviorEventsServiceTest {
 
     private BucketBehaviorEventsData bucketBehaviorEventsData;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         bucketBehaviorEventsService.init(generateRulesDataObject());
         bucketBehaviorEventsData = new BucketBehaviorEventsData();
@@ -66,7 +66,7 @@ public class BucketBehaviorEventsServiceTest {
         performSimulationOfDecay(2);
 
         double bucketSumScore = bucketBehaviorEventsService.getBucketSumScore(bucketBehaviorEventsData);
-        Assert.assertTrue(bucketSumScore < 0);
+        Assertions.assertTrue(bucketSumScore < 0);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class BucketBehaviorEventsServiceTest {
             addFillingTheQuestionnaireEvent(UserType.MERCHANT);
         }
         double bucketSumScore = bucketBehaviorEventsService.getBucketSumScore(bucketBehaviorEventsData);
-        Assert.assertTrue(bucketSumScore < 0);
+        Assertions.assertTrue(bucketSumScore < 0);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class BucketBehaviorEventsServiceTest {
         performSimulationOfDecay(20);
         performSimulationOfDecay(350);
         double bucketSumScore = bucketBehaviorEventsService.getBucketSumScore(bucketBehaviorEventsData);
-        Assert.assertTrue(bucketSumScore < 0);
+        Assertions.assertTrue(bucketSumScore < 0);
     }
 
     public void performSimulationOfDecay(int days) {

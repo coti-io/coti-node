@@ -17,8 +17,7 @@ public class TestUtils {
     private static final String[] hexaOptions = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
     private static final int SIZE_OF_HASH = 64;
     private static final String TRANSACTION_DESCRIPTION = "test";
-    @Autowired
-    private static ICurrencyService currencyService;
+    private static final String NATIVE_CURRENCY_HASH = "ae2b227ab7e614b8734be1f03d1532e66bf6caf76accc02ca4da6e28";
 
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
@@ -53,7 +52,7 @@ public class TestUtils {
         ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
                 Collections.singletonList(new InputBaseTransactionData
                         (generateRandomHash(SIZE_OF_HASH),
-                                currencyService.getNativeCurrencyHash(),
+                                new Hash(NATIVE_CURRENCY_HASH),
                                 new BigDecimal(0),
                                 Instant.now())));
         return new TransactionData(baseTransactions,

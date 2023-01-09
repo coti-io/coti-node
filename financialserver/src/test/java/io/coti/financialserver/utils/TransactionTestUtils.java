@@ -1,23 +1,19 @@
-package utils;
+package io.coti.financialserver.utils;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetHistoryAddressesRequest;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static utils.TestConstants.*;
+import static io.coti.financialserver.utils.TestConstants.*;
 
 public class TransactionTestUtils {
+
 
     public static Hash generateRandomHash() {
         return generateRandomHash(SIZE_OF_HASH);
@@ -36,29 +32,13 @@ public class TransactionTestUtils {
         return new Hash(hexa.toString());
     }
 
-    public static TransactionData createRandomTransaction() {
-        return createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-    }
-
-    public static TransactionData createRandomTransactionWithSenderAddress() {
-        TransactionData transactionData = createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-        transactionData.setSenderHash(generateRandomHash());
-        return transactionData;
-    }
-
-    public static TransactionData createRandomTransactionWithSenderAddress(Hash hash) {
-        TransactionData transactionData = createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-        transactionData.setSenderHash(hash);
-        return transactionData;
-    }
-
-    private static TransactionData createRandomTransaction(Hash hash) {
-        ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>(
-                Collections.singletonList(new InputBaseTransactionData
-                        (HashTestUtils.generateRandomAddressHash(),
-                                new Hash(NATIVE_CURRENCY_HASH),
-                                new BigDecimal(0),
-                                Instant.now())));
+    public static TransactionData createRandomTransactionWithAddress(Hash addressHash) {
+        Hash hash = generateRandomHash(SIZE_OF_HASH);
+        ArrayList<BaseTransactionData> baseTransactions = new ArrayList<>();
+        baseTransactions.add(new InputBaseTransactionData(addressHash, new Hash(NATIVE_CURRENCY_HASH),
+                new BigDecimal(-5), Instant.now()));
+        baseTransactions.add(new ReceiverBaseTransactionData(addressHash, new Hash(NATIVE_CURRENCY_HASH),
+                new BigDecimal(5), new Hash(NATIVE_CURRENCY_HASH), new BigDecimal(5), Instant.now()));
         byte[] bytesToHash = getBaseMessageInBytes(baseTransactions.get(0));
         baseTransactions.get(0).setHash(CryptoHelper.cryptoHash(bytesToHash));
         return new TransactionData(baseTransactions,
@@ -85,14 +65,6 @@ public class TransactionTestUtils {
 
     private static Double generateRandomTrustScore() {
         return Math.random() * 100;
-    }
-
-    public static GetHistoryAddressesRequest generateGetAddressesRequest() {
-        List<Hash> hashes = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            hashes.add(generateRandomHash());
-        }
-        return new GetHistoryAddressesRequest(hashes);
     }
 
 }

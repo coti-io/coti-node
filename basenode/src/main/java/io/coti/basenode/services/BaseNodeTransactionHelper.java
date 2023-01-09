@@ -60,8 +60,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     private Set<Hash> noneIndexedTransactionHashes;
     @Autowired
     private INetworkService networkService;
-    @Autowired
-    private IMonitorService monitorService;
 
     private long totalNumberOfTransactionsFromRecovery = 0;
 
