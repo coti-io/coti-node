@@ -24,8 +24,7 @@ public class MintingFeeQuoteData implements ISignable, ISignValidatable, Seriali
     protected @Valid Hash currencyHash;
     @DecimalMin(value = "0")
     protected BigDecimal mintingFee;
-    @NotNull
-    private @Valid Hash signerHash;
+    private Hash signerHash;
     @NotNull
     private @Valid SignatureData signatureData;
 
