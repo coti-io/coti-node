@@ -28,7 +28,7 @@ public enum HealthMetric implements IHealthMetric {
             long totalTransactionsFromRecoveryServer = transactionHelper.getTotalNumberOfTransactionsFromRecovery();
             if (totalTransactionsFromRecoveryServer > 0) {
                 healthMetricData.addValue(TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, HealthMetricOutputType.EXTERNAL, TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, totalTransactionsFromRecoveryServer);
-                baseDoSnapshot(this, totalTransactions - totalTransactionsFromRecoveryServer);
+                baseDoSnapshot(this, totalTransactionsFromRecoveryServer - totalTransactions);
             } else {
                 baseDoSnapshot(this, (long) -1);
             }
@@ -149,21 +149,6 @@ public enum HealthMetric implements IHealthMetric {
             return "Lower aloud bound of total amount of transactions (including Zero spend transactions) that are sources";
         }
     },
-    DCR_CONFIRMATION_QUEUE_SIZE(DCR_CONFIRMATION_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
-        public void doSnapshot() {
-            baseDoSnapshot(this, (long) confirmationService.getDcrConfirmationQueueSize());
-        }
-
-        @Override
-        public void calculateHealthMetric() {
-            baseCalculateHealthCounterMetricState(this);
-        }
-
-        @Override
-        public String getDescription() {
-            return "Amount of DCRs that are waiting for processing and confirmation.";
-        }
-    },
     WAITING_DCR_QUEUE(WAITING_DCR_QUEUE_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 5, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) confirmationService.getWaitingDspConsensusResultsMapSize());
@@ -179,9 +164,9 @@ public enum HealthMetric implements IHealthMetric {
             return "A number of transactions with DSP consensus that are waiting to be indexed in the expected sequential order.";
         }
     },
-    TCC_CONFIRMATION_QUEUE(TCC_CONFIRMATION_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
+    CONFIRMATION_QUEUE(CONFIRMATION_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            baseDoSnapshot(this, (long) confirmationService.getTccConfirmationQueueSize());
+            baseDoSnapshot(this, (long) confirmationService.getQueueSize());
         }
 
         @Override
@@ -191,7 +176,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Amount of TCCs that are waiting for processing and confirmation.";
+            return "Amount of DCRs and TCCs that are waiting for processing and confirmation.";
         }
     },
     WAITING_MISSING_TRANSACTION_INDEXES(WAITING_MISSING_TRANSACTION_INDEXES_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 5, false, HealthMetricOutputType.ALL) {

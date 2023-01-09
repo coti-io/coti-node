@@ -19,8 +19,7 @@ public class BaseNodeHealthMetricConstants {
     public static final String WAITING_MISSING_TRANSACTION_INDEXES_LABEL = "WaitingMissingTransactionIndexes";
     public static final String TOTAL_POSTPONED_TRANSACTIONS_LABEL = "PostponedTransactions";
     public static final String WEB_SOCKET_MESSAGES_QUEUE_LABEL = "WebSocketMessagesQueue";
-    public static final String TCC_CONFIRMATION_QUEUE_LABEL = "TccConfirmationQueueSize";
-    public static final String DCR_CONFIRMATION_QUEUE_SIZE_LABEL = "DcrConfirmationQueueSize";
+    public static final String CONFIRMATION_QUEUE_LABEL = "ConfirmationQueueSize";
     public static final String PERCENTAGE_USED_HEAP_MEMORY_LABEL = "PercentageUsedHeapMemory";
     public static final String PERCENTAGE_USED_MEMORY_LABEL = "PercentageUsedMemory";
     public static final String CONNECTED_TO_RECOVERY_LABEL = "ConnectedToRecovery";
