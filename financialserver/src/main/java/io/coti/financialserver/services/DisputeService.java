@@ -1,78 +1,37 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.PaymentInputBaseTransactionData;
-import io.coti.basenode.data.PaymentItemData;
-import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.Collection;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.financialserver.crypto.DisputeCrypto;
-import io.coti.financialserver.crypto.GetDisputeHistoryCrypto;
-import io.coti.financialserver.crypto.GetDisputesCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.*;
 import io.coti.financialserver.http.data.DisputeEventResponseData;
 import io.coti.financialserver.http.data.GetDisputeHistoryData;
 import io.coti.financialserver.http.data.GetDisputesData;
-import io.coti.financialserver.model.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.*;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
 public class DisputeService {
 
     private static final int COUNT_ARBITRATORS_PER_DISPUTE = 2;
+    private final Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
     @Value("#{'${arbitrators.userHashes}'.split(',')}")
     private List<String> arbitratorUserHashes;
-    @Autowired
-    private GetDisputesCrypto getDisputesCrypto;
-    @Autowired
-    private DisputeCrypto disputeCrypto;
-    @Autowired
-    private GetDisputeHistoryCrypto getDisputeHistoryCrypto;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private Disputes disputes;
-    @Autowired
-    private ConsumerDisputes consumerDisputes;
-    @Autowired
-    private MerchantDisputes merchantDisputes;
-    @Autowired
-    private ArbitratorDisputes arbitratorDisputes;
-    @Autowired
-    private TransactionDisputes transactionDisputes;
-    @Autowired
-    private ReceiverBaseTransactionOwners receiverBaseTransactionOwners;
-    @Autowired
-    private DisputeHistory disputeHistory;
-    @Autowired
-    private DisputeEvents disputeEvents;
-    @Autowired
-    private UnreadUserDisputeEvents unreadUserDisputeEvents;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private WebSocketService webSocketService;
-    private final Map<ActionSide, Collection<UserDisputesData>> userDisputesCollectionMap = new EnumMap<>(ActionSide.class);
 
-    @PostConstruct
     public void init() {
         userDisputesCollectionMap.put(ActionSide.CONSUMER, consumerDisputes);
         userDisputesCollectionMap.put(ActionSide.MERCHANT, merchantDisputes);
@@ -95,7 +54,7 @@ public class DisputeService {
 
         disputeData.setTransactionCreationTime(transactionData.getCreateTime());
 
-        PaymentInputBaseTransactionData paymentInputBaseTransactionData = transactionHelper.getPaymentInputBaseTransaction(transactionData);
+        PaymentInputBaseTransactionData paymentInputBaseTransactionData = nodeTransactionHelper.getPaymentInputBaseTransaction(transactionData);
         if (paymentInputBaseTransactionData == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_PAYMENT, STATUS_ERROR));
         }
@@ -131,7 +90,7 @@ public class DisputeService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(DISPUTE_ALREADY_EXISTS_FOR_TRANSACTION, STATUS_ERROR));
         }
 
-        Hash merchantHash = getMerchantHash(transactionHelper.getReceiverBaseTransactionHash(transactionData));
+        Hash merchantHash = getMerchantHash(nodeTransactionHelper.getReceiverBaseTransactionHash(transactionData));
         if (merchantHash == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_MERCHANT_NOT_FOUND, STATUS_ERROR));
         }

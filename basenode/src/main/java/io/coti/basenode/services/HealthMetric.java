@@ -1,32 +1,27 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutputType;
 import io.coti.basenode.data.MetricClass;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.model.RejectedTransactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IHealthMetric;
 import io.coti.basenode.utilities.MemoryUtils;
 import lombok.Getter;
 
 import java.time.Instant;
 
 import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.*;
-
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 public enum HealthMetric implements IHealthMetric {
 
     TOTAL_TRANSACTIONS_DELTA(TOTAL_TRANSACTIONS_DELTA_LABEL, MetricClass.TRANSACTIONS_METRIC, 2, 3, true, HealthMetricOutputType.EXTERNAL) {
         @Override
         public void doSnapshot() {
-            long totalTransactions = transactionHelper.getTotalTransactions();
+            long totalTransactions = nodeTransactionHelper.getTotalTransactions();
             HealthMetricData healthMetricData = this.getHealthMetricData();
             healthMetricData.addValue(TOTAL_TRANSACTIONS_LABEL, HealthMetricOutputType.ALL, TOTAL_TRANSACTIONS_LABEL, totalTransactions);
-            long totalTransactionsFromRecoveryServer = transactionHelper.getTotalNumberOfTransactionsFromRecovery();
+            long totalTransactionsFromRecoveryServer = nodeTransactionHelper.getTotalNumberOfTransactionsFromRecovery();
             if (totalTransactionsFromRecoveryServer > 0) {
                 healthMetricData.addValue(TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, HealthMetricOutputType.EXTERNAL, TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, totalTransactionsFromRecoveryServer);
                 baseDoSnapshot(this, totalTransactionsFromRecoveryServer - totalTransactions);
@@ -68,7 +63,7 @@ public enum HealthMetric implements IHealthMetric {
     DSP_CONFIRMED_DELTA(DSP_CONFIRMED_LABEL_DELTA, MetricClass.TRANSACTIONS_METRIC, 2, 5, true, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             long dspConfirmed = confirmationService.getDspConfirmed();
-            long totalTransactions = transactionHelper.getTotalTransactions();
+            long totalTransactions = nodeTransactionHelper.getTotalTransactions();
             this.getHealthMetricData().addValue(DSP_CONFIRMED_LABEL, HealthMetricOutputType.ALL, DSP_CONFIRMED_LABEL, dspConfirmed);
             baseDoSnapshot(this, totalTransactions - dspConfirmed);
         }
@@ -103,7 +98,7 @@ public enum HealthMetric implements IHealthMetric {
         public void doSnapshot() {
             long index = transactionIndexService.getLastTransactionIndexData().getIndex();
             this.getHealthMetricData().addValue(INDEX_LABEL, HealthMetricOutputType.ALL, INDEX_LABEL, index);
-            baseDoSnapshot(this, (transactionHelper.getTotalTransactions() - index) - 1);
+            baseDoSnapshot(this, (nodeTransactionHelper.getTotalTransactions() - index) - 1);
         }
 
         @Override
@@ -364,7 +359,7 @@ public enum HealthMetric implements IHealthMetric {
     },
     ZERO_MQ_RECEIVER_QUEUE_SIZE(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            baseDoSnapshot(this, (long) receiver.getQueueSize());
+            baseDoSnapshot(this, (long) zeroMQReceiver.getQueueSize());
         }
 
         @Override
@@ -578,21 +573,6 @@ public enum HealthMetric implements IHealthMetric {
         }
     };
 
-    protected static IMonitorService monitorService;
-    protected static ITransactionHelper transactionHelper;
-    protected static IClusterService clusterService;
-    protected static TransactionIndexService transactionIndexService;
-    protected static IConfirmationService confirmationService;
-    protected static TrustChainConfirmationService trustChainConfirmationService;
-    protected static ITransactionService transactionService;
-    protected static IPropagationSubscriber propagationSubscriber;
-    protected static IWebSocketMessageService webSocketMessageService;
-    protected static INetworkService networkService;
-    protected static IReceiver receiver;
-    protected static IPropagationPublisher propagationPublisher;
-    protected static IDatabaseConnector databaseConnector;
-    protected static IDBRecoveryService dbRecoveryService;
-    protected static RejectedTransactions rejectedTransactions;
     @Getter
     private final String label;
     @Getter
@@ -657,24 +637,6 @@ public enum HealthMetric implements IHealthMetric {
         } else {
             healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
         }
-    }
-
-    public static void setAutowireds(BaseNodeMonitorService baseNodeMonitorService, BaseNodeServiceManager baseNodeServiceManager) {
-        HealthMetric.monitorService = baseNodeMonitorService;
-        HealthMetric.transactionHelper = baseNodeServiceManager.getTransactionHelper();
-        HealthMetric.clusterService = baseNodeServiceManager.getClusterService();
-        HealthMetric.transactionIndexService = baseNodeServiceManager.getTransactionIndexService();
-        HealthMetric.confirmationService = baseNodeServiceManager.getConfirmationService();
-        HealthMetric.trustChainConfirmationService = baseNodeServiceManager.getTrustChainConfirmationService();
-        HealthMetric.transactionService = baseNodeServiceManager.getTransactionService();
-        HealthMetric.propagationSubscriber = baseNodeServiceManager.getPropagationSubscriber();
-        HealthMetric.webSocketMessageService = baseNodeServiceManager.getWebSocketMessageService();
-        HealthMetric.networkService = baseNodeServiceManager.getNetworkService();
-        HealthMetric.receiver = baseNodeServiceManager.getReceiver();
-        HealthMetric.databaseConnector = baseNodeServiceManager.getDatabaseConnector();
-        HealthMetric.dbRecoveryService = baseNodeServiceManager.getDbRecoveryService();
-        HealthMetric.rejectedTransactions = baseNodeServiceManager.getRejectedTransactions();
-        HealthMetric.propagationPublisher = baseNodeServiceManager.getPropagationPublisher();
     }
 
     public static boolean isToAddExternalMetric(HealthMetricOutputType healthMetricOutputType) {

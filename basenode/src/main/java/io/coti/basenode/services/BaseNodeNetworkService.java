@@ -1,27 +1,19 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.crypto.NetworkCrypto;
-import io.coti.basenode.crypto.NetworkLastKnownNodesCrypto;
-import io.coti.basenode.crypto.NetworkNodeCrypto;
-import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.NetworkChangeException;
 import io.coti.basenode.exceptions.NetworkException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.CustomHttpComponentsClientHttpRequestFactory;
 import io.coti.basenode.http.GetNetworkLastKnownNodesResponse;
 import io.coti.basenode.http.data.NetworkLastKnownNodesResponseData;
-import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ISslService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.InetAddressValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +41,7 @@ import java.util.stream.Collectors;
 
 import static io.coti.basenode.constants.BaseNodeMessages.*;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
-
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -66,26 +58,10 @@ public class BaseNodeNetworkService implements INetworkService {
     private boolean validateServerUrl;
     private String nodeManagerPropagationAddress;
     private String connectToNetworkUrl;
-    @Autowired
-    private ICommunicationService communicationService;
-    @Autowired
-    private NetworkNodeCrypto networkNodeCrypto;
-    @Autowired
-    private NodeRegistrationCrypto nodeRegistrationCrypto;
-    @Autowired
-    private NetworkCrypto networkCrypto;
-    @Autowired
-    private ApplicationContext applicationContext;
-    @Autowired
-    private IPropagationSubscriber propagationSubscriber;
-    @Autowired
-    private ISslService sslService;
     protected Map<NodeType, Map<Hash, NetworkNodeData>> multipleNodeMaps;
     protected Map<NodeType, NetworkNodeData> singleNodeNetworkDataMap;
     protected NetworkNodeData networkNodeData;
     protected HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap;
-    @Autowired
-    private NetworkLastKnownNodesCrypto networkLastKnownNodesCrypto;
 
     @Override
     public void init() {
@@ -591,5 +567,20 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public boolean isConnectedToRecovery() {
         return isZeroSpendServerInNetwork();
+    }
+
+    @Override
+    public void sendDataToConnectedDspNodes(IPropagatable propagatable) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isNotConnectedToDspNodes() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Map<String, List<String>> getNetworkSummary() {
+        throw new UnsupportedOperationException();
     }
 }

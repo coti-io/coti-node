@@ -3,16 +3,15 @@ package io.coti.financialserver.services;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.InitialFundData;
-import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.financialserver.data.ReservedAddress;
-import io.coti.financialserver.model.InitialFunds;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Set;
+
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -25,12 +24,6 @@ public class DistributionService {
     public static final int INITIAL_AMOUNT_FOR_ADVISORS = 200000000;
     @Value("${financialserver.seed.key}")
     private String seed;
-    @Autowired
-    private InitialFunds initialFunds;
-    @Autowired
-    private TransactionCreationService transactionCreationService;
-    @Autowired
-    private ICurrencyService currencyService;
 
     public void distributeToInitialFunds() {
         Hash cotiGenesisAddress = NodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);

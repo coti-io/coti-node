@@ -6,16 +6,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.RequestedAddressHashData;
-import io.coti.basenode.http.AddressFileRequest;
-import io.coti.basenode.http.CustomGson;
-import io.coti.basenode.http.Response;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.AddressResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Addresses;
 import io.coti.basenode.services.interfaces.IAddressService;
-import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,31 +24,26 @@ import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UPLOADED;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.ADDRESS_BATCH_UPLOAD_ERROR;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Slf4j
 @Service
 public class BaseNodeAddressService implements IAddressService {
 
     protected static final int TRUSTED_RESULT_MAX_DURATION_IN_MILLIS = 600_000;
-    @Autowired
-    private Addresses addresses;
-    @Autowired
-    private IValidationService validationService;
-    @Autowired
-    private FileService fileService;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
-    public boolean addNewAddress(AddressData addressData) {
+    public Boolean addNewAddress(AddressData addressData) {
         if (!addressExists(addressData.getHash())) {
             addresses.put(addressData);
             log.info("Address {} was successfully inserted", addressData.getHash());
-            return true;
+            return Boolean.TRUE;
         }
         log.debug("Address {} already exists", addressData.getHash());
-        return false;
+        return Boolean.FALSE;
     }
 
     @Override
@@ -149,5 +139,25 @@ public class BaseNodeAddressService implements IAddressService {
             return diffInMilliSeconds <= TRUSTED_RESULT_MAX_DURATION_IN_MILLIS;
         }
         return false;
+    }
+
+    @Override
+    public void handleNewAddressFromFullNode(AddressData data) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Boolean addAddress(Hash address) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getAddresses(GetHistoryAddressesRequest getHistoryAddressesRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public AddressesExistsResponse addressesCheckExistenceAndRequestHistoryNode(AddressBulkRequest addressRequest) {
+        throw new UnsupportedOperationException();
     }
 }

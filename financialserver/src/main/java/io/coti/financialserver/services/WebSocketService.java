@@ -3,19 +3,13 @@ package io.coti.financialserver.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.crypto.DisputeEventReadCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.data.interfaces.IDisputeEvent;
 import io.coti.financialserver.http.DisputeEventReadRequest;
 import io.coti.financialserver.http.data.DisputeEventResponseData;
-import io.coti.financialserver.model.DisputeEvents;
-import io.coti.financialserver.model.DisputeHistory;
-import io.coti.financialserver.model.UnreadUserDisputeEvents;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -25,21 +19,11 @@ import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_SUCCESS;
 import static io.coti.financialserver.http.HttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.financialserver.http.HttpStringConstants.SUCCESS;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
 public class WebSocketService {
-
-    @Autowired
-    private DisputeEventReadCrypto disputeEventReadCrypto;
-    @Autowired
-    private UnreadUserDisputeEvents unreadUserDisputeEvents;
-    @Autowired
-    private DisputeEvents disputeEvents;
-    @Autowired
-    private DisputeHistory disputeHistory;
-    @Autowired
-    private SimpMessagingTemplate messagingSender;
 
     public ResponseEntity<IResponse> eventRead(DisputeEventReadRequest disputeEventReadRequest) {
 

@@ -44,4 +44,6 @@ public interface IClusterService {
     void addTransactionToTrustChainConfirmationCluster(TransactionData transactionData);
 
     BlockingQueue<TrustChainConfirmationResult> getTrustChainConfirmationResults();
+
+    void init();
 }

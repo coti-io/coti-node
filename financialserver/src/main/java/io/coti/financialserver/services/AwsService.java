@@ -9,6 +9,7 @@ import io.coti.basenode.exceptions.AwsException;
 import io.coti.basenode.services.BaseNodeAwsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -18,6 +19,7 @@ import static io.coti.financialserver.http.HttpStringConstants.*;
 
 @Slf4j
 @Service
+@Primary
 public class AwsService extends BaseNodeAwsService {
 
     @Value("${aws.s3.bucket.name}")

@@ -5,15 +5,10 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Currencies;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.fullnode.crypto.FullNodeFeeRequestCrypto;
 import io.coti.fullnode.http.FullNodeFeeRequest;
 import io.coti.fullnode.http.FullNodeFeeResponse;
 import io.coti.fullnode.http.data.FullNodeFeeResponseData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +22,7 @@ import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
+import static io.coti.fullnode.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -45,14 +41,6 @@ public class FeeService {
     private String seed;
     @Value("${regular.token.fullnode.fee}")
     private BigDecimal regularTokenFullnodeFee;
-    @Autowired
-    private FullNodeFeeRequestCrypto fullNodeFeeRequestCrypto;
-    @Autowired
-    private IValidationService validationService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    protected Currencies currencies;
 
     public ResponseEntity<IResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         try {

@@ -1,6 +1,5 @@
 package io.coti.storagenode.services;
 
-import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.http.AddHistoryEntitiesResponse;
@@ -11,7 +10,6 @@ import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.services.interfaces.IEntityStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.rest.RestStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -22,14 +20,12 @@ import java.util.Map;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.storagenode.http.HttpStringConstants.*;
+import static io.coti.storagenode.services.NodeServiceManager.jacksonSerializer;
+import static io.coti.storagenode.services.NodeServiceManager.objectService;
 
 @Slf4j
 public abstract class EntityStorageService implements IEntityStorageService {
 
-    @Autowired
-    protected ObjectService objectService;
-    @Autowired
-    protected JacksonSerializer jacksonSerializer;
     protected ElasticSearchData objectType;
 
     @Override

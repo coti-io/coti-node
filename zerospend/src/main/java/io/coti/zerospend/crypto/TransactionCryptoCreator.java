@@ -1,22 +1,19 @@
 package io.coti.zerospend.crypto;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+import static io.coti.zerospend.services.NodeServiceManager.transactionCrypto;
+
 @Slf4j
 @Service
 public class TransactionCryptoCreator {
-
-    @Autowired
-    private TransactionCrypto transactionCrypto;
 
     public void signBaseTransactions(TransactionData transactionData, Map<Hash, Integer> addressHashToAddressIndexMap) {
 

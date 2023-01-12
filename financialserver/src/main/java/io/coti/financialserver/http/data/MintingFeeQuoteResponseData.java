@@ -1,8 +1,8 @@
 package io.coti.financialserver.http.data;
 
+import io.coti.basenode.data.MintingFeeQuoteData;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.data.MintingFeeQuoteData;
 import lombok.Data;
 
 import java.math.BigDecimal;

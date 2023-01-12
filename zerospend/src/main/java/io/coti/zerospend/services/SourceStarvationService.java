@@ -5,14 +5,10 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.data.TrustChainConfirmationResult;
-import io.coti.basenode.services.interfaces.IClusterHelper;
-import io.coti.basenode.services.interfaces.IClusterService;
 import io.coti.zerospend.data.ZeroSpendTransactionType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -21,18 +17,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static io.coti.zerospend.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
 public class SourceStarvationService {
 
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private IClusterHelper clusterHelper;
-    @Autowired
-    private TransactionCreationService transactionCreationService;
-
-    @PostConstruct
     protected void init() {
         Thread sourcesStarvationThread = new Thread(this::checkSourcesStarvation, "SOURCES-STARVATION CHECK");
         sourcesStarvationThread.start();

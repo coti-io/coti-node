@@ -1,22 +1,14 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.crypto.RejectedTransactionCrypto;
-import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.GetRejectedTransactionsResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.RejectedTransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.RejectedTransactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,31 +24,15 @@ import static io.coti.basenode.constants.BaseNodeMessages.AUTHENTICATION_FAILED_
 import static io.coti.basenode.constants.BaseNodeMessages.REJECTED_PARENT;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.TRANSACTION_NONE_INDEXED_SERVER_ERROR;
+import static io.coti.dspnode.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
+@Primary
 public class TransactionService extends BaseNodeTransactionService {
 
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private IValidationService validationService;
-    @Autowired
-    private ISender sender;
-    @Autowired
-    private TransactionDspVoteCrypto transactionDspVoteCrypto;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private TransactionPropagationCheckService transactionPropagationCheckService;
     private BlockingQueue<TransactionData> transactionsToValidate;
     private Thread transactionValidationThread;
-    @Autowired
-    private RejectedTransactions rejectedTransactions;
-    @Autowired
-    private RejectedTransactionCrypto rejectedTransactionCrypto;
 
     @Override
     public void init() {
@@ -66,6 +42,7 @@ public class TransactionService extends BaseNodeTransactionService {
         super.init();
     }
 
+    @Override
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         log.debug("Running new transaction from full node handler: {}", transactionData.getHash());
         AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
@@ -100,7 +77,7 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.FinancialServer,
                     NodeType.HistoryNode));
             transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
-            transactionHelper.setTransactionStateToFinished(transactionData);
+            nodeTransactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
         } catch (TransactionValidationException ex) {
             log.error("Transaction Validation Exception while handling transaction {} : {}", transactionData.getHash(), ex.getMessage());
@@ -109,8 +86,8 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error("Exception while handling transaction {}", transactionData.getHash(), ex);
         } finally {
             if (!isTransactionAlreadyPropagated.get()) {
-                boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
-                transactionHelper.endHandleTransaction(transactionData);
+                boolean isTransactionFinished = nodeTransactionHelper.isTransactionFinished(transactionData);
+                nodeTransactionHelper.endHandleTransaction(transactionData);
                 if (isTransactionFinished) {
                     processPostponedTransactions(transactionData);
                 } else {
@@ -122,7 +99,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     protected void handleRejectedTransaction(TransactionData transactionData,
                                              String rejectionReasonDescription) {
-        if (eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
+        if (nodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
             log.debug("Informing full node that transaction is rejected");
             RejectedTransactionData rejectedTransactionData = new RejectedTransactionData(transactionData, rejectionReasonDescription);
             rejectedTransactionCrypto.signMessage(rejectedTransactionData);
@@ -174,6 +151,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public ResponseEntity<IResponse> getRejectedTransactions() {
         try {
             List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
@@ -225,7 +203,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (zeroSpendServer != null) {
             String zeroSpendReceivingAddress = zeroSpendServer.getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zeroSpendReceivingAddress, transactionData.getHash());
-            sender.send(transactionDspVote, zeroSpendReceivingAddress);
+            zeroMQSender.send(transactionDspVote, zeroSpendReceivingAddress);
         } else {
             log.error("ZeroSpendServer is not in the network. Failed to send dsp vote for transaction {}", transactionData.getHash());
         }
@@ -248,6 +226,7 @@ public class TransactionService extends BaseNodeTransactionService {
         propagationPublisher.propagate(transactionData, Collections.singletonList(NodeType.FullNode));
     }
 
+    @Override
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         transactionValidationThread.interrupt();
@@ -261,7 +240,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Scheduled(initialDelay = 2000, fixedDelay = 5000)
     public void totalTransactionsAmountFromRecovery() {
-        TransactionsStateData transactionsStateData = new TransactionsStateData(transactionHelper.getTotalTransactions());
+        TransactionsStateData transactionsStateData = new TransactionsStateData(nodeTransactionHelper.getTotalTransactions());
         propagationPublisher.propagate(transactionsStateData, Collections.singletonList(NodeType.FullNode));
     }
 

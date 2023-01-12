@@ -7,6 +7,7 @@ import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.services.BaseNodeChunkService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseExtractor;
 
@@ -16,6 +17,7 @@ import java.util.function.Consumer;
 
 @Service
 @Slf4j
+@Primary
 public class ChunkService extends BaseNodeChunkService {
 
     private static final int MAXIMUM_BUFFER_SIZE = 50000;

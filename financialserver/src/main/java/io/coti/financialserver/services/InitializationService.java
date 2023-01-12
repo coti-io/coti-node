@@ -5,12 +5,11 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
-import io.coti.basenode.services.interfaces.ICommunicationService;
 import io.coti.financialserver.data.ReservedAddress;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -18,8 +17,11 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
+import static io.coti.financialserver.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
+@Primary
 public class InitializationService extends BaseNodeInitializationService {
 
     private static final int COTI_GENESIS_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
@@ -32,12 +34,6 @@ public class InitializationService extends BaseNodeInitializationService {
     private String webServerUrl;
     @Value("${financialserver.seed.key}")
     private String seed;
-    @Autowired
-    private ICommunicationService communicationService;
-    @Autowired
-    private DistributionService distributionService;
-    @Autowired
-    private FundDistributionService fundDistributionService;
 
     @PostConstruct
     @Override
@@ -68,6 +64,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             distributionService.distributeToInitialFunds();
             fundDistributionService.initReservedBalance();
+            disputeService.init();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

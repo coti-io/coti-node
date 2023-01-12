@@ -1,8 +1,6 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
-import io.coti.basenode.crypto.GetUserTokensRequestCrypto;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CurrencyException;
@@ -10,23 +8,13 @@ import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.TokenResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Currencies;
-import io.coti.basenode.model.CurrencyNameIndexes;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.model.UserCurrencyIndexes;
-import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.IEventService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -34,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -45,28 +34,6 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Value("${native.currency.symbol}")
     protected String nativeCurrencySymbol;
     private Hash nativeCurrencyHash;
-    @Autowired
-    protected Currencies currencies;
-    @Autowired
-    protected CurrencyNameIndexes currencyNameIndexes;
-    @Autowired
-    protected RestTemplate restTemplate;
-    @Autowired
-    protected ApplicationContext applicationContext;
-    @Autowired
-    protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
-    @Autowired
-    private GetUserTokensRequestCrypto getUserTokensRequestCrypto;
-    @Autowired
-    protected IBalanceService balanceService;
-    @Autowired
-    private UserCurrencyIndexes userCurrencyIndexes;
-    @Autowired
-    protected IEventService eventService;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private Transactions transactions;
     private final LockData currencyLockData = new LockData();
     private final LockData currencyNameLockData = new LockData();
     private final LockData originatorHashLockData = new LockData();
@@ -121,7 +88,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public boolean isCurrencyHashAllowed(Hash currencyHash) {
-        return eventService.eventHappened(Event.MULTI_DAG) ||
+        return nodeEventService.eventHappened(Event.MULTI_DAG) ||
                 currencyHash == null;
     }
 
@@ -139,7 +106,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     public void handleMissingTransaction(TransactionData transactionData) {
         handleTransaction(transactionData);
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
-            TokenGenerationFeeBaseTransactionData tokenGenerationFeeData = transactionHelper.getTokenGenerationFeeData(transactionData);
+            TokenGenerationFeeBaseTransactionData tokenGenerationFeeData = nodeTransactionHelper.getTokenGenerationFeeData(transactionData);
             if (tokenGenerationFeeData != null) {
                 OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData();
                 Hash tokenHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
@@ -157,7 +124,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) optionalTokenGenerationFeeBaseTransactionData.get();
                 TokenGenerationServiceData tokenGenerationServiceData = tokenGenerationFeeBaseTransactionData.getServiceData();
                 OriginatorCurrencyData originatorCurrencyData = tokenGenerationServiceData.getOriginatorCurrencyData();
-                boolean transactionConfirmed = transactionHelper.isConfirmed(transactionData);
+                boolean transactionConfirmed = nodeTransactionHelper.isConfirmed(transactionData);
                 CurrencyData currencyData = getCurrencyDataFromDB(originatorCurrencyData);
 
                 if (currencyData == null) {
@@ -251,11 +218,11 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         CurrencyTypeData currencyTypeData = tokenGenerationServiceData.getCurrencyTypeData();
         Hash currencyGeneratingTransactionHash = transactionData.getHash();
         return new CurrencyData(originatorCurrencyData, currencyTypeData, createTime,
-                currencyGeneratingTransactionHash, currencyGeneratingTransactionHash, transactionHelper.isConfirmed(transactionData));
+                currencyGeneratingTransactionHash, currencyGeneratingTransactionHash, nodeTransactionHelper.isConfirmed(transactionData));
     }
 
     private void initializeMintableAmountEntry(TransactionData transactionData) {
-        TokenGenerationFeeBaseTransactionData tokenGenerationFeeData = transactionHelper.getTokenGenerationFeeData(transactionData);
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeData = nodeTransactionHelper.getTokenGenerationFeeData(transactionData);
         if (tokenGenerationFeeData != null) {
             Hash tokenHash = OriginatorCurrencyCrypto.calculateHash(tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData().getSymbol());
             BigDecimal totalSupply = tokenGenerationFeeData.getServiceData().getOriginatorCurrencyData().getTotalSupply();
@@ -277,7 +244,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         if (setTransactionData != null) {
             return setTransactionData.stream().map(
                     transactionData -> {
-                        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
+                        TokenMintingFeeBaseTransactionData tokenMintingFeeData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
                         if (tokenMintingFeeData != null) {
                             return tokenMintingFeeData.getServiceData().getMintingAmount();
                         } else {
@@ -291,13 +258,13 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public void updateMintableAmountMapAndBalance(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeData != null) {
             Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
             BigDecimal mintingRequestedAmount = tokenMintingFeeData.getServiceData().getMintingAmount();
             Hash receiverAddress = tokenMintingFeeData.getServiceData().getReceiverAddress();
             BigDecimal mintableAmount = getTokenMintableAmount(tokenHash);
-            boolean confirmed = transactionHelper.isConfirmed(transactionData);
+            boolean confirmed = nodeTransactionHelper.isConfirmed(transactionData);
             if (mintableAmount != null) {
                 Boolean previousMintingTransactionConfirmed = mintingTransactionToConfirmationMap.get(transactionData.getHash());
                 if (previousMintingTransactionConfirmed == null) {
@@ -321,7 +288,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public void synchronizedUpdateMintableAmountMapAndBalance(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeData != null) {
             Hash currencyHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
             try {
@@ -354,9 +321,9 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     @Override
     public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
-        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = nodeTransactionHelper.getTokenGenerationFeeData(transactionData);
 
-        if (!transactionHelper.validateBaseTransactionPublicKey(tokenGenerationFeeBaseTransactionData, NodeType.FinancialServer)) {
+        if (!nodeTransactionHelper.validateBaseTransactionPublicKey(tokenGenerationFeeBaseTransactionData, NodeType.FinancialServer)) {
             log.error("Error in generation check. Base transaction not signed by an authorized financial server");
             return false;
         }
@@ -386,7 +353,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     }
 
     public void revertCurrencyUnconfirmedRecord(TransactionData transactionData) {
-        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = nodeTransactionHelper.getTokenGenerationFeeData(transactionData);
 
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
@@ -405,8 +372,18 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         }
     }
 
+    @Override
+    public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenFeeRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getCurrenciesForWallet(GetCurrenciesRequest getCurrenciesRequest) {
+        throw new UnsupportedOperationException();
+    }
+
     public void addConfirmedCurrency(TransactionData transactionData) {
-        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = transactionHelper.getTokenGenerationFeeData(transactionData);
+        TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = nodeTransactionHelper.getTokenGenerationFeeData(transactionData);
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         Hash originatorHash = originatorCurrencyData.getOriginatorHash();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
@@ -453,7 +430,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getUserTokens(GetUserTokensRequest getUserTokensRequest) {
         try {
-            if (!eventService.eventHappened(Event.MULTI_DAG)) {
+            if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             if (!getUserTokensRequestCrypto.verifySignature(getUserTokensRequest)) {
@@ -478,7 +455,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenDetails(GetTokenDetailsRequest getTokenDetailsRequest) {
         try {
-            if (!eventService.eventHappened(Event.MULTI_DAG)) {
+            if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = getTokenDetailsRequest.getCurrencyHash();
@@ -491,7 +468,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public ResponseEntity<IResponse> getTokenSymbolDetails(GetTokenSymbolDetailsRequest getTokenSymbolDetailsRequest) {
         try {
-            if (!eventService.eventHappened(Event.MULTI_DAG)) {
+            if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(getTokenSymbolDetailsRequest.getSymbol());
@@ -541,7 +518,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     @Override
     public ResponseEntity<IResponse> getTokenHistory(GetTokenHistoryRequest getTokenHistoryRequest) {
         try {
-            if (!eventService.eventHappened(Event.MULTI_DAG)) {
+            if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             Hash currencyHash = getTokenHistoryRequest.getCurrencyHash();

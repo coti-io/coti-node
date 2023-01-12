@@ -6,27 +6,18 @@ import io.coti.basenode.data.TokenMintingFeeBaseTransactionData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TokenResponseData;
 import io.coti.basenode.http.data.TransactionStatus;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.IWebSocketMessageService;
 import io.coti.fullnode.websocket.data.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static io.coti.fullnode.services.NodeServiceManager.*;
+
 @Slf4j
 @Component
 public class WebSocketSender {
-
-    @Autowired
-    private IWebSocketMessageService messagingSender;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private ICurrencyService currencyService;
 
     public void notifyBalanceChange(Hash addressHash, Hash currencyHash, BigDecimal balance, BigDecimal preBalance) {
         log.trace("Address {} with currency {} , balance {} and pre balance {} is about to be sent to the subscribed user", addressHash, currencyHash, balance, preBalance);
@@ -53,7 +44,7 @@ public class WebSocketSender {
     }
 
     public void updateMintedAddresses(TransactionData transactionData, NotifyTransactionChange notifyTransactionChange) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeBaseTransactionData != null) {
             Hash receiverAddressHash = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
             Optional<BaseTransactionData> identicalAddresses = transactionData.getBaseTransactions().stream().filter(t -> t.getAddressHash().equals(receiverAddressHash)).findFirst();

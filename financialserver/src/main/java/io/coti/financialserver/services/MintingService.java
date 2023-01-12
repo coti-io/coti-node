@@ -3,25 +3,20 @@ package io.coti.financialserver.services;
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.crypto.TokenMintingCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
+import io.coti.basenode.http.GetTokenMintingFeeQuoteRequest;
 import io.coti.basenode.http.Response;
+import io.coti.basenode.http.TokenMintingFeeRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeMintingService;
-import io.coti.basenode.services.interfaces.IEventService;
-import io.coti.financialserver.crypto.GetTokenMintingFeeQuoteRequestCrypto;
-import io.coti.financialserver.crypto.MintingFeeQuoteCrypto;
-import io.coti.financialserver.data.MintingFeeQuoteData;
-import io.coti.financialserver.http.GetTokenMintingFeeQuoteRequest;
 import io.coti.financialserver.http.GetTokenMintingFeeQuoteResponse;
-import io.coti.financialserver.http.TokenMintingFeeRequest;
 import io.coti.financialserver.http.TokenMintingFeeResponse;
 import io.coti.financialserver.http.data.MintingFeeQuoteResponseData;
 import io.coti.financialserver.http.data.TokenMintingFeeResponseData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,27 +29,19 @@ import java.util.Optional;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.financialserver.http.HttpStringConstants.*;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
+@Primary
 public class MintingService extends BaseNodeMintingService {
 
     private static final int MINTING_FEE_QUOTE_EXPIRATION_MINUTES = 60;
     private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
-    @Autowired
-    private TokenMintingCrypto tokenMintingCrypto;
-    @Autowired
-    private FeeService feeService;
-    @Autowired
-    private GetTokenMintingFeeQuoteRequestCrypto getTokenMintingFeeQuoteRequestCrypto;
-    @Autowired
-    private MintingFeeQuoteCrypto mintingFeeQuoteCrypto;
-    @Autowired
-    private IEventService baseNodeEventService;
 
     public ResponseEntity<IResponse> getTokenMintingFee(TokenMintingFeeRequest tokenMintingFeeRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             TokenMintingServiceData tokenMintingServiceData = tokenMintingFeeRequest.getTokenMintingServiceData();
@@ -141,7 +128,7 @@ public class MintingService extends BaseNodeMintingService {
 
     public ResponseEntity<IResponse> getTokenMintingFeeQuote(GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {
         try {
-            if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+            if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
                 return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
             }
             if (!getTokenMintingFeeQuoteRequestCrypto.verifySignature(getTokenMintingFeeQuoteRequest)) {

@@ -5,8 +5,6 @@ import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.data.GetHashToPropagatable;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.storagenode.services.TransactionStorageService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,11 +16,10 @@ import reactor.core.publisher.Flux;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import static io.coti.storagenode.services.NodeServiceManager.transactionStorageService;
+
 @RestController
 public class TransactionController {
-
-    @Autowired
-    private TransactionStorageService transactionStorageService;
 
     @PutMapping(value = "/transactions")
     public ResponseEntity<IResponse> storeMultipleTransactionsToStorage(@Valid @RequestBody AddEntitiesBulkRequest addEntitiesBulkRequest) {

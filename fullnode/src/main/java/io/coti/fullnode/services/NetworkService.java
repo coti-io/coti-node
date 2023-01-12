@@ -1,6 +1,5 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkData;
 import io.coti.basenode.data.NetworkNodeData;
@@ -8,10 +7,9 @@ import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.NetworkChangeException;
 import io.coti.basenode.services.BaseNodeNetworkService;
-import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,15 +17,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.zeroMQSender;
+import static io.coti.fullnode.services.NodeServiceManager.communicationService;
+
 @Service
 @Slf4j
+@Primary
 public class NetworkService extends BaseNodeNetworkService {
 
     private final List<NetworkNodeData> connectedDspNodes = new ArrayList<>(2);
-    @Autowired
-    private ICommunicationService communicationService;
-    @Autowired
-    private ISender sender;
 
     @Override
     public void handleNetworkChanges(NetworkData newNetworkData) {
@@ -62,10 +60,12 @@ public class NetworkService extends BaseNodeNetworkService {
         connectedDspNodes.add(networkNodeData);
     }
 
+    @Override
     public void sendDataToConnectedDspNodes(IPropagatable propagatable) {
-        connectedDspNodes.forEach(networkNodeData -> sender.send(propagatable, networkNodeData.getReceivingFullAddress()));
+        connectedDspNodes.forEach(networkNodeData -> zeroMQSender.send(propagatable, networkNodeData.getReceivingFullAddress()));
     }
 
+    @Override
     public boolean isNotConnectedToDspNodes() {
         return connectedDspNodes.isEmpty();
     }

@@ -1,18 +1,15 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
 import io.coti.basenode.services.BaseNodeMonitorService;
-import io.coti.basenode.services.interfaces.ICommunicationService;
-import io.coti.basenode.services.interfaces.IDspVoteService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -20,28 +17,20 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static io.coti.dspnode.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
+@Primary
 public class InitializationService extends BaseNodeInitializationService {
 
+    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
     @Value("${receiving.port}")
     private String receivingPort;
     @Value("${propagation.port}")
     private String propagationPort;
     @Value("${server.port}")
     private String serverPort;
-    @Autowired
-    private TransactionService transactionService;
-    @Autowired
-    private AddressService addressService;
-    @Autowired
-    private ICommunicationService communicationService;
-    @Autowired
-    private IReceiver messageReceiver;
-    @Autowired
-    private IDspVoteService dspVoteService;
-
-    private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
 
     @PostConstruct
     @Override
@@ -84,7 +73,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
-            messageReceiver.initReceiverHandler();
+            zeroMQReceiver.initReceiverHandler();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

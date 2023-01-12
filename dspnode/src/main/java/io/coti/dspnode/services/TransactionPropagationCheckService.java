@@ -1,14 +1,10 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeTransactionPropagationCheckService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.dspnode.data.UnconfirmedReceivedTransactionHashDspNodeData;
-import io.coti.dspnode.model.UnconfirmedTransactionDspVotes;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -20,20 +16,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static io.coti.dspnode.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
+@Primary
 public class TransactionPropagationCheckService extends BaseNodeTransactionPropagationCheckService {
 
     private static final long PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_DSP_NODE = 60;
     private static final int NUMBER_OF_RETRIES_DSP_NODE = 5;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private ISender sender;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private UnconfirmedTransactionDspVotes unconfirmedTransactionDspVotes;
 
     @Override
     public void init() {
@@ -87,6 +78,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         addUnconfirmedTransaction(transactionHash, false);
     }
 
+    @Override
     public void addPropagatedUnconfirmedTransaction(Hash transactionHash) {
         addUnconfirmedTransaction(transactionHash, true);
     }
@@ -105,6 +97,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
+    @Override
     public void addUnconfirmedTransactionDSPVote(TransactionDspVote transactionDspVote) {
         Hash transactionHash = transactionDspVote.getTransactionHash();
         try {
@@ -191,7 +184,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         if (transactionDspVote != null) {
             log.info("Sending dsp vote for transaction {} to ZeroSpendServer", transactionData.getHash());
             String zeroSpendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
-            sender.send(transactionDspVote, zeroSpendReceivingAddress);
+            zeroMQSender.send(transactionDspVote, zeroSpendReceivingAddress);
         }
     }
 }

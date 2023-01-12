@@ -45,4 +45,8 @@ public interface IConfirmationService {
     AtomicBoolean getInitialTccConfirmationFinished();
 
     int getResendDcrCounter();
+
+    void continueHandleDSPConfirmedTransaction(TransactionData transactionData);
+
+    boolean insertNewTransactionIndex(TransactionData transactionData);
 }

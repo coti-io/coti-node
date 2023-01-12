@@ -1,22 +1,20 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionSyncException;
-import io.coti.basenode.model.AddressTransactionsHistories;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.ITransactionSynchronizationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseExtractor;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Service
 @Slf4j
@@ -25,20 +23,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
     private static final String RECOVERY_NODE_GET_BATCH_ENDPOINT = "/transaction_batch";
     private static final String STARTING_INDEX_URL_PARAM_ENDPOINT = "?starting_index=";
     private static final long MAXIMUM_BUFFER_SIZE = 300000;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private ITransactionService transactionService;
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private AddressTransactionsHistories addressTransactionsHistories;
-    @Autowired
-    private JacksonSerializer jacksonSerializer;
-    @Autowired
-    private RestTemplate restTemplate;
+
     private final Object finishLock = new Object();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap;
 
@@ -134,7 +119,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
         Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap = new ConcurrentHashMap<>();
         Consumer<TransactionData> handleTransactionConsumer = transactionData -> {
             transactionService.handleMissingTransaction(transactionData, trustChainUnconfirmedExistingTransactionHashes, missingTransactionExecutorMap);
-            transactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
+            nodeTransactionHelper.updateAddressTransactionHistory(addressToTransactionsHistoryMap, transactionData);
         };
         handleMissingTransactions(missingTransactions, handleTransactionConsumer, completedMissingTransactionNumber, finishedToReceive, offset);
 

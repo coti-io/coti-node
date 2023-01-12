@@ -2,7 +2,7 @@ package io.coti.fullnode.crypto;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureValidationCrypto;
-import io.coti.fullnode.http.RepropagateTransactionRequest;
+import io.coti.basenode.http.RepropagateTransactionRequest;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;

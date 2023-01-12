@@ -1,12 +1,8 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.services.interfaces.IClusterHelper;
-import io.coti.basenode.services.interfaces.IEventService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,6 +12,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -33,12 +31,6 @@ public class TrustChainConfirmationService {
     private boolean trustScoreNotChanged = false;
     @Getter
     private int tccWaitingConfirmation = 0;
-    @Autowired
-    private IClusterHelper clusterHelper;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IEventService eventService;
     @Getter
     private Map<Hash, Double> transactionTrustChainTrustScoreMap;
 
@@ -65,8 +57,8 @@ public class TrustChainConfirmationService {
             }
         }
 
-        double parentSenderTrustScore = !eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)
-                || transactionHelper.isDspConfirmed(parent) ? parent.getSenderTrustScore() : 0;
+        double parentSenderTrustScore = !nodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)
+                || nodeTransactionHelper.isDspConfirmed(parent) ? parent.getSenderTrustScore() : 0;
 
         // updating parent trustChainTrustScore
         if (parent.getTrustChainTrustScore() < parentSenderTrustScore + maxChildrenTotalTrustScore) {
@@ -80,7 +72,7 @@ public class TrustChainConfirmationService {
         for (TransactionData transactionData : topologicalOrderedGraph) {
             setTotalTrustScore(transactionData);
             if (transactionData.getTrustChainTrustScore() >= threshold && !transactionData.isTrustChainConsensus()
-                    && (!eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) || transactionHelper.isDspConfirmed(transactionData))) {
+                    && (!nodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) || nodeTransactionHelper.isDspConfirmed(transactionData))) {
                 nonZeroSpendTransactionTSValuesMap.remove(transactionData.getHash());
                 Instant trustScoreConsensusTime = Optional.ofNullable(transactionData.getTrustChainConsensusTime()).orElse(Instant.now());
                 TccInfo tccInfo = new TccInfo(transactionData.getHash(), transactionData.getTrustChainTrustScore(), trustScoreConsensusTime);

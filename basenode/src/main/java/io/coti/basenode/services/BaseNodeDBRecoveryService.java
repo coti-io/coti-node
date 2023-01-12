@@ -5,7 +5,6 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DbRestoreSource;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.DataBaseBackupException;
 import io.coti.basenode.exceptions.DataBaseRecoveryException;
@@ -14,15 +13,12 @@ import io.coti.basenode.http.GetBackupBucketResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.interfaces.IAwsService;
 import io.coti.basenode.services.interfaces.IDBRecoveryService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.rocksdb.BackupInfo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +26,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 
 @Slf4j
 @Service
@@ -71,14 +68,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     private Hash restoreNodeHash;
     @Value("${db.restore.source}")
     private DbRestoreSource restoreSource;
-    @Autowired
-    private IDatabaseConnector dBConnector;
-    @Autowired
-    private IAwsService awsService;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private RestTemplate restTemplate;
+
     private String localBackupFolderPath;
     private String remoteBackupFolderPath;
     private String backupS3Path;
@@ -105,7 +95,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
     @Override
     public void init() {
         try {
-            String dbPath = dBConnector.getDBPath();
+            String dbPath = databaseConnector.getDBPath();
             localBackupFolderPath = dbPath + "/backups/local";
             remoteBackupFolderPath = dbPath + "/backups/remote";
             createBackupFolder(localBackupFolderPath);
@@ -203,7 +193,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 lastBackupStartedTime = java.time.Instant.now().getEpochSecond();
                 log.info("Starting DB backup flow");
                 deleteBackup(remoteBackupFolderPath);
-                lastBackupInfo = dBConnector.generateDataBaseBackup(remoteBackupFolderPath);
+                lastBackupInfo = databaseConnector.generateDataBaseBackup(remoteBackupFolderPath);
                 lastBackupDuration = java.time.Instant.now().getEpochSecond() - lastBackupInfo.timestamp();
                 List<String> uploadedBackupFiles = getBackupFiles();
                 long uploadBackupStartedTime = java.time.Instant.now().getEpochSecond();
@@ -244,11 +234,11 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             log.info("Starting DB restore flow");
             if (restoreSource.equals(DbRestoreSource.Local)) {
                 log.info("Restoring from local backup");
-                dBConnector.restoreDataBase(localBackupFolderPath);
+                databaseConnector.restoreDataBase(localBackupFolderPath);
             } else {
                 if (backupToLocalWhenRestoring) {
                     deleteBackup(localBackupFolderPath);
-                    dBConnector.generateDataBaseBackup(localBackupFolderPath);
+                    databaseConnector.generateDataBaseBackup(localBackupFolderPath);
                 }
                 restoreDBFromRemote();
             }
@@ -273,7 +263,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             String latestS3Backup = getLatestS3Backup(s3BackupFolderAndContents, restoreS3Path);
             log.info("Downloading remote backup from S3 bucket");
             awsService.downloadFolderAndContents(restoreBucket, latestS3Backup, remoteBackupFolderPath);
-            dBConnector.restoreDataBase(remoteBackupFolderPath);
+            databaseConnector.restoreDataBase(remoteBackupFolderPath);
         } catch (Exception e) {
             if (e.getCause() != null) {
                 log.error("Error while trying to restore DB from Remote:" + e.getCause());
@@ -281,7 +271,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
                 log.error("Error while trying to restore DB from Remote:" + e);
             }
 
-            dBConnector.restoreDataBase(localBackupFolderPath);
+            databaseConnector.restoreDataBase(localBackupFolderPath);
             throw e;
         } finally {
             deleteBackup(remoteBackupFolderPath);
