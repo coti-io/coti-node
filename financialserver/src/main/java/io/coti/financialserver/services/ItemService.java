@@ -2,15 +2,11 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.crypto.DisputeItemVoteCrypto;
-import io.coti.financialserver.crypto.DisputeUpdateItemCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetDisputesResponse;
 import io.coti.financialserver.http.UpdateItemRequest;
 import io.coti.financialserver.http.VoteRequest;
-import io.coti.financialserver.model.Disputes;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,21 +15,11 @@ import java.time.Instant;
 import java.util.Collections;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
 public class ItemService {
-
-    @Autowired
-    private Disputes disputes;
-    @Autowired
-    private DisputeUpdateItemCrypto disputeUpdateItemCrypto;
-    @Autowired
-    private DisputeItemVoteCrypto disputeItemVoteCrypto;
-    @Autowired
-    private DisputeService disputeService;
-    @Autowired
-    private WebSocketService webSocketService;
 
     public ResponseEntity<IResponse> updateItem(UpdateItemRequest request) {
 

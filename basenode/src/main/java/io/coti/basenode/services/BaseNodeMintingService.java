@@ -1,30 +1,23 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.model.Currencies;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.ICurrencyService;
+import io.coti.basenode.http.GetTokenMintingFeeQuoteRequest;
+import io.coti.basenode.http.TokenMintingFeeRequest;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IMintingService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
 public class BaseNodeMintingService implements IMintingService {
 
-    @Autowired
-    protected ICurrencyService currencyService;
-    @Autowired
-    protected Currencies currencies;
-    @Autowired
-    protected IBalanceService balanceService;
-    @Autowired
-    protected ITransactionHelper transactionHelper;
     private final LockData tokenHashLockData = new LockData();
 
     public void init() {
@@ -33,8 +26,8 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public boolean checkMintingAmountAndUpdateMintableAmount(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
-        if (!transactionHelper.validateBaseTransactionPublicKey(tokenMintingFeeBaseTransactionData, NodeType.FinancialServer)) {
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
+        if (!nodeTransactionHelper.validateBaseTransactionPublicKey(tokenMintingFeeBaseTransactionData, NodeType.FinancialServer)) {
             log.error("Error in Minting check. Base transaction not signed by an authorized Financial server");
             return false;
         }
@@ -77,18 +70,14 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void revertMintingAllocation(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
-        if (tokenMintingFeeData != null) {
-            Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
-            try {
-                synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
-                    CurrencyData currencyFromDB = currencies.getByHash(tokenHash);
-                    BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
-                    if (currencyFromDB == null || mintableAmount == null) {
-                        log.error("Error in Minting revert. Token {} is invalid", tokenHash);
-                        return;
-                    }
-                    currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getAmount()));
+        TokenMintingFeeBaseTransactionData tokenMintingFeeData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
+        Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
+        try {
+            synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
+                BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
+                if (mintableAmount == null) {
+                    log.error("Error in Minting revert. Token {} is invalid", tokenHash);
+                    return;
                 }
                 currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getServiceData().getMintingAmount()));
             }
@@ -98,10 +87,9 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void doTokenMinting(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
-        if (tokenMintingFeeBaseTransactionData != null) {
-            TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
-            Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
+        TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
+        Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
 
             if (currencyService.isNativeCurrency(tokenHash)) {
                 log.error("Error in Minting check. Token {} is Native currency", tokenHash);
@@ -110,6 +98,16 @@ public class BaseNodeMintingService implements IMintingService {
             currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
             updateMintedAddress(tokenMintingFeeBaseTransactionServiceData);
         }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getTokenMintingFeeQuote(GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getTokenMintingFee(TokenMintingFeeRequest tokenMintingFeeRequest) {
+        throw new UnsupportedOperationException();
     }
 
     private void updateMintedAddress(TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData) {

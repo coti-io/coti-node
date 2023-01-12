@@ -1,13 +1,9 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.constants.BaseNodeMessages;
 import io.coti.basenode.data.*;
-import io.coti.basenode.model.TransactionIndexes;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IConfirmationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -17,44 +13,26 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
 public class BaseNodeConfirmationService implements IConfirmationService {
 
-    @Autowired
-    private IBalanceService balanceService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    private IMintingService mintingService;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
-    @Autowired
-    private TransactionIndexes transactionIndexes;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private IEventService eventService;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private ISender sender;
-    private PriorityBlockingQueue<DspConsensusResult> dcrConfirmationQueue;
-    private PriorityBlockingQueue<TccInfo> tccConfirmationQueue;
-    private PriorityBlockingQueue<DspConsensusResult> waitingDspConsensusResults;
     private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
     private final AtomicLong totalConfirmed = new AtomicLong(0);
     private final AtomicLong trustChainConfirmed = new AtomicLong(0);
     private final AtomicLong dspConfirmed = new AtomicLong(0);
-    private Thread dcrMessageHandlerThread;
-    private Thread tccInfoMessageHandlerThread;
-    private Thread missingIndexesHandler;
     private final Object initialTccConfirmationLock = new Object();
     private final Object missingIndexesLock = new Object();
     private final AtomicBoolean initialConfirmationStarted = new AtomicBoolean(false);
     private final AtomicBoolean initialTccConfirmationFinished = new AtomicBoolean(false);
+    private PriorityBlockingQueue<DspConsensusResult> dcrConfirmationQueue;
+    private PriorityBlockingQueue<TccInfo> tccConfirmationQueue;
+    private PriorityBlockingQueue<DspConsensusResult> waitingDspConsensusResults;
+    private Thread dcrMessageHandlerThread;
+    private Thread tccInfoMessageHandlerThread;
+    private Thread missingIndexesHandler;
     private int resendDcrCounter;
 
     public void init() {
@@ -160,7 +138,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             transactionData.setTrustChainConsensusTime(tccInfo.getTrustChainConsensusTime());
             transactionData.setTrustChainTrustScore(tccInfo.getTrustChainTrustScore());
             trustChainConfirmed.incrementAndGet();
-            if (transactionHelper.isConfirmed(transactionData)) {
+            if (nodeTransactionHelper.isConfirmed(transactionData)) {
                 processConfirmedTransaction(transactionData);
             }
             transactions.put(transactionData);
@@ -173,18 +151,19 @@ public class BaseNodeConfirmationService implements IConfirmationService {
             if (!insertNewTransactionIndex(transactionData)) {
                 return;
             }
-            if (transactionHelper.isDspConfirmed(transactionData)) {
+            if (nodeTransactionHelper.isDspConfirmed(transactionData)) {
                 continueHandleDSPConfirmedTransaction(transactionData);
                 dspConfirmed.incrementAndGet();
             }
-            if (transactionHelper.isConfirmed(transactionData)) {
+            if (nodeTransactionHelper.isConfirmed(transactionData)) {
                 processConfirmedTransaction(transactionData);
             }
             transactions.put(transactionData);
         });
     }
 
-    protected boolean insertNewTransactionIndex(TransactionData transactionData) {
+    @Override
+    public boolean insertNewTransactionIndex(TransactionData transactionData) {
         Optional<Boolean> optionalInsertNewTransactionIndex = transactionIndexService.insertNewTransactionIndex(transactionData);
         if (!optionalInsertNewTransactionIndex.isPresent()) {
             return false;
@@ -224,7 +203,6 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                     firstWaitingDcr = monitorRangeAndRequestMissingIndex(firstWaitingDcr);
                 }
             } catch (InterruptedException e) {
-                log.error("BaseNodeConfirmationService::handleMissingIndexes - Was Interrupted");
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
                 log.error(BaseNodeMessages.EXCEPTION, e);
@@ -242,7 +220,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                         networkService.getNetworkNodeData().getNodeType(), firstMissedIndex, inRangeLastMissedIndex);
                 log.info("Sending Resend DCR first index: {} last index: {}, to: {}",
                         firstMissedIndex, inRangeLastMissedIndex, networkService.getRecoveryServer().getReceivingFullAddress());
-                sender.send(nodeResendDcrData, networkService.getRecoveryServer().getReceivingFullAddress());
+                zeroMQSender.send(nodeResendDcrData, networkService.getRecoveryServer().getReceivingFullAddress());
                 resendDcrCounter++;
             }
         } else {
@@ -301,9 +279,9 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         continueHandleConfirmedTransaction(transactionData);
     }
 
-    protected void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
-        if (eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) && !transactionData.isTrustChainConsensus()) {
-            transactionHelper.updateTransactionOnCluster(transactionData);
+    public void continueHandleDSPConfirmedTransaction(TransactionData transactionData) {
+        if (nodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) && !transactionData.isTrustChainConsensus()) {
+            nodeTransactionHelper.updateTransactionOnCluster(transactionData);
         }
     }
 
@@ -317,12 +295,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Override
     public void insertSavedTransaction(TransactionData transactionData, Map<Long, ReducedExistingTransactionData> indexToTransactionMap) {
-        boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
+        boolean isDspConfirmed = nodeTransactionHelper.isDspConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData ->
                 balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount())
         );
         if (!isDspConfirmed) {
-            transactionHelper.addNoneIndexedTransaction(transactionData);
+            nodeTransactionHelper.addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
             indexToTransactionMap.put(transactionData.getDspConsensusResult().getIndex(), new ReducedExistingTransactionData(transactionData));
@@ -352,8 +330,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void insertMissingDspConfirmation(TransactionData transactionData) {
-        if (!transactionHelper.isDspConfirmed(transactionData)) {
-            transactionHelper.addNoneIndexedTransaction(transactionData);
+        if (!nodeTransactionHelper.isDspConfirmed(transactionData)) {
+            nodeTransactionHelper.addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
             insertMissingTransactionIndex(transactionData);

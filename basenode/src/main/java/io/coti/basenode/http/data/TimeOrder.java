@@ -1,4 +1,4 @@
-package io.coti.fullnode.http.data;
+package io.coti.basenode.http.data;
 
 public enum TimeOrder {
     ASC,

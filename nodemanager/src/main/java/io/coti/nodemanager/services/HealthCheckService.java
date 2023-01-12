@@ -4,14 +4,9 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.LockData;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.services.BaseNodeMonitorService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.NetworkNodeStatus;
-import io.coti.nodemanager.model.ActiveNodes;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
-import io.coti.nodemanager.services.interfaces.INodeManagementService;
-import io.coti.nodemanager.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -24,6 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import static io.coti.nodemanager.services.NodeServiceManager.*;
+
 @Service
 @Slf4j
 public class HealthCheckService implements IHealthCheckService {
@@ -35,15 +32,9 @@ public class HealthCheckService implements IHealthCheckService {
     private static final int READ_TIMEOUT = 5000;
     private final Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
     private final LockData nodeHashLockData = new LockData();
-    @Autowired
-    private INodeManagementService nodeManagementService;
-    @Autowired
-    private ActiveNodes activeNodes;
+
     private RestTemplate restTemplate;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private WebSocketSender webSocketSender;
+
 
     @Override
     public void init() {

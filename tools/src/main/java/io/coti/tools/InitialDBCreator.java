@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+
 @Slf4j
 public class InitialDBCreator {
     public static void main(String[] args) {
@@ -20,10 +21,8 @@ public class InitialDBCreator {
 
             Transactions transactions = new Transactions();
             transactions.init();
-            transactions.databaseConnector = connector;
             TransactionIndexes transactionIndexes = new TransactionIndexes();
             transactionIndexes.init();
-            transactionIndexes.databaseConnector = connector;
         } catch (Exception e) {
             log.error("Error at initial db creator", e);
         }

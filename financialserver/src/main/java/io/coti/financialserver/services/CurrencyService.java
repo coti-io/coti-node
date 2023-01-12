@@ -4,15 +4,15 @@ import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
+import io.coti.basenode.http.GenerateTokenFeeRequest;
+import io.coti.basenode.http.GetCurrenciesRequest;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeCurrencyService;
-import io.coti.financialserver.http.GenerateTokenFeeRequest;
-import io.coti.financialserver.http.GetCurrenciesRequest;
 import io.coti.financialserver.http.GetCurrenciesResponse;
 import io.coti.financialserver.http.data.GetCurrencyResponseData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,21 +23,19 @@ import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.financialserver.http.HttpStringConstants.*;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
+@Primary
 public class CurrencyService extends BaseNodeCurrencyService {
 
     private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
-    @Autowired
-    private OriginatorCurrencyCrypto originatorCurrencyCrypto;
-    @Autowired
-    private FeeService feeService;
 
     public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         Hash currencyHash;
         try {
-            if (!eventService.eventHappened(Event.MULTI_DAG)) {
+            if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
                 throw new CurrencyValidationException(MULTI_DAG_IS_NOT_SUPPORTED);
             }
             OriginatorCurrencyData originatorCurrencyData = generateTokenRequest.getOriginatorCurrencyData();
@@ -67,7 +65,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
     }
 
     public ResponseEntity<IResponse> getCurrenciesForWallet(GetCurrenciesRequest getCurrenciesRequest) {
-        if (!eventService.eventHappened(Event.MULTI_DAG)) {
+        if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
             return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
         }
         List<GetCurrencyResponseData> tokenDetails = new ArrayList<>();

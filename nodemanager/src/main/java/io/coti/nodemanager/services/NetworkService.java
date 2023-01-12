@@ -5,6 +5,7 @@ import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.services.BaseNodeNetworkService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -14,8 +15,10 @@ import java.util.Map;
 
 @Slf4j
 @Service
+@Primary
 public class NetworkService extends BaseNodeNetworkService {
 
+    @Override
     public Map<String, List<String>> getNetworkSummary() {
         Map<String, List<String>> summaryMap = new HashMap<>();
         createSummaryStringFromNodeList(getMapFromFactory(NodeType.FullNode), summaryMap);

@@ -1,4 +1,4 @@
-package io.coti.fullnode.http;
+package io.coti.basenode.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.interfaces.IRequest;

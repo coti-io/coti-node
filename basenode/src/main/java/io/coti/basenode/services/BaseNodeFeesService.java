@@ -9,10 +9,8 @@ import io.coti.basenode.http.GetNodeFeesDataResponse;
 import io.coti.basenode.http.NodeFeeSetRequest;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.NodeFees;
 import io.coti.basenode.services.interfaces.INodeFeesService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,14 +26,13 @@ import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_PARAMETERS_MESSAGE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeFees;
 import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
 
 @Slf4j
 @Service
 public class BaseNodeFeesService implements INodeFeesService {
 
-    @Autowired
-    NodeFees nodeFees;
     @Value("${fee.percentage.default:10}")
     private BigDecimal defaultFeePercentage;
     @Value("${fee.minimum.default:1}")

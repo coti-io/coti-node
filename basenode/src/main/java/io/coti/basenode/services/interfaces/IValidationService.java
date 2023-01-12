@@ -48,4 +48,6 @@ public interface IValidationService {
     boolean validateTokenMintingAndAddToAllocatedAmount(TransactionData transactionData);
 
     boolean validateEventHardFork(TransactionData transactionData);
+
+    Boolean validateFullNodeFeeDataIntegrity(TransactionData transactionData);
 }

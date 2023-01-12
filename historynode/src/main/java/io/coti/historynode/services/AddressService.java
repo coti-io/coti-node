@@ -1,22 +1,16 @@
 package io.coti.historynode.services;
 
-import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
-import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.RequestedAddressHashData;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
-import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Addresses;
-import io.coti.basenode.model.RequestedAddressHashes;
 import io.coti.basenode.services.BaseNodeAddressService;
-import io.coti.basenode.services.BaseNodeValidationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -28,26 +22,14 @@ import java.util.*;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.historynode.http.HttpStringConstants.*;
+import static io.coti.historynode.services.NodeServiceManager.*;
 
 
 @Slf4j
 @Service
+@Primary
 public class AddressService extends BaseNodeAddressService {
 
-    @Autowired
-    private StorageConnector<GetHistoryAddressesRequest, GetHistoryAddressesResponse> storageConnector;
-    @Autowired
-    private HttpJacksonSerializer jacksonSerializer;
-    @Autowired
-    private Addresses addresses;
-    @Autowired
-    private RequestedAddressHashes requestedAddressHashes;
-    @Autowired
-    private BaseNodeValidationService validationService;
-    @Autowired
-    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
-    @Autowired
-    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
     @Value("${storage.server.address}")
     private String storageServerAddress;
 
@@ -126,7 +108,7 @@ public class AddressService extends BaseNodeAddressService {
         getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequest);
         GetHistoryAddressesResponse getHistoryAddressesResponse = null;
         try {
-            getHistoryAddressesResponse = storageConnector.retrieveFromStorage(storageServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody();
+            getHistoryAddressesResponse = addressStorageConnector.retrieveFromStorage(storageServerAddress + "/addresses", getHistoryAddressesRequest, GetHistoryAddressesResponse.class).getBody();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("{}: {}", e.getClass().getName(), ((SerializableResponse) jacksonSerializer.deserialize(e.getResponseBodyAsByteArray())).getMessage());
         } catch (Exception e) {

@@ -5,11 +5,9 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.GetHistoryTransactionsRequest;
 import io.coti.basenode.http.GetHistoryTransactionsResponse;
 import io.coti.basenode.http.data.GetHashToPropagatable;
-import io.coti.basenode.services.BaseNodeValidationService;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.FluxSink;
 
@@ -22,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import static io.coti.storagenode.services.NodeServiceManager.jacksonSerializer;
+import static io.coti.storagenode.services.NodeServiceManager.validationService;
+
 @Slf4j
 @Service
 public class TransactionStorageService extends EntityStorageService {
@@ -29,8 +30,6 @@ public class TransactionStorageService extends EntityStorageService {
     private static final int BLOCK_SIZE = 100;
     private static final int POOL_MAX_SIZE = 20;
     private static final String EXCEPTION_MESSAGE = "{}: {}";
-    @Autowired
-    private BaseNodeValidationService validationService;
 
     @PostConstruct
     public void init() {

@@ -9,6 +9,7 @@ import io.coti.basenode.pot.PriorityExecutor;
 import io.coti.basenode.services.BaseNodePotService;
 import io.coti.fullnode.data.MonitorBucketStatistics;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
+@Primary
 public class PotService extends BaseNodePotService {
 
     private static final HashMap<Integer, ExecutorService> queuesPot = new HashMap<>();
@@ -64,7 +66,8 @@ public class PotService extends BaseNodePotService {
         }
     }
 
-    public Map<String, Integer> executorSizes(int bucketNumber) {
+    @Override
+    public Map<String, Integer> executorSizes(Integer bucketNumber) {
         PriorityExecutor executor = (PriorityExecutor) queuesPot.get(bucketNumber);
         Map<String, Integer> executorSizes = new HashMap<>();
         executorSizes.put("ActiveThreads", executor.getActiveCount());

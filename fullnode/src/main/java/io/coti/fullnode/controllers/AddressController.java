@@ -1,16 +1,14 @@
 package io.coti.fullnode.controllers;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.http.AddressBulkRequest;
+import io.coti.basenode.http.AddressRequest;
+import io.coti.basenode.http.AddressesExistsResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.AddressStatus;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.fullnode.http.AddAddressResponse;
-import io.coti.fullnode.http.AddressBulkRequest;
-import io.coti.fullnode.http.AddressRequest;
-import io.coti.fullnode.http.AddressesExistsResponse;
-import io.coti.fullnode.services.AddressService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,14 +18,12 @@ import java.util.List;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_ADDRESS;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.fullnode.services.NodeServiceManager.addressService;
 
 @Slf4j
 @RestController
 @RequestMapping("/address")
 public class AddressController {
-
-    @Autowired
-    private AddressService addressService;
 
     @PutMapping()
     public ResponseEntity<IResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) {

@@ -1,6 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.TransactionDspVote;
 import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 
 import java.util.List;
@@ -25,4 +26,7 @@ public interface ITransactionPropagationCheckService {
     default void removeConfirmedReceiptTransaction(Hash transactionHash) {
     }
 
+    void addUnconfirmedTransactionDSPVote(TransactionDspVote transactionDspVote);
+
+    void addPropagatedUnconfirmedTransaction(Hash hash);
 }

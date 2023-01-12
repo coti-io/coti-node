@@ -4,10 +4,7 @@ import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.OriginatorCurrencyData;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.http.GetTokenDetailsRequest;
-import io.coti.basenode.http.GetTokenHistoryRequest;
-import io.coti.basenode.http.GetTokenSymbolDetailsRequest;
-import io.coti.basenode.http.GetUserTokensRequest;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.TokenResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
@@ -55,4 +52,10 @@ public interface ICurrencyService {
     TokenResponseData fillTokenGenerationResponseData(Hash currencyHash);
 
     ResponseEntity<IResponse> getTokenHistory(GetTokenHistoryRequest getTokenHistoryRequest);
+
+    void revertCurrencyUnconfirmedRecord(TransactionData transactionData);
+
+    ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenFeeRequest);
+
+    ResponseEntity<IResponse> getCurrenciesForWallet(GetCurrenciesRequest getCurrenciesRequest);
 }

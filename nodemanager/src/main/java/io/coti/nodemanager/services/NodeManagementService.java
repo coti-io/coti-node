@@ -1,31 +1,21 @@
 package io.coti.nodemanager.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.http.BaseNodeHttpStringConstants;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkNodeRecordValidationException;
 import io.coti.nodemanager.http.*;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
-import io.coti.nodemanager.model.ActiveNodes;
-import io.coti.nodemanager.model.NodeDailyActivities;
-import io.coti.nodemanager.model.NodeHistory;
-import io.coti.nodemanager.model.ReservedHosts;
-import io.coti.nodemanager.services.interfaces.IHealthCheckService;
-import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import io.coti.nodemanager.services.interfaces.INodeManagementService;
-import io.coti.nodemanager.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +34,7 @@ import java.util.stream.Collectors;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_NODE_SERVER_URL_HOST_RESERVED;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.SERVER_ERROR;
 import static io.coti.nodemanager.http.HttpStringConstants.*;
+import static io.coti.nodemanager.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -56,26 +47,6 @@ public class NodeManagementService implements INodeManagementService {
     private static final int BLACKLIST_INACTIVITY_NUMBER_CHECK_MINUTES = 10;
     private final Set<Hash> blacklistedNodes = new LinkedHashSet<>();
     private final LockData nodeHashLockData = new LockData();
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private NodeHistory nodeHistory;
-    @Autowired
-    private ActiveNodes activeNodes;
-    @Autowired
-    private ReservedHosts reservedHosts;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private StakingService stakingService;
-    @Autowired
-    private NodeDailyActivities nodeDailyActivities;
-    @Autowired
-    private INetworkHistoryService networkHistoryService;
-    @Autowired
-    private IHealthCheckService healthCheckService;
-    @Autowired
-    private WebSocketSender webSocketSender;
     @Value("${server.ip}")
     private String nodeManagerIp;
     @Value("${propagation.port}")

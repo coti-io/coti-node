@@ -1,6 +1,5 @@
-package io.coti.zerospend.http;
+package io.coti.basenode.http;
 
-import io.coti.basenode.http.BaseResponse;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

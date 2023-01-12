@@ -2,14 +2,12 @@ package io.coti.basenode.model;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.interfaces.IEntity;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.DataBaseDeleteException;
 import io.coti.basenode.exceptions.DataBaseWriteException;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.SerializationUtils;
 
 import java.util.Arrays;
@@ -18,12 +16,12 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.databaseConnector;
+
 @Slf4j
 public abstract class Collection<T extends IEntity> {
 
     private static final int LOCK_BYTE_ARRAY_SIZE = 2;
-    @Autowired
-    public IDatabaseConnector databaseConnector;
     protected String columnFamilyName = getClass().getName();
     private Map<Hash, byte[]> lockByteArrayMap;
 

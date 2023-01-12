@@ -1,41 +1,21 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.DspConsensusResultException;
-import io.coti.basenode.model.TransactionIndexes;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IConfirmationService;
 import io.coti.basenode.services.interfaces.IDspVoteService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.ITransactionPropagationCheckService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
 public class BaseNodeDspVoteService implements IDspVoteService {
 
-    @Autowired
-    protected ITransactionHelper transactionHelper;
-    @Autowired
-    protected IConfirmationService confirmationService;
-    @Autowired
-    protected IPropagationPublisher propagationPublisher;
-    @Autowired
-    private DspConsensusCrypto dspConsensusCrypto;
-    @Autowired
-    private ITransactionPropagationCheckService transactionPropagationCheckService;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private TransactionIndexes transactionIndexes;
     private Map<Hash, DspConsensusResult> postponedDspConsensusResultsMap;
 
     public void init() {
@@ -112,5 +92,25 @@ public class BaseNodeDspVoteService implements IDspVoteService {
         } catch (Exception e) {
             log.error("Error occurred in {}: {}", e.getClass().getName(), e.getMessage());
         }
+    }
+
+    @Override
+    public void setIndexForDspResult(TransactionData transactionData, DspConsensusResult dspConsensusResult) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void publishDecision(Hash hash) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void receiveDspVote(TransactionDspVote data) {
+        throw new UnsupportedOperationException();
     }
 }

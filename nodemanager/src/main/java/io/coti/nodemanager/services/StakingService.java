@@ -5,17 +5,14 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.nodemanager.crypto.StakingNodeCrypto;
 import io.coti.nodemanager.data.StakingNodeData;
 import io.coti.nodemanager.data.WeightedNode;
 import io.coti.nodemanager.http.GetStakerListResponse;
 import io.coti.nodemanager.http.SetNodeStakeRequest;
 import io.coti.nodemanager.http.data.SingleNodeDetailsForWallet;
 import io.coti.nodemanager.http.data.StakingNodeResponseData;
-import io.coti.nodemanager.model.StakingNodes;
 import io.coti.nodemanager.services.interfaces.IStakingService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,15 +24,13 @@ import java.util.*;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.nodemanager.http.HttpStringConstants.NODE_STAKE_SET_AUTHENTICATION_ERROR;
 import static io.coti.nodemanager.http.HttpStringConstants.STAKING_NODE_ADDED;
+import static io.coti.nodemanager.services.NodeServiceManager.stakingNodeCrypto;
+import static io.coti.nodemanager.services.NodeServiceManager.stakingNodes;
 
 @Service
 @Slf4j
 public class StakingService implements IStakingService {
 
-    @Autowired
-    private StakingNodes stakingNodes;
-    @Autowired
-    private StakingNodeCrypto stakingNodeCrypto;
     @Value("${staking.fee.maximum.standard: 100.0}")
     private BigDecimal maximumFee;
     @Value("${staking.fee.minimum.standard: 0.0}")

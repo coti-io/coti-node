@@ -4,14 +4,11 @@ import io.coti.basenode.communication.data.ConnectedNodeData;
 import io.coti.basenode.communication.data.ReconnectMonitorData;
 import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.communication.interfaces.ISerializer;
-import io.coti.basenode.communication.interfaces.ISubscriberHandler;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.PublisherHeartBeatData;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.zeromq.SocketType;
@@ -24,6 +21,9 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.serializer;
+import static io.coti.basenode.services.BaseNodeServiceManager.subscriberHandler;
 
 @Slf4j
 @Service
@@ -43,13 +43,9 @@ public class ZeroMQSubscriber implements IPropagationSubscriber {
     private Thread monitorThread;
     private Thread monitorReconnectThread;
     private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();
-    @Autowired
-    private ISerializer serializer;
     private EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap;
     private final Map<String, Thread> queueNameToThreadMap = new HashMap<>();
     private NodeType subscriberNodeType;
-    @Autowired
-    private ISubscriberHandler subscriberHandler;
     private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
 
     @Override

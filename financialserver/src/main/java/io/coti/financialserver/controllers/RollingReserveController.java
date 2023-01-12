@@ -4,9 +4,7 @@ import io.coti.basenode.http.GetMerchantRollingReserveAddressRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.GetMerchantRollingReserveDataRequest;
 import io.coti.financialserver.http.RecourseClaimRequest;
-import io.coti.financialserver.services.RollingReserveService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,13 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static io.coti.financialserver.services.NodeServiceManager.rollingReserveService;
+
 @Slf4j
 @RestController
 @RequestMapping("/rollingReserve")
 public class RollingReserveController {
-
-    @Autowired
-    private RollingReserveService rollingReserveService;
 
     @PostMapping()
     public ResponseEntity<IResponse> getRollingReserveData(@Valid @RequestBody GetMerchantRollingReserveDataRequest request) {

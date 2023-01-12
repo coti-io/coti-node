@@ -6,16 +6,13 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeFeeType;
 import io.coti.basenode.data.TokenGenerationFeeBaseTransactionData;
 import io.coti.basenode.data.TokenGenerationServiceData;
+import io.coti.basenode.http.GenerateTokenFeeRequest;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.INodeFeesService;
 import io.coti.financialserver.data.ReservedAddress;
-import io.coti.financialserver.http.GenerateTokenFeeRequest;
 import io.coti.financialserver.http.TokenGenerationFeeResponse;
 import io.coti.financialserver.http.data.TokenGenerationFeeResponseData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +22,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.financialserver.services.NodeServiceManager.currencyService;
+import static io.coti.financialserver.services.NodeServiceManager.nodeFeesService;
 
 @Slf4j
 @Service
@@ -32,10 +31,6 @@ public class FeeService {
 
     @Value("${financialserver.seed.key}")
     private String seed;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    private INodeFeesService nodeFeesService;
 
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         try {

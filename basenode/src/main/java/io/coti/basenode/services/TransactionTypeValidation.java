@@ -139,10 +139,10 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
     protected static final String INVALID_TRANSACTION_TYPE = "Invalid transaction type";
     protected final TransactionType type;
-    protected OriginatorCurrencyCrypto originatorCurrencyCrypto;
-    protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
-    protected TokenMintingCrypto tokenMintingCrypto;
-    protected ICurrencyService currencyService;
+    protected OriginatorCurrencyCrypto originatorCurrencyCrypto = io.coti.basenode.services.BaseNodeServiceManager.originatorCurrencyCrypto;
+    protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto = io.coti.basenode.services.BaseNodeServiceManager.currencyTypeRegistrationCrypto;
+    protected TokenMintingCrypto tokenMintingCrypto = io.coti.basenode.services.BaseNodeServiceManager.tokenMintingCrypto;
+    protected ICurrencyService currencyService = io.coti.basenode.services.BaseNodeServiceManager.currencyService;
 
     TransactionTypeValidation(TransactionType type) {
         this.type = type;

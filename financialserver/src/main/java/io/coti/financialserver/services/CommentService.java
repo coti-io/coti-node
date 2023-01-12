@@ -3,18 +3,13 @@ package io.coti.financialserver.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.financialserver.crypto.DisputeCommentCrypto;
-import io.coti.financialserver.crypto.GetDisputeItemDetailCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetCommentsRequest;
 import io.coti.financialserver.http.GetCommentsResponse;
 import io.coti.financialserver.http.NewCommentRequest;
 import io.coti.financialserver.http.NewCommentResponse;
 import io.coti.financialserver.http.data.GetDisputeItemDetailData;
-import io.coti.financialserver.model.DisputeComments;
-import io.coti.financialserver.model.Disputes;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,23 +19,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
 public class CommentService {
-
-    @Autowired
-    private DisputeComments disputeComments;
-    @Autowired
-    private DisputeCommentCrypto disputeCommentCrypto;
-    @Autowired
-    private GetDisputeItemDetailCrypto getDisputeCommentsCrypto;
-    @Autowired
-    private Disputes disputes;
-    @Autowired
-    private DisputeService disputeService;
-    @Autowired
-    private WebSocketService webSocketService;
 
     public ResponseEntity<IResponse> newComment(NewCommentRequest request) {
 

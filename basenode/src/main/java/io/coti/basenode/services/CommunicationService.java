@@ -1,31 +1,19 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.communication.interfaces.IReceiver;
-import io.coti.basenode.communication.interfaces.ISender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.function.Consumer;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
 public class CommunicationService implements ICommunicationService {
-
-    @Autowired
-    protected IReceiver receiver;
-    @Autowired
-    private IPropagationSubscriber propagationSubscriber;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private ISender sender;
 
     @Override
     public void initSubscriber(NodeType subscriberNodeType, EnumMap<NodeType, List<Class<? extends IPropagatable>>> initialPublisherNodeTypeToMessageTypesMap) {
@@ -38,18 +26,18 @@ public class CommunicationService implements ICommunicationService {
 
     @Override
     public void initReceiver(String receivingPort, HashMap<String, Consumer<IPropagatable>> classNameToReceiverHandlerMapping) {
-        receiver.init(receivingPort, classNameToReceiverHandlerMapping);
-        receiver.startListening();
+        zeroMQReceiver.init(receivingPort, classNameToReceiverHandlerMapping);
+        zeroMQReceiver.startListening();
     }
 
     @Override
     public void addSender(String receivingServerAddress, NodeType nodeType) {
-        sender.connectToNode(receivingServerAddress, nodeType);
+        zeroMQSender.connectToNode(receivingServerAddress, nodeType);
     }
 
     @Override
     public void removeSender(String receivingFullAddress, NodeType nodeType) {
-        sender.disconnectFromNode(receivingFullAddress, nodeType);
+        zeroMQSender.disconnectFromNode(receivingFullAddress, nodeType);
     }
 
     @Override

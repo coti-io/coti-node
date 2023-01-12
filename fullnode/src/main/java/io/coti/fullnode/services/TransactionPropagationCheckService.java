@@ -6,7 +6,7 @@ import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
 import io.coti.basenode.services.BaseNodeTransactionPropagationCheckService;
 import io.coti.fullnode.data.UnconfirmedReceivedTransactionHashFullNodeData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +16,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static io.coti.fullnode.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
+@Primary
 public class TransactionPropagationCheckService extends BaseNodeTransactionPropagationCheckService {
 
     private static final long PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE = 60;
     private static final int NUMBER_OF_RETRIES_FULL_NODE = 3;
-    @Autowired
-    protected NetworkService networkService;
 
     @Override
     public void init() {
