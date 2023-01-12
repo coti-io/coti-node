@@ -1,15 +1,14 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.services.BaseNodeShutDownService;
-import io.coti.nodemanager.services.interfaces.IHealthCheckService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-@Service
-public class ShutDownService extends BaseNodeShutDownService {
+import static io.coti.nodemanager.services.NodeServiceManager.*;
 
-    @Autowired
-    private IHealthCheckService healthCheckService;
+@Service
+@Primary
+public class ShutDownService extends BaseNodeShutDownService {
 
     @Override
     public void shutDownServices() {

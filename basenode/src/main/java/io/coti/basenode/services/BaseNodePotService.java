@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 @Slf4j
@@ -28,5 +30,15 @@ public class BaseNodePotService implements IPotService {
                 transactionData.getRoundedSenderTrustScore());
         return pot.verify(transactionData.getHash().
                 getBytes(), transactionData.getNonces(), targetDifficulty);
+    }
+
+    @Override
+    public Map<String, Integer> executorSizes(Integer bucketNumber) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void potAction(TransactionData transactionData) {
+        throw new UnsupportedOperationException();
     }
 }

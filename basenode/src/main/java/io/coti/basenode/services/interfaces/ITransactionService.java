@@ -1,6 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.FluxSink;
@@ -37,4 +38,44 @@ public interface ITransactionService {
     int totalPostponedTransactions();
 
     void addDataToMemory(TransactionData transactionData);
+
+    ResponseEntity<IResponse> setIndexToTransactions(SetIndexesRequest setIndexesRequest);
+
+    void shutdown();
+
+    ResponseEntity<IResponse> getRejectedTransactions();
+
+    void handleNewTransactionFromFullNode(TransactionData data);
+
+    ResponseEntity<Response> addNewTransaction(AddTransactionRequest addTransactionRequest);
+
+    ResponseEntity<IResponse> repropagateTransactionByWallet(RepropagateTransactionRequest repropagateTransactionRequest);
+
+    ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash, boolean b);
+
+    void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response);
+
+    ResponseEntity<IResponse> getAddressTransactions(Hash address);
+
+    void getAddressTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response, boolean b);
+
+    void getAddressTransactionBatchByTimestamp(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response, boolean b);
+
+    void getAddressTransactionBatchByDate(GetAddressTransactionBatchByDateRequest getAddressTransactionBatchByDateRequest, HttpServletResponse response, boolean b);
+
+    void getAddressRejectedTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response);
+
+    ResponseEntity<IResponse> getLastTransactions();
+
+    ResponseEntity<IResponse> getTotalTransactions();
+
+    ResponseEntity<IResponse> getTransactionsByPage(int page);
+
+    ResponseEntity<IResponse> repropagateTransactionByAdmin(RepropagateTransactionByAdminRequest repropagateTransactionByAdminRequest);
+
+    ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest);
+
+    void getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest, HttpServletResponse response);
+
+    void getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest, HttpServletResponse response);
 }

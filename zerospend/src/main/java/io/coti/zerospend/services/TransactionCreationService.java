@@ -1,17 +1,12 @@
 package io.coti.zerospend.services;
 
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.NodeCryptoHelper;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.interfaces.*;
-import io.coti.zerospend.crypto.TransactionCryptoCreator;
 import io.coti.zerospend.data.ZeroSpendTransactionType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +19,7 @@ import java.util.*;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.zerospend.data.ZeroSpendTransactionType.GENESIS;
 import static io.coti.zerospend.data.ZeroSpendTransactionType.STARVATION;
+import static io.coti.zerospend.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -31,24 +27,6 @@ public class TransactionCreationService {
 
     public static final int MAX_TRUST_SCORE = 100;
     private static final int ZERO_SPEND_ADDRESS_INDEX = 0;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IValidationService validationService;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private TransactionCrypto transactionCrypto;
-    @Autowired
-    private TransactionCryptoCreator transactionCryptoCreator;
-    @Autowired
-    private DspVoteService dspVoteService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    private IEventService eventService;
-    @Autowired
-    private IClusterService clusterService;
     @Value("${zerospend.seed.key}")
     private String seed;
 
@@ -88,7 +66,7 @@ public class TransactionCreationService {
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
         dspConsensusResult.setDspConsensus(true);
         dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
-        transactionHelper.attachTransactionToCluster(transactionData);
+        nodeTransactionHelper.attachTransactionToCluster(transactionData);
         log.info("Created a new {} Transaction: Hash = {} , SenderTrustScore = {} ", transactionData.getTransactionDescription(), transactionData.getHash(), transactionData.getSenderTrustScore());
     }
 
@@ -107,7 +85,7 @@ public class TransactionCreationService {
             dspConsensusResult.setDspConsensus(true);
             dspVoteService.setIndexForDspResult(transactionData, dspConsensusResult);
 
-            transactionHelper.attachTransactionToCluster(transactionData);
+            nodeTransactionHelper.attachTransactionToCluster(transactionData);
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
@@ -137,7 +115,7 @@ public class TransactionCreationService {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         addressHashToAddressIndexMap.put(addressHash, ZERO_SPEND_ADDRESS_INDEX);
         baseTransactions.add(baseTransactionData);
-        TransactionData transactionData = transactionHelper.createNewTransaction(baseTransactions, description, trustScore, Instant.now(), transactionType);
+        TransactionData transactionData = nodeTransactionHelper.createNewTransaction(baseTransactions, description, trustScore, Instant.now(), transactionType);
         transactionData.setAttachmentTime(Instant.now());
         transactionCryptoCreator.signBaseTransactions(transactionData, addressHashToAddressIndexMap);
         transactionCrypto.signMessage(transactionData);
@@ -147,11 +125,11 @@ public class TransactionCreationService {
     public ResponseEntity<IResponse> createEventTransaction(String description, Event event) {
         TransactionData transactionData = createEventTransactionData(description, event);
         try {
-            if (eventService.checkEventAndUpdateEventsTable(transactionData)) {
+            if (nodeEventService.checkEventAndUpdateEventsTable(transactionData)) {
                 clusterService.selectSources(transactionData);
                 attachTransactionToCluster(transactionData);
                 sendTransactionToPublisher(transactionData);
-                return eventService.getEventTransactionDataResponse(event);
+                return nodeEventService.getEventTransactionDataResponse(event);
             } else {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST).body(new Response("Event Creation Error", STATUS_ERROR));

@@ -5,9 +5,7 @@ import io.coti.basenode.http.GetTokenHistoryRequest;
 import io.coti.basenode.http.GetTokenSymbolDetailsRequest;
 import io.coti.basenode.http.GetUserTokensRequest;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.interfaces.ICurrencyService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,13 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.currencyService;
+
 @Slf4j
 @RestController
 @RequestMapping("/currencies")
 public class BaseNodeCurrencyController {
-
-    @Autowired
-    private ICurrencyService currencyService;
 
     @PostMapping(path = "/token/user")
     public ResponseEntity<IResponse> getUserTokens(@Valid @RequestBody GetUserTokensRequest getUserTokensRequest) {

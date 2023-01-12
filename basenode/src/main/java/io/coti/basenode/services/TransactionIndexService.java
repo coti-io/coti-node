@@ -6,10 +6,7 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionIndexData;
 import io.coti.basenode.http.GetLastTransactionIndexResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.TransactionIndexes;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +14,13 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeTransactionHelper;
+import static io.coti.basenode.services.BaseNodeServiceManager.transactionIndexes;
+
 @Slf4j
 @Service
 public class TransactionIndexService {
 
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private TransactionIndexes transactionIndexes;
     private TransactionIndexData lastTransactionIndexData;
 
     public void init() {
@@ -44,7 +40,7 @@ public class TransactionIndexService {
             log.debug("Inserting new transaction {} with index: {}", transactionData.getHash(), lastTransactionIndexData.getIndex() + 1);
             lastTransactionIndexData = getNextIndexData(lastTransactionIndexData, transactionData);
             transactionIndexes.put(lastTransactionIndexData);
-            transactionHelper.removeNoneIndexedTransaction(transactionData);
+            nodeTransactionHelper.removeNoneIndexedTransaction(transactionData);
             return Optional.of(Boolean.TRUE);
         } else {
             return Optional.of(Boolean.FALSE);

@@ -8,15 +8,16 @@ import io.coti.basenode.exceptions.NetworkChangeException;
 import io.coti.basenode.services.BaseNodeNetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 @Service
 @Slf4j
+@Primary
 public class NetworkService extends BaseNodeNetworkService {
 
     @Override

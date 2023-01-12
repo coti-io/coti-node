@@ -4,11 +4,9 @@ import io.coti.basenode.communication.data.MonitorSocketData;
 import io.coti.basenode.communication.data.ReconnectMonitorData;
 import io.coti.basenode.communication.data.SenderSocketData;
 import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
@@ -22,6 +20,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.serializer;
+
 @Slf4j
 @Service
 public class ZeroMQSender implements ISender {
@@ -30,8 +30,6 @@ public class ZeroMQSender implements ISender {
     private ZMQ.Context zeroMQContext;
     private SocketType socketType;
     private Map<String, SenderSocketData> receivingAddressToSenderSocketMapping;
-    @Autowired
-    private ISerializer serializer;
     private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
     private Thread monitorReconnectThread;
     private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();

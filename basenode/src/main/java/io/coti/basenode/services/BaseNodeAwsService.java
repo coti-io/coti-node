@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.transfer.*;
+import io.coti.basenode.data.Hash;
 import io.coti.basenode.exceptions.AwsDataTransferException;
 import io.coti.basenode.exceptions.AwsException;
 import io.coti.basenode.services.interfaces.IAwsService;
@@ -212,6 +213,26 @@ public class BaseNodeAwsService implements IAwsService {
     @Override
     public boolean isBuildS3ClientWithCredentials() {
         return buildS3ClientWithCredentials;
+    }
+
+    @Override
+    public String uploadDisputeDocument(Hash hash, File file, String contentType) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public S3Object getS3Object(String toString) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void downloadFundDistributionFile(String fileName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String uploadFundDistributionResultFile(String resultsFileNameForToday, File file, String s) {
+        throw new UnsupportedOperationException();
     }
 
     private AmazonS3 getS3Client() {

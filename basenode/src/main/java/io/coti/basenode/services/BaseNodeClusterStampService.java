@@ -1,16 +1,10 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IClusterStampService;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +16,8 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -41,18 +37,6 @@ public class BaseNodeClusterStampService implements IClusterStampService {
     protected String clusterStampFilePrefix;
     @Value("${data.path:./}")
     protected String clusterStampFolder;
-    @Autowired
-    protected IBalanceService balanceService;
-    @Autowired
-    protected TrustChainConfirmationService trustChainConfirmationService;
-    @Autowired
-    protected Transactions transactions;
-    @Autowired
-    protected ClusterStampCrypto clusterStampCrypto;
-    @Autowired
-    protected INetworkService networkService;
-    @Autowired
-    protected ICurrencyService currencyService;
 
     @Override
     public void init() {

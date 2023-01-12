@@ -2,14 +2,14 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IClusterHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentMap;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.transactions;
 
 @Slf4j
 @Service
@@ -17,8 +17,6 @@ public class ClusterHelper implements IClusterHelper {
 
     private static final long MINIMUM_WAIT_TIME_IN_SECONDS = 5;
     private static final long WAIT_REDUCTION_FACTOR = 10;
-    @Autowired
-    private Transactions transactions;
 
     @Override
     public void sortByTopologicalOrder(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster, LinkedList<TransactionData> topologicalOrderedGraph) {

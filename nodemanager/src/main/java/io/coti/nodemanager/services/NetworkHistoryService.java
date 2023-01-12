@@ -7,13 +7,10 @@ import io.coti.nodemanager.data.*;
 import io.coti.nodemanager.exceptions.NetworkHistoryValidationException;
 import io.coti.nodemanager.http.*;
 import io.coti.nodemanager.http.data.*;
-import io.coti.nodemanager.model.NodeDailyActivities;
-import io.coti.nodemanager.model.NodeHistory;
 import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,6 +27,8 @@ import java.util.function.Consumer;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.nodemanager.http.HttpStringConstants.*;
+import static io.coti.nodemanager.services.NodeServiceManager.nodeDailyActivities;
+import static io.coti.nodemanager.services.NodeServiceManager.nodeHistory;
 import static java.lang.Math.max;
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -37,10 +36,6 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class NetworkHistoryService implements INetworkHistoryService {
 
     public static final int NUMBER_OF_SECONDS_IN_DAY = 24 * 60 * 60;
-    @Autowired
-    private NodeHistory nodeHistory;
-    @Autowired
-    private NodeDailyActivities nodeDailyActivities;
 
     @Override
     public List<NodeHistoryData> getNodesHistory() {

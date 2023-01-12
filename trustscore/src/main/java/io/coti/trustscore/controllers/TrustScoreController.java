@@ -5,9 +5,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.http.GetTransactionTrustScoreRequest;
 import io.coti.trustscore.http.SetKycTrustScoreRequest;
 import io.coti.trustscore.http.SetUserTypeRequest;
-import io.coti.trustscore.services.TrustScoreService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,12 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static io.coti.trustscore.services.NodeServiceManager.trustScoreService;
+
 @Slf4j
 @RestController
 public class TrustScoreController {
-
-    @Autowired
-    private TrustScoreService trustScoreService;
 
     @PostMapping(path = "/usertrustscore")
     public ResponseEntity<IResponse> getUserTrustScore(@Valid @RequestBody GetTrustScoreRequest request) {

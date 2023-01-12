@@ -2,13 +2,11 @@ package io.coti.storagenode.services;
 
 import io.coti.basenode.data.Hash;
 import io.coti.storagenode.data.enums.ElasticSearchData;
-import io.coti.storagenode.database.DbConnectorService;
 import io.coti.storagenode.services.interfaces.IObjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.rest.RestStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,12 +15,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.coti.storagenode.services.NodeServiceManager.dbConnectorService;
+
 @Service
 @Slf4j
 public class ObjectService implements IObjectService {
-
-    @Autowired
-    protected DbConnectorService dbConnectorService;
 
     @Override
     public void init() throws IOException {

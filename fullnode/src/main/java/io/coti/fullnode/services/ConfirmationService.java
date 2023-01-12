@@ -6,18 +6,15 @@ import io.coti.basenode.data.TokenMintingServiceData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.data.TransactionStatus;
 import io.coti.basenode.services.BaseNodeConfirmationService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.fullnode.websocket.WebSocketSender;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-@Service
-public class ConfirmationService extends BaseNodeConfirmationService {
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeTransactionHelper;
+import static io.coti.fullnode.services.NodeServiceManager.webSocketSender;
 
-    @Autowired
-    private WebSocketSender webSocketSender;
-    @Autowired
-    private ITransactionHelper transactionHelper;
+@Service
+@Primary
+public class ConfirmationService extends BaseNodeConfirmationService {
 
     @Override
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
@@ -26,7 +23,7 @@ public class ConfirmationService extends BaseNodeConfirmationService {
 
     @Override
     protected void continueHandleTokenChanges(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
         TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
         Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
         webSocketSender.notifyTokenChange(tokenHash);

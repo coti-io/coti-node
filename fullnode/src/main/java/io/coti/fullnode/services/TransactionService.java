@@ -3,34 +3,23 @@ package io.coti.fullnode.services;
 import com.dictiography.collections.IndexedNavigableSet;
 import com.dictiography.collections.IndexedTreeSet;
 import com.google.common.collect.Sets;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.PotException;
 import io.coti.basenode.exceptions.TransactionException;
 import io.coti.basenode.exceptions.TransactionValidationException;
-import io.coti.basenode.http.CustomGson;
-import io.coti.basenode.http.GetTransactionResponse;
-import io.coti.basenode.http.GetTransactionsResponse;
-import io.coti.basenode.http.Response;
-import io.coti.basenode.http.data.ExtendedTransactionResponseData;
-import io.coti.basenode.http.data.RejectedTransactionResponseData;
-import io.coti.basenode.http.data.TransactionResponseData;
-import io.coti.basenode.http.data.TransactionStatus;
+import io.coti.basenode.http.*;
+import io.coti.basenode.http.data.*;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.AddressTransactionsHistories;
-import io.coti.basenode.model.RejectedTransactions;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utilities.MemoryUtils;
-import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
-import io.coti.fullnode.http.*;
-import io.coti.fullnode.http.data.TimeOrder;
-import io.coti.fullnode.websocket.WebSocketSender;
+import io.coti.fullnode.http.AddTransactionResponse;
+import io.coti.fullnode.http.GetAddressTransactionHistoryResponse;
+import io.coti.fullnode.http.GetExtendedTransactionResponse;
+import io.coti.fullnode.http.GetTotalTransactionsResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -51,44 +40,22 @@ import static io.coti.basenode.constants.BaseNodeMessages.*;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_ERROR;
 import static io.coti.fullnode.http.HttpStringConstants.TRANSACTION_NO_DSP_IN_THE_NETWORK;
+import static io.coti.fullnode.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
+@Primary
 public class TransactionService extends BaseNodeTransactionService {
 
     private static final int EXPLORER_LAST_TRANSACTIONS_NUMBER = 20;
     private static final int EXPLORER_TRANSACTION_NUMBER_BY_PAGE = 10;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private TransactionCrypto transactionCrypto;
-    @Autowired
-    private ValidationService validationService;
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private AddressTransactionsHistories addressTransactionHistories;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private WebSocketSender webSocketSender;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private PotService potService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    protected ITransactionPropagationCheckService transactionPropagationCheckService;
+
     private BlockingQueue<ExplorerTransactionData> explorerIndexQueue;
     private IndexedNavigableSet<ExplorerTransactionData> explorerIndexedTransactionSet;
     private BlockingQueue<TransactionData> addressTransactionsByAttachmentQueue;
     private Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap;
     private Map<Hash, Set<Hash>> addressToRejectedTransactionsMap;
-    @Autowired
-    private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
-    @Autowired
-    private RejectedTransactions rejectedTransactions;
+
     private static final AtomicInteger currentlyAddTransaction = new AtomicInteger(0);
     private final LockData transactionLockData = new LockData();
     @Value("${java.process.memory.limit:95}")
@@ -118,7 +85,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
-        TransactionData transactionData = transactionHelper.createNewTransaction(
+        TransactionData transactionData = nodeTransactionHelper.createNewTransaction(
                 request.getBaseTransactions(),
                 request.getHash(),
                 request.getTransactionDescription(),
@@ -139,14 +106,14 @@ public class TransactionService extends BaseNodeTransactionService {
                             .body(new Response(
                                     TRANSACTION_NO_DSP_IN_THE_NETWORK, STATUS_ERROR));
                 }
-                if (transactionHelper.isTransactionExists(transactionData)) {
+                if (nodeTransactionHelper.isTransactionExists(transactionData)) {
                     log.debug("Received existing transaction: {}", transactionData.getHash());
                     return ResponseEntity
                             .status(HttpStatus.BAD_REQUEST)
                             .body(new Response(
                                     TRANSACTION_ALREADY_EXIST_MESSAGE, STATUS_ERROR));
                 }
-                transactionHelper.startHandleTransaction(transactionData);
+                nodeTransactionHelper.startHandleTransaction(transactionData);
 
                 validateTransaction(transactionData);
 
@@ -178,13 +145,13 @@ public class TransactionService extends BaseNodeTransactionService {
 
                 transactionData.setAttachmentTime(Instant.now());
                 transactionCrypto.signMessage(transactionData);
-                transactionHelper.attachTransactionToCluster(transactionData);
-                transactionHelper.setTransactionStateToSaved(transactionData);
+                nodeTransactionHelper.attachTransactionToCluster(transactionData);
+                nodeTransactionHelper.setTransactionStateToSaved(transactionData);
                 webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.ATTACHED_TO_DAG);
                 addDataToMemory(transactionData);
                 ((NetworkService) networkService).sendDataToConnectedDspNodes(transactionData);
                 transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
-                transactionHelper.setTransactionStateToFinished(transactionData);
+                nodeTransactionHelper.setTransactionStateToFinished(transactionData);
                 return ResponseEntity
                         .status(HttpStatus.CREATED)
                         .body(new AddTransactionResponse(
@@ -210,7 +177,7 @@ public class TransactionService extends BaseNodeTransactionService {
             log.error("Exception while adding transaction: {}", transactionData.getHash());
             throw new TransactionException(e);
         } finally {
-            transactionHelper.endHandleTransaction(transactionData);
+            nodeTransactionHelper.endHandleTransaction(transactionData);
             transactionLockData.removeLockFromLocksMap(transactionData.getHash());
             currentlyAddTransaction.decrementAndGet();
             transactionReadWriteLock.readLock().unlock();
@@ -268,7 +235,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     private ResponseEntity<IResponse> repropagateTransaction(TransactionData transactionData) {
-        if (transactionHelper.isTransactionHashProcessing(transactionData.getHash())) {
+        if (nodeTransactionHelper.isTransactionHashProcessing(transactionData.getHash())) {
             log.error("Transaction {} requested to resend is still being processed", transactionData.getHash());
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new Response(TRANSACTION_RESENT_PROCESSING_MESSAGE, STATUS_ERROR));
@@ -385,7 +352,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     public ResponseEntity<IResponse> getAddressTransactions(Hash addressHash) {
         List<TransactionResponseData> transactionsDataList = new ArrayList<>();
-        AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
+        AddressTransactionsHistory addressTransactionsHistory = addressTransactionsHistories.getByHash(addressHash);
 
         try {
             if (addressTransactionsHistory == null) {
@@ -424,7 +391,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
             addressHashList.forEach(addressHash -> {
-                AddressTransactionsHistory addressTransactionsHistory = addressTransactionHistories.getByHash(addressHash);
+                AddressTransactionsHistory addressTransactionsHistory = addressTransactionsHistories.getByHash(addressHash);
                 if (addressTransactionsHistory != null) {
                     addressTransactionsHistory.getTransactionsHistory().forEach(transactionHash ->
                             sendTransactionResponse(transactionHash, firstTransactionSent, output, addressHash, reduced, extended, isIncludeRuntimeTrustScore)
@@ -666,7 +633,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Override
     public void handlePropagatedRejectedTransaction(RejectedTransactionData rejectedTransactionData) {
-        if (!eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
+        if (!nodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)) {
             log.error("Error encountered during the handling of rejected transaction data, event TRUST_SCORE_CONSENSUS didn't happen");
             return;
         }
@@ -678,7 +645,7 @@ public class TransactionService extends BaseNodeTransactionService {
         try {
             transactionReadWriteLock.writeLock().lock();
             synchronized (transactionLockData.addLockToLockMap(rejectedTransactionHash)) {
-                if (!transactionHelper.isTransactionHashExists(rejectedTransactionHash)) {
+                if (!nodeTransactionHelper.isTransactionHashExists(rejectedTransactionHash)) {
                     return;
                 }
                 if (!validationService.validatePropagatedRejectedTransactionDataIntegrity(rejectedTransactionData)) {
@@ -708,7 +675,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
         log.debug("Starting to remove the rejected transaction {}", rejectedTransactionDataHash);
         removeDataFromMemory(transactionData);
-        transactionHelper.continueHandleRejectedTransaction(transactionData);
+        nodeTransactionHelper.continueHandleRejectedTransaction(transactionData);
         webSocketSender.notifyTransactionHistoryChange(transactionData, TransactionStatus.REJECTED);
         rejectedTransactions.put(rejectedTransactionData);
         addAddressToRejectedTransactionsMap(rejectedTransactionData);

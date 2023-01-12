@@ -1,25 +1,18 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.GetMerchantRollingReserveAddressCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.RollingReserveException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.RollingReserveRequest;
 import io.coti.trustscore.http.RollingReserveResponse;
 import io.coti.trustscore.http.RollingReserveValidateRequest;
 import io.coti.trustscore.http.data.RollingReserveResponseData;
-import io.coti.trustscore.model.MerchantRollingReserveAddresses;
-import io.coti.trustscore.model.TrustScores;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +30,7 @@ import java.util.List;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
 import static io.coti.trustscore.http.HttpStringConstants.*;
+import static io.coti.trustscore.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -44,26 +38,8 @@ public class RollingReserveService {
 
     private static final double MAX_ROLLING_RESERVE_RATE = 100;
     private static final String MERCHANT_ADDRESS_END_POINT = "/rollingReserve/merchantReserveAddress";
-    @Autowired
-    private NetworkFeeService feeService;
     @Value("${rolling.reserve.difference.validation}")
     private BigDecimal rollingReserveDifferenceValidation;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private GetMerchantRollingReserveAddressCrypto getMerchantRollingReserveAddressCrypto;
-    @Autowired
-    private MerchantRollingReserveAddresses merchantRollingReserveAddresses;
-    @Autowired
-    private TrustScores trustScores;
-    @Autowired
-    private HttpJacksonSerializer jacksonSerializer;
-    @Autowired
-    private IValidationService validationService;
-    @Autowired
-    private TrustScoreService trustScoreService;
-    @Autowired
-    private ICurrencyService currencyService;
 
     public ResponseEntity<IResponse> createRollingReserveFee(RollingReserveRequest rollingReserveRequest) {
 

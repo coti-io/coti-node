@@ -104,4 +104,5 @@ public interface ITransactionHelper {
     long getTotalNumberOfTransactionsFromRecovery();
 
     void handleReportedTransactionsState(TransactionsStateData transactionsStateData);
+
 }

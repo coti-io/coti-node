@@ -1,14 +1,12 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.SetIndexesRequest;
+import io.coti.basenode.http.SetIndexesResponse;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.zerospend.http.SetIndexesRequest;
-import io.coti.zerospend.http.SetIndexesResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -18,16 +16,12 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.coti.zerospend.services.NodeServiceManager.*;
+
 @Service
 @Slf4j
+@Primary
 public class TransactionService extends BaseNodeTransactionService {
-
-    @Autowired
-    private DspVoteService dspVoteService;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -46,7 +40,7 @@ public class TransactionService extends BaseNodeTransactionService {
     public ResponseEntity<IResponse> setIndexToTransactions(SetIndexesRequest setIndexesRequest) {
         Set<Hash> transactionHashes = setIndexesRequest.getTransactionHashes();
         if (transactionHashes.isEmpty()) {
-            transactionHashes = transactionHelper.getNoneIndexedTransactionHashes();
+            transactionHashes = nodeTransactionHelper.getNoneIndexedTransactionHashes();
         }
         int requestedIndexNumber = transactionHashes.size();
         AtomicInteger indexedTransactionNumber = new AtomicInteger(0);
@@ -64,7 +58,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     @Scheduled(initialDelay = 2000, fixedDelay = 5000)
     public void totalTransactionsAmountFromRecovery() {
-        TransactionsStateData transactionsStateData = new TransactionsStateData(transactionHelper.getTotalTransactions());
+        TransactionsStateData transactionsStateData = new TransactionsStateData(nodeTransactionHelper.getTotalTransactions());
         propagationPublisher.propagate(transactionsStateData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode));
     }
 }

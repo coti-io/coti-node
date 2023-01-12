@@ -1,47 +1,21 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionValidationException;
-import io.coti.basenode.services.ClusterService;
-import io.coti.basenode.services.TransactionIndexService;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.financialserver.crypto.TransactionCryptoCreator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 
+import static io.coti.financialserver.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
 public class TransactionCreationService {
 
     public static final int MAX_TRUST_SCORE = 100;
-
-    @Autowired
-    private TransactionIndexService transactionIndexService;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private TransactionCrypto transactionCrypto;
-    @Autowired
-    private TransactionCryptoCreator transactionCryptoCreator;
-    @Autowired
-    private ClusterService clusterService;
-    @Autowired
-    private RollingReserveService rollingReserveService;
-    @Autowired
-    private IBalanceService balanceService;
-    @Autowired
-    private ICurrencyService currencyService;
 
     public void createNewChargebackTransaction(BigDecimal amount, Hash merchantRollingReserveAddress, Hash consumerAddress, BigDecimal poolAmount) {
         Hash nativeCurrencyHash = currencyService.getNativeCurrencyHash();
@@ -72,7 +46,7 @@ public class TransactionCreationService {
         DspConsensusResult dspConsensusResult = new DspConsensusResult(chargebackTransaction.getHash());
         dspConsensusResult.setDspConsensus(true);
 
-        transactionHelper.attachTransactionToCluster(chargebackTransaction);
+        nodeTransactionHelper.attachTransactionToCluster(chargebackTransaction);
         transactionIndexService.insertNewTransactionIndex(chargebackTransaction);
 
         propagationPublisher.propagate(chargebackTransaction, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode));
@@ -90,7 +64,7 @@ public class TransactionCreationService {
         baseTransactions.add(ibt);
         baseTransactions.add(rbt);
 
-        TransactionData initialTransactionData = transactionHelper.createNewTransaction(baseTransactions, TransactionType.Initial.toString(), MAX_TRUST_SCORE, Instant.now(), TransactionType.Initial);
+        TransactionData initialTransactionData = nodeTransactionHelper.createNewTransaction(baseTransactions, TransactionType.Initial.toString(), MAX_TRUST_SCORE, Instant.now(), TransactionType.Initial);
 
         if (!balanceService.checkBalancesAndAddToPreBalance(initialTransactionData.getBaseTransactions())) {
             throw new TransactionValidationException("Balance check failed");
@@ -102,7 +76,7 @@ public class TransactionCreationService {
         addressHashToAddressIndexMap.put(cotiGenesisAddress, genesisAddressIndex);
         transactionCryptoCreator.signBaseTransactions(initialTransactionData, addressHashToAddressIndexMap);
         transactionCrypto.signMessage(initialTransactionData);
-        transactionHelper.attachTransactionToCluster(initialTransactionData);
+        nodeTransactionHelper.attachTransactionToCluster(initialTransactionData);
 
         propagationPublisher.propagate(initialTransactionData, Arrays.asList(NodeType.ZeroSpendServer, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.DspNode, NodeType.HistoryNode));
 

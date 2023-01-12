@@ -5,11 +5,8 @@ import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IEventService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,16 +15,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeTransactionHelper;
+import static io.coti.basenode.services.BaseNodeServiceManager.transactions;
 
 @Slf4j
 @Service
 public class BaseNodeEventService implements IEventService {
 
     protected Map<Event, Hash> eventsMap = new ConcurrentHashMap<>();
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private Transactions transactions;
 
     @Override
     public void init() {
@@ -53,7 +48,7 @@ public class BaseNodeEventService implements IEventService {
     }
 
     private synchronized boolean addEventToMap(TransactionData eventTransactionData) {
-        EventInputBaseTransactionData eventInputBaseTransactionData = transactionHelper.getEventInputBaseTransactionData(eventTransactionData);
+        EventInputBaseTransactionData eventInputBaseTransactionData = nodeTransactionHelper.getEventInputBaseTransactionData(eventTransactionData);
         Event event = eventInputBaseTransactionData.getEvent();
         boolean isHardFork = event.isHardFork();
         if (eventsMap.containsKey(event) && isHardFork) {
@@ -79,7 +74,7 @@ public class BaseNodeEventService implements IEventService {
 
     public TransactionData getConfirmedEventTransactionData(Event event) {
         TransactionData eventTransactionData = getEventTransactionData(event);
-        if (eventTransactionData != null && transactionHelper.isConfirmed(eventTransactionData)) {
+        if (eventTransactionData != null && nodeTransactionHelper.isConfirmed(eventTransactionData)) {
             return eventTransactionData;
         }
         return null;

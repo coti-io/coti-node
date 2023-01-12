@@ -1,8 +1,6 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.GetMerchantRollingReserveAddressCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.MerchantRollingReserveAddressData;
 import io.coti.basenode.data.NodeType;
@@ -12,21 +10,13 @@ import io.coti.basenode.http.GetMerchantRollingReserveAddressResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.financialserver.crypto.MerchantRollingReserveCrypto;
 import io.coti.financialserver.crypto.RecourseClaimCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.GetMerchantRollingReserveDataRequest;
 import io.coti.financialserver.http.GetRollingReserveReleaseDatesResponse;
 import io.coti.financialserver.http.RecourseClaimRequest;
-import io.coti.financialserver.model.Disputes;
-import io.coti.financialserver.model.MerchantRollingReserves;
-import io.coti.financialserver.model.RecourseClaims;
-import io.coti.financialserver.model.RollingReserveReleaseDates;
 import io.coti.financialserver.utils.DatesHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -44,29 +35,8 @@ public class RollingReserveService {
 
     private static final int COTI_ROLLING_RESERVE_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.ROLLING_RESERVE_POOL.getIndex());
     private static final int ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD = 10;
-    @Autowired
-    private MerchantRollingReserves merchantRollingReserves;
-    @Autowired
-    private RollingReserveReleaseDates rollingReserveReleaseDates;
-    @Autowired
-    private TransactionCreationService transactionCreationService;
-    @Autowired
-    private RecourseClaims recourseClaims;
     @Value("${financialserver.seed.key}")
     private String seed;
-    @Autowired
-    private MerchantRollingReserveCrypto merchantRollingReserveCrypto;
-    @Autowired
-    private GetMerchantRollingReserveAddressCrypto getMerchantRollingReserveAddressCrypto;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private Disputes disputes;
-
     private AtomicInteger lastAddressIndex;
 
 
@@ -151,7 +121,7 @@ public class RollingReserveService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(DISPUTE_TRANSACTION_NOT_FOUND, STATUS_ERROR));
         }
 
-        if (!transactionHelper.getReceiverBaseTransactionAddressHash(transactionData).equals(getCotiRollingReserveAddress())) {
+        if (!nodeTransactionHelper.getReceiverBaseTransactionAddressHash(transactionData).equals(getCotiRollingReserveAddress())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(NOT_COTI_POOL, STATUS_ERROR));
         }
 
@@ -197,9 +167,9 @@ public class RollingReserveService {
             RollingReserveReleaseStatus rollingReserveReleaseStatus = rollingReserveReleaseDateData.getRollingReserveReleaseStatusByMerchant().get(merchantHash);
 
             if (rollingReserveReleaseStatus == null) {
-                rollingReserveReleaseStatus = new RollingReserveReleaseStatus(transactionHelper.getRollingReserveAmount(transactionData), transactionData.getHash());
+                rollingReserveReleaseStatus = new RollingReserveReleaseStatus(nodeTransactionHelper.getRollingReserveAmount(transactionData), transactionData.getHash());
             } else {
-                rollingReserveReleaseStatus.addToInitialAmount(transactionHelper.getRollingReserveAmount(transactionData));
+                rollingReserveReleaseStatus.addToInitialAmount(nodeTransactionHelper.getRollingReserveAmount(transactionData));
                 rollingReserveReleaseStatus.getPaymentTransactions().add(transactionData.getHash());
             }
 

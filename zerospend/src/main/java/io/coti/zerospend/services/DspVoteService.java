@@ -1,16 +1,10 @@
 package io.coti.zerospend.services;
 
-import io.coti.basenode.crypto.DspConsensusCrypto;
-import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.DspVoteException;
-import io.coti.basenode.model.TransactionVotes;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeDspVoteService;
-import io.coti.basenode.services.TransactionIndexService;
-import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,22 +13,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static io.coti.zerospend.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
+@Primary
 public class DspVoteService extends BaseNodeDspVoteService {
 
-    @Autowired
-    private TransactionIndexService transactionIndexService;
-    @Autowired
-    private TransactionVotes transactionVotes;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private TransactionDspVoteCrypto transactionDspVoteCrypto;
-    @Autowired
-    private DspConsensusCrypto dspConsensusCrypto;
-    @Autowired
-    private INetworkService networkService;
     private ConcurrentMap<Hash, List<DspVote>> transactionHashToVotesListMapping;
     private final LockData transactionHashLockData = new LockData();
     private Map<Hash, HashSet<TransactionDspVote>> missingTransactionsAwaitingHandling;

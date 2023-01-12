@@ -1,9 +1,7 @@
 package io.coti.basenode.controllers;
 
 import io.coti.basenode.http.GetTransactionByIndexRequest;
-import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -12,13 +10,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.transactionService;
+
 @Slf4j
 @RestController
 @RequestMapping("/transaction_batch")
 public class TransactionBatchController {
-
-    @Autowired
-    private ITransactionService transactionService;
 
     @PostMapping()
     public void getTransactionBatchByStartAndEnd(@RequestBody @Valid GetTransactionByIndexRequest transactionByIndexRequest, HttpServletResponse response) {

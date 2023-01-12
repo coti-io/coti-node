@@ -1,30 +1,20 @@
 package io.coti.basenode.services;
 
 import com.google.gson.Gson;
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.crypto.GetNodeRegistrationRequestCrypto;
-import io.coti.basenode.crypto.NetworkNodeCrypto;
-import io.coti.basenode.crypto.NodeRegistrationCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.exceptions.NetworkException;
 import io.coti.basenode.exceptions.NetworkNodeValidationException;
 import io.coti.basenode.exceptions.NodeRegistrationValidationException;
 import io.coti.basenode.exceptions.TransactionSyncException;
 import io.coti.basenode.http.*;
-import io.coti.basenode.model.NodeRegistrations;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.INodeServiceManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.info.BuildProperties;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
 import java.util.*;
@@ -34,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
 public abstract class BaseNodeInitializationService {
@@ -42,10 +34,15 @@ public abstract class BaseNodeInitializationService {
     private static final String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     private static final String LAST_KNOWN_WALLET_ENDPOINT = "/nodes/last";
     private static final String NETWORK_DETAILS_ERROR = "Error at getting network details";
+    private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")
     protected String nodeIp;
+    protected String version;
+    protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
+    @Autowired
+    private INodeServiceManager nodeServiceManager;
     @Value("${node.manager.ip}")
     private String nodeManagerIp;
     @Value("${node.manager.port}")
@@ -57,81 +54,16 @@ public abstract class BaseNodeInitializationService {
     private String kycServerAddress;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
-    @Autowired
-    protected INetworkService networkService;
-    @Autowired
-    private IAwsService awsService;
-    @Autowired
-    private IDatabaseConnector databaseConnector;
-    @Autowired
-    private IDBRecoveryService dbRecoveryService;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
-    @Autowired
-    private IBalanceService balanceService;
-    @Autowired
-    private IConfirmationService confirmationService;
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    protected IMonitorService monitorService;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private ITransactionService transactionService;
-    @Autowired
-    private IAddressService addressService;
-    @Autowired
-    private IDspVoteService dspVoteService;
-    @Autowired
-    private IPotService potService;
-    @Autowired
-    private IPropagationSubscriber propagationSubscriber;
-    @Autowired
-    private IShutDownService shutDownService;
-    @Autowired
-    private RestTemplate restTemplate;
-    @Autowired
-    private GetNodeRegistrationRequestCrypto getNodeRegistrationRequestCrypto;
-    @Autowired
-    private NodeRegistrationCrypto nodeRegistrationCrypto;
-    @Autowired
-    private NetworkNodeCrypto networkNodeCrypto;
-    @Autowired
-    private NodeRegistrations nodeRegistrations;
-    @Autowired
-    private BaseNodeClusterStampService clusterStampService;
-    @Autowired
-    private ITransactionSynchronizationService transactionSynchronizationService;
-    @Autowired
-    protected ApplicationContext applicationContext;
-    @Autowired
-    private BuildProperties buildProperties;
-    protected String version;
-    @Autowired
-    private ITransactionPropagationCheckService transactionPropagationCheckService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    private IMintingService mintingService;
-    private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
-    @Autowired
-    protected IScraperInterface scraperService;
-    @Autowired
-    protected IEventService eventService;
-    protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
-    @Autowired
-    private INodeFeesService nodeFeesService;
 
     public void init() {
+        nodeServiceManager.init();
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
         version = buildProperties.getVersion();
     }
 
     public void initServices() {
+        clusterService.init();
         awsService.init();
         dbRecoveryService.init();
         addressService.init();
@@ -146,7 +78,7 @@ public abstract class BaseNodeInitializationService {
         transactionPropagationCheckService.init();
         potService.init();
         initCommunication();
-        eventService.init();
+        nodeEventService.init();
         log.info("The communication initialization is done");
         initTransactionSync();
         log.info("The transaction sync initialization is done");
@@ -236,8 +168,8 @@ public abstract class BaseNodeInitializationService {
             mintingService.handleExistingTransaction(transactionData);
         });
         existingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> transactionService.addDataToMemory(transactionData));
-        eventService.handleExistingTransaction(transactionData);
-        transactionHelper.incrementTotalTransactions();
+        nodeEventService.handleExistingTransaction(transactionData);
+        nodeTransactionHelper.incrementTotalTransactions();
     }
 
     protected void createNetworkNodeData() {

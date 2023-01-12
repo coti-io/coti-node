@@ -3,9 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.HealthMetricOutput;
 import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.services.interfaces.IScraperInterface;
-import io.coti.basenode.services.interfaces.IMonitorService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +13,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.monitorService;
 
 @Slf4j
 @Service
@@ -34,8 +34,6 @@ public class BaseNodeScraperService implements IScraperInterface {
     private int metricToScraperInterval;
     @Value("${detailed.logs:false}")
     private boolean metricsDetailed;
-    @Autowired
-    private IMonitorService monitorService;
 
     public void init() {
         log.info("{} is up", this.getClass().getSimpleName());

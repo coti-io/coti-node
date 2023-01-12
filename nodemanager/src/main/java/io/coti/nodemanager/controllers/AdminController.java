@@ -2,22 +2,17 @@ package io.coti.nodemanager.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.http.*;
-import io.coti.nodemanager.services.NodeManagementService;
-import io.coti.nodemanager.services.StakingService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
+import static io.coti.nodemanager.services.NodeServiceManager.nodeManagementService;
+import static io.coti.nodemanager.services.NodeServiceManager.stakingService;
+
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
-
-    @Autowired
-    private StakingService stakingService;
-    @Autowired
-    private NodeManagementService nodeManagementService;
 
     @PutMapping(path = "/stake")
     public ResponseEntity<IResponse> setNodeStake(@Valid @RequestBody SetNodeStakeAdminRequest request) {

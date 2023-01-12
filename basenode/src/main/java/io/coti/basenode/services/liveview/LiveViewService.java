@@ -4,20 +4,17 @@ import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.services.liveview.data.GraphData;
 import io.coti.basenode.services.liveview.data.GraphTransactionData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Vector;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.messagingSender;
+
 @Slf4j
 @Service
 public class LiveViewService {
-
-    @Autowired
-    private SimpMessagingTemplate messagingSender;
 
     private GraphData graphData;
 

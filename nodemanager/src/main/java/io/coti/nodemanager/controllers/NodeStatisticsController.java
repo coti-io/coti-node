@@ -5,9 +5,7 @@ import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.nodemanager.http.GetNodeDetailsRequest;
 import io.coti.nodemanager.http.GetNodeStatisticsRequest;
 import io.coti.nodemanager.http.GetNodesActivityPercentageRequest;
-import io.coti.nodemanager.services.interfaces.INetworkHistoryService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,13 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static io.coti.nodemanager.services.NodeServiceManager.networkHistoryService;
+
 @RestController
 @RequestMapping("/statistics")
 @Slf4j
 public class NodeStatisticsController {
-
-    @Autowired
-    private INetworkHistoryService networkHistoryService;
 
     @PostMapping(path = "/events")
     public ResponseEntity<IResponse> getNodeEvents(@Valid @RequestBody GetNodeStatisticsRequest getNodeStatisticsRequest) {
