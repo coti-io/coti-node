@@ -7,10 +7,7 @@ import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
 import io.coti.financialserver.data.DisputeItemStatus;
 import io.coti.financialserver.exceptions.DisputeItemChangeStatusException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
@@ -90,9 +87,9 @@ public enum DisputeItemStatusService {
         }
     };
 
-    protected WebSocketService webSocketService;
-    protected Transactions transactions;
-    protected RollingReserveService rollingReserveService;
+    protected WebSocketService webSocketService = io.coti.financialserver.services.NodeServiceManager.webSocketService;
+    protected Transactions transactions = io.coti.financialserver.services.NodeServiceManager.transactions;
+    protected RollingReserveService rollingReserveService = io.coti.financialserver.services.NodeServiceManager.rollingReserveService;
     private final DisputeItemStatus newDisputeItemStatus;
     private final Set<DisputeItemStatus> previousDisputeItemStatuses;
     private final ActionSide actionSide;
@@ -219,22 +216,4 @@ public enum DisputeItemStatusService {
         return true;
     }
 
-    @Component
-    public static class DisputeItemStatusServiceInjector {
-        @Autowired
-        private Transactions transactions;
-        @Autowired
-        private RollingReserveService rollingReserveService;
-        @Autowired
-        private WebSocketService webSocketService;
-
-        @PostConstruct
-        public void postConstruct() {
-            for (DisputeItemStatusService disputeItemStatusService : EnumSet.allOf(DisputeItemStatusService.class)) {
-                disputeItemStatusService.transactions = transactions;
-                disputeItemStatusService.rollingReserveService = rollingReserveService;
-                disputeItemStatusService.webSocketService = webSocketService;
-            }
-        }
-    }
 }

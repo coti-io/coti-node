@@ -1,22 +1,22 @@
 package io.coti.dspnode.services;
 
 import io.coti.basenode.services.BaseNodeShutDownService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-@Service
-public class ShutDownService extends BaseNodeShutDownService {
+import static io.coti.dspnode.services.NodeServiceManager.*;
 
-    @Autowired
-    private TransactionService transactionService;
+@Service
+@Primary
+public class ShutDownService extends BaseNodeShutDownService {
 
     @Override
     public void shutDownServices() {
-        receiver.shutdown();
+        zeroMQReceiver.shutdown();
         propagationSubscriber.shutdown();
         propagationPublisher.shutdown();
         transactionService.shutdown();
-        sender.shutdown();
+        zeroMQSender.shutdown();
         confirmationService.shutdown();
         databaseConnector.shutdown();
     }

@@ -5,7 +5,6 @@ import io.coti.basenode.data.HealthMetricOutput;
 import io.coti.basenode.services.interfaces.IMonitorService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,6 +18,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.dbRecoveryService;
+import static io.coti.basenode.services.BaseNodeServiceManager.monitorConfigurationProperties;
+
 @Slf4j
 @Service
 public class BaseNodeMonitorService implements IMonitorService {
@@ -27,8 +29,6 @@ public class BaseNodeMonitorService implements IMonitorService {
     @Getter
     private final ReentrantReadWriteLock monitorReadWriteLock = new ReentrantReadWriteLock(true);
     private Thread sampleHealthStateThread;
-    @Autowired
-    private BaseNodeServiceManager baseNodeServiceManager;
     @Value("${allow.transaction.monitoring:false}")
     private boolean allowTransactionMonitoring;
     @Value("${detailed.logs:false}")
@@ -58,13 +58,11 @@ public class BaseNodeMonitorService implements IMonitorService {
             return;
         }
 
-        HealthMetric.setAutowireds(this, baseNodeServiceManager);
-
         try {
             for (HealthMetric healthMetric : HealthMetric.values()) {
                 healthMetrics.put(healthMetric, new HealthMetricData(healthMetric));
             }
-            baseNodeServiceManager.getMonitorConfigurationProperties().updateThresholds(healthMetrics);
+            monitorConfigurationProperties.updateThresholds(healthMetrics);
 
             sampleHealthStateThread = new Thread(this::sampleHealthState, "NodeMonitorService");
             sampleHealthStateThread.start();
@@ -199,7 +197,7 @@ public class BaseNodeMonitorService implements IMonitorService {
             updateHealthMetricsSnapshot();
             calculateHealthMetrics();
             calculateTotalHealthState();
-            baseNodeServiceManager.getDbRecoveryService().clearBackupLog();
+            dbRecoveryService.clearBackupLog();
         } catch (Exception e) {
             log.error(e.getMessage());
             throw e;

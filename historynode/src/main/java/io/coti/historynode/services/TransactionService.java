@@ -4,18 +4,12 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.*;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.historynode.crypto.GetTransactionsByAddressRequestCrypto;
 import io.coti.historynode.data.AddressTransactionsByAddress;
 import io.coti.historynode.data.AddressTransactionsByDate;
-import io.coti.historynode.http.GetTransactionsByAddressRequest;
-import io.coti.historynode.http.GetTransactionsByDateRequest;
-import io.coti.historynode.model.AddressTransactionsByAddresses;
-import io.coti.historynode.model.AddressTransactionsByDates;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,27 +26,16 @@ import java.util.*;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
-
+import static io.coti.historynode.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
+@Primary
 public class TransactionService extends BaseNodeTransactionService {
 
     private static final String END_POINT_RETRIEVE = "/transactions/reactive";
     @Value("${storage.server.address}")
     protected String storageServerAddress;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private StorageConnector<AddEntitiesBulkRequest, AddHistoryEntitiesResponse> storageConnector;
-    @Autowired
-    private AddressTransactionsByAddresses addressTransactionsByAddresses;
-    @Autowired
-    private AddressTransactionsByDates addressTransactionsByDates;
-    @Autowired
-    private GetTransactionsByAddressRequestCrypto getTransactionsByAddressRequestCrypto;
-    @Autowired
-    private HttpJacksonSerializer jacksonSerializer;
 
     @Override
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
@@ -121,7 +104,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     private void getTransactionFromElasticSearch(List<Hash> transactionsHashes, PrintWriter output) {
         RestTemplate restTemplate = new RestTemplate();
-        CustomRequestCallBack requestCallBack = new CustomRequestCallBack(jacksonSerializer, new GetHistoryTransactionsRequest(transactionsHashes));
+        CustomRequestCallBack requestCallBack = new CustomRequestCallBack(httpJacksonSerializer, new GetHistoryTransactionsRequest(transactionsHashes));
         ((ChunkService) chunkService).transactionHandler(responseExtractor ->
                         restTemplate.execute(storageServerAddress + END_POINT_RETRIEVE, HttpMethod.POST, requestCallBack, responseExtractor)
                 , output);
@@ -219,7 +202,7 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     protected ResponseEntity<AddHistoryEntitiesResponse> storeEntitiesByType(String url, AddEntitiesBulkRequest addEntitiesBulkRequest) {
-        return storageConnector.storeInStorage(url, addEntitiesBulkRequest, AddHistoryEntitiesResponse.class);
+        return entitiesStorageConnector.storeInStorage(url, addEntitiesBulkRequest, AddHistoryEntitiesResponse.class);
     }
 
 }

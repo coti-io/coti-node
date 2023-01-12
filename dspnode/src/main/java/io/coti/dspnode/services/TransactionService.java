@@ -1,15 +1,9 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.crypto.TransactionDspVoteCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeTransactionService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.IValidationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,24 +12,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
+@Primary
 public class TransactionService extends BaseNodeTransactionService {
 
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private IValidationService validationService;
-    @Autowired
-    private ISender sender;
-    @Autowired
-    private TransactionDspVoteCrypto transactionDspVoteCrypto;
-    @Autowired
-    private INetworkService networkService;
-    @Autowired
-    private TransactionPropagationCheckService transactionPropagationCheckService;
     private BlockingQueue<TransactionData> transactionsToValidate;
     private Thread transactionValidationThread;
 
@@ -47,6 +30,7 @@ public class TransactionService extends BaseNodeTransactionService {
         super.init();
     }
 
+    @Override
     public void handleNewTransactionFromFullNode(TransactionData transactionData) {
         log.debug("Running new transaction from full node handler: {}", transactionData.getHash());
         AtomicBoolean isTransactionAlreadyPropagated = new AtomicBoolean(false);
@@ -65,9 +49,9 @@ public class TransactionService extends BaseNodeTransactionService {
                 postponedTransactionMap.putIfAbsent(transactionData, true);
                 return;
             }
-            if (!validateAndAttachTransaction(transactionData)) {
-                return;
-            }
+
+            validateAndAttachTransaction(transactionData);
+
             propagationPublisher.propagate(transactionData, Arrays.asList(
                     NodeType.FullNode,
                     NodeType.TrustScoreNode,
@@ -76,14 +60,14 @@ public class TransactionService extends BaseNodeTransactionService {
                     NodeType.FinancialServer,
                     NodeType.HistoryNode));
             transactionPropagationCheckService.addNewUnconfirmedTransaction(transactionData.getHash());
-            transactionHelper.setTransactionStateToFinished(transactionData);
+            nodeTransactionHelper.setTransactionStateToFinished(transactionData);
             transactionsToValidate.add(transactionData);
         } catch (Exception ex) {
             log.error("Exception while handling transaction {}", transactionData, ex);
         } finally {
             if (!isTransactionAlreadyPropagated.get()) {
-                boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
-                transactionHelper.endHandleTransaction(transactionData);
+                boolean isTransactionFinished = nodeTransactionHelper.isTransactionFinished(transactionData);
+                nodeTransactionHelper.endHandleTransaction(transactionData);
                 if (isTransactionFinished) {
                     processPostponedTransactions(transactionData);
                 }
@@ -136,7 +120,7 @@ public class TransactionService extends BaseNodeTransactionService {
         if (zeroSpendServer != null) {
             String zeroSpendReceivingAddress = zeroSpendServer.getReceivingFullAddress();
             log.debug("Sending DSP vote to {} for transaction {}", zeroSpendReceivingAddress, transactionData.getHash());
-            sender.send(transactionDspVote, zeroSpendReceivingAddress);
+            zeroMQSender.send(transactionDspVote, zeroSpendReceivingAddress);
         } else {
             log.error("ZeroSpendServer is not in the network. Failed to send dsp vote for transaction {}", transactionData.getHash());
         }
@@ -159,6 +143,7 @@ public class TransactionService extends BaseNodeTransactionService {
         propagationPublisher.propagate(transactionData, Collections.singletonList(NodeType.FullNode));
     }
 
+    @Override
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         transactionValidationThread.interrupt();
@@ -168,12 +153,11 @@ public class TransactionService extends BaseNodeTransactionService {
             Thread.currentThread().interrupt();
             log.error("Interrupted shutdown {}", this.getClass().getSimpleName());
         }
-
     }
 
     @Scheduled(initialDelay = 2000, fixedDelay = 5000)
     public void totalTransactionsAmountFromRecovery() {
-        TransactionsStateData transactionsStateData = new TransactionsStateData(transactionHelper.getTotalTransactions());
+        TransactionsStateData transactionsStateData = new TransactionsStateData(nodeTransactionHelper.getTotalTransactions());
         propagationPublisher.propagate(transactionsStateData, Collections.singletonList(NodeType.FullNode));
     }
 

@@ -1,11 +1,8 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.model.TransactionIndexes;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IConfirmationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -16,24 +13,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
 public class BaseNodeConfirmationService implements IConfirmationService {
 
-    @Autowired
-    private IBalanceService balanceService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    private IMintingService mintingService;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
-    @Autowired
-    private TransactionIndexes transactionIndexes;
-    @Autowired
-    private Transactions transactions;
     private BlockingQueue<ConfirmationData> confirmationQueue;
     private final Map<Long, DspConsensusResult> waitingDspConsensusResults = new ConcurrentHashMap<>();
     private final Map<Long, TransactionData> waitingMissingTransactionIndexes = new ConcurrentHashMap<>();
@@ -126,17 +111,16 @@ public class BaseNodeConfirmationService implements IConfirmationService {
                 if (!insertNewTransactionIndex(transactionData)) {
                     return;
                 }
-                if (transactionHelper.isDspConfirmed(transactionData)) {
+                if (nodeTransactionHelper.isDspConfirmed(transactionData)) {
                     continueHandleDSPConfirmedTransaction(transactionData);
                     dspConfirmed.incrementAndGet();
                 }
             }
-            if (transactionHelper.isConfirmed(transactionData)) {
+            if (nodeTransactionHelper.isConfirmed(transactionData)) {
                 processConfirmedTransaction(transactionData);
             }
             transactions.put(transactionData);
         });
-
     }
 
     protected boolean insertNewTransactionIndex(TransactionData transactionData) {
@@ -201,12 +185,12 @@ public class BaseNodeConfirmationService implements IConfirmationService {
 
     @Override
     public void insertSavedTransaction(TransactionData transactionData, Map<Long, ReducedExistingTransactionData> indexToTransactionMap) {
-        boolean isDspConfirmed = transactionHelper.isDspConfirmed(transactionData);
+        boolean isDspConfirmed = nodeTransactionHelper.isDspConfirmed(transactionData);
         transactionData.getBaseTransactions().forEach(baseTransactionData ->
                 balanceService.updatePreBalance(baseTransactionData.getAddressHash(), baseTransactionData.getCurrencyHash(), baseTransactionData.getAmount())
         );
         if (!isDspConfirmed) {
-            transactionHelper.addNoneIndexedTransaction(transactionData);
+            nodeTransactionHelper.addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
             indexToTransactionMap.put(transactionData.getDspConsensusResult().getIndex(), new ReducedExistingTransactionData(transactionData));
@@ -236,8 +220,8 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     private void insertMissingDspConfirmation(TransactionData transactionData) {
-        if (!transactionHelper.isDspConfirmed(transactionData)) {
-            transactionHelper.addNoneIndexedTransaction(transactionData);
+        if (!nodeTransactionHelper.isDspConfirmed(transactionData)) {
+            nodeTransactionHelper.addNoneIndexedTransaction(transactionData);
         }
         if (transactionData.getDspConsensusResult() != null) {
             insertMissingTransactionIndex(transactionData);

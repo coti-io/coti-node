@@ -4,10 +4,8 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
-import io.coti.basenode.services.interfaces.IClusterHelper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,6 +15,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.clusterHelper;
 
 @Slf4j
 @Service
@@ -33,8 +33,6 @@ public class TrustChainConfirmationService {
     private boolean trustScoreNotChanged = false;
     @Getter
     private int tccWaitingConfirmation = 0;
-    @Autowired
-    private IClusterHelper clusterHelper;
 
     public void init(ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster) {
         this.trustChainConfirmationCluster = new ConcurrentHashMap<>(trustChainConfirmationCluster);
@@ -62,7 +60,6 @@ public class TrustChainConfirmationService {
         if (parent.getTrustChainTrustScore() < parent.getSenderTrustScore() + maxChildrenTotalTrustScore) {
             parent.setTrustChainTrustScore(parent.getSenderTrustScore() + maxChildrenTotalTrustScore);
         }
-
     }
 
     public List<TccInfo> getTrustChainConfirmedTransactions() {

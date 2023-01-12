@@ -2,16 +2,10 @@ package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
-import io.coti.basenode.model.AddressTransactionsHistories;
-import io.coti.basenode.model.TransactionIndexes;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -23,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.data.TransactionState.*;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -30,36 +25,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     public static final int CURRENCY_SCALE = 8;
     private final AtomicLong totalTransactions = new AtomicLong(0);
-    @Autowired
-    protected ITransactionPropagationCheckService transactionPropagationCheckService;
-    @Autowired
-    private AddressTransactionsHistories addressTransactionsHistories;
-    @Autowired
-    private TransactionCrypto transactionCrypto;
-    @Autowired
-    private IBalanceService balanceService;
-    @Autowired
-    private IConfirmationService confirmationService;
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private TransactionIndexes transactionIndexes;
-    @Autowired
-    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
-    @Autowired
-    private BaseNodeCurrencyService currencyService;
-    @Autowired
-    private IMintingService mintingService;
-    @Autowired
-    private IEventService eventService;
-    @Autowired
-    private ITransactionHelper transactionHelper;
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private Set<Hash> noneIndexedTransactionHashes;
-    @Autowired
-    private INetworkService networkService;
 
     private long totalNumberOfTransactionsFromRecovery = 0;
 
@@ -110,7 +77,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     }
 
     public void updateMintedAddress(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeBaseTransactionData != null) {
             Hash receiverAddressHash = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
             Optional<BaseTransactionData> identicalAddresses = transactionData.getBaseTransactions().stream().filter(t -> t.getAddressHash().equals(receiverAddressHash)).findFirst();
@@ -342,7 +309,7 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
 
     @Override
     public boolean checkEventHardForkAndAddToEvents(TransactionData transactionData) {
-        if (!eventService.checkEventAndUpdateEventsTable(transactionData)) {
+        if (!nodeEventService.checkEventAndUpdateEventsTable(transactionData)) {
             return false;
         }
         transactionHashToTransactionStateStackMapping.get(transactionData.getHash()).push(PAYLOAD_CHECKED);

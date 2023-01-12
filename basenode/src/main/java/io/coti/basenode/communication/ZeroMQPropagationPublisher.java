@@ -2,13 +2,11 @@ package io.coti.basenode.communication;
 
 import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.PublisherHeartBeatData;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.ZeroMQPublisherException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.zeromq.SocketType;
@@ -21,6 +19,8 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.serializer;
 
 @Slf4j
 @Service
@@ -39,8 +39,6 @@ public class ZeroMQPropagationPublisher implements IPropagationPublisher {
     private Thread publishHeartBeatMessageThread;
     private Thread monitorThread;
     private BlockingQueue<ZeroMQMessageData> publishMessageQueue;
-    @Autowired
-    private ISerializer serializer;
     private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
 
     public void init(String propagationPort, NodeType publisherNodeType) {

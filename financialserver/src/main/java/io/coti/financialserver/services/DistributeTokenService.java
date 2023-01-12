@@ -4,8 +4,6 @@ import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.financialserver.crypto.TokenSaleDistributionCrypto;
 import io.coti.financialserver.data.Fund;
 import io.coti.financialserver.data.ReservedAddress;
 import io.coti.financialserver.data.TokenSaleDistributionData;
@@ -14,10 +12,8 @@ import io.coti.financialserver.http.TokenSaleDistributionRequest;
 import io.coti.financialserver.http.TokenSaleDistributionResponse;
 import io.coti.financialserver.http.data.TokenSaleDistributionResponseData;
 import io.coti.financialserver.http.data.TokenSaleDistributionResultData;
-import io.coti.financialserver.model.TokenSaleDistributions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,6 +25,7 @@ import java.util.List;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.financialserver.http.HttpStringConstants.DISTRIBUTION_REQUEST_HANDLED_PREVIOUSLY;
 import static io.coti.financialserver.http.HttpStringConstants.DUPLICATE_FUND_NAME;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -38,14 +35,6 @@ public class DistributeTokenService {
     private String seed;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
-    @Autowired
-    private TokenSaleDistributionCrypto tokenSaleDistributionCrypto;
-    @Autowired
-    private TransactionCreationService transactionCreationService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    private TokenSaleDistributions tokenSaleDistributions;
 
     public ResponseEntity<IResponse> distributeTokens(TokenSaleDistributionRequest request) {
 

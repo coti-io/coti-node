@@ -1,8 +1,7 @@
-package io.coti.financialserver.http;
+package io.coti.basenode.http;
 
 import io.coti.basenode.data.CurrencyTypeData;
 import io.coti.basenode.data.OriginatorCurrencyData;
-import io.coti.basenode.http.Request;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

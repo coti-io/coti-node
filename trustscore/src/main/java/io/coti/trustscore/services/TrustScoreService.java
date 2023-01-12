@@ -1,7 +1,6 @@
 package io.coti.trustscore.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.http.GetUserTrustScoreResponse;
@@ -9,10 +8,6 @@ import io.coti.basenode.http.Response;
 import io.coti.basenode.http.data.TransactionTrustScoreResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.trustscore.config.rules.RulesData;
-import io.coti.trustscore.crypto.GetTransactionTrustScoreRequestCrypto;
-import io.coti.trustscore.crypto.TrustScoreCrypto;
-import io.coti.trustscore.crypto.TrustScoreEventCrypto;
-import io.coti.trustscore.crypto.TrustScoreUserTypeCrypto;
 import io.coti.trustscore.data.Buckets.*;
 import io.coti.trustscore.data.Enums.EventType;
 import io.coti.trustscore.data.Enums.HighFrequencyEventScoreType;
@@ -21,21 +16,17 @@ import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.*;
 import io.coti.trustscore.data.TrustScoreData;
 import io.coti.trustscore.http.*;
-import io.coti.trustscore.model.BucketEvents;
-import io.coti.trustscore.model.TrustScores;
 import io.coti.trustscore.services.interfaces.IBucketEventService;
 import io.coti.trustscore.utils.BucketBuilder;
 import io.coti.trustscore.utils.DatesCalculation;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -46,6 +37,7 @@ import java.util.*;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.trustscore.http.HttpStringConstants.*;
+import static io.coti.trustscore.services.NodeServiceManager.*;
 import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest;
 
 @Slf4j
@@ -53,37 +45,12 @@ import static io.coti.trustscore.utils.BucketBuilder.buildTransactionDataRequest
 @Data
 public class TrustScoreService {
 
-    @Autowired
-    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
-    @Autowired
-    private TrustScoreCrypto trustScoreCrypto;
-    @Autowired
-    private TrustScoreUserTypeCrypto trustScoreUserTypeCrypto;
-    @Autowired
-    private TrustScoreEventCrypto trustScoreEventCrypto;
-    @Autowired
-    private TrustScores trustScores;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
-    @Autowired
-    private BucketTransactionService bucketTransactionService;
-    @Autowired
-    private BucketBehaviorEventsService bucketBehaviorEventsService;
-    @Autowired
-    private BucketInitialTrustScoreEventsService bucketInitialTrustScoreEventsService;
-    @Autowired
-    private BucketChargeBackEventsService bucketChargeBackEventsService;
-    @Autowired
-    private BucketNotFulfilmentEventsService bucketNotFulfilmentEventsService;
-    @Autowired
-    private BucketEvents bucketEvents;
-    @Autowired
-    private GetTransactionTrustScoreRequestCrypto getTransactionTrustScoreRequestCrypto;
     private List<IBucketEventService> bucketEventServiceList;
     private RulesData rulesData;
 
-    @PostConstruct
-    private void init() {
+    protected void init() {
         log.info("{} is up", this.getClass().getSimpleName());
         bucketEventServiceList = new ArrayList<>();
         rulesData = loadRulesFromJsonFile();

@@ -3,10 +3,7 @@ package io.coti.zerospend.services;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
-import io.coti.basenode.services.interfaces.IClusterHelper;
-import io.coti.basenode.services.interfaces.IClusterService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,17 +16,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.zerospend.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
 public class SourceStarvationService {
 
     private static final long SOURCE_STARVATION_CHECK_TASK_DELAY = 3000;
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private IClusterHelper clusterHelper;
-    @Autowired
-    private TransactionCreationService transactionCreationService;
 
     @Scheduled(fixedDelay = SOURCE_STARVATION_CHECK_TASK_DELAY)
     public void checkSourcesStarvation() {

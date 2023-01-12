@@ -4,45 +4,33 @@ import com.google.common.collect.Sets;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IClusterService;
-import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.ISourceSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
 public class ClusterService implements IClusterService {
 
     private static final int TCC_CONFIRMATION_INTERVAL = 3000;
-    private ArrayList<HashSet<Hash>> sourceSetsByTrustScore;
-    private HashMap<Hash, TransactionData> sourceMap;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private IConfirmationService confirmationService;
-    @Autowired
-    private ISourceSelector sourceSelector;
-    @Autowired
-    private TrustChainConfirmationService trustChainConfirmationService;
-    private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private final AtomicLong totalSources = new AtomicLong(0);
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private ArrayList<HashSet<Hash>> sourceSetsByTrustScore;
+    private HashMap<Hash, TransactionData> sourceMap;
+    private ConcurrentHashMap<Hash, TransactionData> trustChainConfirmationCluster;
     private Thread trustChainConfirmedTransactionsThread;
     private boolean initialConfirmation = true;
     private Object initialConfirmationLock;
 
-    @PostConstruct
     public void init() {
         initialConfirmationLock = confirmationService.getInitialConfirmationLock();
         trustChainConfirmationCluster = new ConcurrentHashMap<>();
@@ -125,11 +113,9 @@ public class ClusterService implements IClusterService {
     }
 
     private void updateParents(TransactionData transactionData) {
-
         updateSingleParent(transactionData, transactionData.getLeftParentHash());
         updateSingleParent(transactionData, transactionData.getRightParentHash());
         removeTransactionParentsFromSources(transactionData);
-
     }
 
     private void updateSingleParent(TransactionData transactionData, Hash parentHash) {

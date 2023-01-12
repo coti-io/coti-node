@@ -5,15 +5,19 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.exceptions.ClusterStampValidationException;
 import io.coti.basenode.services.BaseNodeClusterStampService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.clusterStampCrypto;
+import static io.coti.basenode.services.BaseNodeServiceManager.networkService;
 
 @Slf4j
 @Service
+@Primary
 public class ClusterStampService extends BaseNodeClusterStampService {
 
     @Override

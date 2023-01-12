@@ -9,10 +9,7 @@ import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.AddressBalanceData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.IEventService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.MULTI_DAG_IS_NOT_SUPPORTED;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.BaseNodeServiceManager.currencyService;
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeEventService;
 
 @Slf4j
 @Service
@@ -33,10 +32,6 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     protected Map<Hash, Map<Hash, BigDecimal>> balanceMap;
     protected Map<Hash, Map<Hash, BigDecimal>> preBalanceMap;
-    @Autowired
-    protected ICurrencyService currencyService;
-    @Autowired
-    private IEventService baseNodeEventService;
 
     public void init() {
         balanceMap = new ConcurrentHashMap<>();
@@ -101,7 +96,7 @@ public class BaseNodeBalanceService implements IBalanceService {
 
     @Override
     public ResponseEntity<IResponse> getTokenBalances(GetTokenBalancesRequest getTokenBalancesRequest) {
-        if (!baseNodeEventService.eventHappened(Event.MULTI_DAG)) {
+        if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
             return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));
         }
         Map<Hash, Map<Hash, AddressBalanceData>> addressToTokenBalances = new HashMap<>();

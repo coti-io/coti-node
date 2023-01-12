@@ -5,11 +5,10 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.BaseNodeInitializationService;
-import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -18,13 +17,15 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 
-@Service
+import static io.coti.fullnode.services.NodeServiceManager.*;
+
 @Slf4j
+@Service
+@Primary
 public class InitializationService extends BaseNodeInitializationService {
 
     private final EnumMap<NodeType, List<Class<? extends IPropagatable>>> publisherNodeTypeToMessageTypesMap = new EnumMap<>(NodeType.class);
-    @Autowired
-    private ICommunicationService communicationService;
+
     @Value("${server.port}")
     private String serverPort;
     @Value("${minimumFee}")

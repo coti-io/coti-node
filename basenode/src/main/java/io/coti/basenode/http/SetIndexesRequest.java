@@ -1,4 +1,4 @@
-package io.coti.zerospend.http;
+package io.coti.basenode.http;
 
 import io.coti.basenode.data.Hash;
 import lombok.Data;

@@ -1,40 +1,23 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.crypto.TransactionSenderCrypto;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
 import io.coti.basenode.data.interfaces.ITrustScoreNodeValidatable;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IPotService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.services.interfaces.IValidationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.EnumSet;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
-
 
 @Service
 public class BaseNodeValidationService implements IValidationService {
-
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private TransactionCrypto transactionCrypto;
-    @Autowired
-    private TransactionSenderCrypto transactionSenderCrypto;
-    @Autowired
-    private IPotService potService;
 
     @Override
     public boolean validateSource(Hash transactionHash) {
@@ -56,8 +39,8 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateTransactionDataIntegrity(TransactionData transactionData) {
-        return transactionHelper.validateTransactionType(transactionData) && transactionHelper.validateTransactionCrypto(transactionData)
-                && transactionHelper.validateBaseTransactionsDataIntegrity(transactionData) && validateTransactionSenderSignature(transactionData);
+        return nodeTransactionHelper.validateTransactionType(transactionData) && nodeTransactionHelper.validateTransactionCrypto(transactionData)
+                && nodeTransactionHelper.validateBaseTransactionsDataIntegrity(transactionData) && validateTransactionSenderSignature(transactionData);
     }
 
     @Override
@@ -79,37 +62,42 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateTransactionTrustScore(TransactionData transactionData) {
-        return transactionHelper.validateTrustScore(transactionData);
+        return nodeTransactionHelper.validateTrustScore(transactionData);
     }
 
     @Override
     public boolean validateBaseTransactionAmounts(TransactionData transactionData) {
-        return transactionHelper.validateBaseTransactionAmounts(transactionData.getBaseTransactions());
+        return nodeTransactionHelper.validateBaseTransactionAmounts(transactionData.getBaseTransactions());
     }
 
     @Override
     public boolean validateBalancesAndAddToPreBalance(TransactionData transactionData) {
-        return transactionHelper.checkBalancesAndAddToPreBalance(transactionData);
+        return nodeTransactionHelper.checkBalancesAndAddToPreBalance(transactionData);
     }
 
     @Override
     public boolean validateTokenMintingAndAddToAllocatedAmount(TransactionData transactionData) {
-        return transactionHelper.checkTokenMintingAndAddToAllocatedAmount(transactionData);
+        return nodeTransactionHelper.checkTokenMintingAndAddToAllocatedAmount(transactionData);
     }
 
     @Override
     public boolean validateEventHardFork(TransactionData transactionData) {
-        return transactionHelper.checkEventHardForkAndAddToEvents(transactionData);
+        return nodeTransactionHelper.checkEventHardForkAndAddToEvents(transactionData);
+    }
+
+    @Override
+    public Boolean validateFullNodeFeeDataIntegrity(TransactionData transactionData) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean validateCurrencyUniquenessAndAddUnconfirmedRecord(TransactionData transactionData) {
-        return transactionHelper.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData);
+        return nodeTransactionHelper.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData);
     }
 
     @Override
     public <T extends BaseTransactionData & ITrustScoreNodeValidatable> boolean validateBaseTransactionTrustScoreNodeResult(T baseTransactionData) {
-        return transactionHelper.validateBaseTransactionTrustScoreNodeResult(baseTransactionData);
+        return nodeTransactionHelper.validateBaseTransactionTrustScoreNodeResult(baseTransactionData);
     }
 
     @Override
@@ -125,7 +113,7 @@ public class BaseNodeValidationService implements IValidationService {
 
     @Override
     public boolean validateTransactionTimeFields(TransactionData transactionData) {
-        return transactionHelper.validateTransactionTimeFields(transactionData);
+        return nodeTransactionHelper.validateTransactionTimeFields(transactionData);
     }
 
     @Override

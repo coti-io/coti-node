@@ -1,13 +1,9 @@
 package io.coti.fullnode.controllers;
 
 import io.coti.basenode.data.TransactionIndexData;
-import io.coti.basenode.http.Response;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.TransactionIndexService;
-import io.coti.fullnode.http.*;
-import io.coti.fullnode.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -17,17 +13,14 @@ import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 
 import static io.coti.fullnode.http.HttpStringConstants.EXPLORER_TRANSACTION_PAGE_INVALID;
+import static io.coti.fullnode.services.NodeServiceManager.transactionIndexService;
+import static io.coti.fullnode.services.NodeServiceManager.transactionService;
 
 @Slf4j
 @RestController
 @RequestMapping("/transaction")
 @Validated
 public class TransactionController {
-
-    @Autowired
-    private TransactionService transactionService;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
 
     @PutMapping()
     public ResponseEntity<Response> addTransaction(@Valid @RequestBody AddTransactionRequest addTransactionRequest) {

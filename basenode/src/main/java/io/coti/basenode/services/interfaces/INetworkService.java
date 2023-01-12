@@ -1,6 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.*;
+import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.http.GetNetworkLastKnownNodesResponse;
 import io.coti.basenode.http.data.NetworkLastKnownNodesResponseData;
 
@@ -47,21 +48,21 @@ public interface INetworkService {
 
     void handleConnectedSingleNodeChange(NetworkData newNetworkData, NodeType singleNodeType);
 
-    void setNodeManagerPropagationAddress(String nodeManagerPropagationAddress);
-
     String getNodeManagerPropagationAddress();
+
+    void setNodeManagerPropagationAddress(String nodeManagerPropagationAddress);
 
     void setConnectToNetworkUrl(String connectToNetworkUrl);
 
     NetworkData getNetworkData();
 
-    NetworkData getSignedNetworkData();
-
     void setNetworkData(NetworkData networkData);
 
-    void setNetworkNodeData(NetworkNodeData networkNodeData);
+    NetworkData getSignedNetworkData();
 
     NetworkNodeData getNetworkNodeData();
+
+    void setNetworkNodeData(NetworkNodeData networkNodeData);
 
     void connectToNetwork();
 
@@ -73,9 +74,15 @@ public interface INetworkService {
 
     List<Hash> getNodesHashes(NodeType nodeType);
 
-    void setNetworkLastKnownNodeMap(HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap);
-
     Map<Hash, NetworkNodeData> getNetworkLastKnownNodeMap();
 
+    void setNetworkLastKnownNodeMap(HashMap<Hash, NetworkNodeData> networkLastKnownNodeMap);
+
     boolean isConnectedToRecovery();
+
+    void sendDataToConnectedDspNodes(IPropagatable propagatable);
+
+    boolean isNotConnectedToDspNodes();
+
+    Map<String, List<String>> getNetworkSummary();
 }

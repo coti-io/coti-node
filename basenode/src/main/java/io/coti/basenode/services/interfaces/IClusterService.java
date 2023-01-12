@@ -31,4 +31,6 @@ public interface IClusterService {
     void checkForTrustChainConfirmedTransaction();
 
     double getRuntimeTrustChainTrustScore(Hash transactionHash);
+
+    void init();
 }

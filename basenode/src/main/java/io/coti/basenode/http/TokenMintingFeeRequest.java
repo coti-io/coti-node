@@ -1,8 +1,7 @@
-package io.coti.financialserver.http;
+package io.coti.basenode.http;
 
+import io.coti.basenode.data.MintingFeeQuoteData;
 import io.coti.basenode.data.TokenMintingServiceData;
-import io.coti.basenode.http.Request;
-import io.coti.financialserver.data.MintingFeeQuoteData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

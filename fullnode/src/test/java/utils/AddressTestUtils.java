@@ -2,8 +2,8 @@ package utils;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.fullnode.http.AddressBulkRequest;
-import io.coti.fullnode.http.AddressesExistsResponse;
+import io.coti.basenode.http.AddressBulkRequest;
+import io.coti.basenode.http.AddressesExistsResponse;
 
 import java.util.*;
 

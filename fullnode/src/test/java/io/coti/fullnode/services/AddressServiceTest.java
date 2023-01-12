@@ -6,13 +6,13 @@ import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
+import io.coti.basenode.http.AddressBulkRequest;
+import io.coti.basenode.http.AddressesExistsResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.model.RequestedAddressHashes;
 import io.coti.basenode.services.FileService;
 import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.fullnode.http.AddressBulkRequest;
-import io.coti.fullnode.http.AddressesExistsResponse;
 import io.coti.fullnode.websocket.WebSocketSender;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-public class AddressServiceTest {
+class AddressServiceTest {
 
     private final String HISTORY_PORT = "7031";
 
@@ -77,7 +77,7 @@ public class AddressServiceTest {
      * the expected response is Hash, TRUE.
      */
     @Test
-    public void addressesExist_addressInLocalDB_shouldReturnHashAndTrue() {
+    void addressesExist_addressInLocalDB_shouldReturnHashAndTrue() {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash());
 
@@ -97,7 +97,7 @@ public class AddressServiceTest {
      * the expected response is Hash, TRUE,TRUE.
      */
     @Test
-    public void addressesExist_addressInLocalDbAndUpdatedFromHistoryLessThenTenMinutes_shouldReturnTrueAndFalse() {
+    void addressesExist_addressInLocalDbAndUpdatedFromHistoryLessThenTenMinutes_shouldReturnTrueAndFalse() {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(), addressInRequestedAddressesCollectionLessThenTenMinutes.getHash());
         AddressesExistsResponse actualResponse = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);

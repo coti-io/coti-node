@@ -8,9 +8,7 @@ import io.coti.basenode.model.Collection;
 import io.coti.basenode.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
@@ -21,6 +19,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.applicationContext;
 
 @Slf4j
 @Service
@@ -39,8 +39,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private boolean dropNotListedColumnFamilies;
     @Value("${reset.transactions}")
     private boolean resetTransactions;
-    @Autowired
-    private ApplicationContext ctx;
+
     private String dbPath;
     private RocksDB db;
     protected List<String> columnFamilyClassNames;
@@ -212,7 +211,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
     private void initColumnFamilyClasses() {
         for (int i = 1; i < columnFamilyClassNames.size(); i++) {
             try {
-                ((Collection<?>) ctx.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
+                ((Collection<?>) applicationContext.getBean(Class.forName(columnFamilyClassNames.get(i)))).init();
             } catch (Exception e) {
                 throw new DataBaseException("Error at init column family classes.", e);
             }

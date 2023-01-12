@@ -7,20 +7,11 @@ import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.INetworkService;
-import io.coti.financialserver.crypto.FundDistributionFileCrypto;
-import io.coti.financialserver.crypto.FundDistributionFileResultCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.*;
 import io.coti.financialserver.http.data.*;
-import io.coti.financialserver.model.DailyFundDistributionFiles;
-import io.coti.financialserver.model.DailyFundDistributions;
-import io.coti.financialserver.model.FailedFundDistributions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.financialserver.http.HttpStringConstants.*;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -55,26 +47,6 @@ public class FundDistributionService {
     private String kycServerPublicKey;
     @Value("${distribution.cron.enabled}")
     private boolean distributionCronEnabled;
-    @Autowired
-    private TransactionCreationService transactionCreationService;
-    @Autowired
-    private IBalanceService balanceService;
-    @Autowired
-    protected INetworkService networkService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    private AwsService awsService;
-    @Autowired
-    private FundDistributionFileCrypto fundDistributionFileCrypto;
-    @Autowired
-    private FundDistributionFileResultCrypto fundDistributionFileResultCrypto;
-    @Autowired
-    private DailyFundDistributions dailyFundDistributions;
-    @Autowired
-    private FailedFundDistributions failedFundDistributions;
-    @Autowired
-    private DailyFundDistributionFiles dailyFundDistributionFiles;
     private Map<Hash, FundDistributionReservedBalanceData> fundReservedBalanceMap;
     private Map<Hash, ReservedBalanceData> addressToReservedBalanceMap;
 

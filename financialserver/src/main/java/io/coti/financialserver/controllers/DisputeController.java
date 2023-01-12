@@ -2,23 +2,17 @@ package io.coti.financialserver.controllers;
 
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.financialserver.http.*;
-import io.coti.financialserver.services.DisputeService;
-import io.coti.financialserver.services.ItemService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
+import static io.coti.financialserver.services.NodeServiceManager.disputeService;
+import static io.coti.financialserver.services.NodeServiceManager.itemService;
+
 @RestController
 @RequestMapping("/dispute")
 public class DisputeController {
-
-    @Autowired
-    private DisputeService disputeService;
-
-    @Autowired
-    private ItemService itemService;
 
     @PutMapping()
     public ResponseEntity<IResponse> createDispute(@Valid @RequestBody NewDisputeRequest newDisputeRequest) {

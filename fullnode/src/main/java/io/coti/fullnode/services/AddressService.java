@@ -1,55 +1,33 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
-import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetHistoryAddressesRequest;
-import io.coti.basenode.http.GetHistoryAddressesResponse;
-import io.coti.basenode.http.HttpJacksonSerializer;
-import io.coti.basenode.http.SerializableResponse;
-import io.coti.basenode.model.Addresses;
-import io.coti.basenode.model.RequestedAddressHashes;
+import io.coti.basenode.http.*;
 import io.coti.basenode.services.BaseNodeAddressService;
-import io.coti.fullnode.http.AddressBulkRequest;
-import io.coti.fullnode.http.AddressesExistsResponse;
-import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
+import static io.coti.fullnode.services.NodeServiceManager.*;
+
 @Slf4j
 @Service
+@Primary
 public class AddressService extends BaseNodeAddressService {
 
-    @Autowired
-    private WebSocketSender webSocketSender;
-    @Autowired
-    private NetworkService networkService;
-    @Autowired
-    private Addresses addresses;
-    @Autowired
-    private RequestedAddressHashes requestedAddressHashes;
-    @Autowired
-    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
-    @Autowired
-    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
-    @Autowired
-    private HttpJacksonSerializer jacksonSerializer;
-
-    public boolean addAddress(Hash addressHash) {
+    public Boolean addAddress(Hash addressHash) {
         AddressData addressData = new AddressData(addressHash);
 
         if (!super.addNewAddress(addressData)) {
-            return false;
+            return Boolean.FALSE;
         }
 
         networkService.sendDataToConnectedDspNodes(addressData);
         continueHandleGeneratedAddress(addressData);
-        return true;
+        return Boolean.TRUE;
     }
 
     @Override

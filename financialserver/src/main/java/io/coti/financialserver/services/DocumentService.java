@@ -6,18 +6,11 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.services.FileService;
-import io.coti.financialserver.crypto.DisputeDocumentCrypto;
-import io.coti.financialserver.crypto.GetDisputeItemDetailCrypto;
-import io.coti.financialserver.crypto.GetDocumentFileCrypto;
 import io.coti.financialserver.data.*;
 import io.coti.financialserver.http.*;
 import io.coti.financialserver.http.data.GetDisputeItemDetailData;
 import io.coti.financialserver.http.data.GetDocumentFileData;
-import io.coti.financialserver.model.DisputeDocuments;
-import io.coti.financialserver.model.Disputes;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,29 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.coti.financialserver.http.HttpStringConstants.*;
+import static io.coti.financialserver.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
 public class DocumentService {
-
-    @Autowired
-    private AwsService awsService;
-    @Autowired
-    private DisputeDocuments disputeDocuments;
-    @Autowired
-    private DisputeDocumentCrypto disputeDocumentCrypto;
-    @Autowired
-    private GetDisputeItemDetailCrypto getDisputeDocumentNamesCrypto;
-    @Autowired
-    private GetDocumentFileCrypto getDocumentFileCrypto;
-    @Autowired
-    private Disputes disputes;
-    @Autowired
-    private DisputeService disputeService;
-    @Autowired
-    private WebSocketService webSocketService;
-    @Autowired
-    private FileService fileService;
 
     public ResponseEntity<IResponse> newDocument(NewDocumentRequest request) {
 

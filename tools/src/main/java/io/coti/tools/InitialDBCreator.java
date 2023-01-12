@@ -20,10 +20,8 @@ public class InitialDBCreator {
 
             Transactions transactions = new Transactions();
             transactions.init();
-            transactions.databaseConnector = connector;
             TransactionIndexes transactionIndexes = new TransactionIndexes();
             transactionIndexes.init();
-            transactionIndexes.databaseConnector = connector;
         } catch (Exception e) {
             log.error("Error at initial db creator", e);
         }

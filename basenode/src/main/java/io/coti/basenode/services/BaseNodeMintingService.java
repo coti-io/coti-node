@@ -1,30 +1,23 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.model.Currencies;
-import io.coti.basenode.services.interfaces.IBalanceService;
-import io.coti.basenode.services.interfaces.ICurrencyService;
+import io.coti.basenode.http.GetTokenMintingFeeQuoteRequest;
+import io.coti.basenode.http.TokenMintingFeeRequest;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IMintingService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+
 @Slf4j
 @Service
 public class BaseNodeMintingService implements IMintingService {
 
-    @Autowired
-    protected ICurrencyService currencyService;
-    @Autowired
-    protected Currencies currencies;
-    @Autowired
-    protected IBalanceService balanceService;
-    @Autowired
-    protected ITransactionHelper transactionHelper;
     private final LockData tokenHashLockData = new LockData();
 
     public void init() {
@@ -33,8 +26,8 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public boolean checkMintingAmountAndUpdateMintableAmount(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
-        if (!transactionHelper.validateBaseTransactionPublicKey(tokenMintingFeeBaseTransactionData, NodeType.FinancialServer)) {
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
+        if (!nodeTransactionHelper.validateBaseTransactionPublicKey(tokenMintingFeeBaseTransactionData, NodeType.FinancialServer)) {
             log.error("Error in Minting check. Base transaction not signed by an authorized Financial server");
             return false;
         }
@@ -77,7 +70,7 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void revertMintingAllocation(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeData = transactionHelper.getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeData != null) {
             Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
             try {
@@ -99,7 +92,7 @@ public class BaseNodeMintingService implements IMintingService {
 
     @Override
     public void doTokenMinting(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = transactionHelper.getTokenMintingFeeData(transactionData);
+        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
         if (tokenMintingFeeBaseTransactionData != null) {
             TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
             Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
@@ -111,6 +104,16 @@ public class BaseNodeMintingService implements IMintingService {
             currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
             updateMintedAddress(tokenMintingFeeBaseTransactionServiceData);
         }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getTokenMintingFeeQuote(GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getTokenMintingFee(TokenMintingFeeRequest tokenMintingFeeRequest) {
+        throw new UnsupportedOperationException();
     }
 
     private void updateMintedAddress(TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData) {

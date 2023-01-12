@@ -2,7 +2,7 @@ package io.coti.financialserver.crypto;
 
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.SignatureCrypto;
-import io.coti.financialserver.data.MintingFeeQuoteData;
+import io.coti.basenode.data.MintingFeeQuoteData;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;

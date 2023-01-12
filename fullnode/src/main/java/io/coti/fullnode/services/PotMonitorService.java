@@ -1,18 +1,16 @@
 package io.coti.fullnode.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+import static io.coti.fullnode.services.NodeServiceManager.potService;
+
 @Slf4j
 @Service
 public class PotMonitorService {
-
-    @Autowired
-    private PotService potService;
 
     @Scheduled(initialDelay = 1000, fixedDelay = 60000)
     public void lastPot() {

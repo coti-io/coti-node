@@ -2,11 +2,9 @@ package io.coti.basenode.communication;
 
 import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.IReceiver;
-import io.coti.basenode.communication.interfaces.ISerializer;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.ZeroMQReceiverException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
@@ -18,6 +16,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.serializer;
 
 @Slf4j
 @Service
@@ -32,8 +32,6 @@ public class ZeroMQReceiver implements IReceiver {
     private Thread receiverThread;
     private Thread monitorThread;
     private Thread messagesQueueHandlerThread;
-    @Autowired
-    private ISerializer serializer;
     private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
 
     @Override

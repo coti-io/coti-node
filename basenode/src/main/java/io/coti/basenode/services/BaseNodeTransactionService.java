@@ -1,19 +1,16 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.JacksonSerializer;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.ChunkException;
+import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;
 import io.coti.basenode.http.data.ReducedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.TransactionIndexes;
-import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,42 +26,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import static io.coti.basenode.constants.BaseNodeMessages.*;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Slf4j
 @Service
 public class BaseNodeTransactionService implements ITransactionService {
 
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private IValidationService validationService;
-    @Autowired
-    private IDspVoteService dspVoteService;
-    @Autowired
-    private IConfirmationService confirmationService;
-    @Autowired
-    private IClusterService clusterService;
-    @Autowired
-    private IClusterHelper clusterHelper;
-    @Autowired
-    private Transactions transactions;
-    @Autowired
-    private TransactionIndexService transactionIndexService;
-    @Autowired
-    private JacksonSerializer jacksonSerializer;
-    @Autowired
-    private TransactionIndexes transactionIndexes;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    private IMintingService mintingService;
     protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
-    @Autowired
-    protected IChunkService chunkService;
-    @Autowired
-    protected IEventService eventService;
 
     @Override
     public void init() {
@@ -137,7 +108,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                     transactionNumber.incrementAndGet();
                 }
             }
-            for (Hash hash : transactionHelper.getNoneIndexedTransactionHashes()) {
+            for (Hash hash : nodeTransactionHelper.getNoneIndexedTransactionHashes()) {
                 output.write(jacksonSerializer.serialize(transactions.getByHash(hash)));
                 output.flush();
                 transactionNumber.incrementAndGet();
@@ -169,7 +140,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 }
             }
 
-            for (Hash hash : transactionHelper.getNoneIndexedTransactionHashes()) {
+            for (Hash hash : nodeTransactionHelper.getNoneIndexedTransactionHashes()) {
                 sink.next(jacksonSerializer.serialize((transactions.getByHash(hash))));
                 transactionNumber.incrementAndGet();
 
@@ -201,7 +172,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public ResponseEntity<IResponse> getNoneIndexedTransactions() {
         try {
-            Set<Hash> noneIndexedTransactionHashes = transactionHelper.getNoneIndexedTransactionHashes();
+            Set<Hash> noneIndexedTransactionHashes = nodeTransactionHelper.getNoneIndexedTransactionHashes();
             List<TransactionData> noneIndexedTransactions = new ArrayList<>();
             noneIndexedTransactionHashes.forEach(transactionHash -> {
                         TransactionData transactionData = transactions.getByHash(transactionHash);
@@ -226,7 +197,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     @Override
     public void getNoneIndexedTransactionBatch(HttpServletResponse response, boolean isExtended) {
         try {
-            Set<Hash> noneIndexedTransactionHashes = transactionHelper.getNoneIndexedTransactionHashes();
+            Set<Hash> noneIndexedTransactionHashes = nodeTransactionHelper.getNoneIndexedTransactionHashes();
             PrintWriter output = response.getWriter();
             chunkService.startOfChunk(output);
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
@@ -278,18 +249,16 @@ public class BaseNodeTransactionService implements ITransactionService {
                 postponedTransactionMap.putIfAbsent(transactionData, false);
                 return;
             }
-            if (!validateAndAttachTransaction(transactionData)) {
-                return;
-            }
+            validateAndAttachTransaction(transactionData);
 
             continueHandlePropagatedTransaction(transactionData);
-            transactionHelper.setTransactionStateToFinished(transactionData);
+            nodeTransactionHelper.setTransactionStateToFinished(transactionData);
         } catch (Exception e) {
             log.error("Transaction propagation handler error:", e);
         } finally {
             if (!isTransactionAlreadyPropagated.get()) {
-                boolean isTransactionFinished = transactionHelper.isTransactionFinished(transactionData);
-                transactionHelper.endHandleTransaction(transactionData);
+                boolean isTransactionFinished = nodeTransactionHelper.isTransactionFinished(transactionData);
+                nodeTransactionHelper.endHandleTransaction(transactionData);
                 if (isTransactionFinished) {
                     processPostponedTransactions(transactionData);
                 }
@@ -301,12 +270,12 @@ public class BaseNodeTransactionService implements ITransactionService {
             isTransactionAlreadyPropagated) {
         try {
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
-                isTransactionAlreadyPropagated.set(transactionHelper.isTransactionAlreadyPropagated(transactionData));
+                isTransactionAlreadyPropagated.set(nodeTransactionHelper.isTransactionAlreadyPropagated(transactionData));
                 if (!isTransactionAlreadyPropagated.get()) {
                     if (!TransactionType.ZeroSpend.equals(transactionData.getType())) {
                         log.info("Starting handling for new transaction: {}", transactionData.getHash());
                     }
-                    transactionHelper.startHandleTransaction(transactionData);
+                    nodeTransactionHelper.startHandleTransaction(transactionData);
                 }
             }
         } finally {
@@ -314,26 +283,21 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
     }
 
-    protected boolean validateAndAttachTransaction(TransactionData transactionData) {
+    protected void validateAndAttachTransaction(TransactionData transactionData) {
         if (!validationService.validateBalancesAndAddToPreBalance(transactionData)) {
-            log.error("Balance check failed: {}", transactionData.getHash());
-            return false;
+            throw new TransactionValidationException(INSUFFICIENT_FUNDS_MESSAGE);
         }
         if (transactionData.getType().equals(TransactionType.TokenGeneration) && !validationService.validateCurrencyUniquenessAndAddUnconfirmedRecord(transactionData)) {
-            log.error("Not unique token generation attempt by transaction: {}", transactionData.getHash());
-            return false;
+            throw new TransactionValidationException(NOT_UNIQUE_TOKEN_GENERATION_TRANSACTION);
         }
         if (transactionData.getType().equals(TransactionType.TokenMinting) && !validationService.validateTokenMintingAndAddToAllocatedAmount(transactionData)) {
-            log.error("Minting balance check failed: {}", transactionData.getHash());
-            return false;
+            throw new TransactionValidationException(INSUFFICIENT_MINTING_FUNDS_MESSAGE);
         }
         if (transactionData.getType().equals(TransactionType.EventHardFork) && !validationService.validateEventHardFork(transactionData)) {
-            log.error("EVENT HARD FORK validation failed for transaction: {}", transactionData.getHash());
-            return false;
+            throw new TransactionValidationException(EVENT_HARD_FORK_ERROR);
         }
-        transactionHelper.attachTransactionToCluster(transactionData);
-        transactionHelper.setTransactionStateToSaved(transactionData);
-        return true;
+        nodeTransactionHelper.attachTransactionToCluster(transactionData);
+        nodeTransactionHelper.setTransactionStateToSaved(transactionData);
     }
 
     public void removeTransactionHashFromUnconfirmed(TransactionData transactionData) {
@@ -345,18 +309,22 @@ public class BaseNodeTransactionService implements ITransactionService {
         if (postponedDspConsensusResult != null) {
             dspVoteService.handleVoteConclusion(postponedDspConsensusResult);
         }
-        Map<TransactionData, Boolean> postponedParentTransactionMap = postponedTransactionMap.entrySet().stream().filter(
-                        postponedTransactionMapEntry ->
-                                (postponedTransactionMapEntry.getKey().getRightParentHash() != null
-                                        && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionData.getHash()))
-                                        || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
-                                        && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionData.getHash())))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<TransactionData, Boolean> postponedParentTransactionMap = getPostponedChildrenTransactionMap(transactionData.getHash(), postponedTransactionMap);
         postponedParentTransactionMap.forEach((postponedTransaction, isTransactionFromFullNode) -> {
             log.debug("Handling postponed transaction : {}, parent of transaction: {}", postponedTransaction.getHash(), transactionData.getHash());
             postponedTransactionMap.remove(postponedTransaction);
             handlePostponedTransaction(postponedTransaction, isTransactionFromFullNode);
         });
+    }
+
+    protected Map<TransactionData, Boolean> getPostponedChildrenTransactionMap(Hash transactionDataHash, Map<TransactionData, Boolean> postponedTransactionMap) {
+        return postponedTransactionMap.entrySet().stream().filter(
+                        postponedTransactionMapEntry ->
+                                (postponedTransactionMapEntry.getKey().getRightParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getRightParentHash().equals(transactionDataHash))
+                                        || (postponedTransactionMapEntry.getKey().getLeftParentHash() != null
+                                        && postponedTransactionMapEntry.getKey().getLeftParentHash().equals(transactionDataHash)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     protected void handlePostponedTransaction(TransactionData postponedTransaction,
@@ -367,13 +335,13 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     protected void continueHandlePropagatedTransaction(TransactionData transactionData) {
-        // implemented by sub classes
+        // implemented by subclasses
     }
 
     @Override
     public void handleMissingTransaction(TransactionData
                                                  transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap) {
-        boolean transactionExists = transactionHelper.isTransactionExists(transactionData);
+        boolean transactionExists = nodeTransactionHelper.isTransactionExists(transactionData);
         transactions.put(transactionData);
         if (!transactionExists) {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).submit(() -> {
@@ -386,7 +354,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 currencyService.handleMissingTransaction(transactionData);
                 mintingService.handleMissingTransaction(transactionData);
             });
-            transactionHelper.incrementTotalTransactions();
+            nodeTransactionHelper.incrementTotalTransactions();
         } else {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() ->
             {
@@ -395,7 +363,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 mintingService.handleMissingTransaction(transactionData);
             });
         }
-        eventService.handleMissingTransaction(transactionData);
+        nodeEventService.handleMissingTransaction(transactionData);
         missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CLUSTER).submit(() -> clusterService.addMissingTransactionOnInit(transactionData, trustChainUnconfirmedExistingTransactionHashes));
     }
 
@@ -421,6 +389,96 @@ public class BaseNodeTransactionService implements ITransactionService {
                 }
             }
         }, monitorThreadName);
+    }
+
+    @Override
+    public ResponseEntity<IResponse> setIndexToTransactions(SetIndexesRequest setIndexesRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void shutdown() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void handleNewTransactionFromFullNode(TransactionData data) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<Response> addNewTransaction(AddTransactionRequest addTransactionRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> repropagateTransactionByWallet(RepropagateTransactionRequest repropagateTransactionRequest) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash, boolean b) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getAddressTransactions(Hash address) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void getAddressTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response, boolean b) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void getAddressTransactionBatchByTimestamp(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response, boolean b) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void getAddressTransactionBatchByDate(GetAddressTransactionBatchByDateRequest getAddressTransactionBatchByDateRequest, HttpServletResponse response, boolean b) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getLastTransactions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getTotalTransactions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getTransactionsByPage(int page) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> repropagateTransactionByAdmin(RepropagateTransactionByAdminRequest repropagateTransactionByAdminRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> setReceiverBaseTransactionOwner(TransactionRequest transactionRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest, HttpServletResponse response) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest, HttpServletResponse response) {
+        throw new UnsupportedOperationException();
     }
 
     public void addDataToMemory(TransactionData transactionData) {
@@ -477,5 +535,4 @@ public class BaseNodeTransactionService implements ITransactionService {
             }
         }
     }
-
 }

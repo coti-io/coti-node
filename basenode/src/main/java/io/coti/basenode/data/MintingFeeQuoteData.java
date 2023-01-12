@@ -1,7 +1,5 @@
-package io.coti.financialserver.data;
+package io.coti.basenode.data;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;

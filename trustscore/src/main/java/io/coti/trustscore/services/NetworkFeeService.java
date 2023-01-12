@@ -6,10 +6,6 @@ import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Currencies;
-import io.coti.basenode.services.interfaces.ICurrencyService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.trustscore.config.rules.UserNetworkFeeByTrustScoreRange;
 import io.coti.trustscore.data.Enums.TrustScoreRangeType;
 import io.coti.trustscore.data.TrustScoreData;
@@ -17,9 +13,7 @@ import io.coti.trustscore.http.NetworkFeeRequest;
 import io.coti.trustscore.http.NetworkFeeResponse;
 import io.coti.trustscore.http.NetworkFeeValidateRequest;
 import io.coti.trustscore.http.data.NetworkFeeResponseData;
-import io.coti.trustscore.model.TrustScores;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +29,7 @@ import java.util.Map;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.services.BaseNodeTransactionHelper.CURRENCY_SCALE;
 import static io.coti.trustscore.http.HttpStringConstants.*;
+import static io.coti.trustscore.services.NodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -46,18 +41,6 @@ public class NetworkFeeService {
     private BigDecimal networkFeeDifferenceValidation;
     @Value("${regular.token.network.fee}")
     private BigDecimal regularTokenNetworkFee;
-    @Autowired
-    private ITransactionHelper transactionHelper;
-    @Autowired
-    private TrustScores trustScores;
-    @Autowired
-    private IValidationService validationService;
-    @Autowired
-    private TrustScoreService trustScoreService;
-    @Autowired
-    private ICurrencyService currencyService;
-    @Autowired
-    protected Currencies currencies;
 
     public ResponseEntity<IResponse> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
@@ -196,7 +179,7 @@ public class NetworkFeeService {
         return validationService.validateAmountField(networkFeeData.getOriginalAmount())
                 && validationService.validateAmountField(networkFeeData.getAmount())
                 && validationService.validateAmountField(networkFeeData.getReducedAmount())
-                && validateNetworkFeeCrypto(networkFeeData) && transactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData);
+                && validateNetworkFeeCrypto(networkFeeData) && nodeTransactionHelper.validateBaseTransactionTrustScoreNodeResult(networkFeeData);
     }
 
     private void setNetworkFeeHash(NetworkFeeData networkFeeData) {
