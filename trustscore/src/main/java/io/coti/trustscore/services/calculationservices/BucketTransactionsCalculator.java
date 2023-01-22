@@ -10,9 +10,9 @@ import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.BalanceCountAndContribution;
 import io.coti.trustscore.services.calculationservices.interfaces.IScoreCalculator;
 import io.coti.trustscore.utils.DatesCalculation;
-import javafx.util.Pair;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.Collections;
 import java.util.Date;
@@ -97,7 +97,7 @@ public class BucketTransactionsCalculator extends BucketCalculator {
 
     public void decayAndUpdateOldMonthlyEventScores(TransactionEventScore transactionEventScore, int daysDiff) {
         EventDecay transactionEventDecay = new EventDecay(transactionEventScore, bucketTransactionEventsData.getOldMonthBalanceContribution());
-        Pair<TransactionEventScore, Double> scoreAfterDecay = new DecayCalculator<TransactionEventScore>().calculateEntry(transactionEventDecay, daysDiff);
+        MutablePair<TransactionEventScore, Double> scoreAfterDecay = new DecayCalculator<TransactionEventScore>().calculateEntry(transactionEventDecay, daysDiff);
         bucketTransactionEventsData.setOldMonthBalanceContribution(scoreAfterDecay.getValue());
     }
 
@@ -213,7 +213,7 @@ public class BucketTransactionsCalculator extends BucketCalculator {
             for (long day = DatesCalculation.addToDateByDays(lastDayWithChangeInBalance.getTime(), 1).getTime();
                  day <= beginningOfToday;
                  day = DatesCalculation.addToDateByDays(day, 1).getTime(), numberOfDecays++) {
-                Pair<TransactionEventScore, Double> scoreAfterDecay = new DecayCalculator<TransactionEventScore>().calculateEntry(new EventDecay(transactionEventsScore
+                MutablePair<TransactionEventScore, Double> scoreAfterDecay = new DecayCalculator<TransactionEventScore>().calculateEntry(new EventDecay(transactionEventsScore
                         .getTransactionEventScoreMap()
                         .get(TransactionEventScoreType.AVERAGE_BALANCE), previousBalanceScore), -numberOfDecays);
                 double balanceDayScore = scoreAfterDecay.getValue();

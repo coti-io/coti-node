@@ -1,7 +1,7 @@
 package io.coti.trustscore.services.calculationservices;
 
 import io.coti.trustscore.config.rules.EventScore;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.Date;
 import java.util.Map;
@@ -30,9 +30,9 @@ public class VectorScoreCalculator<T extends EventScore> {
             for (Map.Entry<Date, String> dayToScoreCalculateFormulaEntry : dayToScoreCalculateFormulaMap.entrySet()) {
                 Date day = dayToScoreCalculateFormulaEntry.getKey();
                 String formula = dayToScoreCalculateFormulaEntry.getValue();
-                Pair<T, Double> eventScoreValue
-                        = scoreCalculator.calculateEntry(new Pair<>(eventScore, formula));
-                double dailyScore = eventScoreValue.getValue();
+                MutablePair eventScoreValue
+                        = scoreCalculator.calculateEntry(new MutablePair<>(eventScore, formula));
+                double dailyScore = (double) eventScoreValue.getValue();
                 dailyScoreMap.put(day, dailyScore);
             }
             eventScoresToValueByDayMap.put(eventScore, dailyScoreMap);

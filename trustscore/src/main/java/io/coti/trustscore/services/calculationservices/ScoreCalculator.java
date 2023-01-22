@@ -3,7 +3,7 @@ package io.coti.trustscore.services.calculationservices;
 import io.coti.trustscore.config.rules.EventScore;
 import io.coti.trustscore.services.calculationservices.interfaces.IScoreCalculator;
 import io.coti.trustscore.utils.MathCalculation;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.AbstractMap;
 import java.util.Map;
@@ -26,7 +26,7 @@ public class ScoreCalculator<T extends EventScore> implements IScoreCalculator {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public Pair<T, Double> calculateEntry(Pair<T, String> eventScoresToScoreCalculationFormulaPair) {
-        return new Pair<>(eventScoresToScoreCalculationFormulaPair.getKey(), MathCalculation.evaluateExpression(eventScoresToScoreCalculationFormulaPair.getValue()));
+    public MutablePair<T, Double> calculateEntry(MutablePair<T, String> eventScoresToScoreCalculationFormulaPair) {
+        return new MutablePair<>(eventScoresToScoreCalculationFormulaPair.getKey(), MathCalculation.evaluateExpression(eventScoresToScoreCalculationFormulaPair.getValue()));
     }
 }
