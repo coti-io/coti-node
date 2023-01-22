@@ -8,7 +8,7 @@ import io.coti.trustscore.data.Enums.BehaviorEventsScoreType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.EventCountAndContributionData;
 import io.coti.trustscore.utils.DatesCalculation;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.Date;
 import java.util.List;
@@ -160,7 +160,7 @@ public class BucketBehaviorEventsCalculator extends BucketCalculator {
                 // loop on every date
                 for (Map.Entry<Date, Double> dateToOldEventsContributionEntry : behaviorEventTypeToOldEventsContributionEntry.getValue().entrySet()) {
                     EventDecay behaviorEventDecay = new EventDecay(suspiciousEventScore, dateToOldEventsContributionEntry.getValue());
-                    Pair<SuspiciousEventScore, Double> decayedScores = new DecayCalculator<SuspiciousEventScore>().calculateEntry(behaviorEventDecay, daysDiff);
+                    MutablePair<SuspiciousEventScore, Double> decayedScores = new DecayCalculator<SuspiciousEventScore>().calculateEntry(behaviorEventDecay, daysDiff);
                     dayToScoreMap.put(dateToOldEventsContributionEntry.getKey(), decayedScores.getValue());
                 }
                 behaviorEventTypeToOldEventsContributionMapAfterDecayed.put(BehaviorEventsScoreType.enumFromString(suspiciousEventScore.getName()), dayToScoreMap);

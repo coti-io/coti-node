@@ -8,7 +8,7 @@ import io.coti.trustscore.data.Buckets.BucketNotFulfilmentEventsData;
 import io.coti.trustscore.data.Enums.CompensableEventScoreType;
 import io.coti.trustscore.data.Enums.UserType;
 import io.coti.trustscore.data.Events.NotFulfilmentToClientContributionData;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,14 +48,14 @@ public class BucketNotFulfilmentEventsCalculator extends BucketCalculator {
         for (int i = 0; i < daysDiff; i++) {
             String fineDailyChangeFormula = createFineFormula(clientNotFulfilmentToClientContributionData, compensableEventScore.getFineDailyChange());
             clientNotFulfilmentToClientContributionData
-                    .setFine((double) scoreCalculator.calculateEntry(new Pair<>(compensableEventScore,
+                    .setFine((double) scoreCalculator.calculateEntry(new MutablePair(compensableEventScore,
                             fineDailyChangeFormula)).getValue());
         }
     }
 
     private double calculateFine(NotFulfilmentToClientContributionData notFulfilmentToClientContributionData) {
         String fineFormula = createFineFormula(notFulfilmentToClientContributionData, compensableEventScore.getFine());
-        return new ScoreCalculator<>().calculateEntry(new Pair<>(compensableEventScore, fineFormula)).getValue();
+        return new ScoreCalculator<>().calculateEntry(new MutablePair<>(compensableEventScore, fineFormula)).getValue();
     }
 
     public void setCurrentScoresForSpecificClient(boolean isDebtDecreasing, Hash clientHash) {
