@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -30,34 +31,39 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.currencyService;
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeEventService;
 import static io.coti.basenode.utils.HashTestUtils.generateRandomAddressHash;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {BaseNodeCurrencyService.class, BaseNodeBalanceService.class})
+@ContextConfiguration(classes = {BaseNodeBalanceService.class})
 
+@ComponentScan(basePackages = {"services"})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class BaseNodeBalanceServiceTest {
+class BaseNodeBalanceServiceTest {
 
     @Autowired
-    private BaseNodeBalanceService balanceService;
+    BaseNodeBalanceService baseNodeBalanceService;
     @MockBean
-    protected ICurrencyService currencyService;
+    IEventService nodeEventServiceLocal;
     @MockBean
-    protected IEventService nodeEventService;
+    ICurrencyService currencyServiceLocal;
 
     @BeforeEach
-    public void init() {
-        balanceService.init();
+    void init() {
+        nodeEventService = nodeEventServiceLocal;
+        currencyService = currencyServiceLocal;
+        baseNodeBalanceService.init();
     }
 
     @Test
-    public void getCurrencyBalances_noNative_valuesMatch() {
-        when(nodeEventService.eventHappened(isA(Event.MULTI_DAG.getClass()))).thenReturn(true);
+    void getCurrencyBalances_noNative_valuesMatch() {
+        when(nodeEventServiceLocal.eventHappened(isA(Event.MULTI_DAG.getClass()))).thenReturn(true);
         when(currencyService.getNativeCurrencyHashIfNull(any(Hash.class))).then(a -> a.getArgument(0));
 
         GetTokenBalancesRequest getCurrencyBalanceRequest = new GetTokenBalancesRequest();
@@ -71,14 +77,14 @@ public class BaseNodeBalanceServiceTest {
         HashMap<Hash, BigDecimal> currencyHashToAmountMap1 = new HashMap<>();
         currencyHashToAmountMap1.put(tokenHash1, BigDecimal.TEN);
         currencyHashToAmountMap1.put(tokenHash2, BigDecimal.ONE);
-        balanceService.balanceMap.put(addressHash1, currencyHashToAmountMap1);
-        balanceService.balanceMap.put(addressHash2, currencyHashToAmountMap1);
+        baseNodeBalanceService.balanceMap.put(addressHash1, currencyHashToAmountMap1);
+        baseNodeBalanceService.balanceMap.put(addressHash2, currencyHashToAmountMap1);
         HashMap<Hash, BigDecimal> currencyHashToAmountMap2 = new HashMap<>();
         currencyHashToAmountMap2.put(tokenHash1, BigDecimal.ZERO);
         currencyHashToAmountMap2.put(tokenHash2, BigDecimal.ONE);
-        balanceService.preBalanceMap.put(addressHash1, currencyHashToAmountMap2);
-        balanceService.preBalanceMap.put(addressHash2, currencyHashToAmountMap2);
-        ResponseEntity<IResponse> currencyBalances = balanceService.getTokenBalances(getCurrencyBalanceRequest);
+        baseNodeBalanceService.preBalanceMap.put(addressHash1, currencyHashToAmountMap2);
+        baseNodeBalanceService.preBalanceMap.put(addressHash2, currencyHashToAmountMap2);
+        ResponseEntity<IResponse> currencyBalances = baseNodeBalanceService.getTokenBalances(getCurrencyBalanceRequest);
 
         Assertions.assertEquals(HttpStatus.OK, currencyBalances.getStatusCode());
         Assertions.assertTrue(((GetTokenBalancesResponse) Objects.requireNonNull(currencyBalances.getBody())).getTokenBalances().get(addressHash1).containsKey(tokenHash1));
@@ -88,7 +94,7 @@ public class BaseNodeBalanceServiceTest {
     }
 
     @Test
-    public void rollbackBaseTransactions() {
+    void rollbackBaseTransactions() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         Map<Hash, Map<Hash, BigDecimal>> preBalanceMap = new ConcurrentHashMap<>();
         AtomicReference<Hash> currencyHash = new AtomicReference<>();
@@ -98,34 +104,33 @@ public class BaseNodeBalanceServiceTest {
             currencyHash.set(baseTransactionData.getCurrencyHash());
             preBalanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
             preBalanceMap.get(addressHash).merge(currencyHash.get(), amount, (a, b) -> b.add(a));
-            when(currencyService.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash())).thenReturn(baseTransactionData.getCurrencyHash());
+            when(currencyServiceLocal.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash())).thenReturn(baseTransactionData.getCurrencyHash());
         });
-        ReflectionTestUtils.setField(balanceService, "preBalanceMap", preBalanceMap);
-        balanceService.rollbackBaseTransactions(transactionData);
+        ReflectionTestUtils.setField(baseNodeBalanceService, "preBalanceMap", preBalanceMap);
+        baseNodeBalanceService.rollbackBaseTransactions(transactionData);
         Assertions.assertEquals(BigDecimal.ZERO, preBalanceMap.get(transactionData.getBaseTransactions().get(0).getAddressHash()).get(currencyHash.get()));
     }
 
     @Test
-    public void checkBalancesAndAddToPreBalance_balance_below_zero() {
+    void checkBalancesAndAddToPreBalance_balance_below_zero() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
-        transactionData.getBaseTransactions().forEach(baseTransactionData ->
-                when(currencyService.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash())).thenReturn(baseTransactionData.getCurrencyHash()));
-        Assertions.assertFalse(balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions()));
+        transactionData.getBaseTransactions().forEach(baseTransactionData -> when(currencyServiceLocal.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash())).thenReturn(baseTransactionData.getCurrencyHash()));
+        Assertions.assertFalse(baseNodeBalanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions()));
     }
 
     @Test
-    public void checkBalancesAndAddToPreBalance_success() {
+    void checkBalancesAndAddToPreBalance_success() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
             if (baseTransactionData instanceof InputBaseTransactionData) {
                 Hash addressHash = baseTransactionData.getAddressHash();
-                balanceService.balanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
-                balanceService.balanceMap.get(addressHash).putIfAbsent(baseTransactionData.getCurrencyHash(), new BigDecimal(10));
-                balanceService.preBalanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
-                balanceService.preBalanceMap.get(addressHash).putIfAbsent(baseTransactionData.getCurrencyHash(), new BigDecimal(10));
+                baseNodeBalanceService.balanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
+                baseNodeBalanceService.balanceMap.get(addressHash).putIfAbsent(baseTransactionData.getCurrencyHash(), new BigDecimal(10));
+                baseNodeBalanceService.preBalanceMap.putIfAbsent(addressHash, new ConcurrentHashMap<>());
+                baseNodeBalanceService.preBalanceMap.get(addressHash).putIfAbsent(baseTransactionData.getCurrencyHash(), new BigDecimal(10));
             }
-            when(currencyService.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash())).thenReturn(baseTransactionData.getCurrencyHash());
+            when(currencyServiceLocal.getNativeCurrencyHashIfNull(baseTransactionData.getCurrencyHash())).thenReturn(baseTransactionData.getCurrencyHash());
         });
-        Assertions.assertTrue(balanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions()));
+        Assertions.assertTrue(baseNodeBalanceService.checkBalancesAndAddToPreBalance(transactionData.getBaseTransactions()));
     }
 }

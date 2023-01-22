@@ -1,12 +1,8 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.communication.interfaces.IPropagationSubscriber;
-import io.coti.basenode.communication.interfaces.IReceiver;
 import io.coti.basenode.data.HealthMetricData;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.model.RejectedTransactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IMonitorService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.utilities.MonitorConfigurationProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -14,65 +10,40 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL;
 import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TOTAL_TRANSACTIONS_LABEL;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {BaseNodeMonitorService.class, BaseNodeServiceManager.class,
-        MonitorConfigurationProperties.class})
-@EnableConfigurationProperties(value = MonitorConfigurationProperties.class)
+@ContextConfiguration(classes = {BaseNodeMonitorService.class, MonitorConfigurationProperties.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class BaseNodeMonitorServiceTest {
+class BaseNodeMonitorServiceTest {
 
     @Autowired
-    protected IMonitorService monitorService;
+    IMonitorService monitorServiceLocal;
+    @MockBean
+    INetworkService networkService;
     @Autowired
-    private BaseNodeServiceManager baseNodeServiceManager;
-    @Autowired
-    private MonitorConfigurationProperties monitorConfigurationProperties;
+    MonitorConfigurationProperties monitorConfigurationPropertiesLocal;
     @MockBean
-    protected INetworkService networkService;
-    @MockBean
-    private ITransactionHelper transactionHelper;
-    @MockBean
-    private IConfirmationService confirmationService;
-    @MockBean
-    private TransactionIndexService transactionIndexService;
-    @MockBean
-    private TrustChainConfirmationService trustChainConfirmationService;
-    @MockBean
-    private IClusterService clusterService;
-    @MockBean
-    private ITransactionService transactionService;
-    @MockBean
-    private RejectedTransactions rejectedTransactions;
-    @MockBean
-    private IPropagationSubscriber propagationSubscriber;
-    @MockBean
-    private IWebSocketMessageService webSocketMessageService;
-    @MockBean
-    private IReceiver receiver;
-    @MockBean
-    private IPropagationPublisher propagationPublisher;
-    @MockBean
-    private IDatabaseConnector databaseConnector;
-    @MockBean
-    private IDBRecoveryService dbRecoveryService;
+    BaseNodeTransactionHelper transactionHelper;
 
     @BeforeEach
-    public void init() {
+    void init() {
+        nodeTransactionHelper = transactionHelper;
+        monitorConfigurationProperties = monitorConfigurationPropertiesLocal;
+        monitorService = monitorServiceLocal;
         monitorService.initNodeMonitor();
+
     }
 
     private void initMetricData(HealthMetric healthMetric) {
@@ -85,7 +56,7 @@ public class BaseNodeMonitorServiceTest {
     }
 
     @Test
-    public void totalTransactionsMetric_checkCondition_normal() {
+    void totalTransactionsMetric_checkCondition_normal() {
         long totalTransactionsFromLocal = 7;
         long totalTransactionsFromRecovery = 7;
         HealthMetric healthMetric = HealthMetric.TOTAL_TRANSACTIONS_DELTA;
@@ -96,7 +67,7 @@ public class BaseNodeMonitorServiceTest {
     }
 
     @Test
-    public void totalTransactionsMetric_checkCondition_warning() {
+    void totalTransactionsMetric_checkCondition_warning() {
         long totalTransactionsFromLocal = 7;
         long totalTransactionsFromRecovery = 9;
         HealthMetric healthMetric = HealthMetric.TOTAL_TRANSACTIONS_DELTA;
@@ -109,7 +80,7 @@ public class BaseNodeMonitorServiceTest {
     }
 
     @Test
-    public void totalTransactionsMetric_checkCondition_critical() {
+    void totalTransactionsMetric_checkCondition_critical() {
         long totalTransactionsFromLocal = 7;
         long totalTransactionsFromRecovery = 15;
         HealthMetric healthMetric = HealthMetric.TOTAL_TRANSACTIONS_DELTA;
@@ -143,7 +114,7 @@ public class BaseNodeMonitorServiceTest {
     }
 
     @Test
-    public void percentage_used_heap_memory_normal() {
+    void percentage_used_heap_memory_normal() {
         HealthMetric healthMetric = HealthMetric.PERCENTAGE_USED_HEAP_MEMORY;
         initMetricData(healthMetric);
 
@@ -154,7 +125,7 @@ public class BaseNodeMonitorServiceTest {
     }
 
     @Test
-    public void percentage_used_memory_normal() {
+    void percentage_used_memory_normal() {
         HealthMetric healthMetric = HealthMetric.PERCENTAGE_USED_MEMORY;
         initMetricData(healthMetric);
 

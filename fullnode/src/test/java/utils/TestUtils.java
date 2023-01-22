@@ -1,13 +1,11 @@
 package utils;
 
 import io.coti.basenode.data.*;
-import io.coti.basenode.http.GetHistoryAddressesRequest;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TestUtils {
@@ -16,10 +14,6 @@ public class TestUtils {
     private static final int SIZE_OF_HASH = 64;
     private static final String TRANSACTION_DESCRIPTION = "test";
     public static final String NATIVE_CURRENCY_HASH = "ae2b227ab7e614b8734be1f03d1532e66bf6caf76accc02ca4da6e28";
-
-    public static Hash generateRandomHash() {
-        return generateRandomHash(SIZE_OF_HASH);
-    }
 
     public static Hash generateRandomHash(int lengthOfHash) {
         StringBuilder hexa = new StringBuilder();
@@ -32,18 +26,6 @@ public class TestUtils {
 
     public static TransactionData createRandomTransaction() {
         return createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-    }
-
-    public static TransactionData createRandomTransactionWithSenderAddress() {
-        TransactionData transactionData = createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-        transactionData.setSenderHash(generateRandomHash());
-        return transactionData;
-    }
-
-    public static TransactionData createRandomTransactionWithSenderAddress(Hash hash) {
-        TransactionData transactionData = createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
-        transactionData.setSenderHash(hash);
-        return transactionData;
     }
 
     private static TransactionData createRandomTransaction(Hash hash) {
@@ -65,21 +47,12 @@ public class TestUtils {
         return Math.random() * 100;
     }
 
-    public static GetHistoryAddressesRequest generateGetAddressesRequest() {
-        List<Hash> hashes = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            hashes.add(generateRandomHash());
-        }
-        return new GetHistoryAddressesRequest(hashes);
-    }
-
     public static RejectedTransactionData createRejectedTransaction() {
         TransactionData transactionToBeRejected = createRandomTransaction(generateRandomHash(SIZE_OF_HASH));
         return createRejectedTransaction(transactionToBeRejected);
     }
 
     public static RejectedTransactionData createRejectedTransaction(TransactionData transactionToBeRejected) {
-        RejectedTransactionData rejectedTransaction = new RejectedTransactionData(transactionToBeRejected, TRANSACTION_DESCRIPTION);
-        return rejectedTransaction;
+        return new RejectedTransactionData(transactionToBeRejected, TRANSACTION_DESCRIPTION);
     }
 }

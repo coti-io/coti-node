@@ -1,17 +1,15 @@
 package io.coti.storagenode.services;
 
 import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.crypto.*;
+import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
+import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.http.SerializableResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
-import io.coti.basenode.services.interfaces.IPotService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.storagenode.data.enums.ElasticSearchData;
 import io.coti.storagenode.database.DbConnectorService;
 import org.junit.jupiter.api.Assertions;
@@ -32,6 +30,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+import static io.coti.storagenode.services.NodeServiceManager.dbConnectorService;
+import static io.coti.storagenode.services.NodeServiceManager.objectService;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {AddressStorageService.class,
@@ -39,11 +40,10 @@ import static org.mockito.Mockito.when;
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @ExtendWith({SpringExtension.class})
-public class AddressStorageServiceTest {
+class AddressStorageServiceTest {
 
-    private final int NUMBER_OF_ADDRESSES = 4;
     @Autowired
-    protected JacksonSerializer jacksonSerializer;
+    protected JacksonSerializer jacksonSerializerLocal;
     AddressData addressDataInStorage1 = AddressTestUtils.generateRandomAddressData();
     AddressData addressDataInStorage2 = AddressTestUtils.generateRandomAddressData();
     AddressData addressDataNotInStorage1 = AddressTestUtils.generateRandomAddressData();
@@ -51,42 +51,31 @@ public class AddressStorageServiceTest {
     @Autowired
     private AddressStorageService addressStorageService;
     @Autowired
-    private BaseNodeValidationService validationService;
+    private BaseNodeValidationService validationServiceLocal;
     @MockBean
-    private RejectedTransactionCrypto rejectedTransactionCrypto;
+    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCryptoLocal;
     @MockBean
-    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
+    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCryptoLocal;
     @MockBean
-    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
+    private ObjectService objectServiceLocal;
     @MockBean
-    private ObjectService objectService;
-    @MockBean
-    private DbConnectorService dbConnectorService;
-    //
-    @MockBean
-    private NodeCryptoHelper nodeCryptoHelper;
-    @MockBean
-    private Transactions transactions;
-    //
-    @MockBean
-    private ITransactionHelper transactionHelper;
-    @MockBean
-    private TransactionCrypto transactionCrypto;
-    @MockBean
-    private TransactionSenderCrypto transactionSenderCrypto;
-    @MockBean
-    private IPotService potService;
+    private DbConnectorService dbConnectorServiceLocal;
 
     @BeforeEach
-    public void init() {
-
+    void init() {
+        getHistoryAddressesResponseCrypto = getHistoryAddressesResponseCryptoLocal;
+        getHistoryAddressesRequestCrypto = getHistoryAddressesRequestCryptoLocal;
+        jacksonSerializer = jacksonSerializerLocal;
+        objectService = objectServiceLocal;
+        dbConnectorService = dbConnectorServiceLocal;
+        validationService = validationServiceLocal;
     }
 
     /**
      * Test request received with bad signature.
      */
     @Test
-    public void retrieveMultipleObjectsFromStorage_badSignature_errorReturned() {
+    void retrieveMultipleObjectsFromStorage_badSignature_errorReturned() {
         GetHistoryAddressesRequest getHistoryAddressesRequest = AddressTestUtils.generateGetHistoryAddressesRequest(
                 null, null,
                 addressDataInStorage1);
@@ -104,19 +93,19 @@ public class AddressStorageServiceTest {
      * both address are found in elastic and will be returned.
      */
     @Test
-    public void retrieveMultipleObjectsFromStorage_addressesInStorage_returnsAddresses() {
+    void retrieveMultipleObjectsFromStorage_addressesInStorage_returnsAddresses() {
         GetHistoryAddressesRequest getHistoryAddressesRequest = AddressTestUtils.generateGetHistoryAddressesRequest(
                 null, null,
                 addressDataInStorage1,
                 addressDataInStorage2);
         when(getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)).thenReturn(true);
 
-        mockGetMultiObjectsFromDb(true, ElasticSearchData.ADDRESSES,
+        mockGetMultiObjectsFromDb(ElasticSearchData.ADDRESSES,
                 generateInStorageList(Boolean.TRUE, Boolean.TRUE),
                 addressDataInStorage1,
                 addressDataInStorage2);
 
-        mockGetMultiObjectsFromDb(false, ElasticSearchData.ADDRESSES,
+        mockGetMultiObjectsFromDb(ElasticSearchData.ADDRESSES,
                 generateInStorageList(Boolean.TRUE, Boolean.TRUE),
                 addressDataInStorage1,
                 addressDataInStorage2);
@@ -132,19 +121,19 @@ public class AddressStorageServiceTest {
      * both address are not found in elastic and null will be returned.
      */
     @Test
-    public void retrieveMultipleObjectsFromStorage_addressesNotInStorage_returnsNulls() {
+    void retrieveMultipleObjectsFromStorage_addressesNotInStorage_returnsNulls() {
         GetHistoryAddressesRequest getHistoryAddressesRequest = AddressTestUtils.generateGetHistoryAddressesRequest(
                 null, null,
                 addressDataNotInStorage1,
                 addressDataNotInStorage2);
         when(getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)).thenReturn(true);
 
-        mockGetMultiObjectsFromDb(true, ElasticSearchData.ADDRESSES,
+        mockGetMultiObjectsFromDb(ElasticSearchData.ADDRESSES,
                 generateInStorageList(Boolean.FALSE, Boolean.FALSE),
                 addressDataNotInStorage1,
                 addressDataNotInStorage2);
 
-        mockGetMultiObjectsFromDb(false, ElasticSearchData.ADDRESSES,
+        mockGetMultiObjectsFromDb(ElasticSearchData.ADDRESSES,
                 generateInStorageList(Boolean.FALSE, Boolean.FALSE),
                 addressDataNotInStorage1,
                 addressDataNotInStorage2);
@@ -184,10 +173,13 @@ public class AddressStorageServiceTest {
     }
 
     private List<Boolean> generateInStorageList(Boolean... inStorageList) {
-        return new ArrayList<>(Arrays.asList(inStorageList));
+        List<Boolean> inStorageListReturn = new ArrayList<>();
+        inStorageListReturn.addAll(Arrays.asList(inStorageList));
+        return inStorageListReturn;
+
     }
 
-    private void mockGetMultiObjectsFromDb(boolean fromColdStorage, ElasticSearchData objectType, List<Boolean> inStorage, AddressData... addresses) {
+    private void mockGetMultiObjectsFromDb(ElasticSearchData objectType, List<Boolean> inStorage, AddressData... addresses) {
         List<Hash> hashes = new ArrayList<>();
         Map<Hash, String> objectsFromDBMap = new HashMap<>();
         AtomicInteger index = new AtomicInteger(0);

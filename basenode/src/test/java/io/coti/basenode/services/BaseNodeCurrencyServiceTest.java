@@ -2,18 +2,15 @@ package io.coti.basenode.services;
 
 
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
-import io.coti.basenode.crypto.GetUserTokensRequestCrypto;
 import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
 import io.coti.basenode.model.Currencies;
 import io.coti.basenode.model.CurrencyNameIndexes;
-import io.coti.basenode.model.Transactions;
 import io.coti.basenode.model.UserCurrencyIndexes;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.IEventService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -33,13 +30,13 @@ import testUtils.BaseNodeTestUtils;
 import java.util.HashSet;
 import java.util.Set;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.Mockito.*;
 
 
 @ContextConfiguration(classes = {BaseNodeCurrencyService.class, BaseNodeRocksDBConnector.class,
         Currencies.class, NodeCryptoHelper.class,
-        BaseNodeNetworkService.class, RestTemplate.class,
-        ApplicationContext.class,
+        BaseNodeNetworkService.class, RestTemplate.class, ApplicationContext.class,
         CurrencyTypeRegistrationCrypto.class
 })
 
@@ -47,36 +44,22 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class BaseNodeCurrencyServiceTest {
+class BaseNodeCurrencyServiceTest {
 
     @Autowired
     private BaseNodeCurrencyService baseNodeCurrencyService;
     @MockBean
-    protected CurrencyNameIndexes currencyNameIndexes;
-    @MockBean
-    private GetUserTokensRequestCrypto getUserTokensRequestCrypto;
+    protected CurrencyNameIndexes currencyNameIndexesLocal;
     @MockBean
     protected IBalanceService balanceService;
     @MockBean
-    private UserCurrencyIndexes userCurrencyIndexes;
+    private UserCurrencyIndexes userCurrencyIndexesLocal;
     @MockBean
     protected IEventService eventService;
     @MockBean
-    private ITransactionHelper transactionHelper;
+    private BaseNodeTransactionHelper transactionHelper;
     @MockBean
-    private Transactions transactions;
-    @MockBean
-    private BaseNodeRocksDBConnector baseNodeRocksDBConnector;
-    @MockBean
-    private NodeCryptoHelper nodeCryptoHelper;
-    @MockBean
-    private RestTemplate restTemplate;
-    @MockBean
-    private CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
-    @MockBean
-    private ApplicationContext applicationContext;
-    @MockBean
-    private Currencies currencies;
+    private Currencies currenciesLocal;
     @MockBean
     private BaseNodeNetworkService baseNodeNetworkService;
     @MockBean
@@ -87,12 +70,17 @@ public class BaseNodeCurrencyServiceTest {
     private OriginatorCurrencyData currencyData;
 
     @BeforeEach
-    public void init() {
+    void init() {
         baseNodeCurrencyService.init();
+        nodeTransactionHelper = transactionHelper;
+        nodeEventService = eventService;
+        currencies = currenciesLocal;
+        currencyNameIndexes = currencyNameIndexesLocal;
+        userCurrencyIndexes = userCurrencyIndexesLocal;
     }
 
     @Test
-    public void revertCurrencyUnconfirmedRecord() {
+    void revertCurrencyUnconfirmedRecord() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         Hash originatorHash = TransactionTestUtils.generateRandomHash();
         Set<Hash> tokensHashSet = new HashSet<>();
@@ -111,14 +99,14 @@ public class BaseNodeCurrencyServiceTest {
     }
 
     @Test
-    public void get_native_currency_data_if_null() {
+    void get_native_currency_data_if_null() {
         Hash calculatedCurrencyHash = OriginatorCurrencyCrypto.calculateHash("COTI");
         Hash nativeCurrencyHash = baseNodeCurrencyService.getNativeCurrencyHashIfNull(null);
         Assertions.assertEquals(nativeCurrencyHash, calculatedCurrencyHash);
     }
 
     @Test
-    public void is_currency_hash_allowed() {
+    void is_currency_hash_allowed() {
         Hash currencyHash = BaseNodeTestUtils.generateRandomHash(136);
         Assertions.assertFalse(baseNodeCurrencyService.isCurrencyHashAllowed(currencyHash));
     }

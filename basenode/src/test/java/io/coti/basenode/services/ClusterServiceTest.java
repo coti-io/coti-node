@@ -5,9 +5,7 @@ import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.ISourceSelector;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
@@ -29,6 +27,7 @@ import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.Mockito.when;
 
 
@@ -38,33 +37,28 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class ClusterServiceTest {
+class ClusterServiceTest {
 
     @Autowired
-    private ClusterService clusterService;
+    private ClusterService clusterServiceLocal;
     @Autowired
-    private Transactions transactions;
+    private Transactions transactionsLocal;
     @MockBean
-    private IDatabaseConnector databaseConnector;
+    private IDatabaseConnector databaseConnectorLocal;
     @MockBean
-    private IConfirmationService confirmationService;
-    @MockBean
-    private ISourceSelector sourceSelector;
-    @MockBean
-    private TrustChainConfirmationService trustChainConfirmationService;
-    @MockBean
-    private ITransactionHelper transactionHelper;
-    @MockBean
-    private BaseNodeEventService baseNodeEventService;
+    INetworkService networkService;
 
     @BeforeEach
     public void init() {
+        databaseConnector = databaseConnectorLocal;
+        clusterService = clusterServiceLocal;
+        transactions = transactionsLocal;
         clusterService.init();
         transactions.init();
     }
 
     @Test
-    public void detachFromCluster() {
+    void detachFromCluster() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         TransactionData leftParent = TransactionTestUtils.createRandomTransaction();
         TransactionData leftParentWithChild = SerializationUtils.deserialize(SerializationUtils.serialize(leftParent));
