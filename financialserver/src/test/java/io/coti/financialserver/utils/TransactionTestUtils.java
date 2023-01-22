@@ -14,11 +14,6 @@ import static io.coti.financialserver.utils.TestConstants.*;
 
 public class TransactionTestUtils {
 
-
-    public static Hash generateRandomHash() {
-        return generateRandomHash(SIZE_OF_HASH);
-    }
-
     public static Hash generateRandomAddressHash() {
         return generateRandomHash(SIZE_OF_ADDRESS_HASH);
     }

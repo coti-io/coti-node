@@ -2,8 +2,8 @@ package utils;
 
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
-import io.coti.fullnode.http.AddressBulkRequest;
-import io.coti.fullnode.http.AddressesExistsResponse;
+import io.coti.basenode.http.AddressBulkRequest;
+import io.coti.basenode.http.AddressesExistsResponse;
 
 import java.util.*;
 
@@ -11,23 +11,6 @@ public class AddressTestUtils {
 
     public static AddressData generateRandomAddressData() {
         return new AddressData(HashTestUtils.generateRandomAddressHash());
-    }
-
-    public static List<AddressData> generateListOfRandomAddressData(int listSize) {
-
-        List<AddressData> addresses = new ArrayList<>();
-        for (int i = 0; i < listSize; i++) {
-            addresses.add(generateRandomAddressData());
-        }
-        return addresses;
-    }
-
-    public static Set<AddressData> generateSetOfRandomAddressData(int listSize) {
-        Set<AddressData> addresses = new HashSet<>();
-        for (int i = 0; i < listSize; i++) {
-            addresses.add(generateRandomAddressData());
-        }
-        return addresses;
     }
 
     public static boolean equals(AddressesExistsResponse expected, Object actual) {
@@ -61,8 +44,7 @@ public class AddressTestUtils {
     }
 
     public static AddressBulkRequest generateAddressBulkRequest(Hash... addressHashes) {
-        List<Hash> addressHashesList = new ArrayList<>();
-        Arrays.stream(addressHashes).forEach(addressHash -> addressHashesList.add(addressHash));
+        List<Hash> addressHashesList = new ArrayList<>(Arrays.asList(addressHashes));
 
         AddressBulkRequest addressBulkRequest = new AddressBulkRequest();
         addressBulkRequest.setAddresses(addressHashesList);
