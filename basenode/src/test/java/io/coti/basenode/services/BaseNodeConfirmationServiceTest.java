@@ -1,15 +1,11 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
-import io.coti.basenode.crypto.TransactionCrypto;
+import io.coti.basenode.communication.ZeroMQSender;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -29,6 +25,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static io.coti.basenode.utils.TransactionTestUtils.createTransactionIndexData;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -36,62 +33,56 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ContextConfiguration(classes = {BaseNodeConfirmationService.class,
-        BaseNodeBalanceService.class, BaseNodeTransactionHelper.class, BaseNodeEventService.class,
-        BaseNodeCurrencyService.class,
+@ContextConfiguration(classes = {BaseNodeConfirmationService.class, BaseNodeEventService.class,
+        BaseNodeTransactionHelper.class
 })
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class BaseNodeConfirmationServiceTest {
+class BaseNodeConfirmationServiceTest {
 
     @Autowired
-    private BaseNodeConfirmationService baseNodeConfirmationService;
-    @MockBean
-    private IBalanceService balanceService;
-    @MockBean
-    private IMintingService mintingService;
+    private BaseNodeConfirmationService confirmationService;
     @Autowired
-    private ITransactionHelper transactionHelper;
-    @MockBean
-    private ITransactionPropagationCheckService transactionPropagationCheckService;
-    @MockBean
-    private TransactionIndexService transactionIndexService;
-    @MockBean
-    private TransactionIndexes transactionIndexes;
-    @MockBean
-    private Transactions transactions;
+    BaseNodeTransactionHelper transactionHelper;
     @Autowired
     BaseNodeEventService baseNodeEventService;
+    @MockBean
+    Transactions transactionsLocal;
+    @MockBean
+    TransactionIndexes transactionIndexesLocal;
+    @MockBean
+    BaseNodeNetworkService networkServiceLocal;
+    @MockBean
+    TransactionIndexService transactionIndexServiceLocal;
+    @MockBean
+    ZeroMQSender senderLocal;
+    @MockBean
+    ClusterService clusterServiceLocal;
 
-    @MockBean
-    private AddressTransactionsHistories addressTransactionsHistories;
-    @MockBean
-    private TransactionCrypto transactionCrypto;
-    @MockBean
-    private IClusterService clusterService;
-    @MockBean
-    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
-    @MockBean
-    private BaseNodeCurrencyService baseNodeCurrencyService;
-    @MockBean
-    private INetworkService networkService;
-    @MockBean
-    private ISender sender;
+
     private static final double DELTA = 1e-15;
 
     @BeforeEach
     public void init() {
-        baseNodeConfirmationService.init();
+        BaseNodeServiceManager.nodeTransactionHelper = this.transactionHelper;
+        nodeEventService = baseNodeEventService;
+        transactions = transactionsLocal;
+        transactionIndexes = transactionIndexesLocal;
+        networkService = networkServiceLocal;
+        transactionIndexService = transactionIndexServiceLocal;
+        zeroMQSender = senderLocal;
+        clusterService = clusterServiceLocal;
+        confirmationService.init();
     }
 
     @Test
-    public void continue_handle_dsp_confirmed_transaction() {
+    void continue_handle_dsp_confirmed_transaction() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
 
-        baseNodeConfirmationService.continueHandleDSPConfirmedTransaction(transactionData);
+        confirmationService.continueHandleDSPConfirmedTransaction(transactionData);
 
         TransactionData eventTransactionData = TransactionTestUtils.createHardForkTrustScoreConsensusTransaction();
         when(transactions.getByHash(any(Hash.class))).thenReturn(eventTransactionData);
@@ -109,12 +100,12 @@ public class BaseNodeConfirmationServiceTest {
         Assertions.assertEquals(HttpStatus.OK, confirmedEventTransactionDataResponse.getStatusCode());
         Assertions.assertEquals(eventTransactionData.getHash().toString(), ((GetTransactionResponse) confirmedEventTransactionDataResponse.getBody()).getTransactionData().getHash());
 
-        baseNodeConfirmationService.continueHandleDSPConfirmedTransaction(transactionData);
+        confirmationService.continueHandleDSPConfirmedTransaction(transactionData);
 
         transactionData.setTrustChainTrustScore(120);
         transactionData.setTrustChainConsensus(true);
 
-        baseNodeConfirmationService.continueHandleDSPConfirmedTransaction(transactionData);
+        confirmationService.continueHandleDSPConfirmedTransaction(transactionData);
     }
 
     @Test
@@ -124,12 +115,12 @@ public class BaseNodeConfirmationServiceTest {
         doAnswer(invocation -> {
             Consumer<TransactionData> arg0 = invocation.getArgument(1, Consumer.class);
             arg0.accept(transactionData);
-            baseNodeConfirmationService.getInitialTccConfirmationFinished().set(true);
+            confirmationService.getInitialTccConfirmationFinished().set(true);
             return null;
         }).when(transactions).lockAndGetByHash(any(Hash.class), any(Consumer.class));
-        baseNodeConfirmationService.setTccToTrue(tccInfo);
-        await().atMost(5, SECONDS).until(() -> baseNodeConfirmationService.getInitialTccConfirmationFinished().get());
-        Assertions.assertTrue(baseNodeConfirmationService.getInitialTccConfirmationFinished().get());
+        confirmationService.setTccToTrue(tccInfo);
+        await().atMost(5, SECONDS).until(() -> confirmationService.getInitialTccConfirmationFinished().get());
+        Assertions.assertTrue(confirmationService.getInitialTccConfirmationFinished().get());
         Assertions.assertEquals(115.0, transactionData.getTrustChainTrustScore(), DELTA);
     }
 
@@ -151,8 +142,8 @@ public class BaseNodeConfirmationServiceTest {
         NetworkNodeData recoveryServer = mock(NetworkNodeData.class);
         when(networkService.getRecoveryServer()).thenReturn(recoveryServer);
         when(recoveryServer.getReceivingFullAddress()).thenReturn("tcp://localhost:7030");
-        Assertions.assertFalse(baseNodeConfirmationService.insertNewTransactionIndex(transactionData));
-        await().atMost(8500, MILLISECONDS).until(() -> baseNodeConfirmationService.getResendDcrCounter() > 0);
-        verify(sender, atLeastOnce()).send(any(NodeResendDcrData.class), any(String.class));
+        Assertions.assertFalse(confirmationService.insertNewTransactionIndex(transactionData));
+        await().atMost(8500, MILLISECONDS).until(() -> confirmationService.getResendDcrCounter() > 0);
+        verify(zeroMQSender, atLeastOnce()).send(any(NodeResendDcrData.class), any(String.class));
     }
 }

@@ -8,12 +8,14 @@ import io.coti.basenode.http.GetNodeFeesDataResponse;
 import io.coti.basenode.http.NodeFeeSetRequest;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.model.NodeFees;
+import io.coti.basenode.services.interfaces.INetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
@@ -29,11 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeFees;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {BaseNodeFeesService.class, NodeFees.class, IDatabaseConnector.class})
+@ContextConfiguration(classes = {BaseNodeFeesService.class})
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -44,14 +47,17 @@ class BaseNodeFeesServiceTest {
     @Autowired
     private BaseNodeFeesService baseNodeFeesService;
     @MockBean
-    NodeFees nodeFees;
+    NodeFees nodeFeesLocal;
     @MockBean
-    public IDatabaseConnector databaseConnector;
+    IDatabaseConnector databaseConnector;
+    @MockBean
+    INetworkService networkService;
     List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
     Map<Hash, NodeFeeData> nodeFeesMap = new ConcurrentHashMap<>();
 
     @BeforeEach
-    public void init() {
+    void init() {
+        nodeFees = nodeFeesLocal;
         nodeFeeTypeList.addAll(Arrays.asList(NodeFeeType.TOKEN_MINTING_FEE, NodeFeeType.TOKEN_GENERATION_FEE));
         when(nodeFees.getByHash(any(Hash.class))).then((a -> nodeFeesMap.get(a.getArgument(0))));
         doAnswer(invocation -> {

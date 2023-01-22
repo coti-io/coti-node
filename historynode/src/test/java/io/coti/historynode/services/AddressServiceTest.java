@@ -1,11 +1,13 @@
 package io.coti.historynode.services;
 
 import io.coti.basenode.config.NodeConfig;
-import io.coti.basenode.crypto.*;
+import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
+import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
+import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
 import io.coti.basenode.http.HttpJacksonSerializer;
@@ -15,9 +17,6 @@ import io.coti.basenode.model.Addresses;
 import io.coti.basenode.model.RequestedAddressHashes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.BaseNodeValidationService;
-import io.coti.basenode.services.FileService;
-import io.coti.basenode.services.interfaces.IPotService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +36,9 @@ import java.util.*;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.INVALID_SIGNATURE;
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+import static io.coti.historynode.services.NodeServiceManager.addressStorageConnector;
+import static io.coti.historynode.services.NodeServiceManager.requestedAddressHashes;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -51,51 +53,38 @@ class AddressServiceTest {
     @MockBean
     private StorageConnector storageConnector;
     @MockBean
-    private Addresses addresses;
+    private Addresses addressesLocal;
     @MockBean
-    private RequestedAddressHashes requestedAddressHashes;
+    private RequestedAddressHashes requestedAddressHashesLocal;
     @MockBean
-    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
+    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCryptoLocal;
     @MockBean
-    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
+    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCryptoLocal;
     @MockBean
-    private BaseNodeValidationService validationService;
-    @MockBean
-    private ITransactionHelper transactionHelper;
-    @MockBean
-    private TransactionCrypto transactionCrypto;
-    @MockBean
-    private TransactionSenderCrypto transactionSenderCrypto;
-    @MockBean
-    private IPotService potService;
-    @MockBean
-    private IDatabaseConnector iDatabaseConnector;
-    @MockBean
-    private RejectedTransactionCrypto rejectedTransactionCrypto;
-    @MockBean
-    private FileService fileService;
+    private BaseNodeValidationService validationServiceLocal;
     private Hash hashInRocks;
     private AddressData addressDataFromRocks;
     private Hash hashInStorage;
     private AddressData addressDataFromStorage;
     private List<Hash> addressHashesFromFullNodeRequest;
     private GetHistoryAddressesRequest getHistoryAddressesRequestFromFullNode;
-    private List<Hash> addressHashesToStorageHashList;
-    private GetHistoryAddressesRequest getHistoryAddressesRequestToStorageNode;
 
     @BeforeEach
     public void setUpBeforeEachTest() {
+        getHistoryAddressesRequestCrypto = getHistoryAddressesRequestCryptoLocal;
+        getHistoryAddressesResponseCrypto = getHistoryAddressesResponseCryptoLocal;
+        addressStorageConnector = storageConnector;
+        requestedAddressHashes = requestedAddressHashesLocal;
+        validationService = validationServiceLocal;
         hashInRocks = HashTestUtils.generateRandomAddressHash();
         addressDataFromRocks = new AddressData(hashInRocks);
         addressDataFromStorage = new AddressData(hashInStorage);
+        addresses = addressesLocal;
         when(addresses.getByHash(hashInRocks)).thenReturn(addressDataFromRocks);
         hashInStorage = HashTestUtils.generateRandomAddressHash();
         addressHashesFromFullNodeRequest = new ArrayList<>(Arrays.asList(hashInRocks, hashInStorage));
         getHistoryAddressesRequestFromFullNode = new GetHistoryAddressesRequest(addressHashesFromFullNodeRequest);
         setRequestDummySignerHashAndSignature(getHistoryAddressesRequestFromFullNode);
-
-        addressHashesToStorageHashList = new ArrayList<>(Collections.singletonList(hashInStorage));
-        getHistoryAddressesRequestToStorageNode = new GetHistoryAddressesRequest(addressHashesToStorageHashList);
     }
 
     @Test
@@ -134,25 +123,19 @@ class AddressServiceTest {
     void getAddress_testResponseFromStorageOrderNotCorrect_shouldReturnOrderedResponse() {
         List<Hash> addressesHashFromStorage1 = HashTestUtils.generateListOfRandomAddressHashes(15);
         List<Hash> addressesHashFromStorage2 = HashTestUtils.generateListOfRandomAddressHashes(15);
-        List<Hash> addressesHashFromStorage = new ArrayList<>();
-        addressesHashFromStorage.addAll(addressesHashFromStorage1);
+        List<Hash> addressesHashFromStorage = new ArrayList<>(addressesHashFromStorage1);
         addressesHashFromStorage.add(hashInRocks);
         addressesHashFromStorage.addAll(addressesHashFromStorage2);
 
-        List<Hash> orderedList = new ArrayList<>();
-        orderedList.addAll(addressesHashFromStorage);
+        List<Hash> orderedList = new ArrayList<>(addressesHashFromStorage);
 
 
         GetHistoryAddressesRequest getHistoryAddressesRequestFromFullNode = new GetHistoryAddressesRequest(addressesHashFromStorage);
         setRequestDummySignerHashAndSignature(getHistoryAddressesRequestFromFullNode);
 
-        List<Hash> addressesDataFromHistoryList = new ArrayList<>();
-        addressesDataFromHistoryList.addAll(addressesHashFromStorage1);
-        addressesDataFromHistoryList.addAll(addressesHashFromStorage2);
-
         Map<Hash, AddressData> responseMap = new LinkedHashMap<>();
-        addressesHashFromStorage2.stream().forEach(hash -> responseMap.put(hash, new AddressData(hash)));
-        addressesHashFromStorage1.stream().forEach(hash -> responseMap.put(hash, new AddressData(hash)));
+        addressesHashFromStorage2.forEach(hash -> responseMap.put(hash, new AddressData(hash)));
+        addressesHashFromStorage1.forEach(hash -> responseMap.put(hash, new AddressData(hash)));
         GetHistoryAddressesResponse unOrderedResponseFromStorage = new GetHistoryAddressesResponse(responseMap);
         setResponseDummySignerHashAndSignature(unOrderedResponseFromStorage);
 
@@ -161,9 +144,9 @@ class AddressServiceTest {
         ResponseEntity<IResponse> responseFromGetAddresses = addressService.getAddresses(getHistoryAddressesRequestFromFullNode);
 
         Map<Hash, AddressData> orderedExpectedResponseMap = new LinkedHashMap<>();
-        addressesHashFromStorage1.stream().forEach(hash -> orderedExpectedResponseMap.put(hash, new AddressData(hash)));
+        addressesHashFromStorage1.forEach(hash -> orderedExpectedResponseMap.put(hash, new AddressData(hash)));
         orderedExpectedResponseMap.put(hashInRocks, new AddressData(hashInRocks));
-        addressesHashFromStorage2.stream().forEach(hash -> orderedExpectedResponseMap.put(hash, new AddressData(hash)));
+        addressesHashFromStorage2.forEach(hash -> orderedExpectedResponseMap.put(hash, new AddressData(hash)));
         GetHistoryAddressesResponse expectedResponse = new GetHistoryAddressesResponse(orderedExpectedResponseMap);
         ResponseEntity<IResponse> expectedOrderedResponseFromStorage = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
@@ -202,7 +185,7 @@ class AddressServiceTest {
         addressHashesToAddresses.put(addressHashNotFound, null);
         GetHistoryAddressesResponse getHistoryAddressesResponseFromStorageNode = new GetHistoryAddressesResponse(addressHashesToAddresses);
 
-        GetHistoryAddressesRequest getHistoryAddressesRequestToStorage = new GetHistoryAddressesRequest(Arrays.asList(addressHashNotFound));
+        GetHistoryAddressesRequest getHistoryAddressesRequestToStorage = new GetHistoryAddressesRequest(Collections.singletonList(addressHashNotFound));
         getHistoryAddressesRequestCrypto.signMessage(getHistoryAddressesRequestToStorage);
         when(storageConnector.retrieveFromStorage(any(String.class), any(GetHistoryAddressesRequest.class), any(Class.class))).thenReturn(ResponseEntity.status(HttpStatus.OK).body(getHistoryAddressesResponseFromStorageNode));
         when(getHistoryAddressesResponseCrypto.verifySignature(any(GetHistoryAddressesResponse.class))).thenReturn(true);

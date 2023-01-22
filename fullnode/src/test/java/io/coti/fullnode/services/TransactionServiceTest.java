@@ -1,15 +1,13 @@
 package io.coti.fullnode.services;
 
 import com.google.common.collect.Sets;
-import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.data.TransactionStatus;
-import io.coti.basenode.model.*;
+import io.coti.basenode.model.RejectedTransactions;
+import io.coti.basenode.model.Transactions;
+import io.coti.basenode.model.UnconfirmedReceivedTransactionHashes;
 import io.coti.basenode.services.BaseNodeEventService;
-import io.coti.basenode.services.TransactionIndexService;
-import io.coti.basenode.services.interfaces.*;
-import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.fullnode.data.UnconfirmedReceivedTransactionHashFullNodeData;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +31,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+import static io.coti.fullnode.services.NodeServiceManager.webSocketSender;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration(classes = {TransactionService.class,
@@ -43,64 +43,42 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class TransactionServiceTest {
+class TransactionServiceTest {
 
     @Autowired
     private TransactionService transactionService;
     @MockBean
     private ITransactionHelper transactionHelper;
     @MockBean
-    private ValidationService validationService;
+    private ValidationService validationServiceLocal;
     @MockBean
-    private IDspVoteService dspVoteService;
-    @MockBean
-    private IConfirmationService confirmationService;
-    @MockBean
-    private IClusterService clusterService;
-    @MockBean
-    private IClusterHelper clusterHelper;
-    @MockBean
-    private Transactions transactions;
-    @MockBean
-    private TransactionIndexService transactionIndexService;
-    @MockBean
-    private JacksonSerializer jacksonSerializer;
-    @MockBean
-    private TransactionIndexes transactionIndexes;
-    @MockBean
-    private ICurrencyService currencyService;
-    @MockBean
-    private IMintingService mintingService;
-    @MockBean
-    private IChunkService chunkService;
+    private Transactions transactionsLocal;
     @MockBean
     private BaseNodeEventService eventService;
     @MockBean
-    private TransactionCrypto transactionCrypto;
+    private WebSocketSender webSocketSenderLocal;
     @MockBean
-    private AddressTransactionsHistories addressTransactionsHistories;
+    private TransactionPropagationCheckService transactionPropagationCheckServiceLocal;
     @MockBean
-    private WebSocketSender webSocketSender;
+    private UnconfirmedReceivedTransactionHashes unconfirmedReceivedTransactionHashesLocal;
     @MockBean
-    private INetworkService networkService;
-    @MockBean
-    private PotService potService;
-    @MockBean
-    private TransactionPropagationCheckService transactionPropagationCheckService;
-    @MockBean
-    private UnconfirmedReceivedTransactionHashes unconfirmedReceivedTransactionHashes;
-    @MockBean
-    private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
-    @MockBean
-    private RejectedTransactions rejectedTransactions;
+    private RejectedTransactions rejectedTransactionsLocal;
 
     @BeforeEach
-    public void init() {
+    void init() {
+        rejectedTransactions = rejectedTransactionsLocal;
+        webSocketSender = webSocketSenderLocal;
+        nodeEventService = eventService;
+        validationService = validationServiceLocal;
+        unconfirmedReceivedTransactionHashes = unconfirmedReceivedTransactionHashesLocal;
+        transactionPropagationCheckService = transactionPropagationCheckServiceLocal;
+        nodeTransactionHelper = transactionHelper;
+        transactions = transactionsLocal;
         transactionService.init();
     }
 
     @Test
-    public void removeDataFromMemory_verifyDataRemoved() {
+    void removeDataFromMemory_verifyDataRemoved() {
         TransactionData transactionData = TestUtils.createRandomTransaction();
         transactionData.setAttachmentTime(Instant.now());
         Map<Hash, NavigableMap<Instant, Set<Hash>>> addressToTransactionsByAttachmentMap = new ConcurrentHashMap<>();
@@ -116,7 +94,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void removeTransactionHashFromUnconfirmed_verifyRemoved() {
+    void removeTransactionHashFromUnconfirmed_verifyRemoved() {
         TransactionData transactionData = TestUtils.createRandomTransaction();
         Map<Hash, UnconfirmedReceivedTransactionHashData> unconfirmedReceivedTransactionHashesMap = new ConcurrentHashMap<>();
         UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData = new UnconfirmedReceivedTransactionHashData(transactionData.getHash());
@@ -124,7 +102,6 @@ public class TransactionServiceTest {
                 new UnconfirmedReceivedTransactionHashFullNodeData(unconfirmedReceivedTransactionHashData, 3);
         unconfirmedReceivedTransactionHashesMap.put(unconfirmedReceivedTransactionHashData.getTransactionHash(), unconfirmedReceivedTransactionHashFullNodeData);
         ReflectionTestUtils.setField(transactionPropagationCheckService, "unconfirmedReceivedTransactionHashesMap", unconfirmedReceivedTransactionHashesMap);
-        ReflectionTestUtils.setField(transactionPropagationCheckService, "unconfirmedReceivedTransactionHashes", unconfirmedReceivedTransactionHashes);
         ReflectionTestUtils.setField(transactionPropagationCheckService, "transactionHashLockData", new LockData());
         when(unconfirmedReceivedTransactionHashes.getByHash(transactionData.getHash())).thenReturn(unconfirmedReceivedTransactionHashFullNodeData);
         doCallRealMethod().when(transactionPropagationCheckService).removeTransactionHashFromUnconfirmed(transactionData.getHash());
@@ -136,7 +113,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void handlePropagatedRejectedTransaction_noRejectionIfEventNotHappened() {
+    void handlePropagatedRejectedTransaction_noRejectionIfEventNotHappened() {
         RejectedTransactionData rejectedTransaction = TestUtils.createRejectedTransaction();
         when(eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(false);
         transactionService.handlePropagatedRejectedTransaction(rejectedTransaction);
@@ -144,7 +121,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void handlePropagatedRejectedTransaction_noRejectionIfTransactionNull() {
+    void handlePropagatedRejectedTransaction_noRejectionIfTransactionNull() {
         RejectedTransactionData rejectedTransaction = TestUtils.createRejectedTransaction();
         rejectedTransaction.setHash(null);
         when(eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
@@ -153,7 +130,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void handlePropagatedRejectedTransaction_noRejectionIfTransactionDoesNotExist() {
+    void handlePropagatedRejectedTransaction_noRejectionIfTransactionDoesNotExist() {
         TransactionData transactionData = TestUtils.createRandomTransaction();
         RejectedTransactionData rejectedTransaction = TestUtils.createRejectedTransaction(transactionData);
         when(eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
@@ -163,7 +140,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void handlePropagatedRejectedTransaction_noRejectionIfDataIntegrityCheckFailed() {
+    void handlePropagatedRejectedTransaction_noRejectionIfDataIntegrityCheckFailed() {
         TransactionData transactionData = TestUtils.createRandomTransaction();
         RejectedTransactionData rejectedTransaction = TestUtils.createRejectedTransaction(transactionData);
         when(eventService.eventHappened(Event.TRUST_SCORE_CONSENSUS)).thenReturn(true);
@@ -174,7 +151,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void handlePropagatedRejectedTransaction() {
+    void handlePropagatedRejectedTransaction() {
         TransactionData transactionData = TestUtils.createRandomTransaction();
         transactionData.setAttachmentTime(Instant.now());
         RejectedTransactionData rejectedTransaction = TestUtils.createRejectedTransaction(transactionData);

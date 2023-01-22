@@ -1,13 +1,11 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.interfaces.IPropagationPublisher;
-import io.coti.basenode.crypto.DspConsensusCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
 import io.coti.basenode.services.interfaces.IConfirmationService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
-import io.coti.basenode.services.interfaces.ITransactionPropagationCheckService;
+import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.utils.HashTestUtils;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -43,24 +42,27 @@ class BaseNodeDspVoteServiceTest {
     @Autowired
     private BaseNodeDspVoteService baseNodeDspVoteService;
     @MockBean
-    protected ITransactionHelper transactionHelper;
+    protected IConfirmationService confirmationServiceLocal;
     @MockBean
-    protected IConfirmationService confirmationService;
+    protected IPropagationPublisher propagationPublisherLocal;
     @MockBean
-    protected IPropagationPublisher propagationPublisher;
+    private Transactions transactionsLocal;
     @MockBean
-    private DspConsensusCrypto dspConsensusCrypto;
+    private TransactionIndexes transactionIndexesLocal;
     @MockBean
-    private ITransactionPropagationCheckService transactionPropagationCheckService;
+    BaseNodeTransactionHelper transactionHelper;
     @MockBean
-    private Transactions transactions;
-    @MockBean
-    private TransactionIndexes transactionIndexes;
+    public INetworkService networkService;
     private Map<Hash, TransactionIndexData> transactionIndexesMap = new HashMap<>();
 
     @BeforeEach
-    public void init() {
+    void init() {
         baseNodeDspVoteService.init();
+        nodeTransactionHelper = transactionHelper;
+        confirmationService = confirmationServiceLocal;
+        transactions = transactionsLocal;
+        propagationPublisher = propagationPublisherLocal;
+        transactionIndexes = transactionIndexesLocal;
     }
 
     @Test

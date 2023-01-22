@@ -1,19 +1,10 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
-import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.http.HttpJacksonSerializer;
+import io.coti.basenode.http.AddressBulkRequest;
+import io.coti.basenode.http.AddressesExistsResponse;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.model.RequestedAddressHashes;
-import io.coti.basenode.services.FileService;
-import io.coti.basenode.services.interfaces.IValidationService;
-import io.coti.fullnode.http.AddressBulkRequest;
-import io.coti.fullnode.http.AddressesExistsResponse;
-import io.coti.fullnode.websocket.WebSocketSender;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,41 +22,33 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {AddressService.class, IDatabaseConnector.class, HttpJacksonSerializer.class, CryptoHelper.class, NodeCryptoHelper.class})
+@ContextConfiguration(classes = {AddressService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-public class AddressServiceTest {
-
-    private final String HISTORY_PORT = "7031";
+class AddressServiceTest {
 
     @Autowired
     private AddressService addressService;
     @MockBean
-    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
+    private NetworkService networkServiceLocal;
     @MockBean
-    private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
+    private Addresses addressesLocal;
     @MockBean
-    private NetworkService networkService;
-    @MockBean
-    private Addresses addresses;
-    @MockBean
-    private RequestedAddressHashes requestedAddressHashes;
-    @MockBean
-    private WebSocketSender webSocketSender;
-    @MockBean
-    private IValidationService validationService;
-    @MockBean
-    private FileService fileService;
+    private RequestedAddressHashes requestedAddressHashesLocal;
 
     private AddressData addressInLocalAddressesCollection = AddressTestUtils.generateRandomAddressData();
     private RequestedAddressHashData addressInRequestedAddressesCollectionLessThenTenMinutes = new RequestedAddressHashData(HashTestUtils.generateRandomAddressHash());
 
 
     @BeforeEach
-    public void setUpBeforeEachTest() {
+    void setUpBeforeEachTest() {
+        networkService = networkServiceLocal;
+        addresses = addressesLocal;
+        requestedAddressHashes = requestedAddressHashesLocal;
         when(addresses.getByHash(addressInLocalAddressesCollection.getHash())).thenReturn(addressInLocalAddressesCollection);
         setTimeAndMock(addressInRequestedAddressesCollectionLessThenTenMinutes, 300_000);
 
@@ -77,7 +60,7 @@ public class AddressServiceTest {
      * the expected response is Hash, TRUE.
      */
     @Test
-    public void addressesExist_addressInLocalDB_shouldReturnHashAndTrue() {
+    void addressesExist_addressInLocalDB_shouldReturnHashAndTrue() {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash());
 
@@ -97,7 +80,7 @@ public class AddressServiceTest {
      * the expected response is Hash, TRUE,TRUE.
      */
     @Test
-    public void addressesExist_addressInLocalDbAndUpdatedFromHistoryLessThenTenMinutes_shouldReturnTrueAndFalse() {
+    void addressesExist_addressInLocalDbAndUpdatedFromHistoryLessThenTenMinutes_shouldReturnTrueAndFalse() {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(), addressInRequestedAddressesCollectionLessThenTenMinutes.getHash());
         AddressesExistsResponse actualResponse = addressService.addressesCheckExistenceAndRequestHistoryNode(addressBulkRequest);

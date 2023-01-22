@@ -1,18 +1,17 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.GetTransactionResponse;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
-import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IEventService;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,54 +23,37 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static io.coti.basenode.utils.TransactionTestUtils.createTransactionIndexData;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {BaseNodeEventService.class, IEventService.class,
-        BaseNodeTransactionHelper.class
-
+@ContextConfiguration(classes = {BaseNodeEventService.class, BaseNodeTransactionHelper.class
 })
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @ExtendWith({SpringExtension.class})
 @Slf4j
-public class BaseNodeEventServiceTest {
+class BaseNodeEventServiceTest {
     @Autowired
     private IEventService baseNodeEventService;
     @Autowired
-    private ITransactionHelper transactionHelper;
+    private ITransactionHelper transactionHelperLocal;
     @MockBean
-    private ITransactionPropagationCheckService transactionPropagationCheckService;
+    private Transactions transactionsLocal;
     @MockBean
-    private Transactions transactions;
+    private TransactionIndexes transactionIndexesLocal;
 
-    @MockBean
-    private AddressTransactionsHistories addressTransactionsHistories;
-    @MockBean
-    private TransactionCrypto transactionCrypto;
-    @MockBean
-    private IBalanceService balanceService;
-    @MockBean
-    private IConfirmationService confirmationService;
-    @MockBean
-    private IClusterService clusterService;
-
-    @MockBean
-    private TransactionIndexes transactionIndexes;
-    @MockBean
-    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
-    @MockBean
-    private BaseNodeCurrencyService currencyService;
-    @MockBean
-    private IMintingService mintingService;
-
-    @MockBean
-    private INetworkService networkService;
+    @BeforeEach
+    void init() {
+        transactions = transactionsLocal;
+        transactionIndexes = transactionIndexesLocal;
+        nodeTransactionHelper = transactionHelperLocal;
+    }
 
     @Test
-    public void handleNewHardForkEvent_TrustScoreConsensusBeforeTCC_validation() {
+    void handleNewHardForkEvent_TrustScoreConsensusBeforeTCC_validation() {
         TransactionData transactionData = TransactionTestUtils.createHardForkTrustScoreConsensusTransaction();
 
         ResponseEntity<IResponse> eventTransactionDataResponse = baseNodeEventService.getEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
