@@ -1,18 +1,16 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TccInfo;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionIndexData;
-import io.coti.basenode.model.AddressTransactionsHistories;
 import io.coti.basenode.model.TransactionIndexes;
 import io.coti.basenode.model.Transactions;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.services.interfaces.IEventService;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,55 +27,44 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static io.coti.basenode.utils.TestConstants.MAX_TRUST_SCORE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {TrustChainConfirmationService.class,
-        ClusterHelper.class, BaseNodeTransactionHelper.class
-})
+@ContextConfiguration(classes = {TrustChainConfirmationService.class, ClusterHelper.class, ClusterService.class})
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-
-public class TrustChainConfirmationServiceTest {
+class TrustChainConfirmationServiceTest {
 
     @Autowired
-    private TrustChainConfirmationService trustChainConfirmationService;
+    TrustChainConfirmationService trustChainConfirmationServiceLocal;
     @Autowired
-    private ClusterHelper clusterHelper;
+    ClusterHelper clusterHelperLocal;
     @Autowired
-    private BaseNodeTransactionHelper transactionHelper;
+    ClusterService clusterServiceLocal;
     @MockBean
-    private ITransactionPropagationCheckService transactionPropagationCheckService;
+    IEventService nodeEventServiceLocal;
     @MockBean
-    private BaseNodeEventService baseNodeEventService;
+    BaseNodeTransactionHelper baseNodeTransactionHelper;
     @MockBean
-    private Transactions transactions;
+    TransactionIndexes transactionIndexesLocal;
+    @MockBean
+    Transactions transactionsLocal;
 
-    @MockBean
-    private AddressTransactionsHistories addressTransactionsHistories;
-    @MockBean
-    private TransactionCrypto transactionCrypto;
-    @MockBean
-    private IBalanceService balanceService;
-    @MockBean
-    private IConfirmationService confirmationService;
-    @MockBean
-    private IClusterService clusterService;
-    @MockBean
-    private TransactionIndexes transactionIndexes;
-    @MockBean
-    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
-    @MockBean
-    private BaseNodeCurrencyService currencyService;
-    @MockBean
-    private IMintingService mintingService;
-    @MockBean
-    private INetworkService networkService;
-
+    @BeforeEach
+    public void init() {
+        trustChainConfirmationService = trustChainConfirmationServiceLocal;
+        clusterService = clusterServiceLocal;
+        clusterHelper = clusterHelperLocal;
+        nodeEventService = nodeEventServiceLocal;
+        nodeTransactionHelper = baseNodeTransactionHelper;
+        transactionIndexes = transactionIndexesLocal;
+        transactions = transactionsLocal;
+    }
 
     @Test
     public void getTrustChainConfirmedTransactions_preTrustScoreConsensus() {
@@ -87,15 +74,15 @@ public class TrustChainConfirmationServiceTest {
 
         ConcurrentMap<Hash, TransactionData> trustChainConfirmationCluster = new ConcurrentHashMap<>();
         trustChainConfirmationCluster.put(transactionData.getHash(), transactionData);
-        trustChainConfirmationService.init(trustChainConfirmationCluster);
-        List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationService.getTrustChainConfirmedTransactions();
+        trustChainConfirmationServiceLocal.init(trustChainConfirmationCluster);
+        List<TccInfo> trustChainConfirmedTransactions = trustChainConfirmationServiceLocal.getTrustChainConfirmedTransactions();
 
         Assertions.assertEquals(transactionData.getRoundedSenderTrustScore(), (int) Math.round(trustChainConfirmationCluster.get(transactionData.getHash()).getTrustChainTrustScore()));
         Assertions.assertTrue(trustChainConfirmedTransactions.isEmpty());
     }
 
     @Test
-    public void init_preTrustScoreConsensus() {
+    void init_preTrustScoreConsensus() {
         int majorityTCCThreshold = MAX_TRUST_SCORE / 2 + 5;
         long index = 7;
         TransactionIndexData transactionIndexData = new TransactionIndexData(new Hash("7"), index, "7".getBytes(StandardCharsets.UTF_8));

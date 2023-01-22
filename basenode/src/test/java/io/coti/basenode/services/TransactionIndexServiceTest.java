@@ -4,10 +4,11 @@ import io.coti.basenode.data.DspConsensusResult;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionIndexData;
 import io.coti.basenode.model.TransactionIndexes;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.Instant;
 import java.util.Optional;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeTransactionHelper;
+import static io.coti.basenode.services.BaseNodeServiceManager.transactionIndexes;
+
 @ContextConfiguration(classes = {TransactionIndexService.class})
 @ExtendWith(OutputCaptureExtension.class)
 @TestPropertySource(locations = "classpath:test.properties")
@@ -33,9 +37,17 @@ class TransactionIndexServiceTest {
     @Autowired
     private TransactionIndexService transactionIndexService;
     @MockBean
-    private ITransactionHelper transactionHelper;
+    private TransactionIndexes transactionIndexesLocal;
     @MockBean
-    private TransactionIndexes transactionIndexes;
+    private BaseNodeTransactionHelper baseNodeTransactionHelper;
+    @MockBean
+    INetworkService networkService;
+
+    @BeforeEach
+    void init() {
+        transactionIndexes = transactionIndexesLocal;
+        nodeTransactionHelper = baseNodeTransactionHelper;
+    }
 
     @Test
     void insert_new_transaction_index_empty(CapturedOutput output) {

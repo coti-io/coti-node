@@ -1,13 +1,13 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.crypto.TransactionCrypto;
-import io.coti.basenode.data.*;
-import io.coti.basenode.model.*;
+import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.LockData;
+import io.coti.basenode.data.TransactionData;
+import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
+import io.coti.basenode.model.Transactions;
+import io.coti.basenode.model.UnconfirmedReceivedTransactionHashes;
 import io.coti.basenode.services.BaseNodeEventService;
-import io.coti.basenode.services.TransactionIndexService;
-import io.coti.basenode.services.interfaces.*;
-import io.coti.fullnode.crypto.ResendTransactionRequestCrypto;
+import io.coti.basenode.services.interfaces.ITransactionHelper;
 import io.coti.fullnode.data.UnconfirmedReceivedTransactionHashFullNodeData;
 import io.coti.fullnode.websocket.WebSocketSender;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +27,8 @@ import utils.TestUtils;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
+import static io.coti.fullnode.services.NodeServiceManager.webSocketSender;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration(classes = {TransactionService.class,
@@ -37,62 +39,39 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class TransactionServiceTest {
+class TransactionServiceTest {
 
     @Autowired
     private TransactionService transactionService;
     @MockBean
     private ITransactionHelper transactionHelper;
     @MockBean
-    private ValidationService validationService;
+    private ValidationService validationServiceLocal;
     @MockBean
-    private IDspVoteService dspVoteService;
-    @MockBean
-    private IConfirmationService confirmationService;
-    @MockBean
-    private IClusterService clusterService;
-    @MockBean
-    private IClusterHelper clusterHelper;
-    @MockBean
-    private Transactions transactions;
-    @MockBean
-    private TransactionIndexService transactionIndexService;
-    @MockBean
-    private JacksonSerializer jacksonSerializer;
-    @MockBean
-    private TransactionIndexes transactionIndexes;
-    @MockBean
-    private ICurrencyService currencyService;
-    @MockBean
-    private IMintingService mintingService;
-    @MockBean
-    private IChunkService chunkService;
+    private Transactions transactionsLocal;
     @MockBean
     private BaseNodeEventService eventService;
     @MockBean
-    private TransactionCrypto transactionCrypto;
+    private WebSocketSender webSocketSenderLocal;
     @MockBean
-    private AddressTransactionsHistories addressTransactionsHistories;
+    private TransactionPropagationCheckService transactionPropagationCheckServiceLocal;
     @MockBean
-    private WebSocketSender webSocketSender;
-    @MockBean
-    private INetworkService networkService;
-    @MockBean
-    private PotService potService;
-    @MockBean
-    private TransactionPropagationCheckService transactionPropagationCheckService;
-    @MockBean
-    private UnconfirmedReceivedTransactionHashes unconfirmedReceivedTransactionHashes;
-    @MockBean
-    private ResendTransactionRequestCrypto resendTransactionRequestCrypto;
+    private UnconfirmedReceivedTransactionHashes unconfirmedReceivedTransactionHashesLocal;
 
     @BeforeEach
-    public void init() {
+    void init() {
+        webSocketSender = webSocketSenderLocal;
+        nodeEventService = eventService;
+        validationService = validationServiceLocal;
+        unconfirmedReceivedTransactionHashes = unconfirmedReceivedTransactionHashesLocal;
+        transactionPropagationCheckService = transactionPropagationCheckServiceLocal;
+        nodeTransactionHelper = transactionHelper;
+        transactions = transactionsLocal;
         transactionService.init();
     }
 
     @Test
-    public void removeTransactionHashFromUnconfirmed_verifyRemoved() {
+    void removeTransactionHashFromUnconfirmed_verifyRemoved() {
         TransactionData transactionData = TestUtils.createRandomTransaction();
         Map<Hash, UnconfirmedReceivedTransactionHashData> unconfirmedReceivedTransactionHashesMap = new ConcurrentHashMap<>();
         UnconfirmedReceivedTransactionHashData unconfirmedReceivedTransactionHashData = new UnconfirmedReceivedTransactionHashData(transactionData.getHash());
@@ -100,7 +79,6 @@ public class TransactionServiceTest {
                 new UnconfirmedReceivedTransactionHashFullNodeData(unconfirmedReceivedTransactionHashData, 3);
         unconfirmedReceivedTransactionHashesMap.put(unconfirmedReceivedTransactionHashData.getTransactionHash(), unconfirmedReceivedTransactionHashFullNodeData);
         ReflectionTestUtils.setField(transactionPropagationCheckService, "unconfirmedReceivedTransactionHashesMap", unconfirmedReceivedTransactionHashesMap);
-        ReflectionTestUtils.setField(transactionPropagationCheckService, "unconfirmedReceivedTransactionHashes", unconfirmedReceivedTransactionHashes);
         ReflectionTestUtils.setField(transactionPropagationCheckService, "transactionHashLockData", new LockData());
         when(unconfirmedReceivedTransactionHashes.getByHash(transactionData.getHash())).thenReturn(unconfirmedReceivedTransactionHashFullNodeData);
         doCallRealMethod().when(transactionPropagationCheckService).removeTransactionHashFromUnconfirmed(transactionData.getHash());

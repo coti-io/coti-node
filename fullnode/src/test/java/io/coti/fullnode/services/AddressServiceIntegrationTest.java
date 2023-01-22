@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -45,12 +46,11 @@ import static org.mockito.Mockito.when;
         HttpJacksonSerializer.class, GetHistoryAddressesRequestCrypto.class, CryptoHelper.class, NodeCryptoHelper.class,
         GetHistoryAddressesResponseCrypto.class, IDatabaseConnector.class, RocksDBConnector.class, AnnotationConfigContextLoader.class,
         NodeCryptoHelper.class
-        /*IPropagationPublisher.class, ZeroMQPropagationPublisher.class, ISerializer.class, JacksonSerializer.class, CommunicationService.class,
-        IReceiver.class*/})
+})
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-public class AddressServiceIntegrationTest {
+class AddressServiceIntegrationTest {
 
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // need to add a tests in Storage node and in history node that will prepare for tests in this class.
@@ -93,30 +93,15 @@ public class AddressServiceIntegrationTest {
     @Autowired
     private AddressService addressService;
     @MockBean
-    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
+    private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCryptoLocal;
     @MockBean
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
-    /*
-    @Autowired
-    private IPropagationPublisher propagationPublisher;
-    @Autowired
-    private ISerializer serializer;
-    @Autowired
-    private IReceiver iReceiver;
-    @Autowired
-    private CommunicationService communicationService;
-    */
     @MockBean
-    private NetworkService networkService;
-
+    private NetworkService networkServiceLocal;
     @MockBean
-    private Addresses addresses;
+    private Addresses addressesLocal;
     @MockBean
-    private RequestedAddressHashes requestedAddressHashes;
-//    @Autowired
-//    public IDatabaseConnector databaseConnector;
-//    @Autowired
-//    private RocksDBConnector rocksDBConnector;
+    private RequestedAddressHashes requestedAddressHashesLocal;
 
     @MockBean
     private WebSocketSender webSocketSender;
@@ -156,13 +141,12 @@ public class AddressServiceIntegrationTest {
         }
     }
 
-    //TODO 8/4/2019 astolia: change to @BeforeClass
     @BeforeEach
-    public void setUp() {
-//        rocksDBConnector.setColumnFamily();
-//        databaseConnector.init();
-
-        addresses.put(AddressTestUtils.generateRandomAddressData());
+    void setUp() {
+        networkService = networkServiceLocal;
+        addresses = addressesLocal;
+        requestedAddressHashes = requestedAddressHashesLocal;
+        getHistoryAddressesRequestCrypto = getHistoryAddressesRequestCryptoLocal;
 
         when(addresses.getByHash(addressInLocalAddressesCollection.getHash())).thenReturn(addressInLocalAddressesCollection);
         doAnswer(invocation -> {
@@ -179,8 +163,6 @@ public class AddressServiceIntegrationTest {
         mockNotFound(addressNotFoundInFullNodeAndFoundInStorage);
         mockNotFound(addressNotFoundInFullNodeAndNotFound);
         mockNetworkService();
-        //TODO 8/1/2019 astolia: todo mock crypto?
-
     }
 
     private void setTimeAndMock(RequestedAddressHashData requestedAddressHashData, long insertionTime) {
@@ -324,7 +306,7 @@ public class AddressServiceIntegrationTest {
      * the address is expected to be returned by history node and the response will be TRUE, FALSE(Ordered).
      */
     @Test
-    public void addressesExist_addressInLocalDbAndNotFound_shouldGetResponseFromStorageNode_IT() {
+    void addressesExist_addressInLocalDbAndNotFound_shouldGetResponseFromStorageNode_IT() {
         AddressBulkRequest addressBulkRequest = AddressTestUtils.generateAddressBulkRequest(
                 addressInLocalAddressesCollection.getHash(),
                 addressNotFoundInFullNodeAndNotFound.getHash());

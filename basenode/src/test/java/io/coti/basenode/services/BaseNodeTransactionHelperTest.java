@@ -1,19 +1,16 @@
 package io.coti.basenode.services;
 
 import com.google.common.collect.Sets;
-import io.coti.basenode.communication.JacksonSerializer;
-import io.coti.basenode.communication.interfaces.ISender;
-import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
-import io.coti.basenode.crypto.ExpandedTransactionTrustScoreCrypto;
-import io.coti.basenode.crypto.GetUserTokensRequestCrypto;
-import io.coti.basenode.crypto.TransactionCrypto;
 import io.coti.basenode.data.*;
-import io.coti.basenode.database.interfaces.IDatabaseConnector;
-import io.coti.basenode.model.*;
-import io.coti.basenode.services.interfaces.*;
+import io.coti.basenode.model.AddressTransactionsHistories;
+import io.coti.basenode.model.TransactionIndexes;
+import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.interfaces.IConfirmationService;
+import io.coti.basenode.services.interfaces.ITransactionPropagationCheckService;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +20,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -32,95 +28,52 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 
-@ContextConfiguration(classes = {BaseNodeTransactionHelper.class, BaseNodeTransactionService.class, AddressTransactionsHistories.class,
-        TransactionCrypto.class, BaseNodeBalanceService.class, BaseNodeConfirmationService.class, ClusterService.class, Transactions.class,
-        TransactionIndexes.class, ExpandedTransactionTrustScoreCrypto.class, BaseNodeCurrencyService.class, BaseNodeMintingService.class,
-        BaseNodeEventService.class, INetworkService.class, CurrencyNameIndexes.class, TransactionIndexService.class,
-        BaseNodeValidationService.class, BaseNodeDspVoteService.class, ClusterHelper.class, JacksonSerializer.class, RestTemplate.class,
-        CurrencyTypeRegistrationCrypto.class, GetUserTokensRequestCrypto.class, UserCurrencyIndexes.class
-
-})
+@ContextConfiguration(classes = {BaseNodeTransactionHelper.class, BaseNodeTransactionService.class, ClusterService.class})
 
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
+class BaseNodeTransactionHelperTest {
 
-public class BaseNodeTransactionHelperTest {
-
     @Autowired
-    private BaseNodeTransactionService transactionService;
-    @Autowired
-    private ITransactionHelper transactionHelper;
+    private BaseNodeTransactionHelper transactionHelper;
     @MockBean
-    private ITransactionPropagationCheckService transactionPropagationCheckService;
+    private ITransactionPropagationCheckService transactionPropagationCheckServiceLocal;
     @MockBean
-    private AddressTransactionsHistories addressTransactionsHistories;
-    @Autowired
-    private TransactionCrypto transactionCrypto;
+    private AddressTransactionsHistories addressTransactionsHistoriesLocal;
     @MockBean
-    private BaseNodeBalanceService balanceService;
-    @Autowired
-    private BaseNodeConfirmationService baseNodeConfirmationService;
-    @Autowired
-    private ClusterService clusterService;
+    private BaseNodeBalanceService balanceServiceLocal;
     @MockBean
-    private ISourceSelector sourceSelector;
+    private Transactions transactionsLocal;
     @MockBean
-    private TrustChainConfirmationService trustChainConfirmationService;
-    @MockBean
-    private Transactions transactions;
-    @MockBean
-    private TransactionIndexes transactionIndexes;
-    @MockBean
-    private ExpandedTransactionTrustScoreCrypto expandedTransactionTrustScoreCrypto;
-    @MockBean
-    private BaseNodeCurrencyService currencyService;
-    @MockBean
-    private BaseNodeMintingService mintingService;
+    private TransactionIndexes transactionIndexesLocal;
     @MockBean
     private BaseNodeEventService eventService;
+    @MockBean
+    private IConfirmationService confirmationServiceLocal;
 
-    @MockBean
-    private IDatabaseConnector databaseConnector;
-    @MockBean
-    private Currencies currencies;
-    @MockBean
-    private CurrencyNameIndexes currencyNameIndexes;
-    @MockBean
-    private TransactionIndexService transactionIndexService;
-    @MockBean
-    private INetworkService networkService;
-    @MockBean
-    private IValidationService validationService;
-    @MockBean
-    private IDspVoteService dspVoteService;
-    @MockBean
-    private IClusterHelper clusterHelper;
-    @MockBean
-    private JacksonSerializer jacksonSerializer;
-    @MockBean
-    private IChunkService chunkService;
-    @Autowired
-    protected RestTemplate restTemplate;
-    @Autowired
-    protected CurrencyTypeRegistrationCrypto currencyTypeRegistrationCrypto;
-    @Autowired
-    private GetUserTokensRequestCrypto getUserTokensRequestCrypto;
-
-    @Autowired
-    private UserCurrencyIndexes userCurrencyIndexes;
-    @Autowired
-    protected BaseNodeEventService baseNodeEventService;
-    @MockBean
-    private ISender sender;
+    @BeforeEach
+    void init() {
+        clusterService = new ClusterService();
+        nodeTransactionHelper = transactionHelper;
+        nodeEventService = eventService;
+        transactionIndexes = transactionIndexesLocal;
+        addressTransactionsHistories = addressTransactionsHistoriesLocal;
+        transactions = transactionsLocal;
+        transactionPropagationCheckService = transactionPropagationCheckServiceLocal;
+        balanceService = balanceServiceLocal;
+        confirmationService = confirmationServiceLocal;
+        clusterService.init();
+    }
 
     @Test
-    public void getTransaction_updateTransactionOnCluster_coverage() {
+    void getTransaction_updateTransactionOnCluster_coverage() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
 
         final Set<Hash> trustChainConfirmationTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
@@ -142,9 +95,8 @@ public class BaseNodeTransactionHelperTest {
     }
 
     @Test
-    public void attachTransactionToCluster_addToTCCCluster() {
+    void attachTransactionToCluster_addToTCCCluster() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
-
         // Initial state
         final Set<Hash> trustChainConfirmationTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
         ArrayList<HashSet<Hash>> sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
@@ -169,7 +121,7 @@ public class BaseNodeTransactionHelperTest {
     }
 
     @Test
-    public void addExistingTransactionOnInit_coverage() {
+    void addExistingTransactionOnInit_coverage() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
 
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
@@ -178,7 +130,6 @@ public class BaseNodeTransactionHelperTest {
         transactionData.setDspConsensusResult(dspConsensusResult);
 
         // Initial state
-        final Set<Hash> trustChainConfirmationTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
         ArrayList<HashSet<Hash>> sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
         long initialSourcesAmount = clusterService.getTotalSources();
         int initialTotalSources = sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum();
@@ -196,16 +147,14 @@ public class BaseNodeTransactionHelperTest {
     }
 
     @Test
-    public void addMissingTransactionOnInit_coverage() {
+    void addMissingTransactionOnInit_coverage() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
-
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
         dspConsensusResult.setIndexingTime(Instant.now());
         dspConsensusResult.setDspConsensus(true);
         transactionData.setDspConsensusResult(dspConsensusResult);
 
         // Initial state
-        final Set<Hash> trustChainConfirmationTransactionHashes = clusterService.getTrustChainConfirmationTransactionHashes();
         ArrayList<HashSet<Hash>> sourceSetsByTrustScore = clusterService.getSourceSetsByTrustScore();
         long initialSourcesAmount = clusterService.getTotalSources();
         int initialTotalSources = sourceSetsByTrustScore.stream().mapToInt(HashSet::size).sum();
@@ -225,7 +174,7 @@ public class BaseNodeTransactionHelperTest {
     }
 
     @Test
-    public void addTransactionToTrustChainConfirmationCluster_verifyAddition() {
+    void addTransactionToTrustChainConfirmationCluster_verifyAddition() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         clusterService.attachToCluster(transactionData);
         ConcurrentHashMap<Hash, TransactionData> copyTrustChainConfirmationCluster = clusterService.getCopyTrustChainConfirmationCluster();
@@ -251,7 +200,7 @@ public class BaseNodeTransactionHelperTest {
     }
 
     @Test
-    public void removeNoneIndexedTransaction_verifyRemoval() {
+    void removeNoneIndexedTransaction_verifyRemoval() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         Set<Hash> noneIndexedTransactionHashes = new HashSet<>(Collections.singleton(transactionData.getHash()));
         ReflectionTestUtils.setField(transactionHelper, "noneIndexedTransactionHashes", noneIndexedTransactionHashes);

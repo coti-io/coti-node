@@ -6,9 +6,10 @@ import io.coti.basenode.model.Currencies;
 import io.coti.basenode.services.interfaces.IBalanceService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.basenode.services.interfaces.IMintingService;
-import io.coti.basenode.services.interfaces.ITransactionHelper;
+import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.utils.TransactionTestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration(classes = {BaseNodeMintingService.class})
@@ -28,12 +30,12 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class BaseNodeMintingServiceTest {
+class BaseNodeMintingServiceTest {
 
     @Autowired
     private IMintingService mintingService;
     @MockBean
-    protected Currencies currencies;
+    protected Currencies currenciesLocal;
     @MockBean
     protected IBalanceService balanceService;
     @MockBean
@@ -41,12 +43,21 @@ public class BaseNodeMintingServiceTest {
     @MockBean
     private TokenMintingServiceData tokenMintingServiceData;
     @MockBean
-    private ITransactionHelper transactionHelper;
+    private BaseNodeTransactionHelper transactionHelper;
     @MockBean
-    private ICurrencyService currencyService;
+    private ICurrencyService currencyServiceLocal;
+    @MockBean
+    INetworkService networkService;
+
+    @BeforeEach
+    void init() {
+        nodeTransactionHelper = transactionHelper;
+        currencyService = currencyServiceLocal;
+        currencies = currenciesLocal;
+    }
 
     @Test
-    public void revertMintingAllocation() {
+    void revertMintingAllocation() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         Hash currencyHash = TransactionTestUtils.generateRandomHash();
         when(transactionHelper.getTokenMintingFeeData(transactionData)).thenReturn(tokenMintingFeeBaseTransactionData);

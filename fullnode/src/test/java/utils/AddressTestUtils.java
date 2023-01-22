@@ -13,23 +13,6 @@ public class AddressTestUtils {
         return new AddressData(HashTestUtils.generateRandomAddressHash());
     }
 
-    public static List<AddressData> generateListOfRandomAddressData(int listSize) {
-
-        List<AddressData> addresses = new ArrayList<>();
-        for (int i = 0; i < listSize; i++) {
-            addresses.add(generateRandomAddressData());
-        }
-        return addresses;
-    }
-
-    public static Set<AddressData> generateSetOfRandomAddressData(int listSize) {
-        Set<AddressData> addresses = new HashSet<>();
-        for (int i = 0; i < listSize; i++) {
-            addresses.add(generateRandomAddressData());
-        }
-        return addresses;
-    }
-
     public static boolean equals(AddressesExistsResponse expected, Object actual) {
         if (expected == actual) return true;
         if (!(actual instanceof AddressesExistsResponse)) return false;
@@ -61,8 +44,7 @@ public class AddressTestUtils {
     }
 
     public static AddressBulkRequest generateAddressBulkRequest(Hash... addressHashes) {
-        List<Hash> addressHashesList = new ArrayList<>();
-        Arrays.stream(addressHashes).forEach(addressHash -> addressHashesList.add(addressHash));
+        List<Hash> addressHashesList = new ArrayList<>(Arrays.asList(addressHashes));
 
         AddressBulkRequest addressBulkRequest = new AddressBulkRequest();
         addressBulkRequest.setAddresses(addressHashesList);
