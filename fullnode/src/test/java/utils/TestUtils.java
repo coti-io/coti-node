@@ -1,6 +1,8 @@
 package utils;
 
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
+import io.coti.fullnode.http.FullNodeFeeRequest;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -14,6 +16,10 @@ public class TestUtils {
     private static final int SIZE_OF_HASH = 64;
     private static final String TRANSACTION_DESCRIPTION = "test";
     public static final String NATIVE_CURRENCY_HASH = "ae2b227ab7e614b8734be1f03d1532e66bf6caf76accc02ca4da6e28";
+
+    public static Hash generateRandomHash() {
+        return generateRandomHash(SIZE_OF_HASH);
+    }
 
     public static Hash generateRandomHash(int lengthOfHash) {
         StringBuilder hexa = new StringBuilder();
@@ -54,5 +60,25 @@ public class TestUtils {
 
     public static RejectedTransactionData createRejectedTransaction(TransactionData transactionToBeRejected) {
         return new RejectedTransactionData(transactionToBeRejected, TRANSACTION_DESCRIPTION);
+    }
+
+    public static FullNodeFeeRequest createFullNodeFeeRequest() {
+        Hash currencyHash = OriginatorCurrencyCrypto.calculateHash("COTI");
+        Hash userHash = generateRandomHash();
+        FullNodeFeeRequest fullNodeFeeRequest = new FullNodeFeeRequest();
+        fullNodeFeeRequest.setFeeIncluded(true);
+        fullNodeFeeRequest.setOriginalAmount(new BigDecimal(1000));
+        fullNodeFeeRequest.setUserHash(userHash);
+        fullNodeFeeRequest.setOriginalCurrencyHash(currencyHash);
+        return fullNodeFeeRequest;
+    }
+
+    public static FullNodeFeeData generateFullNodeFeeData(Hash hash, double amount) {
+        return new FullNodeFeeData(hash,
+                null,
+                new BigDecimal(amount),
+                null,
+                new BigDecimal(1),
+                Instant.now());
     }
 }
