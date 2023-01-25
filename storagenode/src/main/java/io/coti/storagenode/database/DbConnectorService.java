@@ -113,7 +113,6 @@ public class DbConnectorService implements IDbConnectorService {
             ClusterHealthRequest clusterHealthRequest = new ClusterHealthRequest(index);
             ClusterHealthResponse response = restClient.cluster().health(clusterHealthRequest, RequestOptions.DEFAULT);
         }
-
         ClusterGetSettingsRequest clusterGetSettingsRequest = new ClusterGetSettingsRequest();
         return restClient.cluster().getSettings(clusterGetSettingsRequest, RequestOptions.DEFAULT);
     }
@@ -123,7 +122,6 @@ public class DbConnectorService implements IDbConnectorService {
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.getForObject(uri, String.class);
     }
-
 
     @Override
     public GetResponse getObjectFromDbByHash(Hash hash, String index, boolean fromColdStorage) {
@@ -257,7 +255,6 @@ public class DbConnectorService implements IDbConnectorService {
             buildObjectName(objectName, builder);
             builder.endObject();
             PutMappingRequest request = new PutMappingRequest(index);
-//        request.type(INDEX_TYPE);
             request.source(builder);
             if (fromColdStorage) {
                 restColdStorageClient.indices().putMapping(request, RequestOptions.DEFAULT);
@@ -270,15 +267,13 @@ public class DbConnectorService implements IDbConnectorService {
     }
 
     private void buildObjectName(String objectName, XContentBuilder builder) throws IOException {
-        builder.startObject("properties");
-        {
-            builder.startObject(objectName);
-            {
-                builder.field("type", "text");
-            }
-            builder.endObject();
-        }
-        builder.endObject();
+        builder.startObject()
+                .startObject("properties")
+                .startObject(objectName)
+                .field("type", "text")
+                .endObject()
+                .endObject()
+                .endObject();
     }
 
 

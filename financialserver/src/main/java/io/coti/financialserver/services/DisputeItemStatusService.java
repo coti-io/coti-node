@@ -2,6 +2,7 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.model.Transactions;
+import io.coti.basenode.services.BaseNodeServiceManager;
 import io.coti.financialserver.data.ActionSide;
 import io.coti.financialserver.data.DisputeData;
 import io.coti.financialserver.data.DisputeItemData;
@@ -88,10 +89,8 @@ public enum DisputeItemStatusService {
     };
 
     protected WebSocketService webSocketService = io.coti.financialserver.services.NodeServiceManager.webSocketService;
-    ;
-    protected Transactions transactions = io.coti.financialserver.services.NodeServiceManager.transactions;
+    protected Transactions transactions = BaseNodeServiceManager.transactions;
     protected RollingReserveService rollingReserveService = io.coti.financialserver.services.NodeServiceManager.rollingReserveService;
-    ;
     private final DisputeItemStatus newDisputeItemStatus;
     private final Set<DisputeItemStatus> previousDisputeItemStatuses;
     private final ActionSide actionSide;

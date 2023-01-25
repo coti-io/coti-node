@@ -22,13 +22,13 @@ import java.util.Map;
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {GetHistoryAddressesResponseCrypto.class, CryptoHelper.class})
-public class AddressesResponseCryptoTest {
+class AddressesResponseCryptoTest {
 
     @Autowired
     private GetHistoryAddressesResponseCrypto getHistoryAddressesResponseCrypto;
 
     @Test
-    public void testGetSignature() {
+    void testGetSignature() {
         int size = 10;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
         Map<Hash, AddressData> addressHashesToAddresses = new LinkedHashMap<>();
@@ -54,7 +54,7 @@ public class AddressesResponseCryptoTest {
     }
 
     @Test
-    public void testGetSignatureOrdered() {
+    void testGetSignatureOrdered() {
         int size = 10;
         List<AddressData> addresses = AddressTestUtils.generateListOfRandomAddressData(size);
 

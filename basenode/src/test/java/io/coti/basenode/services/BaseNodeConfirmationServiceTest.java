@@ -109,7 +109,7 @@ class BaseNodeConfirmationServiceTest {
     }
 
     @Test
-    public void handle_tcc_info_update() {
+    void handle_tcc_info_update() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         TccInfo tccInfo = new TccInfo(transactionData.getHash(), 115, Instant.now());
         doAnswer(invocation -> {
@@ -125,7 +125,7 @@ class BaseNodeConfirmationServiceTest {
     }
 
     @Test
-    public void handleMissingIndexes() {
+    void handleMissingIndexes() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         DspConsensusResult dspConsensusResult = new DspConsensusResult(transactionData.getHash());
         dspConsensusResult.setIndex(2);

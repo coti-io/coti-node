@@ -119,7 +119,10 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private void handleTransaction(TransactionData transactionData) {
         if (transactionData.getType().equals(TransactionType.TokenGeneration)) {
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData;
-            Optional<BaseTransactionData> optionalTokenGenerationFeeBaseTransactionData = transactionData.getBaseTransactions().stream().filter(TokenGenerationFeeBaseTransactionData.class::isInstance).findFirst();
+            Optional<BaseTransactionData> optionalTokenGenerationFeeBaseTransactionData = transactionData.getBaseTransactions()
+                    .stream()
+                    .filter(TokenGenerationFeeBaseTransactionData.class::isInstance)
+                    .findFirst();
             if (optionalTokenGenerationFeeBaseTransactionData.isPresent()) {
                 tokenGenerationFeeBaseTransactionData = (TokenGenerationFeeBaseTransactionData) optionalTokenGenerationFeeBaseTransactionData.get();
                 TokenGenerationServiceData tokenGenerationServiceData = tokenGenerationFeeBaseTransactionData.getServiceData();
@@ -130,42 +133,54 @@ public class BaseNodeCurrencyService implements ICurrencyService {
                 if (currencyData == null) {
                     Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
                     currencyData = getCurrencyDataInstance(tokenGenerationServiceData, createTime, originatorCurrencyData, transactionData);
-                    if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
-                        CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
-                        Hash previousCurrencyHash = previousCurrencyNameIndexData.getCurrencyHash();
-                        removeUserCurrencyIndexByCurrencyHash(previousCurrencyHash);
-                        currencies.deleteByHash(previousCurrencyHash);
-                    }
-                    if (isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
-                        currencies.put(currencyData);
-                        currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
-                        addToUserCurrencyIndexes(currencyData.getOriginatorHash(), currencyData.getHash());
-                        if (currencyData.isConfirmed()) {
-                            initializeMintableAmountEntry(transactionData);
-                        }
-                    }
+                    handleNewCurrencyData(transactionData, currencyData, transactionConfirmed);
                 } else if (currencyData.getCurrencyGeneratingTransactionHash().equals(transactionData.getHash())) {
-                    if (transactionConfirmed && !currencyData.isConfirmed()) {
-                        currencyData.setConfirmed(true);
-                        currencies.put(currencyData);
-                    }
-                    if (currencyData.isConfirmed()) {
-                        initializeMintableAmountEntry(transactionData);
-                    }
+                    handleTransactionPartiallyConfirmed(transactionData, transactionConfirmed, currencyData);
                 } else if (transactionConfirmed) {
                     Instant createTime = tokenGenerationFeeBaseTransactionData.getCreateTime();
                     CurrencyData newCurrencyData = getCurrencyDataInstance(tokenGenerationServiceData, createTime, originatorCurrencyData, transactionData);
-                    currencies.put(newCurrencyData);
-                    if (!newCurrencyData.getName().equals(currencyData.getName())) {
-                        currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
-                        currencyNameIndexes.put(new CurrencyNameIndexData(newCurrencyData.getName(), newCurrencyData.getHash()));
-                    }
-                    if (!currencyData.getOriginatorHash().equals(newCurrencyData.getOriginatorHash())) {
-                        removeUserCurrencyIndexByCurrencyHash(currencyData.getHash());
-                        addToUserCurrencyIndexes(newCurrencyData.getOriginatorHash(), newCurrencyData.getHash());
-                    }
-                    initializeMintableAmountEntry(transactionData);
+                    handleTransactionConfirmed(transactionData, newCurrencyData, currencyData);
                 }
+            }
+        }
+    }
+
+    private void handleTransactionPartiallyConfirmed(TransactionData transactionData, boolean transactionConfirmed, CurrencyData currencyData) {
+        if (transactionConfirmed && !currencyData.isConfirmed()) {
+            currencyData.setConfirmed(true);
+            currencies.put(currencyData);
+        }
+        if (currencyData.isConfirmed()) {
+            initializeMintableAmountEntry(transactionData);
+        }
+    }
+
+    private void handleTransactionConfirmed(TransactionData transactionData, CurrencyData newCurrencyData, CurrencyData currencyData) {
+        currencies.put(newCurrencyData);
+        if (!newCurrencyData.getName().equals(currencyData.getName())) {
+            currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+            currencyNameIndexes.put(new CurrencyNameIndexData(newCurrencyData.getName(), newCurrencyData.getHash()));
+        }
+        if (!currencyData.getOriginatorHash().equals(newCurrencyData.getOriginatorHash())) {
+            removeUserCurrencyIndexByCurrencyHash(currencyData.getHash());
+            addToUserCurrencyIndexes(newCurrencyData.getOriginatorHash(), newCurrencyData.getHash());
+        }
+        initializeMintableAmountEntry(transactionData);
+    }
+
+    private void handleNewCurrencyData(TransactionData transactionData, CurrencyData currencyData, boolean transactionConfirmed) {
+        if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
+            CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+            Hash previousCurrencyHash = previousCurrencyNameIndexData.getCurrencyHash();
+            removeUserCurrencyIndexByCurrencyHash(previousCurrencyHash);
+            currencies.deleteByHash(previousCurrencyHash);
+        }
+        if (isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
+            currencies.put(currencyData);
+            currencyNameIndexes.put(new CurrencyNameIndexData(currencyData.getName(), currencyData.getHash()));
+            addToUserCurrencyIndexes(currencyData.getOriginatorHash(), currencyData.getHash());
+            if (currencyData.isConfirmed()) {
+                initializeMintableAmountEntry(transactionData);
             }
         }
     }

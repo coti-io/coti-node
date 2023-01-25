@@ -23,7 +23,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @Slf4j
-public class BaseNodeClusterStampServiceTest {
+class BaseNodeClusterStampServiceTest {
 
     @Autowired
     private BaseNodeClusterStampService baseNodeClusterStampService;
@@ -42,7 +42,7 @@ public class BaseNodeClusterStampServiceTest {
     protected ICurrencyService currencyService;
 
     @Test
-    public void init() {
+    void init() {
         Assertions.assertThrows(ClusterStampException.class, () -> baseNodeClusterStampService.init());
     }
 }

@@ -43,6 +43,7 @@ public class TransactionService extends BaseNodeTransactionService {
         addToHistoryTransactionIndexes(transactionData);
     }
 
+    @Override
     public void getTransactionsByAddress(GetTransactionsByAddressRequest getTransactionsByAddressRequest, HttpServletResponse response) {
         try {
             CustomHttpServletResponse customResponse = new CustomHttpServletResponse(response);
@@ -57,6 +58,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public void getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest, HttpServletResponse response) {
 
         List<Hash> transactionHashes = getTransactionHashesByDate(getTransactionsByDateRequest.getDate());

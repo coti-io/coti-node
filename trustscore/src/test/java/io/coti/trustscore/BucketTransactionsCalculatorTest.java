@@ -12,7 +12,6 @@ import io.coti.trustscore.testutils.BucketUtil;
 import io.coti.trustscore.utils.DatesCalculation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,7 +44,7 @@ public class BucketTransactionsCalculatorTest {
     }
 
     @Test
-    public void setBucketTransactionEventsDataTest() {
+    void setBucketTransactionEventsDataTest() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
         bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
@@ -55,7 +54,7 @@ public class BucketTransactionsCalculatorTest {
     }
 
     @Test
-    public void decayScoresTestWhenDecayDayEvents() {
+    void decayScoresTestWhenDecayDayEvents() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
         bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
@@ -72,7 +71,7 @@ public class BucketTransactionsCalculatorTest {
     }
 
     @Test
-    public void decayScoresTestWhenDecayMonthEvents() {
+    void decayScoresTestWhenDecayMonthEvents() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
         bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         BucketTransactionsCalculator bucketTransactionsCalculator = new BucketTransactionsCalculator(bucketTransactionEventsData);
@@ -93,7 +92,7 @@ public class BucketTransactionsCalculatorTest {
     }
 
     @Test
-    public void setCurrentDayTransactionsScoresTest() {
+    void setCurrentDayTransactionsScoresTest() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
         bucketTransactionEventsData.setUserType(UserType.CONSUMER);
         bucketTransactionEventsData.setCurrentDateNumberOfTransactions(8);
@@ -107,7 +106,7 @@ public class BucketTransactionsCalculatorTest {
 
     @Test
     // Balance don't affect the fullnode TS
-    public void fullNodeTransactionTest() {
+    void fullNodeTransactionTest() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
         bucketTransactionEventsData.setUserType(UserType.FULL_NODE);
         bucketTransactionEventsData.setCurrentDateNumberOfTransactions(8);

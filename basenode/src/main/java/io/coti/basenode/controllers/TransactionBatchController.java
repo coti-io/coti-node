@@ -27,7 +27,7 @@ public class TransactionBatchController {
         transactionService.getTransactionBatch(startingIndex, response);
     }
 
-    @GetMapping(value = "/reactive", produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
+    @GetMapping(value = "/reactive", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<byte[]> getTransactionBatchReactive(@RequestParam(name = "starting_index") @Valid @NotNull Long startingIndex) {
         return Flux.create(fluxSink -> transactionService.getTransactionBatch(startingIndex, fluxSink));
     }

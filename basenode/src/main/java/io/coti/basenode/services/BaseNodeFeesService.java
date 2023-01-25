@@ -117,6 +117,7 @@ public class BaseNodeFeesService implements INodeFeesService {
     }
 
     @Override
+    @SuppressWarnings("java:S1612")
     public ResponseEntity<IResponse> getNodeFees() {
 
         ArrayList<NodeFeeData> feesData = new ArrayList<>();

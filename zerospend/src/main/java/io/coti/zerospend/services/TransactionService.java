@@ -37,6 +37,7 @@ public class TransactionService extends BaseNodeTransactionService {
         dspVoteService.preparePropagatedTransactionForVoting(transactionData);
     }
 
+    @Override
     public ResponseEntity<IResponse> setIndexToTransactions(SetIndexesRequest setIndexesRequest) {
         Set<Hash> transactionHashes = setIndexesRequest.getTransactionHashes();
         if (transactionHashes.isEmpty()) {
