@@ -49,6 +49,7 @@ public enum GetDisputeResponseClass {
         return actionSide;
     }
 
+    @SuppressWarnings("java:S1172")
     public GetDisputeResponseData getNewInstance(DisputeData disputeData, Hash userHash) {
         try {
             Constructor<? extends GetDisputeResponseData> constructor = getDisputeResponseClass.getConstructor(DisputeData.class);

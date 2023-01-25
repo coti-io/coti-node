@@ -17,6 +17,7 @@ import static io.coti.dspnode.services.NodeServiceManager.propagationPublisher;
 @Primary
 public class AddressService extends BaseNodeAddressService {
 
+    @Override
     public void handleNewAddressFromFullNode(AddressData addressData) {
         if (addressExists(addressData.getHash())) {
             log.debug("Address {} exists", addressData.getHash());

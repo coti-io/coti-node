@@ -108,7 +108,7 @@ class BaseNodeConfirmationServiceTest {
     }
 
     @Test
-    public void handle_tcc_info_update() {
+    void handle_tcc_info_update() {
         TransactionData transactionData = TransactionTestUtils.createRandomTransaction();
         TccInfo tccInfo = new TccInfo(transactionData.getHash(), 115, Instant.now());
         doAnswer(invocation -> {

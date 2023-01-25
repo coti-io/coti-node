@@ -38,6 +38,7 @@ public class PotService extends BaseNodePotService {
         super.init();
     }
 
+    @Override
     public void potAction(TransactionData transactionData) {
         Hash transactionHash = transactionData.getHash();
         try {

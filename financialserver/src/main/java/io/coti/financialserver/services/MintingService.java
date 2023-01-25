@@ -39,6 +39,7 @@ public class MintingService extends BaseNodeMintingService {
     private static final int MINTING_FEE_QUOTE_EXPIRATION_MINUTES = 60;
     private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
 
+    @Override
     public ResponseEntity<IResponse> getTokenMintingFee(TokenMintingFeeRequest tokenMintingFeeRequest) {
         try {
             if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
@@ -126,6 +127,7 @@ public class MintingService extends BaseNodeMintingService {
         return CryptoHelper.isAddressValid(address);
     }
 
+    @Override
     public ResponseEntity<IResponse> getTokenMintingFeeQuote(GetTokenMintingFeeQuoteRequest getTokenMintingFeeQuoteRequest) {
         try {
             if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {

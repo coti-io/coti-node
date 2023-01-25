@@ -4,7 +4,6 @@ import io.coti.basenode.http.AddEntitiesBulkRequest;
 import io.coti.basenode.http.AddHistoryEntitiesResponse;
 import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.GetHistoryAddressesResponse;
-import io.coti.basenode.model.RequestedAddressHashes;
 import io.coti.basenode.services.BaseNodeServiceManager;
 import io.coti.historynode.crypto.GetTransactionsByAddressRequestCrypto;
 import io.coti.historynode.model.AddressTransactionsByAddresses;
@@ -17,17 +16,15 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @Primary
+@SuppressWarnings({"java:S1104", "java:S1444"})
 public class NodeServiceManager extends BaseNodeServiceManager {
 
-    public static RequestedAddressHashes requestedAddressHashes;
     public static AddressTransactionsByAddresses addressTransactionsByAddresses;
     public static AddressTransactionsByDates addressTransactionsByDates;
     public static GetTransactionsByAddressRequestCrypto getTransactionsByAddressRequestCrypto;
     public static StorageConnector<GetHistoryAddressesRequest, GetHistoryAddressesResponse> addressStorageConnector;
     public static StorageConnector<AddEntitiesBulkRequest, AddHistoryEntitiesResponse> entitiesStorageConnector;
 
-    @Autowired
-    public RequestedAddressHashes autowiredRequestedAddressHashes;
     @Autowired
     public AddressTransactionsByAddresses autowiredAddressTransactionsByAddresses;
     @Autowired

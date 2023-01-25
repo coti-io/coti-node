@@ -106,7 +106,7 @@ public class BucketTransactionServiceTest {
     }
 
     @Test
-    public void addEventToCalculationsTest() {
+    void addEventToCalculationsTest() {
         Assertions.assertTrue(
                 (ifTwoNumbersAreEqualOrAlmostEqual(bucketTransactionEventsDataForWallet.getCurrentMonthDayToBalanceCountAndContribution()
                         .get(setDateOnBeginningOfDay(decreaseTodayDateByDays(0))).getContribution(), 0.03568973444951873))
@@ -116,41 +116,41 @@ public class BucketTransactionServiceTest {
     }
 
     @Test
-    public void getBucketSumScoreTest() {
+    void getBucketSumScoreTest() {
         double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
         Assertions.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     @Test
-    public void bucketTransactionServiceSimulationOfZeroDayDecayedTest() {
+    void bucketTransactionServiceSimulationOfZeroDayDecayedTest() {
         decayDailyEventsDataForWallet(0);
         double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
         Assertions.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     @Test
-    public void bucketTransactionServiceSimulationOfDayDecayedTest() {
+    void bucketTransactionServiceSimulationOfDayDecayedTest() {
         decayDailyEventsDataForWallet(1);
         double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
         Assertions.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     @Test
-    public void bucketTransactionServiceSimulationOfTwoDayDecayedTest() {
+    void bucketTransactionServiceSimulationOfTwoDayDecayedTest() {
         decayDailyEventsDataForWallet(2);
         double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
         Assertions.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     @Test
-    public void bucketTransactionServiceSimulationOfThreeDayDecayed() {
+    void bucketTransactionServiceSimulationOfThreeDayDecayed() {
         decayDailyEventsDataForWallet(3);
         double bucketSumScore = bucketTransactionService.getBucketSumScore(bucketTransactionEventsDataForWallet);
         Assertions.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     @Test
-    public void bucketTransactionServiceSimulationOfThreeDayDecayedAndAddingNewTransactionTest() {
+    void bucketTransactionServiceSimulationOfThreeDayDecayedAndAddingNewTransactionTest() {
         decayDailyEventsDataForWallet(3);
 
         TransactionData transactionData =
@@ -165,7 +165,7 @@ public class BucketTransactionServiceTest {
     }
 
     @Test
-    public void bucketTransactionServiceComplicatedScenarioTest() {
+    void bucketTransactionServiceComplicatedScenarioTest() {
         // Decay 3 days, and adding transaction of 7 coti
         decayDailyEventsDataForWallet(3);
         TransactionData transactionData =
@@ -202,7 +202,7 @@ public class BucketTransactionServiceTest {
     }
 
     @Test
-    public void bucketTransactionEventsDataForNodeTest() {
+    void bucketTransactionEventsDataForNodeTest() {
         decayDailyEventsDataForNode(3);
 
         TransactionData transactionData =

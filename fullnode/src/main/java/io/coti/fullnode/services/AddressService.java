@@ -18,10 +18,11 @@ import static io.coti.fullnode.services.NodeServiceManager.*;
 @Primary
 public class AddressService extends BaseNodeAddressService {
 
+    @Override
     public Boolean addAddress(Hash addressHash) {
         AddressData addressData = new AddressData(addressHash);
 
-        if (!super.addNewAddress(addressData)) {
+        if (Boolean.FALSE.equals(super.addNewAddress(addressData))) {
             return Boolean.FALSE;
         }
 
@@ -35,6 +36,7 @@ public class AddressService extends BaseNodeAddressService {
         webSocketSender.notifyGeneratedAddress(addressData.getHash());
     }
 
+    @Override
     public AddressesExistsResponse addressesCheckExistenceAndRequestHistoryNode(AddressBulkRequest addressRequest) {
 
         List<Hash> addressHashes = addressRequest.getAddresses();

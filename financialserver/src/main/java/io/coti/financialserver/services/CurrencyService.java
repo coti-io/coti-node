@@ -32,6 +32,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
 
     private static final String EXCEPTION_MESSAGE = "%s. Exception: %s";
 
+    @Override
     public ResponseEntity<IResponse> getTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         Hash currencyHash;
         try {
@@ -64,6 +65,7 @@ public class CurrencyService extends BaseNodeCurrencyService {
         return feeService.createTokenGenerationFee(generateTokenRequest);
     }
 
+    @Override
     public ResponseEntity<IResponse> getCurrenciesForWallet(GetCurrenciesRequest getCurrenciesRequest) {
         if (!nodeEventService.eventHappened(Event.MULTI_DAG)) {
             return ResponseEntity.badRequest().body(new Response(MULTI_DAG_IS_NOT_SUPPORTED, STATUS_ERROR));

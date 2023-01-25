@@ -14,6 +14,7 @@ import static io.coti.fullnode.services.NodeServiceManager.feeService;
 @Primary
 public class ValidationService extends BaseNodeValidationService {
 
+    @Override
     public Boolean validateFullNodeFeeDataIntegrity(TransactionData transactionData) {
         Optional<FullNodeFeeData> optionalFullNodeFeeData = transactionData.getBaseTransactions().stream().filter(FullNodeFeeData.class::isInstance).map(FullNodeFeeData.class::cast).findFirst();
         return optionalFullNodeFeeData.isPresent() && feeService.validateFeeData(optionalFullNodeFeeData.get());

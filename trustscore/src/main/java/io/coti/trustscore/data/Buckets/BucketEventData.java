@@ -20,6 +20,7 @@ public abstract class BucketEventData<T extends EventData> implements IEntity {
     private Hash bucketHash;
     private Date startPeriodTime;
     private double calculatedDelta;
+    @SuppressWarnings("java:S1948")
     private Map<Hash, T> eventDataHashToEventDataMap;
     private Date lastUpdate;
     private EventType eventType;

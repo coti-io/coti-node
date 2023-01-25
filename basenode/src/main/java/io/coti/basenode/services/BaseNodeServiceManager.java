@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@SuppressWarnings({"java:S1104", "java:S1444"})
 public class BaseNodeServiceManager implements INodeServiceManager {
     public static RequestedAddressHashes requestedAddressHashes;
     public static BuildProperties buildProperties;

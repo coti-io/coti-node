@@ -80,6 +80,7 @@ public class TransactionService extends BaseNodeTransactionService {
         addressTransactionsByAttachmentThread.start();
     }
 
+    @Override
     public ResponseEntity<Response> addNewTransaction(AddTransactionRequest request) {
         TransactionData transactionData = nodeTransactionHelper.createNewTransaction(
                 request.getBaseTransactions(),
@@ -195,6 +196,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public ResponseEntity<IResponse> repropagateTransactionByWallet(RepropagateTransactionRequest request) {
 
         if (!resendTransactionRequestCrypto.verifySignature(request)) {
@@ -216,6 +218,7 @@ public class TransactionService extends BaseNodeTransactionService {
         return repropagateTransaction(transactionData);
     }
 
+    @Override
     public ResponseEntity<IResponse> repropagateTransactionByAdmin(RepropagateTransactionByAdminRequest request) {
         TransactionData transactionData = transactions.getByHash(request.getTransactionHash());
         if (transactionData == null) {
@@ -286,7 +289,7 @@ public class TransactionService extends BaseNodeTransactionService {
             throw new TransactionValidationException(AUTHENTICATION_FAILED_MESSAGE);
         }
 
-        if (!validationService.validateFullNodeFeeDataIntegrity(transactionData)) {
+        if (Boolean.FALSE.equals(validationService.validateFullNodeFeeDataIntegrity(transactionData))) {
             log.error("Invalid fullnode fee data for transaction {}", transactionData.getHash());
             throw new TransactionValidationException(INVALID_FULL_NODE_FEE);
         }
@@ -325,6 +328,7 @@ public class TransactionService extends BaseNodeTransactionService {
 
     }
 
+    @Override
     public void getTransactions(GetTransactionsRequest getTransactionsRequest, HttpServletResponse response) {
         try {
             List<Hash> transactionHashes = getTransactionsRequest.getTransactionHashes();
@@ -344,6 +348,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public ResponseEntity<IResponse> getAddressTransactions(Hash addressHash) {
         List<TransactionResponseData> transactionsDataList = new ArrayList<>();
         AddressTransactionsHistory addressTransactionsHistory = addressTransactionsHistories.getByHash(addressHash);
@@ -375,6 +380,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public void getAddressTransactionBatch(GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response, boolean reduced) {
         try {
             List<Hash> addressHashList = getAddressTransactionBatchRequest.getAddresses();
@@ -399,6 +405,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public void getAddressTransactionBatchByTimestamp(GetAddressTransactionBatchByTimestampRequest getAddressTransactionBatchByTimestampRequest, HttpServletResponse response, boolean reduced) {
         try {
             PrintWriter output = response.getWriter();
@@ -472,6 +479,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public void getAddressTransactionBatchByDate(GetAddressTransactionBatchByDateRequest getAddressTransactionBatchByDateRequest, HttpServletResponse response, boolean reduced) {
         try {
             Set<Hash> addressHashSet = getAddressTransactionBatchByDateRequest.getAddresses();
@@ -497,6 +505,7 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public ResponseEntity<IResponse> getLastTransactions() {
         List<TransactionData> transactionsDataList = new ArrayList<>();
         Iterator<ExplorerTransactionData> iterator = explorerIndexedTransactionSet.descendingIterator();
@@ -520,10 +529,12 @@ public class TransactionService extends BaseNodeTransactionService {
         }
     }
 
+    @Override
     public ResponseEntity<IResponse> getTotalTransactions() {
         return ResponseEntity.ok(new GetTotalTransactionsResponse(explorerIndexedTransactionSet.size()));
     }
 
+    @Override
     public ResponseEntity<IResponse> getTransactionsByPage(int page) {
         int totalTransactionsNumber = explorerIndexedTransactionSet.size();
         int index = totalTransactionsNumber - (page - 1) * EXPLORER_TRANSACTION_NUMBER_BY_PAGE;
@@ -540,6 +551,7 @@ public class TransactionService extends BaseNodeTransactionService {
         return ResponseEntity.ok(new GetTransactionsResponse(transactionDataList));
     }
 
+    @Override
     public ResponseEntity<IResponse> getTransactionDetails(Hash transactionHash, boolean extended) {
         try {
             TransactionData transactionData = transactions.getByHash(transactionHash);

@@ -29,7 +29,7 @@ public class AddressController {
     public ResponseEntity<IResponse> addAddress(@Valid @RequestBody AddressRequest addAddressRequest) {
 
         if (addressService.validateAddress(addAddressRequest.getAddress())) {
-            if (addressService.addAddress(addAddressRequest.getAddress())) {
+            if (Boolean.TRUE.equals(addressService.addAddress(addAddressRequest.getAddress()))) {
                 return ResponseEntity
                         .status(HttpStatus.CREATED)
                         .body(new AddAddressResponse(addAddressRequest.getAddress().toHexString(), AddressStatus.CREATED));

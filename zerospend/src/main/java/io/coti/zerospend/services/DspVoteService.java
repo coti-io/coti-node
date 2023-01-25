@@ -31,6 +31,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         super.init();
     }
 
+    @Override
     public void preparePropagatedTransactionForVoting(TransactionData transactionData) {
         List<Hash> dspHashList = new LinkedList<>();
         networkService.getMapFromFactory(NodeType.DspNode).forEach((hash, node) ->
@@ -82,6 +83,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         transactionHashToVotesListMapping.get(transactionHash).add(new DspVote(transactionDspVote));
     }
 
+    @Override
     public void receiveDspVote(TransactionDspVote transactionDspVote) {
         Hash transactionHash = transactionDspVote.getHash();
         Hash voterDspHash = transactionDspVote.getVoterDspHash();
@@ -148,6 +150,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         transactionHashToVotesListMapping.remove(transactionHash);
     }
 
+    @Override
     public synchronized void setIndexForDspResult(TransactionData transactionData, DspConsensusResult dspConsensusResult) {
         dspConsensusResult.setIndex(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
         dspConsensusResult.setIndexingTime(Instant.now());
@@ -156,6 +159,7 @@ public class DspVoteService extends BaseNodeDspVoteService {
         transactionIndexService.insertNewTransactionIndex(transactionData);
     }
 
+    @Override
     public void publishDecision(Hash transactionHash) {
         publishDecision(transactionHash, new HashMap<>(), true);
     }

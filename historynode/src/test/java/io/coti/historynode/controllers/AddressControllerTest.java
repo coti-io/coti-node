@@ -30,7 +30,7 @@ import javax.servlet.ServletContext;
 @SpringBootTest
 @AutoConfigureMockMvc
 @WebAppConfiguration
-public class AddressControllerTest {
+class AddressControllerTest {
 
     private MockMvc mockMvc;
 
@@ -46,13 +46,13 @@ public class AddressControllerTest {
     private ObjectMapper mapper;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.appContext).build();
         mapper = new ObjectMapper();
     }
 
     @Test
-    public void givenWac_whenServletContext_thenItProvidesAddressController() {
+    void givenWac_whenServletContext_thenItProvidesAddressController() {
         ServletContext servletContext = appContext.getServletContext();
         Assertions.assertNotNull(servletContext);
         Assertions.assertTrue(servletContext instanceof MockServletContext);
