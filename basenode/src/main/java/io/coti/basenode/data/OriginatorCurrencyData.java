@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 public class OriginatorCurrencyData implements ISignable, ISignValidatable, Serializable {
 
     private static final long serialVersionUID = 6995268770045990662L;
+    @SuppressWarnings("java:S5998")
     @Pattern(regexp = "^(?=.{1,64}$)(?:[A-Za-z0-9]+[-. ])*[A-Za-z0-9]+$")
     protected String name;
     @Pattern(regexp = "[A-Za-z0-9]{1,6}+")

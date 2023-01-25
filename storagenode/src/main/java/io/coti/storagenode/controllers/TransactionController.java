@@ -26,12 +26,12 @@ public class TransactionController {
         return transactionStorageService.storeMultipleObjectsToStorage(addEntitiesBulkRequest.getHashToEntityJsonDataMap());
     }
 
-    @PostMapping(value = "/transactions", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE, MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @PostMapping(value = "/transactions", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public void getMultipleTransactionsInBlocksFromStorage(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest, HttpServletResponse response) {
         transactionStorageService.retrieveMultipleObjectsInBlocksFromStorage(getHistoryTransactionsRequest, response);
     }
 
-    @PostMapping(value = "/transactions/reactive", produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
+    @PostMapping(value = "/transactions/reactive", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<GetHashToPropagatable<TransactionData>> getTransactionsReactive(@Valid @RequestBody GetHistoryTransactionsRequest getHistoryTransactionsRequest) {
         return Flux.create(fluxSink -> transactionStorageService.retrieveMultipleObjectsInReactiveFromStorage(getHistoryTransactionsRequest, fluxSink));
 

@@ -322,18 +322,14 @@ public class NodeManagementService implements INodeManagementService {
                 NodeNetworkDataRecord nodeNetworkDataRecord = oldNodeNetworkDataRecordMap.get(nodeNetworkDataRecordHash);
                 if (isAlreadyInsertedFlag) {
                     newNodeNetworkDataRecordMap.put(nodeNetworkDataRecordHash, nodeNetworkDataRecord);
-                } else {
-                    if (nodeNetworkDataRecord.getRecordTime().isBefore(newNodeNetworkDataRecordTime)
-                            || (nodeNetworkDataRecord.getRecordTime().equals(newNodeNetworkDataRecordTime) && !asFirst)) {
-                        newNodeNetworkDataRecordMap.put(nodeNetworkDataRecordHash, nodeNetworkDataRecord);
-                    } else {
-                        if ((nodeNetworkDataRecord.getRecordTime().equals(newNodeNetworkDataRecordTime) && asFirst)
-                                || nodeNetworkDataRecord.getRecordTime().isAfter(newNodeNetworkDataRecordTime)) {
-                            newNodeNetworkDataRecordMap.put(newNodeNetworkDataRecordHash, newNodeNetworkDataRecord);
-                            isAlreadyInsertedFlag = true;
-                            newNodeNetworkDataRecordMap.put(nodeNetworkDataRecordHash, nodeNetworkDataRecord);
-                        }
-                    }
+                } else if (nodeNetworkDataRecord.getRecordTime().isBefore(newNodeNetworkDataRecordTime)
+                        || (nodeNetworkDataRecord.getRecordTime().equals(newNodeNetworkDataRecordTime) && !asFirst)) {
+                    newNodeNetworkDataRecordMap.put(nodeNetworkDataRecordHash, nodeNetworkDataRecord);
+                } else if ((nodeNetworkDataRecord.getRecordTime().equals(newNodeNetworkDataRecordTime) && asFirst)
+                        || nodeNetworkDataRecord.getRecordTime().isAfter(newNodeNetworkDataRecordTime)) {
+                    newNodeNetworkDataRecordMap.put(newNodeNetworkDataRecordHash, newNodeNetworkDataRecord);
+                    isAlreadyInsertedFlag = true;
+                    newNodeNetworkDataRecordMap.put(nodeNetworkDataRecordHash, nodeNetworkDataRecord);
                 }
                 nodeNetworkDataRecordHash = oldNodeNetworkDataRecordMap.nextKey(nodeNetworkDataRecordHash);
             }

@@ -26,7 +26,7 @@ import static io.coti.trustscore.testutils.GeneralUtilsFunctions.generateRandomH
 @ContextConfiguration(classes = {BucketNotFulfilmentEventsService.class,
         BaseNodeRocksDBConnector.class
 })
-public class BucketNotFulfilmentEventsServiceTest {
+class BucketNotFulfilmentEventsServiceTest {
 
     @Autowired
     private BucketNotFulfilmentEventsService bucketNotFulfilmentEventsService;
@@ -41,7 +41,7 @@ public class BucketNotFulfilmentEventsServiceTest {
     }
 
     @Test
-    public void addEventToCalculations() {
+    void addEventToCalculations() {
         NotFulfilmentEventsData notFulfilmentEventsData
                 = new NotFulfilmentEventsData(buildBehaviorEventsDataRequest(CompensableEventScoreType.NON_FULFILMENT));
         bucketNotFulfilmentEventsService.addEventToCalculations(notFulfilmentEventsData, bucketNotFulfilmentEventsData);
@@ -50,7 +50,7 @@ public class BucketNotFulfilmentEventsServiceTest {
     }
 
     @Test
-    public void getBucketEventType() {
+    void getBucketEventType() {
         EventType eventType = bucketNotFulfilmentEventsService.getBucketEventType();
         Assertions.assertEquals(EventType.NOT_FULFILMENT_EVENT, eventType);
     }

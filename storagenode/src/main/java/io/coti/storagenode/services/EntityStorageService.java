@@ -45,13 +45,13 @@ public abstract class EntityStorageService implements IEntityStorageService {
             }
         }
 
-        if (verifyRetrievedSingleObject(hash, objectAsJson, fromColdStorage, objectType)) {
+        if (verifyRetrievedSingleObject(hash, objectAsJson, fromColdStorage)) {
             return jacksonSerializer.deserialize(objectAsJson);
         }
         return null;
     }
 
-    protected boolean verifyRetrievedSingleObject(Hash objectHash, String objectAsJson, boolean fromColdStorage, ElasticSearchData objectType) {
+    protected boolean verifyRetrievedSingleObject(Hash objectHash, String objectAsJson, boolean fromColdStorage) {
 
         if (objectAsJson != null && validateObjectDataIntegrity(objectHash, objectAsJson)) {
             if (!fromColdStorage) {
@@ -163,7 +163,7 @@ public abstract class EntityStorageService implements IEntityStorageService {
     protected void verifyEntitiesFromDbMap(Map<Hash, String> responsesMap, Map<Hash, String> objectsFromDBMap) {
         objectsFromDBMap.forEach((hash, objectAsJsonString) ->
                 {
-                    if (!verifyRetrievedSingleObject(hash, objectAsJsonString, false, objectType)) {
+                    if (!verifyRetrievedSingleObject(hash, objectAsJsonString, false)) {
                         responsesMap.put(hash, replaceHotStorageObjectWithColdStorageObject(hash, objectType));
                     } else {
                         responsesMap.put(hash, objectAsJsonString);

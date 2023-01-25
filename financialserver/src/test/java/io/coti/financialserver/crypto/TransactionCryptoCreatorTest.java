@@ -24,7 +24,7 @@ import java.util.Map;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class TransactionCryptoCreatorTest {
+class TransactionCryptoCreatorTest {
 
     @Autowired
     private TransactionCryptoCreator transactionCryptoCreator;
@@ -33,7 +33,7 @@ public class TransactionCryptoCreatorTest {
     private static final String SEED = "6c233873925b0cbf352bd5cb4f5548cb4f5c5e2e33664043f6f31c883304b6ce";
 
     @Test
-    public void test_sign_base_transactions() {
+    void test_sign_base_transactions() {
         Hash address = TransactionTestUtils.generateRandomAddressHash();
         NodeCryptoHelper.setSeed(SEED);
         TransactionData transactionData = TransactionTestUtils.createRandomTransactionWithAddress(address);

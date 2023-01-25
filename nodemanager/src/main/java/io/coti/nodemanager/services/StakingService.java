@@ -43,20 +43,17 @@ public class StakingService implements IStakingService {
     private String[] stakeSignerPublicKeyArray;
     @Value("${staking.stakers.only: false}")
     private boolean stakersOnly;
+    private static final double PROBABILITY_FROM_TS = 1.0;
 
     @Override
     public ResponseEntity<IResponse> setNodeStake(StakingNodeData stakingNodeData) {
         try {
-
             stakingNodes.put(stakingNodeData);
             log.info("New node stake data set through admin interface: {} ", stakingNodeData);
-            return ResponseEntity.status(HttpStatus.OK).
-                    body(new Response(String.format(STAKING_NODE_ADDED, stakingNodeData.getNodeHash())));
+            return ResponseEntity.status(HttpStatus.OK).body(new Response(String.format(STAKING_NODE_ADDED, stakingNodeData.getNodeHash())));
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(e.getMessage(), STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
@@ -64,9 +61,7 @@ public class StakingService implements IStakingService {
     public ResponseEntity<IResponse> setNodeStake(SetNodeStakeRequest setNodeStakeRequest) {
 
         if (!checkIfSignerInList(setNodeStakeRequest.getSignerHash()) || !stakingNodeCrypto.verifySignature(setNodeStakeRequest)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new Response(NODE_STAKE_SET_AUTHENTICATION_ERROR, STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(NODE_STAKE_SET_AUTHENTICATION_ERROR, STATUS_ERROR));
         }
 
         return setNodeStake(new StakingNodeData(setNodeStakeRequest.getNodeHash(), setNodeStakeRequest.getStake()));
@@ -77,13 +72,10 @@ public class StakingService implements IStakingService {
         try {
             List<StakingNodeResponseData> stakers = new ArrayList<>();
             stakingNodes.forEach(stakingNodeData -> stakers.add(new StakingNodeResponseData(stakingNodeData)));
-            return ResponseEntity.status(HttpStatus.OK).
-                    body(new GetStakerListResponse(stakers));
+            return ResponseEntity.status(HttpStatus.OK).body(new GetStakerListResponse(stakers));
         } catch (Exception e) {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(e.getMessage(), STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(e.getMessage(), STATUS_ERROR));
         }
     }
 
@@ -96,7 +88,7 @@ public class StakingService implements IStakingService {
         for (NetworkNodeData node : nodeMap.values()) {
             StakingNodeData stakingNodeData = stakingNodes.getByHash(node.getNodeHash());
             if (stakingNodeData != null && stakingNodeData.getStake() != null && stakingNodeData.getStake().doubleValue() > 0) {
-                double weight = stakingNodeData.getStake().doubleValue() * probabilityFromFee(node.getFeeData()) * probabilityFromTS(node.getTrustScore());
+                double weight = stakingNodeData.getStake().doubleValue() * probabilityFromFee(node.getFeeData()) * PROBABILITY_FROM_TS;
                 if (weight > 0) {
                     WeightedNode weightedNode = new WeightedNode(node, weight);
                     weightedNodeList.add(weightedNode);
@@ -104,28 +96,38 @@ public class StakingService implements IStakingService {
                     numberNodes++;
                 }
             }
-
         }
 
         Collections.shuffle(weightedNodeList);
         double randomValue = Math.random();
         double randomWeight = totalWeight * randomValue;
+        NetworkNodeData selectedStakedNode;
 
         if (randomValue <= 0.5) {
-            double accumWeight = 0.0;
-            for (int i = 0; i < numberNodes; i++) {
-                accumWeight += weightedNodeList.get(i).getWeight();
-                if (accumWeight >= randomWeight) {
-                    return weightedNodeList.get(i).getNode();
-                }
-            }
+            selectedStakedNode = getSelectedStakedNodeFromLowerRandom(numberNodes, weightedNodeList, randomWeight);
         } else {
-            double accumWeight = totalWeight;
-            for (int i = numberNodes - 1; i >= 0; i--) {
-                accumWeight -= weightedNodeList.get(i).getWeight();
-                if (accumWeight <= randomWeight) {
-                    return weightedNodeList.get(i).getNode();
-                }
+            selectedStakedNode = getSelectedStakedNodeFromHigherRandom(totalWeight, numberNodes, weightedNodeList, randomWeight);
+        }
+        return selectedStakedNode;
+    }
+
+    private NetworkNodeData getSelectedStakedNodeFromHigherRandom(double totalWeight, int numberNodes, List<WeightedNode> weightedNodeList, double randomWeight) {
+        double accumWeight = totalWeight;
+        for (int i = numberNodes - 1; i >= 0; i--) {
+            accumWeight -= weightedNodeList.get(i).getWeight();
+            if (accumWeight <= randomWeight) {
+                return weightedNodeList.get(i).getNode();
+            }
+        }
+        return null;
+    }
+
+    private NetworkNodeData getSelectedStakedNodeFromLowerRandom(int numberNodes, List<WeightedNode> weightedNodeList, double randomWeight) {
+        double accumWeight = 0.0;
+        for (int i = 0; i < numberNodes; i++) {
+            accumWeight += weightedNodeList.get(i).getWeight();
+            if (accumWeight >= randomWeight) {
+                return weightedNodeList.get(i).getNode();
             }
         }
         return null;
@@ -163,11 +165,6 @@ public class StakingService implements IStakingService {
 
         return 1.0 / recommendedFee - (16.0 / 9.0 / (Math.pow(recommendedFee, 3))) * Math.pow((fee - 3.0 / 4.0 * recommendedFee), 2);
 
-    }
-
-    private double probabilityFromTS(Double trustScore) {
-        //first implementation doesn't use trust score
-        return 1.0;
     }
 
     private boolean checkIfSignerInList(Hash signerHash) {

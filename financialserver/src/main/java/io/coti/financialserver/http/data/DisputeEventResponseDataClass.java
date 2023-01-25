@@ -44,6 +44,7 @@ public enum DisputeEventResponseDataClass {
         return DisputeEventResponseDataClasses.disputeEventResponseDataClassMap.get(disputeEventClass);
     }
 
+    @SuppressWarnings("java:S1172")
     public IDisputeEventResponseData getEventObject(DisputeEventData disputeEventData, Hash userHash, ActionSide evenDisplaySide) {
         try {
             Constructor<? extends IDisputeEventResponseData> constructor = disputeEventResponseClass.getConstructor(disputeEventClass);
