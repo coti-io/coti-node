@@ -33,6 +33,7 @@ public class AddressService extends BaseNodeAddressService {
     @Value("${storage.server.address}")
     private String storageServerAddress;
 
+    @Override
     public ResponseEntity<IResponse> getAddresses(GetHistoryAddressesRequest getHistoryAddressesRequest) {
         try {
             if (!getHistoryAddressesRequestCrypto.verifySignature(getHistoryAddressesRequest)) {

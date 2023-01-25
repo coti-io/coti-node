@@ -23,7 +23,7 @@ public abstract class BaseTransactionResponseData implements IResponseData {
     }
 
     protected BaseTransactionResponseData(BaseTransactionData baseTransactionData) {
-        this.hash = baseTransactionData.getHash() == null ? null : baseTransactionData.getHash().toString();
+        this.hash = baseTransactionData.getHash().toString();
         this.addressHash = baseTransactionData.getAddressHash().toString();
         this.currencyHash = baseTransactionData.getCurrencyHash() != null ? baseTransactionData.getCurrencyHash().toString() : null;
         this.amount = baseTransactionData.getAmount();

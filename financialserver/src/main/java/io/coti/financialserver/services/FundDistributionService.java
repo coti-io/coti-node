@@ -292,31 +292,29 @@ public class FundDistributionService {
     private ResponseEntity<IResponse> updateWithTransactionsEntriesFromVerifiedFile(List<FundDistributionData> fundDistributionFileEntriesData, AtomicLong acceptedDistributionNumber, AtomicLong notAcceptedDistributionNumber) {
         List<FundDistributionFileEntryResultData> fundDistributionFileEntryResults = new ArrayList<>();
         fundDistributionFileEntriesData.forEach(entryData -> {
-                    boolean isAddressValid;
-                    boolean isLockupDateValid = false;
-                    boolean uniqueByDate = false;
-                    boolean passedPreBalanceCheck = false;
-                    boolean accepted = (isAddressValid = isAddressValid(entryData)) && (isLockupDateValid = isLockupDateValid(entryData)) && (uniqueByDate = isEntryDataUniquePerDate(entryData)) &&
-                            (passedPreBalanceCheck = updateFundAvailableLockedBalances(entryData));
+            boolean isAddressValid = isAddressValid(entryData);
+            boolean isLockupDateValid = isLockupDateValid(entryData);
+            boolean uniqueByDate = isEntryDataUniquePerDate(entryData);
+            boolean passedPreBalanceCheck = updateFundAvailableLockedBalances(entryData);
+            boolean accepted = isAddressValid && isLockupDateValid && uniqueByDate && passedPreBalanceCheck;
 
-                    if (accepted) {
-                        acceptedDistributionNumber.incrementAndGet();
-                        entryData.setStatus(DistributionEntryStatus.ACCEPTED);
-                        DailyFundDistributionData fundDistributionOfDay = dailyFundDistributions.getByHash(entryData.getHashByDate());
-                        if (fundDistributionOfDay == null) {
-                            LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries = new LinkedHashMap<>();
-                            fundDistributionOfDay = new DailyFundDistributionData(entryData.getReleaseTime(), fundDistributionEntries);
-                        }
-                        fundDistributionOfDay.getFundDistributionEntries().put(entryData.getHash(), entryData);
-                        dailyFundDistributions.put(fundDistributionOfDay);
-                    } else {
-                        notAcceptedDistributionNumber.incrementAndGet();
-                    }
-                    String statusByChecks = getTransactionEntryStatusByChecks(isAddressValid, isLockupDateValid, uniqueByDate, passedPreBalanceCheck);
-                    fundDistributionFileEntryResults.add(new FundDistributionFileEntryResultData(entryData.getId(), entryData.getReceiverAddress().toString(),
-                            entryData.getDistributionPoolFund().getText(), entryData.getSource(), accepted, statusByChecks));
+            if (accepted) {
+                acceptedDistributionNumber.incrementAndGet();
+                entryData.setStatus(DistributionEntryStatus.ACCEPTED);
+                DailyFundDistributionData fundDistributionOfDay = dailyFundDistributions.getByHash(entryData.getHashByDate());
+                if (fundDistributionOfDay == null) {
+                    LinkedHashMap<Hash, FundDistributionData> fundDistributionEntries = new LinkedHashMap<>();
+                    fundDistributionOfDay = new DailyFundDistributionData(entryData.getReleaseTime(), fundDistributionEntries);
                 }
-        );
+                fundDistributionOfDay.getFundDistributionEntries().put(entryData.getHash(), entryData);
+                dailyFundDistributions.put(fundDistributionOfDay);
+            } else {
+                notAcceptedDistributionNumber.incrementAndGet();
+            }
+            String statusByChecks = getTransactionEntryStatusByChecks(isAddressValid, isLockupDateValid, uniqueByDate, passedPreBalanceCheck);
+            fundDistributionFileEntryResults.add(new FundDistributionFileEntryResultData(entryData.getId(), entryData.getReceiverAddress().toString(),
+                    entryData.getDistributionPoolFund().getText(), entryData.getSource(), accepted, statusByChecks));
+        });
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new AddFundDistributionsResponse(new AddFundDistributionsResponseData(fundDistributionFileEntryResults)));
     }

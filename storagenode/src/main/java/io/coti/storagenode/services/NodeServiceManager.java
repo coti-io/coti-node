@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @Primary
+@SuppressWarnings({"java:S1104", "java:S1444"})
 public class NodeServiceManager extends BaseNodeServiceManager {
 
     public static DbConnectorService dbConnectorService;

@@ -35,6 +35,7 @@ public class AwsService extends BaseNodeAwsService {
         super.init();
     }
 
+    @Override
     public String uploadDisputeDocument(Hash documentHash, File file, String contentType) {
         String fileName = documentHash.toString();
         return uploadDocument(file, contentType, fileName, bucketName);
@@ -61,14 +62,17 @@ public class AwsService extends BaseNodeAwsService {
         return error;
     }
 
+    @Override
     public S3Object getS3Object(String fileName) {
         return s3Client.getObject(bucketName, fileName);
     }
 
+    @Override
     public void downloadFundDistributionFile(String fileName) {
         downloadFile(fileName, bucketNameDistribution);
     }
 
+    @Override
     public String uploadFundDistributionResultFile(String fileName, File file, String contentType) {
         return uploadDocument(file, contentType, fileName, bucketNameDistribution);
     }

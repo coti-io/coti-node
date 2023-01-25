@@ -32,7 +32,7 @@ import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 @ContextConfiguration(classes = {BucketBehaviorEventsService.class,
         BaseNodeRocksDBConnector.class
 })
-public class BucketBehaviorEventsServiceTest {
+class BucketBehaviorEventsServiceTest {
 
     @Autowired
     private BucketBehaviorEventsService bucketBehaviorEventsService;
@@ -47,7 +47,7 @@ public class BucketBehaviorEventsServiceTest {
     }
 
     @Test
-    public void bucketBehaviorEventsServiceComplicatedScenarioWithDecayTest() {
+    void bucketBehaviorEventsServiceComplicatedScenarioWithDecayTest() {
         addBehaviorEvents();
         performSimulationOfDecay(3);
         performSimulationOfDecay(2);
@@ -70,7 +70,7 @@ public class BucketBehaviorEventsServiceTest {
     }
 
     @Test
-    public void bucketBehaviorEventsServiceSimpleScenarioTest() {
+    void bucketBehaviorEventsServiceSimpleScenarioTest() {
         addBehaviorEvents();
 
         for (int i = 0; i < 8; i++) {
@@ -85,7 +85,7 @@ public class BucketBehaviorEventsServiceTest {
     }
 
     @Test
-    public void bucketBehaviorEventsServiceWithLargeDecayTest() {
+    void bucketBehaviorEventsServiceWithLargeDecayTest() {
         addBehaviorEvents();
         performSimulationOfDecay(400);
         addBehaviorEvents();

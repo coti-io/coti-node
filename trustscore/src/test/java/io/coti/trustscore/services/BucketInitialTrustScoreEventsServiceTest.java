@@ -29,7 +29,7 @@ import static io.coti.trustscore.utils.DatesCalculation.decreaseTodayDateByDays;
 @ContextConfiguration(classes = {BucketInitialTrustScoreEventsService.class,
         BaseNodeRocksDBConnector.class
 })
-public class BucketInitialTrustScoreEventsServiceTest {
+class BucketInitialTrustScoreEventsServiceTest {
 
     @Autowired
     private BucketInitialTrustScoreEventsService bucketInitialTrustScoreEventsService;
@@ -37,21 +37,21 @@ public class BucketInitialTrustScoreEventsServiceTest {
     private BucketInitialTrustScoreEventsData bucketInitialTrustScoreEventsData;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         bucketInitialTrustScoreEventsService.init(generateRulesDataObject());
         bucketInitialTrustScoreEventsData = new BucketInitialTrustScoreEventsData();
         bucketInitialTrustScoreEventsData.setUserType(UserType.MERCHANT);
     }
 
     @Test
-    public void addEventToCalculationsSimpleTest() {
+    void addEventToCalculationsSimpleTest() {
         addInitialTrustScoreEvents();
         double bucketSumScore = bucketInitialTrustScoreEventsService.getBucketSumScore(bucketInitialTrustScoreEventsData);
         Assertions.assertTrue(isTrustScoreValueValid(bucketSumScore));
     }
 
     @Test
-    public void addEventToCalculationsWithDecayTest() {
+    void addEventToCalculationsWithDecayTest() {
         addInitialTrustScoreEvents();
         bucketInitialTrustScoreEventsData.setLastUpdate(decreaseTodayDateByDays(1));
 
