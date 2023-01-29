@@ -84,7 +84,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) {
-            baseTransactionData.setSignature(nodeIdentityService.signMessage(getSignatureMessage(transactionData), index));
+            baseTransactionData.setSignature(nodeIdentityService.signMessage(this.getSignatureMessage(transactionData), index));
 
         }
     },
@@ -309,7 +309,12 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     @Override
     public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) {
         baseTransactionData.setSignature(nodeIdentityService.signMessage(this.getSignatureMessage(transactionData), index));
+    }
 
+    @Override
+    public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index, String seed) {
+        SignatureData signatureData = CryptoHelper.signBytes(this.getSignatureMessage(transactionData), CryptoHelper.generatePrivateKey(seed, index).toHexString());
+        baseTransactionData.setSignature(signatureData);
     }
 
     @Override
@@ -319,7 +324,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
         trustScoreNodeResultData.setSignature(nodeIdentityService.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));
         trustScoreNodeResult.add(trustScoreNodeResultData);
         baseTransactionData.setTrustScoreNodeResult(trustScoreNodeResult);
-
     }
 
     @Override
@@ -340,7 +344,6 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
             log.error("{}: {}", e.getClass().getName(), e.getMessage());
             return false;
         }
-
     }
 
     @Override

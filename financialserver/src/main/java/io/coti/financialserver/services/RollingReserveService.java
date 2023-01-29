@@ -35,12 +35,17 @@ public class RollingReserveService {
 
     private static final int COTI_ROLLING_RESERVE_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.ROLLING_RESERVE_POOL.getIndex());
     private static final int ROLLING_RESERVE_DEFAULT_DAYS_TO_HOLD = 10;
-    @Value("${financialserver.seed.key}")
+    @Value("${financialserver.seed.key:}")
     private String seed;
+    @Value("${secret.financialserver.seed.name.key:}")
+    private String seedSecretName;
     private AtomicInteger lastAddressIndex;
 
+    void init() {
+        seed = secretManagerService.getSecret(seed, seedSecretName, "seed");
+    }
 
-    public void init() {
+    public void initAddress() {
         lastAddressIndex = new AtomicInteger(ReservedAddress.values().length + 1); // Reserving initial values to predefined transactions
         merchantRollingReserves.forEach(c -> lastAddressIndex.getAndIncrement());
     }
@@ -51,7 +56,7 @@ public class RollingReserveService {
 
     public synchronized int getNextAddressIndex() {
         if (lastAddressIndex == null) {
-            init();
+            initAddress();
         }
         return lastAddressIndex.incrementAndGet();
     }

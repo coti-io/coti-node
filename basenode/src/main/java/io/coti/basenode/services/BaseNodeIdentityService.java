@@ -9,20 +9,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.secretManagerService;
+
 @Service
 @Slf4j
 public class BaseNodeIdentityService implements INodeIdentityService {
 
-    @Value("#{'${global.private.key}'}")
+    @Value("#{'${global.private.key:}'}")
     private String nodePrivateKey;
+    @Value("#{'${secret.private.key.name:}'}")
+    private String nodePrivateKeySecretName;
     private String seed;
     private String nodePublicKey;
 
     public void init() {
+        nodePrivateKey = secretManagerService.getSecret(nodePrivateKey, nodePrivateKeySecretName, "Private Key");
         nodePublicKey = CryptoHelper.getPublicKeyFromPrivateKey(nodePrivateKey);
         log.info("Node public key is set to {}", nodePublicKey);
     }
-
 
     public SignatureData signMessage(byte[] message) {
         return CryptoHelper.signBytes(message, nodePrivateKey);
