@@ -19,6 +19,8 @@ public interface IBaseTransactionCrypto {
 
     void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index);
 
+    void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index, String seed);
+
     <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData);
 
     String getPublicKey(BaseTransactionData receiverBaseTransactionData);

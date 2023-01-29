@@ -26,8 +26,14 @@ public class TransactionCreationService {
 
     public static final int MAX_TRUST_SCORE = 100;
     private static final int ZERO_SPEND_ADDRESS_INDEX = 0;
-    @Value("${zerospend.seed.key}")
+    @Value("${zerospend.seed.key:}")
     private String seed;
+    @Value("${secret.zerospend.seed.name.key:}")
+    private String seedSecretName;
+
+    void init() {
+        seed = secretManagerService.getSecret(seed, seedSecretName, "seed");
+    }
 
     public TransactionData createNewStarvationZeroSpendTransaction(TransactionData transactionData) {
         return createNewZeroSpendTransaction(transactionData, STARVATION);

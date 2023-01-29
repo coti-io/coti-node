@@ -31,8 +31,10 @@ public class InitializationService extends BaseNodeInitializationService {
     private String serverPort;
     @Value("${server.url}")
     private String webServerUrl;
-    @Value("${financialserver.seed.key}")
+    @Value("${financialserver.seed.key:}")
     private String seed;
+    @Value("${secret.financialserver.seed.name.key:}")
+    private String seedSecretName;
 
     @PostConstruct
     @Override
@@ -50,6 +52,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
             NetworkNodeData zerospendNetworkNodeData = networkService.getSingleNodeData(NodeType.ZeroSpendServer);
             if (zerospendNetworkNodeData == null) {
+                seed = secretManagerService.getSecret(seed, seedSecretName, "seed");
                 log.info("Please generate Native token at ZeroSpend with following genesis address: {}", nodeIdentityService.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX));
                 log.error("No zerospend server exists in the network got from the node manager. Exiting from the application");
                 System.exit(SpringApplication.exit(applicationContext));
@@ -61,9 +64,14 @@ public class InitializationService extends BaseNodeInitializationService {
             nodeFeeTypeList.addAll(Arrays.asList(NodeFeeType.TOKEN_MINTING_FEE, NodeFeeType.TOKEN_GENERATION_FEE));
             super.initServices();
 
+            distributionService.init();
             distributionService.distributeToInitialFunds();
+            fundDistributionService.init();
             fundDistributionService.initReservedBalance();
             disputeService.init();
+            distributeTokenService.init();
+            feeService.init();
+            rollingReserveService.init();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

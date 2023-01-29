@@ -60,6 +60,7 @@ public class InitializationService extends BaseNodeInitializationService {
             }
 
             super.initServices();
+            feeService.init();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();

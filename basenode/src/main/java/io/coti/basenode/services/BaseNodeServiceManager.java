@@ -104,9 +104,12 @@ public class BaseNodeServiceManager implements INodeServiceManager {
     public static TransactionDspVoteCrypto transactionDspVoteCrypto;
     public static TransactionVotes transactionVotes;
     public static INodeIdentityService nodeIdentityService;
+    public static ISecretManagerService secretManagerService;
 
     @Autowired
     public INodeIdentityService autowiredNodeIdentityService;
+    @Autowired
+    public ISecretManagerService autowiredSecretManagerService;
     @Autowired
     public TransactionVotes autowiredTransactionVotes;
     @Autowired

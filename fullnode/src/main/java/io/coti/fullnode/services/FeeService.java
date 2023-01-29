@@ -36,10 +36,16 @@ public class FeeService {
     private BigDecimal maximumFee;
     @Value("${fee.percentage}")
     private BigDecimal feePercentage;
-    @Value("${fullnode.seed.key}")
+    @Value("${fullnode.seed.key:}")
     private String seed;
     @Value("${regular.token.fullnode.fee}")
     private BigDecimal regularTokenFullnodeFee;
+    @Value("${secret.fullnode.seed.name.key:}")
+    private String seedSecretName;
+
+    public void init() {
+        seed = secretManagerService.getSecret(seed, seedSecretName, "seed");
+    }
 
     public ResponseEntity<IResponse> createFullNodeFee(FullNodeFeeRequest fullNodeFeeRequest) {
         try {

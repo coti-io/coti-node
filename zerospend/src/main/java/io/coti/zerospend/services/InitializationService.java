@@ -61,6 +61,7 @@ public class InitializationService extends BaseNodeInitializationService {
             super.initServices();
             zeroMQReceiver.initReceiverHandler();
 
+            transactionCreationService.init();
             if (transactions.isEmpty()) {
                 transactionCreationService.createGenesisTransactions();
             }
