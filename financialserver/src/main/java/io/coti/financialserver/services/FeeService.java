@@ -22,6 +22,7 @@ import java.time.Instant;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
 import static io.coti.basenode.services.BaseNodeServiceManager.nodeIdentityService;
+import static io.coti.basenode.services.BaseNodeServiceManager.secretManagerService;
 import static io.coti.financialserver.services.NodeServiceManager.currencyService;
 import static io.coti.financialserver.services.NodeServiceManager.nodeFeesService;
 
@@ -29,8 +30,14 @@ import static io.coti.financialserver.services.NodeServiceManager.nodeFeesServic
 @Service
 public class FeeService {
 
-    @Value("${financialserver.seed.key}")
+    @Value("${financialserver.seed.key:}")
     private String seed;
+    @Value("${secret.financialserver.seed.name.key:}")
+    private String seedSecretName;
+
+    void init() {
+        seed = secretManagerService.getSecret(seed, seedSecretName, "seed");
+    }
 
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         try {

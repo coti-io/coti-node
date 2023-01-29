@@ -13,7 +13,10 @@ import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.model.RequestedAddressHashes;
 import io.coti.basenode.services.BaseNodeIdentityService;
+import io.coti.basenode.services.BaseNodeSecretManagerService;
+import io.coti.basenode.services.BaseNodeServiceManager;
 import io.coti.basenode.services.FileService;
+import io.coti.basenode.services.interfaces.ISecretManagerService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.database.RocksDBConnector;
 import io.coti.fullnode.websocket.WebSocketSender;
@@ -42,7 +45,7 @@ import static org.mockito.Mockito.when;
 @ContextConfiguration(classes = {AddressService.class, IDatabaseConnector.class,
         HttpJacksonSerializer.class, GetHistoryAddressesRequestCrypto.class, CryptoHelper.class,
         GetHistoryAddressesResponseCrypto.class, IDatabaseConnector.class, RocksDBConnector.class, AnnotationConfigContextLoader.class,
-        BaseNodeIdentityService.class
+        BaseNodeIdentityService.class, ISecretManagerService.class, BaseNodeSecretManagerService.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
@@ -91,6 +94,8 @@ class AddressServiceIntegrationTest {
     private AddressService addressService;
     @Autowired
     private BaseNodeIdentityService nodeIdentityService;
+    @Autowired
+    ISecretManagerService secretManagerService;
     @MockBean
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCryptoLocal;
     @MockBean
@@ -132,6 +137,7 @@ class AddressServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        BaseNodeServiceManager.secretManagerService = secretManagerService;
         nodeIdentityService.init();
         networkService = networkServiceLocal;
         addresses = addressesLocal;

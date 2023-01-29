@@ -31,9 +31,9 @@ public class InitializationService {
     @PostConstruct
     private void init() {
         try {
+            log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
             nodeServiceManager.init();
             nodeIdentityService.init();
-            log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
             databaseConnector.init();
             awsService.init();
             dbRecoveryService.init();

@@ -39,14 +39,20 @@ public class FundDistributionService {
     private static final String DAILY_DISTRIBUTION_RESULT_FILE_PREFIX = "distribution_results_";
     private static final String DAILY_DISTRIBUTION_RESULT_FILE_SUFFIX = ".csv";
     private static final String COMMA_SEPARATOR = ",";
-    @Value("${financialserver.seed.key}")
+    @Value("${financialserver.seed.key:}")
     private String seed;
+    @Value("${secret.financialserver.seed.name.key:}")
+    private String seedSecretName;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
     @Value("${distribution.cron.enabled}")
     private boolean distributionCronEnabled;
     private Map<Hash, FundDistributionReservedBalanceData> fundReservedBalanceMap;
     private Map<Hash, ReservedBalanceData> addressToReservedBalanceMap;
+
+    void init() {
+        seed = secretManagerService.getSecret(seed, seedSecretName, "seed");
+    }
 
     public void initReservedBalance() {
         nodeIdentityService.setSeed(seed);

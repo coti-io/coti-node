@@ -15,27 +15,33 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 public class CryptoHelper {
 
+    public static final int ADDRESS_SIZE_IN_BYTES = 68;
+    public static final int ADDRESS_CHECKSUM_SIZE_IN_BYTES = 4;
+    public static final int DEFAULT_HASH_BYTE_SIZE = 32;
     private static final String EC_SPEC = "secp256k1";
     private static final String EC_ALGORITHM = "ECDSA";
     private static final X9ECParameters curve = SECNamedCurves.getByName(EC_SPEC);
     private static final ECDomainParameters domain = new ECDomainParameters(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
     private static final ECParameterSpec spec = new ECParameterSpec(curve.getCurve(), curve.getG(), curve.getN(), curve.getH());
-    public static final int ADDRESS_SIZE_IN_BYTES = 68;
-    public static final int ADDRESS_CHECKSUM_SIZE_IN_BYTES = 4;
-    public static final int DEFAULT_HASH_BYTE_SIZE = 32;
 
     private CryptoHelper() {
 
@@ -188,4 +194,41 @@ public class CryptoHelper {
         digest.update(input);
         return new Hash(digest.digest());
     }
+
+    public static byte[] encrypt(byte[] inputData, byte[] publicKey, String algorithm) throws NoSuchAlgorithmException,
+            InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+
+        PublicKey key = KeyFactory.getInstance(algorithm)
+                .generatePublic(new X509EncodedKeySpec(publicKey));
+
+        Cipher cipher = Cipher.getInstance(algorithm);
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+
+        return cipher.doFinal(inputData);
+    }
+
+    public static byte[] decrypt(byte[] inputData, byte[] privateKey, String algorithm) throws NoSuchAlgorithmException,
+            InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+
+        PrivateKey key = KeyFactory.getInstance(algorithm)
+                .generatePrivate(new PKCS8EncodedKeySpec(privateKey));
+
+        Cipher cipher = Cipher.getInstance(algorithm);
+        cipher.init(Cipher.DECRYPT_MODE, key);
+
+        return cipher.doFinal(inputData);
+    }
+
+    public static String decryptString(String encryptedSecret, byte[] privateKey, String algorithm) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        byte[] encryptedSecretBytes = Base64.getDecoder().decode(encryptedSecret.getBytes());
+        byte[] decryptedSecretBytes = decrypt(encryptedSecretBytes, privateKey, algorithm);
+        return new String(decryptedSecretBytes, StandardCharsets.UTF_8);
+    }
+
+    public static String encryptString(String decryptedSecret, byte[] publicKey, String algorithm) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        byte[] secretBytes = decryptedSecret.getBytes(StandardCharsets.UTF_8);
+        byte[] encryptedSecretBytes = encrypt(secretBytes, publicKey, algorithm);
+        return Base64.getEncoder().encodeToString(encryptedSecretBytes);
+    }
+
 }

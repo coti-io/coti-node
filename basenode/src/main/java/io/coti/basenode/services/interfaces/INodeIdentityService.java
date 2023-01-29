@@ -18,4 +18,5 @@ public interface INodeIdentityService {
     Hash generateAddress(String seed, Integer index);
 
     void setSeed(String seed);
+
 }
