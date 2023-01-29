@@ -30,10 +30,16 @@ import static io.coti.financialserver.services.NodeServiceManager.*;
 @Service
 public class DistributeTokenService {
 
-    @Value("${financialserver.seed.key}")
+    @Value("${financialserver.seed.key:}")
     private String seed;
+    @Value("${secret.financialserver.seed.name.key:}")
+    private String seedSecretName;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
+
+    void init() {
+        seed = secretManagerService.getSecret(seed, seedSecretName, "seed");
+    }
 
     public ResponseEntity<IResponse> distributeTokens(TokenSaleDistributionRequest request) {
 

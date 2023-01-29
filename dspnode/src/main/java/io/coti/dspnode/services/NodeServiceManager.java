@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
 @Primary
+@Service
 public class NodeServiceManager extends BaseNodeServiceManager {
 
     public static UnconfirmedTransactionDspVotes unconfirmedTransactionDspVotes;

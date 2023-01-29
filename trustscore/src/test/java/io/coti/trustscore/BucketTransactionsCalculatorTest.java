@@ -105,7 +105,7 @@ public class BucketTransactionsCalculatorTest {
     }
 
     @Test
-    // Balance don't affect the fullnode TS
+        // Balance don't affect the fullnode TS
     void fullNodeTransactionTest() {
         BucketTransactionEventsData bucketTransactionEventsData = new BucketTransactionEventsData();
         bucketTransactionEventsData.setUserType(UserType.FULL_NODE);

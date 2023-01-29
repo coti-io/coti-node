@@ -16,13 +16,19 @@ import static io.coti.financialserver.services.NodeServiceManager.*;
 @Service
 public class DistributionService {
 
-    private static final int COTI_GENESIS_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
     public static final int INITIAL_AMOUNT_FOR_TOKEN_SALE = 600000000;
     public static final int INITIAL_AMOUNT_FOR_INCENTIVES = 900000000;
     public static final int INITIAL_AMOUNT_FOR_TEAM = 300000000;
     public static final int INITIAL_AMOUNT_FOR_ADVISORS = 200000000;
-    @Value("${financialserver.seed.key}")
+    private static final int COTI_GENESIS_ADDRESS_INDEX = Math.toIntExact(ReservedAddress.GENESIS_ONE.getIndex());
+    @Value("${financialserver.seed.key:}")
     private String seed;
+    @Value("${secret.financialserver.seed.name.key:}")
+    private String seedSecretName;
+
+    void init() {
+        seed = secretManagerService.getSecret(seed, seedSecretName, "seed");
+    }
 
     public void distributeToInitialFunds() {
         Hash cotiGenesisAddress = nodeIdentityService.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
