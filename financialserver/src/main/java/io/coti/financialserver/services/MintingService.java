@@ -2,7 +2,6 @@ package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.exceptions.CurrencyValidationException;
@@ -112,7 +111,7 @@ public class MintingService extends BaseNodeMintingService {
                 mintingFee = feeService.calculateTokenMintingFee(tokenMintingServiceData.getMintingAmount());
             }
             TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = new TokenMintingFeeBaseTransactionData(feeService.networkFeeAddress(),
-                    currencyService.getNativeCurrencyHash(), NodeCryptoHelper.getNodeHash(), mintingFee, Instant.now(), tokenMintingServiceData);
+                    currencyService.getNativeCurrencyHash(), nodeIdentityService.getNodeHash(), mintingFee, Instant.now(), tokenMintingServiceData);
             setTokenMintingFeeHash(tokenMintingFeeBaseTransactionData);
             signTokenMintingFee(tokenMintingFeeBaseTransactionData);
             TokenMintingFeeResponseData tokenMintingFeeResponseData = new TokenMintingFeeResponseData(tokenMintingFeeBaseTransactionData);
@@ -170,7 +169,7 @@ public class MintingService extends BaseNodeMintingService {
     }
 
     private void signTokenMintingFee(TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData) {
-        tokenMintingFeeBaseTransactionData.setSignature(NodeCryptoHelper.signMessage(tokenMintingFeeBaseTransactionData.getHash().getBytes()));
+        tokenMintingFeeBaseTransactionData.setSignature(nodeIdentityService.signMessage(tokenMintingFeeBaseTransactionData.getHash().getBytes()));
     }
 
     private boolean isStillValid(MintingFeeQuoteData mintingFeeQuoteData) {

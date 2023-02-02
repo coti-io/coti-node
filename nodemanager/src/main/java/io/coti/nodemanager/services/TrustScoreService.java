@@ -1,6 +1,5 @@
 package io.coti.nodemanager.services;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
 import io.coti.basenode.data.NodeTrustScoreData;
@@ -22,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeIdentityService;
 
 @Service
 @Slf4j
@@ -153,7 +154,7 @@ public class TrustScoreService implements ITrustScoreService {
         NodeTrustScoreRequest nodeTrustScoreRequest = new NodeTrustScoreRequest();
         List<Hash> nodesToSend = nodesList.stream().map(NetworkNodeData::getHash).collect(Collectors.toList());
         nodeTrustScoreRequest.setNodesHash(nodesToSend);
-        nodeTrustScoreRequest.setNodeManagerHash(NodeCryptoHelper.getNodeHash());
+        nodeTrustScoreRequest.setNodeManagerHash(nodeIdentityService.getNodeHash());
         trustScoreRequestCrypto.signMessage(nodeTrustScoreRequest);
         return nodeTrustScoreRequest;
     }

@@ -11,6 +11,7 @@ import io.coti.basenode.services.interfaces.INodeServiceManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -34,10 +35,15 @@ public abstract class BaseNodeInitializationService {
     private static final String NODE_MANAGER_NODES_ENDPOINT = "/nodes";
     private static final String LAST_KNOWN_WALLET_ENDPOINT = "/nodes/last";
     private static final String NETWORK_DETAILS_ERROR = "Error at getting network details";
+    private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     @Value("${network}")
     protected NetworkType networkType;
     @Value("${server.ip}")
     protected String nodeIp;
+    protected String version;
+    protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
+    @Autowired
+    private INodeServiceManager nodeServiceManager;
     @Value("${node.manager.ip}")
     private String nodeManagerIp;
     @Value("${node.manager.port}")
@@ -49,18 +55,15 @@ public abstract class BaseNodeInitializationService {
     private String kycServerAddress;
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
-    @Autowired
-    private INodeServiceManager nodeServiceManager;
-    private final Map<Long, ReducedExistingTransactionData> indexToTransactionMap = new HashMap<>();
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
-    private Object initialConfirmationLock;
-    protected String version;
-    protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
+    @Autowired
+    public BuildProperties buildProperties;
 
     public void init() {
-        nodeServiceManager.init();
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
         version = buildProperties.getVersion();
+        nodeServiceManager.init();
+        nodeIdentityService.init();
     }
 
     public void initServices() {
@@ -128,12 +131,7 @@ public abstract class BaseNodeInitializationService {
                 transactionSynchronizationService.requestMissingTransactions(transactionIndexService.getLastTransactionIndexData().getIndex() + 1);
             }
             clusterService.startToCheckTrustChainConfirmation();
-            initialConfirmationLock = confirmationService.getInitialConfirmationLock();
-            synchronized (initialConfirmationLock) {
-                while (!confirmationService.getInitialConfirmationFinished().get()) {
-                    initialConfirmationLock.wait(100);
-                }
-            }
+            waitingInitialConfirmation();
             balanceService.validateBalances();
             log.info("Transactions Load completed");
 
@@ -144,6 +142,14 @@ public abstract class BaseNodeInitializationService {
             throw new TransactionSyncException("Error at sync transactions.", e);
         } catch (Exception e) {
             throw new TransactionSyncException("Error at sync transactions.", e);
+        }
+    }
+
+    private void waitingInitialConfirmation() throws InterruptedException {
+        synchronized (confirmationService.getInitialConfirmationLock()) {
+            while (!confirmationService.getInitialConfirmationFinished().get()) {
+                confirmationService.getInitialConfirmationLock().wait(100);
+            }
         }
     }
 

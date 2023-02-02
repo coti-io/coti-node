@@ -1,7 +1,6 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.RollingReserveException;
 import io.coti.basenode.http.*;
@@ -142,7 +141,7 @@ public class RollingReserveService {
     private void signRollingReserveFee(RollingReserveData rollingReserveData, boolean isValid) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(rollingReserveData);
-        BaseTransactionCrypto.ROLLING_RESERVE_DATA.signMessage(new TransactionData(baseTransactions), rollingReserveData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
+        BaseTransactionCrypto.ROLLING_RESERVE_DATA.signMessage(new TransactionData(baseTransactions), rollingReserveData, new TrustScoreNodeResultData(nodeIdentityService.getNodeHash(), isValid));
     }
 
     private boolean isRollingReserveValid(RollingReserveData rollingReserveData, NetworkFeeData networkFeeData, double userTrustScore, UserType userType) {

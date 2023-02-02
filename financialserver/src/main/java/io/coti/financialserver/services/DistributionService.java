@@ -1,6 +1,5 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.InitialFundData;
 import io.coti.financialserver.data.ReservedAddress;
@@ -26,10 +25,10 @@ public class DistributionService {
     private String seed;
 
     public void distributeToInitialFunds() {
-        Hash cotiGenesisAddress = NodeCryptoHelper.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
+        Hash cotiGenesisAddress = nodeIdentityService.generateAddress(seed, COTI_GENESIS_ADDRESS_INDEX);
         Set<ReservedAddress> initialFundDistributionAddresses = ReservedAddress.getInitialFundDistributionAddresses();
         initialFundDistributionAddresses.forEach(initialFundDistributionAddress -> {
-            Hash fundAddress = NodeCryptoHelper.generateAddress(seed, Math.toIntExact(initialFundDistributionAddress.getIndex()));
+            Hash fundAddress = nodeIdentityService.generateAddress(seed, Math.toIntExact(initialFundDistributionAddress.getIndex()));
 
             if (!isInitialTransactionExistsByAddress(fundAddress)) {
                 BigDecimal amount = getInitialAmountByReservedAddress(initialFundDistributionAddress);

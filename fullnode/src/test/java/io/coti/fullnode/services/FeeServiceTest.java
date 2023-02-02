@@ -5,6 +5,7 @@ import io.coti.basenode.data.FullNodeFeeData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
+import io.coti.basenode.services.BaseNodeIdentityService;
 import io.coti.basenode.services.interfaces.ICurrencyService;
 import io.coti.fullnode.crypto.FullNodeFeeRequestCrypto;
 import io.coti.fullnode.http.FullNodeFeeRequest;
@@ -24,29 +25,31 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import utils.TestUtils;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
-import static io.coti.basenode.services.BaseNodeServiceManager.currencyService;
-import static io.coti.basenode.services.BaseNodeServiceManager.validationService;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static io.coti.fullnode.services.NodeServiceManager.fullNodeFeeRequestCrypto;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {FeeService.class, ValidationService.class})
+@ContextConfiguration(classes = {FeeService.class, ValidationService.class, BaseNodeIdentityService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 class FeeServiceTest {
 
     @Autowired
-    private FeeService feeService;
-    @Autowired
     ValidationService validationServiceLocal;
     @MockBean
     ICurrencyService currencyServiceLocal;
     @MockBean
     FullNodeFeeRequestCrypto fullNodeFeeRequestCryptoLocal;
+    @Autowired
+    private FeeService feeService;
+    @Autowired
+    private BaseNodeIdentityService nodeIdentityServiceLocal;
 
     @BeforeEach
     void init() {
+        nodeIdentityService = nodeIdentityServiceLocal;
         currencyService = currencyServiceLocal;
         fullNodeFeeRequestCrypto = fullNodeFeeRequestCryptoLocal;
         validationService = validationServiceLocal;
