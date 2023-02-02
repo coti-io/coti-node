@@ -1,7 +1,6 @@
 package io.coti.zerospend.services;
 
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -95,14 +94,14 @@ public class TransactionCreationService {
     }
 
     private TransactionData createZeroSpendTransactionData(double trustScore, ZeroSpendTransactionType description) {
-        Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
+        Hash addressHash = nodeIdentityService.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         BaseTransactionData baseTransactionData = new InputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now());
         return createTransactionData(baseTransactionData, description.name(), trustScore, TransactionType.ZeroSpend, addressHash);
     }
 
 
     private TransactionData createEventTransactionData(String description, Event event) {
-        Hash addressHash = NodeCryptoHelper.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
+        Hash addressHash = nodeIdentityService.generateAddress(seed, ZERO_SPEND_ADDRESS_INDEX);
         EventInputBaseTransactionData eventInputBaseTransactionData = new EventInputBaseTransactionData(addressHash, currencyService.getNativeCurrencyHash(), BigDecimal.ZERO, Instant.now(),
                 event);
         return createTransactionData(eventInputBaseTransactionData, description, MAX_TRUST_SCORE, TransactionType.EventHardFork, addressHash);

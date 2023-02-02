@@ -2,7 +2,6 @@ package io.coti.basenode.services;
 
 
 import io.coti.basenode.crypto.CurrencyTypeRegistrationCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.database.BaseNodeRocksDBConnector;
@@ -35,7 +34,7 @@ import static org.mockito.Mockito.*;
 
 
 @ContextConfiguration(classes = {BaseNodeCurrencyService.class, BaseNodeRocksDBConnector.class,
-        Currencies.class, NodeCryptoHelper.class,
+        Currencies.class,
         BaseNodeNetworkService.class, RestTemplate.class, ApplicationContext.class,
         CurrencyTypeRegistrationCrypto.class
 })

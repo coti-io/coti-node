@@ -3,7 +3,6 @@ package io.coti.fullnode.services;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.ISignable;
 import io.coti.basenode.database.interfaces.IDatabaseConnector;
@@ -13,6 +12,7 @@ import io.coti.basenode.http.GetHistoryAddressesRequest;
 import io.coti.basenode.http.HttpJacksonSerializer;
 import io.coti.basenode.model.Addresses;
 import io.coti.basenode.model.RequestedAddressHashes;
+import io.coti.basenode.services.BaseNodeIdentityService;
 import io.coti.basenode.services.FileService;
 import io.coti.basenode.services.interfaces.IValidationService;
 import io.coti.fullnode.database.RocksDBConnector;
@@ -22,11 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -43,9 +40,9 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {AddressService.class, IDatabaseConnector.class,
-        HttpJacksonSerializer.class, GetHistoryAddressesRequestCrypto.class, CryptoHelper.class, NodeCryptoHelper.class,
+        HttpJacksonSerializer.class, GetHistoryAddressesRequestCrypto.class, CryptoHelper.class,
         GetHistoryAddressesResponseCrypto.class, IDatabaseConnector.class, RocksDBConnector.class, AnnotationConfigContextLoader.class,
-        NodeCryptoHelper.class
+        BaseNodeIdentityService.class
 })
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
@@ -92,6 +89,8 @@ class AddressServiceIntegrationTest {
 
     @Autowired
     private AddressService addressService;
+    @Autowired
+    private BaseNodeIdentityService nodeIdentityService;
     @MockBean
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCryptoLocal;
     @MockBean
@@ -130,19 +129,10 @@ class AddressServiceIntegrationTest {
     private RequestedAddressHashData addressNotFoundInFullNodeAndNotFound = new RequestedAddressHashData(
             new Hash("9aaf17d8b83748d4e7a10e7a8ae02039d6557bf1825220e45965b25d03b5958fbd727548bcb5ca80f8af39cb078d7d8970d3331d508510776a8874450a12cd6395d51886"));
 
-    @Configuration
-    static class ContextConfiguration {
-        @Bean
-        public MethodInvokingFactoryBean nodePrivateKey() {
-            MethodInvokingFactoryBean methodInvokingFactoryBean = new MethodInvokingFactoryBean();
-            methodInvokingFactoryBean.setStaticMethod(NodeCryptoHelper.class.getName() + ".nodePrivateKey");
-            methodInvokingFactoryBean.setArguments("14e524a9e78fdefb61e159cf91f4cf0bddc5168362c92061b526d842bd03ce0d");
-            return methodInvokingFactoryBean;
-        }
-    }
 
     @BeforeEach
     void setUp() {
+        nodeIdentityService.init();
         networkService = networkServiceLocal;
         addresses = addressesLocal;
         requestedAddressHashes = requestedAddressHashesLocal;

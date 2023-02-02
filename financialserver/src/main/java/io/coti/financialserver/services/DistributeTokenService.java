@@ -1,6 +1,5 @@
 package io.coti.financialserver.services;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -85,9 +84,9 @@ public class DistributeTokenService {
     private void distributeTokenByEntry(TokenSaleDistributionEntryData entry) {
 
         int tokenSaleIndex = Math.toIntExact(ReservedAddress.TOKEN_SALE.getIndex());
-        Hash fundSourceAddress = NodeCryptoHelper.generateAddress(seed, tokenSaleIndex);
+        Hash fundSourceAddress = nodeIdentityService.generateAddress(seed, tokenSaleIndex);
         int targetSaleIndex = Math.toIntExact(entry.getFundName().getReservedAddress().getIndex());
-        Hash fundTargetAddress = NodeCryptoHelper.generateAddress(seed, targetSaleIndex);
+        Hash fundTargetAddress = nodeIdentityService.generateAddress(seed, targetSaleIndex);
         Hash transactionHash;
         try {
             transactionHash = transactionCreationService.createInitialTransaction(entry.getAmount(), currencyService.getNativeCurrencyHash(), fundSourceAddress, fundTargetAddress, tokenSaleIndex);

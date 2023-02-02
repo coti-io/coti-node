@@ -1,7 +1,7 @@
 package io.coti.basenode.controllers;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.services.BaseNodeServiceManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,6 +26,6 @@ public class NodeHashController {
                             schema = @Schema(implementation = Hash.class))})})
     @GetMapping()
     public Hash getNodeHash() {
-        return NodeCryptoHelper.getNodeHash();
+        return BaseNodeServiceManager.nodeIdentityService.getNodeHash();
     }
 }
