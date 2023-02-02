@@ -1,6 +1,5 @@
 package io.coti.dspnode.services;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -87,7 +86,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, BaseNodeMonitorService.HealthState.NORMAL);
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.DspNode, version, nodeIp, serverPort, nodeIdentityService.getNodeHash(), networkType, BaseNodeMonitorService.HealthState.NORMAL);
         networkNodeData.setPropagationPort(propagationPort);
         networkNodeData.setReceivingPort(receivingPort);
         return networkNodeData;

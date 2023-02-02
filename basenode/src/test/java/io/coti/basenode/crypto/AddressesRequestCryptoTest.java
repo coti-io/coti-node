@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -19,16 +18,13 @@ import java.util.List;
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {GetHistoryAddressesRequestCrypto.class, CryptoHelper.class})
-public class AddressesRequestCryptoTest {
+class AddressesRequestCryptoTest {
 
     @Autowired
     private GetHistoryAddressesRequestCrypto getHistoryAddressesRequestCrypto;
 
-    @MockBean
-    private NodeCryptoHelper nodeCryptoHelper;
-
     @Test
-    public void testGetSignatureEqual() {
+    void testGetSignatureEqual() {
         List<Hash> addressHashes = HashTestUtils.generateListOfRandomAddressHashes(10);
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashes);
         Instant createTime = getHistoryAddressesRequest.getCreateTime();
@@ -43,7 +39,7 @@ public class AddressesRequestCryptoTest {
     }
 
     @Test
-    public void testGetSignatureNotEqual() {
+    void testGetSignatureNotEqual() {
         List<Hash> addressHashesTwo = HashTestUtils.generateListOfRandomHashes(10);
         GetHistoryAddressesRequest getHistoryAddressesRequest = new GetHistoryAddressesRequest(addressHashesTwo);
         Instant createTime = getHistoryAddressesRequest.getCreateTime();

@@ -1,7 +1,6 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeFeeType;
 import io.coti.basenode.data.TokenGenerationFeeBaseTransactionData;
@@ -22,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 import static io.coti.basenode.http.BaseNodeHttpStringConstants.STATUS_ERROR;
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeIdentityService;
 import static io.coti.financialserver.services.NodeServiceManager.currencyService;
 import static io.coti.financialserver.services.NodeServiceManager.nodeFeesService;
 
@@ -38,7 +38,7 @@ public class FeeService {
             TokenGenerationServiceData tokenGenerationServiceData = new TokenGenerationServiceData(generateTokenRequest.getOriginatorCurrencyData(), generateTokenRequest.getCurrencyTypeData(), tokenGenerationFeeCalculated);
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData =
                     new TokenGenerationFeeBaseTransactionData(networkFeeAddress(), currencyService.getNativeCurrencyHash(),
-                            NodeCryptoHelper.getNodeHash(), tokenGenerationFeeCalculated, Instant.now(), tokenGenerationServiceData);
+                            nodeIdentityService.getNodeHash(), tokenGenerationFeeCalculated, Instant.now(), tokenGenerationServiceData);
             setTokenGenerationFeeHash(tokenGenerationFeeBaseTransactionData);
             signTokenGenerationFee(tokenGenerationFeeBaseTransactionData);
             TokenGenerationFeeResponseData tokenGenerationFeeResponseData = new TokenGenerationFeeResponseData(tokenGenerationFeeBaseTransactionData);
@@ -59,7 +59,7 @@ public class FeeService {
     }
 
     protected Hash networkFeeAddress() {
-        return NodeCryptoHelper.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
+        return nodeIdentityService.generateAddress(seed, (int) ReservedAddress.NETWORK_FEE_POOL.getIndex());
     }
 
     protected void setTokenGenerationFeeHash(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
@@ -67,6 +67,6 @@ public class FeeService {
     }
 
     protected void signTokenGenerationFee(TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData) {
-        tokenGenerationFeeBaseTransactionData.setSignature(NodeCryptoHelper.signMessage(tokenGenerationFeeBaseTransactionData.getHash().getBytes()));
+        tokenGenerationFeeBaseTransactionData.setSignature(nodeIdentityService.signMessage(tokenGenerationFeeBaseTransactionData.getHash().getBytes()));
     }
 }

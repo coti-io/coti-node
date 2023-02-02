@@ -1,6 +1,5 @@
 package io.coti.trustscore.services;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -70,7 +69,7 @@ public class InitializationService extends BaseNodeInitializationService {
 
     @Override
     protected NetworkNodeData createNodeProperties() {
-        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, version, nodeIp, serverPort, NodeCryptoHelper.getNodeHash(), networkType, monitorService.getLastTotalHealthState());
+        NetworkNodeData networkNodeData = new NetworkNodeData(NodeType.TrustScoreNode, version, nodeIp, serverPort, nodeIdentityService.getNodeHash(), networkType, monitorService.getLastTotalHealthState());
         networkNodeData.setWebServerUrl(webServerUrl);
         return networkNodeData;
 

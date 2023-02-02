@@ -1,7 +1,6 @@
 package io.coti.trustscore.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.Response;
@@ -190,7 +189,7 @@ public class NetworkFeeService {
     private void signNetworkFee(NetworkFeeData networkFeeData, boolean isValid) {
         List<BaseTransactionData> baseTransactions = new ArrayList<>();
         baseTransactions.add(networkFeeData);
-        BaseTransactionCrypto.NETWORK_FEE_DATA.signMessage(new TransactionData(baseTransactions), networkFeeData, new TrustScoreNodeResultData(NodeCryptoHelper.getNodeHash(), isValid));
+        BaseTransactionCrypto.NETWORK_FEE_DATA.signMessage(new TransactionData(baseTransactions), networkFeeData, new TrustScoreNodeResultData(nodeIdentityService.getNodeHash(), isValid));
     }
 
 

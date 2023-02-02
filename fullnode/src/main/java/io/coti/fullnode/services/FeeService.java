@@ -1,7 +1,6 @@
 package io.coti.fullnode.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.*;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -105,7 +104,7 @@ public class FeeService {
     }
 
     public Hash getAddress() {
-        return NodeCryptoHelper.generateAddress(seed, FULL_NODE_FEE_ADDRESS_INDEX);
+        return nodeIdentityService.generateAddress(seed, FULL_NODE_FEE_ADDRESS_INDEX);
     }
 
     public void setFullNodeFeeHash(FullNodeFeeData fullNodeFeeData) {

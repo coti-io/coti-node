@@ -11,6 +11,7 @@ import io.coti.basenode.services.interfaces.INodeServiceManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -55,11 +56,14 @@ public abstract class BaseNodeInitializationService {
     @Value("${kycserver.public.key}")
     private String kycServerPublicKey;
     private EnumMap<InitializationTransactionHandlerType, ExecutorData> existingTransactionExecutorMap;
+    @Autowired
+    public BuildProperties buildProperties;
 
     public void init() {
-        nodeServiceManager.init();
         log.info("Application name: {}, version: {}", buildProperties.getName(), buildProperties.getVersion());
         version = buildProperties.getVersion();
+        nodeServiceManager.init();
+        nodeIdentityService.init();
     }
 
     public void initServices() {

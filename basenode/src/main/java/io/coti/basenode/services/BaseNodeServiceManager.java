@@ -12,7 +12,6 @@ import io.coti.basenode.services.liveview.LiveViewService;
 import io.coti.basenode.utilities.MonitorConfigurationProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BaseNodeServiceManager implements INodeServiceManager {
     public static RequestedAddressHashes requestedAddressHashes;
-    public static BuildProperties buildProperties;
     public static IDatabaseConnector databaseConnector;
     public static IReceiver zeroMQReceiver;
     public static ISender zeroMQSender;
@@ -105,7 +103,10 @@ public class BaseNodeServiceManager implements INodeServiceManager {
     public static ITransactionService transactionService;
     public static TransactionDspVoteCrypto transactionDspVoteCrypto;
     public static TransactionVotes transactionVotes;
+    public static INodeIdentityService nodeIdentityService;
 
+    @Autowired
+    public INodeIdentityService autowiredNodeIdentityService;
     @Autowired
     public TransactionVotes autowiredTransactionVotes;
     @Autowired
@@ -242,8 +243,6 @@ public class BaseNodeServiceManager implements INodeServiceManager {
     public IClusterHelper autowiredClusterHelper;
     @Autowired
     public ISourceSelector autowiredSourceSelector;
-    @Autowired
-    public BuildProperties autowiredBuildProperties;
     @Autowired
     public CurrencyNameIndexes autowiredCurrencyNameIndexes;
     @Autowired

@@ -1,7 +1,6 @@
 package io.coti.basenode.services;
 
 import com.google.gson.Gson;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.DbRestoreSource;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NetworkNodeData;
@@ -125,7 +124,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
             if (restoreNodeHash.toString().isEmpty()) {
                 throw new DataBaseRecoveryException("Restore node hash can not be empty when restore flag is set to true");
             }
-            if (restoreSource.equals(DbRestoreSource.Remote) && NodeCryptoHelper.getNodeHash().equals(restoreNodeHash) && backupBucket.isEmpty()) {
+            if (restoreSource.equals(DbRestoreSource.Remote) && nodeIdentityService.getNodeHash().equals(restoreNodeHash) && backupBucket.isEmpty()) {
                 throw new DataBaseRecoveryException("Aws backup bucket can not be empty when restore flag is set to true and remote restore is from the node's own backup");
             }
         }
@@ -280,7 +279,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
 
     private String getBackupBucketFromRestoreNode() {
 
-        if (NodeCryptoHelper.getNodeHash().equals(restoreNodeHash)) {
+        if (nodeIdentityService.getNodeHash().equals(restoreNodeHash)) {
             return backupBucket;
         }
         NetworkNodeData networkNodeData = networkService.getNetworkNodeData();
@@ -328,7 +327,7 @@ public class BaseNodeDBRecoveryService implements IDBRecoveryService {
         StringBuilder sb = new StringBuilder(network);
         sb.append(folderDelimiter).append(applicationName).append(folderDelimiter);
         if (backup) {
-            backupS3Path = sb.toString() + NodeCryptoHelper.getNodeHash();
+            backupS3Path = sb.toString() + nodeIdentityService.getNodeHash();
         }
         if (restore) {
             restoreS3Path = sb.toString() + restoreNodeHash.toString();

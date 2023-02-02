@@ -1,7 +1,6 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.CryptoHelper;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -50,7 +49,7 @@ public class FundDistributionService {
     private Map<Hash, ReservedBalanceData> addressToReservedBalanceMap;
 
     public void initReservedBalance() {
-        NodeCryptoHelper.setSeed(seed);
+        nodeIdentityService.setSeed(seed);
         fundReservedBalanceMap = new ConcurrentHashMap<>();
         addressToReservedBalanceMap = new ConcurrentHashMap<>();
         for (Fund fund : Fund.values()) {
@@ -550,7 +549,7 @@ public class FundDistributionService {
 
     private Hash getEntryResultSourceFundAddress(FundDistributionFileEntryResultData entryResult) {
         int sourceAddressIndex = Math.toIntExact(Fund.getFundByText(entryResult.getDistributionPool()).getReservedAddress().getIndex());
-        return NodeCryptoHelper.generateAddress(seed, sourceAddressIndex);
+        return nodeIdentityService.generateAddress(seed, sourceAddressIndex);
     }
 
     private Hash createInitialTransactionToDistributionEntry(FundDistributionData fundDistributionData) {
@@ -576,7 +575,7 @@ public class FundDistributionService {
                 fileWriter.write(getEntryResultAsCommaDelimitedLine(entryResult));
                 updateFundDistributionFileResultData(fundDistributionFileResultData, entryResult);
             }
-            fundDistributionFileResultData.setFinancialServerHash(NodeCryptoHelper.getNodeHash());
+            fundDistributionFileResultData.setFinancialServerHash(nodeIdentityService.getNodeHash());
             fundDistributionFileResultCrypto.signMessage(fundDistributionFileResultData);
             SignatureData signature = fundDistributionFileResultCrypto.getSignature(fundDistributionFileResultData);
             fileWriter.write(signature.getR() + COMMA_SEPARATOR + signature.getS()

@@ -1,10 +1,8 @@
 package io.coti.historynode.services;
 
-import io.coti.basenode.config.NodeConfig;
 import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.crypto.GetHistoryAddressesRequestCrypto;
 import io.coti.basenode.crypto.GetHistoryAddressesResponseCrypto;
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.AddressData;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.SignatureData;
@@ -42,7 +40,7 @@ import static io.coti.historynode.services.NodeServiceManager.requestedAddressHa
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ContextConfiguration(classes = {AddressService.class, BaseNodeValidationService.class, NodeConfig.class, CryptoHelper.class, NodeCryptoHelper.class, Transactions.class, HttpJacksonSerializer.class})
+@ContextConfiguration(classes = {AddressService.class, BaseNodeValidationService.class, CryptoHelper.class, Transactions.class, HttpJacksonSerializer.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
