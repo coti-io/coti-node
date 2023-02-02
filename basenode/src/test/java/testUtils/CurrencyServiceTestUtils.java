@@ -2,9 +2,7 @@ package testUtils;
 
 import io.coti.basenode.data.CurrencyData;
 import io.coti.basenode.data.Hash;
-import io.coti.basenode.services.interfaces.ICurrencyService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.Instant;

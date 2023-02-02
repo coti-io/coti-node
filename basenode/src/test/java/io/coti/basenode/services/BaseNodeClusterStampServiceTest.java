@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.config.NodeConfig;
 import io.coti.basenode.crypto.ClusterStampCrypto;
 import io.coti.basenode.exceptions.ClusterStampException;
 import io.coti.basenode.model.Transactions;
@@ -18,7 +17,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ContextConfiguration(classes = {BaseNodeClusterStampService.class, NodeConfig.class})
+@ContextConfiguration(classes = {BaseNodeClusterStampService.class})
 @TestPropertySource(locations = "classpath:test.properties")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest

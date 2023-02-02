@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeIdentityService;
+
 @Slf4j
 public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     INPUT_BASE_TRANSACTION_DATA(InputBaseTransactionData.class) {
@@ -82,7 +84,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) {
-            baseTransactionData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
+            baseTransactionData.setSignature(nodeIdentityService.signMessage(getSignatureMessage(transactionData), index));
 
         }
     },
@@ -103,7 +105,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
         @Override
         public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) {
-            baseTransactionData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
+            baseTransactionData.setSignature(nodeIdentityService.signMessage(this.getSignatureMessage(transactionData), index));
 
         }
     },
@@ -306,7 +308,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
 
     @Override
     public void signMessage(TransactionData transactionData, BaseTransactionData baseTransactionData, int index) {
-        baseTransactionData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData), index));
+        baseTransactionData.setSignature(nodeIdentityService.signMessage(this.getSignatureMessage(transactionData), index));
 
     }
 
@@ -314,7 +316,7 @@ public enum BaseTransactionCrypto implements IBaseTransactionCrypto {
     public <T extends BaseTransactionData & ITrustScoreNodeValidatable> void signMessage(TransactionData transactionData, T baseTransactionData, TrustScoreNodeResultData trustScoreNodeResultData) {
 
         List<TrustScoreNodeResultData> trustScoreNodeResult = baseTransactionData.getTrustScoreNodeResult() != null ? baseTransactionData.getTrustScoreNodeResult() : new ArrayList<>();
-        trustScoreNodeResultData.setSignature(NodeCryptoHelper.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));
+        trustScoreNodeResultData.setSignature(nodeIdentityService.signMessage(this.getSignatureMessage(transactionData, trustScoreNodeResultData)));
         trustScoreNodeResult.add(trustScoreNodeResultData);
         baseTransactionData.setTrustScoreNodeResult(trustScoreNodeResult);
 

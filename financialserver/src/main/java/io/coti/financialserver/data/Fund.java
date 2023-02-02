@@ -1,7 +1,8 @@
 package io.coti.financialserver.data;
 
-import io.coti.basenode.crypto.NodeCryptoHelper;
 import io.coti.basenode.data.Hash;
+
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeIdentityService;
 
 public enum Fund {
 
@@ -18,7 +19,7 @@ public enum Fund {
     Fund(ReservedAddress reservedAddress, String text) {
         this.reservedAddress = reservedAddress;
         this.text = text;
-        this.fundHash = NodeCryptoHelper.generateAddress(Math.toIntExact(this.reservedAddress.getIndex()));
+        this.fundHash = nodeIdentityService.generateAddress(Math.toIntExact(this.reservedAddress.getIndex()));
     }
 
     public ReservedAddress getReservedAddress() {
