@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+import javax.annotation.PreDestroy;
+
 
 @Slf4j
 @SpringBootApplication
@@ -21,4 +23,10 @@ public class ZeroSpendServerApplication {
         log.info("################    ZERO SPEND SERVER IS UP       ##################");
         log.info("##################################################################");
     }
+
+    @PreDestroy
+    public void destroy() {
+        log.info("!!!!!!!!!!!!!!!!    ZERO SPEND SERVER IS DOWN       !!!!!!!!!!!!!!!!!!");
+    }
+
 }
