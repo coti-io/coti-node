@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+import javax.annotation.PreDestroy;
+
 @Slf4j
 @SpringBootApplication
 @EnableAsync
@@ -20,4 +22,10 @@ public class DspNodeApplication {
         log.info("################    DSP NODE IS UP       ##################");
         log.info("############################################################");
     }
+
+    @PreDestroy
+    public void destroy() {
+        log.info("!!!!!!!!!!!!!!!!    DSP NODE IS DOWN       !!!!!!!!!!!!!!!!!!");
+    }
+
 }
