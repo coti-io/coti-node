@@ -1,0 +1,149 @@
+#!/bin/bash
+# A script to generate a fullnode.properties file from environment variables
+
+set -e pipefail # fail on error , debug all lines
+
+#########################################
+# Preparation
+#########################################
+
+# Set necessary variables from the environment
+
+# Required environment variables:
+#  - ACTION
+#  - SERVERNAME
+#  - PKEY
+#  - SEED
+if [ -z ${ACTION} ]; then
+  echo "Environment variable ACTION not defined"
+  exit 1
+fi
+if [ -z ${SERVERNAME} ]; then
+  echo "Environment variable SERVERNAME not defined"
+  exit 1
+fi
+if [ -z ${PKEY} ]; then
+  echo "Environment variable PKEY not defined"
+  exit 1
+fi
+if [ -z ${SEED} ]; then
+  echo "Environment variable SEED not defined"
+  exit 1
+fi
+
+# Optional environment variables
+# If an environment variable is not found, a default is chosen
+#  - SERVER_PORT
+#  - DATABSE_FOLDER_NAME
+#  - MINIMUM_FEE
+#  - MAXIMUM_FEE
+#  - FEE_PERCENTAGE
+if [ -z ${SERVERPORT} ]; then
+  SERVER_PORT=7070
+fi
+if [ -z ${DATABSE_FOLDER_NAME} ]; then
+  DATABSE_FOLDER_NAME=rocksDB
+fi
+if [ -z ${MINIMUM_FEE} ]; then
+  MINIMUM_FEE=0.01
+fi
+if [ -z ${MAXIMUM_FEE} ]; then
+  MAXIMUM_FEE=25
+fi
+if [ -z ${FEE_PERCENTAGE} ]; then
+  FEE_PERCENTAGE=1
+fi
+
+# Calculate dervied variables 
+SERVER_URL=https://$SERVERNAME
+SERVER_IP=$(curl -s ifconfig.me) 
+echo "Detected Server IP: $SERVERIP"
+LOGGING_FILE_NAME="FullNode1";
+data_dir=/app/data
+mkdir -p $data_dir
+
+#########################################
+# Generate fullnode.properties
+#########################################
+FULLNODE_PROPERTIES_FILE=$data_dir/fullnode.properties
+
+if [[ $ACTION == "testnet" ]];
+then
+cat <<EOF-TESTNET >$FULLNODE_PROPERTIES_FILE
+network=TestNet
+server.ip=$SERVER_IP
+server.port=$SERVER_PORT
+server.url=$SERVER_URL
+application.name=FullNode
+logging.file.name=$LOGGING_FILE_NAME
+database.folder.name=$DATABSE_FOLDER_NAME
+resetDatabase=false
+global.private.key=$PKEY
+fullnode.seed=$SEED
+minimumFee=$MINIMUM_FEE
+maximumFee=$MAXIMUM_FEE
+fee.percentage=$FEE_PERCENTAGE
+zero.fee.user.hashes=9c37d52ae10e6b42d3bb707ca237dd150165daca32bf8ef67f73d1e79ee609a9f88df0d437a5ba5a6cf7c68d63c077fa2c63a21a91fc192dfd9c1fe4b64bb959
+kycserver.public.key=c10052a39b023c8d4a3fc406a74df1742599a387c58bcea2a2093bd85103f3bd22816fa45bbfb26c1f88a112f0c0b007755eb1be1fad3b45f153adbac4752638
+kycserver.url=https://cca.coti.io
+node.manager.ip=52.59.142.53
+node.manager.port=7090
+node.manager.propagation.port=10001
+allow.transaction.monitoring=true
+whitelist.ips=127.0.0.1,0:0:0:0:0:0:0:1
+node.manager.public.key=2fc59886c372808952766fa5a39d33d891af69c354e6a5934a258871407536d6705693099f076226ee5bf4b200422e56635a7f3ba86df636757e0ae42415f7c2
+allow.transaction.monitoring=true
+regular.token.fullnode.fee=1
+EOF-TESTNET
+elif [[ $ACTION == "mainnet" ]];
+then
+cat <<EOF-MAINNET >$FULLNODE_PROPERTIES_FILE
+network=MainNet
+server.ip=$SERVERIP
+server.port=$SERVER_PORT
+server.url=$SERVERURL
+application.name=FullNode
+logging.file.name=$logging_file_name
+database.folder.name=$DATABSE_FOLDER_NAME
+global.private.key=$PKEY
+fullnode.seed=$SEED
+minimumFee=$MINIMUM_FEE
+maximumFee=$MAXIMUM_FEE
+fee.percentage=$FEE_PERCENTAGE
+zero.fee.user.hashes=
+kycserver.public.key=c10052a39b023c8d4a3fc406a74df1742599a387c58bcea2a2093bd85103f3bd22816fa45bbfb26c1f88a112f0c0b007755eb1be1fad3b45f153adbac4752638
+kycserver.url=https://cca.coti.io
+node.manager.ip=35.157.47.86
+node.manager.port=7090
+node.manager.propagation.port=10001
+node.manager.public.key=2fc59886c372808952766fa5a39d33d891af69c354e6a5934a258871407536d6705693099f076226ee5bf4b200422e56635a7f3ba86df636757e0ae42415f7c2
+allow.transaction.monitoring=true
+regular.token.fullnode.fee=1
+EOF-MAINNET
+fi
+
+chown root:root $FULLNODE_PROPERTIES_FILE
+chgrp root $FULLNODE_PROPERTIES_FILE
+
+echo fullnode.properties file successfully generated at $FULLNODE_PROPERTIES_FILE
+
+#########################################
+# Download Clusterstamp
+#########################################
+
+CLUSTERSTAMP_FILE=/app/FullNode1_clusterstamp.csv
+if [ -f "$CLUSTERSTAMP_FILE" ]; then
+  echo "Clusterstamp $CLUSTERSTAMP_FILE exists."
+else
+  if [[ $ACTION == "testnet" ]]; then
+    CLUSTERSTAMP_URL=https://www.dropbox.com/s/rpyercs56zmay0z/FullNode1_clusterstamp.csv
+  elif [[ $ACTION == "mainnet" ]]; then
+    CLUSTERSTAMP_URL=https://coti.tips/downloads/FullNode1_clusterstamp.csv
+  fi
+  echo "Downloading clusterstamp."
+  curl -sL $CLUSTERSTAMP_URL --output $CLUSTERSTAMP_FILE
+  echo "Download completed."
+fi
+
+chown root:root $CLUSTERSTAMP_FILE
+chgrp root $CLUSTERSTAMP_FILE
