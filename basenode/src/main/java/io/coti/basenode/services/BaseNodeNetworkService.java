@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.ZeroMQSubscriber;
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
@@ -429,6 +430,11 @@ public class BaseNodeNetworkService implements INetworkService {
             }
             handleConnectedZeroSpendServer(singleNodeType, newSingleNodeData, currentSingleNodeData);
             setSingleNodeData(singleNodeType, newSingleNodeData);
+        }
+        else {
+            if (currentSingleNodeData != null) {
+                propagationSubscriber.disconnect(currentSingleNodeData.getPropagationFullAddress(), currentSingleNodeData.getNodeType());
+            }
         }
     }
 
