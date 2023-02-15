@@ -387,7 +387,7 @@ public class BaseNodeRocksDBConnector implements IDatabaseConnector {
             if (!dbDirectory.exists() || !dbDirectory.isDirectory()) {
                 boolean success = dbDirectory.mkdir();
                 if (!success) {
-                    throw new DataBaseException("Unable to create new DB directory");
+                    throw new DataBaseException("Unable to create new DB directory: ".concat(dbDirectory.getAbsolutePath()));
                 }
             }
         } catch (DataBaseException e) {
