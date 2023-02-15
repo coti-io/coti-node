@@ -45,7 +45,7 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     public boolean equals(Object a) {
         if (a instanceof NetworkNodeData) {
             NetworkNodeData aNetworkNodeData = (NetworkNodeData) a;
-            return nodeType.equals(aNetworkNodeData.nodeType) && nodeHash.equals(aNetworkNodeData.getHash()) && reportedHealthState.equals(aNetworkNodeData.reportedHealthState);
+            return nodeType.equals(aNetworkNodeData.nodeType) && nodeHash.equals(aNetworkNodeData.getHash());
         } else {
             return false;
         }
