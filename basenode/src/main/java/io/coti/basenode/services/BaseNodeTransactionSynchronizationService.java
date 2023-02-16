@@ -39,8 +39,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
             Thread monitorMissingTransactionThread = transactionService.monitorTransactionThread("missing", completedMissingTransactionNumber, receivedMissingTransactionNumber, "Sync Txs Monitor");
             Thread insertMissingTransactionThread = insertMissingTransactionThread(missingTransactions, trustChainUnconfirmedExistingTransactionHashes, completedMissingTransactionNumber, monitorMissingTransactionThread, finishedToReceive, finishedToInsert);
             ResponseExtractor<Void> responseExtractor = getResponseExtractorForMissingTransactionChunks(missingTransactions, receivedMissingTransactionNumber, insertMissingTransactionThread);
-            restTemplate.execute(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT
-                    + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
+            restTemplate.execute(networkService.getRecoveryServerAddress() + RECOVERY_NODE_GET_BATCH_ENDPOINT + STARTING_INDEX_URL_PARAM_ENDPOINT + firstMissingTransactionIndex, HttpMethod.GET, null, responseExtractor);
             if (insertMissingTransactionThread.isAlive()) {
                 log.info("Received all {} missing transactions from recovery server", receivedMissingTransactionNumber);
                 synchronized (finishLock) {
@@ -75,7 +74,8 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
                         receivedMissingTransactionNumber.incrementAndGet();
                         if (!insertMissingTransactionThread.isAlive()) {
                             missingTransactionExecutorMap = new EnumMap<>(InitializationTransactionHandlerType.class);
-                            EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType -> missingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData(initializationTransactionHandlerType)));
+                            EnumSet.allOf(InitializationTransactionHandlerType.class).forEach(initializationTransactionHandlerType ->
+                                    missingTransactionExecutorMap.put(initializationTransactionHandlerType, new ExecutorData(initializationTransactionHandlerType)));
                             insertMissingTransactionThread.start();
                         }
                         Arrays.fill(buf, 0, offset + n, (byte) 0);
@@ -105,7 +105,7 @@ public class BaseNodeTransactionSynchronizationService implements ITransactionSy
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            missingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination());
+            missingTransactionExecutorMap.forEach((initializationTransactionHandlerType, executorData) -> executorData.waitForTermination(completedMissingTransactionNumber));
             synchronized (finishLock) {
                 finishedToInsert.set(true);
                 finishLock.notifyAll();
