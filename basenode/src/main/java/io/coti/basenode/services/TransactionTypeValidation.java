@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import static io.coti.basenode.services.BaseNodeServiceManager.nodeEventService;
+
 @Slf4j
 public enum TransactionTypeValidation implements ITransactionTypeValidation {
     PAYMENT(TransactionType.Payment) {
@@ -210,7 +212,7 @@ public enum TransactionTypeValidation implements ITransactionTypeValidation {
 
                 originalAmount = outputBaseTransactionData.getOriginalAmount();
                 originalCurrencyHash = Optional.ofNullable(outputBaseTransactionData.getOriginalCurrencyHash()).orElse(nativeCurrencyHash);
-                if (outputBaseTransactionData instanceof ReceiverBaseTransactionData) {
+                if (nodeEventService.eventHappened(Event.TRUST_SCORE_CONSENSUS) && outputBaseTransactionData instanceof ReceiverBaseTransactionData) {
                     Hash currencyHash = Optional.ofNullable(outputBaseTransactionData.getCurrencyHash()).orElse(nativeCurrencyHash);
                     if (currencyHash != null && !currencyHash.equals(originalCurrencyHash)) {
                         return false;
