@@ -33,12 +33,16 @@ fi
 
 # Optional environment variables
 # If an environment variable is not found, a default is chosen
+#  - SERVER_IP
 #  - SERVER_PORT
 #  - DATABSE_FOLDER_NAME
 #  - MINIMUM_FEE
 #  - MAXIMUM_FEE
 #  - FEE_PERCENTAGE
-if [ -z ${SERVERPORT} ]; then
+if [ -z ${SERVER_IP} ]; then
+  SERVER_IP=$(curl -s ifconfig.me) 
+fi
+if [ -z ${SERVER_PORT} ]; then
   SERVER_PORT=7070
 fi
 if [ -z ${DATABSE_FOLDER_NAME} ]; then
@@ -56,7 +60,6 @@ fi
 
 # Calculate dervied variables 
 SERVER_URL=https://$SERVERNAME
-SERVER_IP=$(curl -s ifconfig.me) 
 echo "Detected Server IP: $SERVER_IP"
 LOGGING_FILE_NAME="FullNode1";
 data_dir=/app/data
