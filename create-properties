@@ -41,6 +41,7 @@ fi
 #  - FEE_PERCENTAGE
 if [ -z ${SERVER_IP} ]; then
   SERVER_IP=$(curl -s ifconfig.me) 
+  echo "Detected Server IP: $SERVER_IP"
 fi
 if [ -z ${SERVER_PORT} ]; then
   SERVER_PORT=7070
@@ -60,7 +61,6 @@ fi
 
 # Calculate dervied variables 
 SERVER_URL=https://$SERVERNAME
-echo "Detected Server IP: $SERVER_IP"
 LOGGING_FILE_NAME="FullNode1";
 data_dir=/app/data
 mkdir -p $data_dir
