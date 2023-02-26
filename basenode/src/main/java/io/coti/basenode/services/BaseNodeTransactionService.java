@@ -432,7 +432,7 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public ResponseEntity<IResponse> repropagateTransactionByWallet(RepropagateTransactionRequest repropagateTransactionRequest) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
