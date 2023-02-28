@@ -41,7 +41,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Discrepancy between the number of transactions declared by the recovery node and the total number of transactions recorded locally.";
+            return "The discrepancy between the number of transactions stated by network vs. the number of transactions recorded in node.";
         }
     },
     NUMBER_OF_TIMES_TCC_NOT_CHANGED(NUMBER_OF_TIMES_TCC_NOT_CHANGED_LABEL, MetricClass.TRANSACTIONS_METRIC, 5, 10, true, HealthMetricOutputType.EXTERNAL) {
@@ -57,7 +57,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Number of times that Trust Chain Trust Score of oldest non Zero Spend transaction not changed";
+            return "The number of times that Trust Chain Trust Score of the oldest non ZeroSpend transaction in cluster has not changed.";
         }
     },
     DSP_CONFIRMED_DELTA(DSP_CONFIRMED_LABEL_DELTA, MetricClass.TRANSACTIONS_METRIC, 2, 5, true, HealthMetricOutputType.EXTERNAL) {
@@ -75,7 +75,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Discrepancy between the number of Total transactions and the number of DSP Confirmed";
+            return "The discrepancy between the number of total transactions vs. the number of confirmed DSP transactions.";
         }
     },
     TOTAL_CONFIRMED(TOTAL_CONFIRMED_LABEL, MetricClass.TRANSACTIONS_METRIC, 0, 0, true, HealthMetricOutputType.ALL) {
@@ -91,7 +91,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Total amount of transactions with both DSP Confirmed and Trust Chain Confirmed";
+            return "The total number of transactions that both DSP and Trust Chain confirmed.";
         }
     },
     INDEX_DELTA(INDEX_DELTA_LABEL, MetricClass.TRANSACTIONS_METRIC, 2, 4, true, HealthMetricOutputType.EXTERNAL) {
@@ -108,7 +108,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Discrepancy between the number of total transactions and the index value. The highest contiguous index value should be one less than the total number of transactions";
+            return "The discrepancy between the total number of transactions vs. the highest index value. (Highest contiguous index value should be equal to the amount of transactions).";
         }
     },
     SOURCES_UPPER_BOUND(SOURCES_UPPER_BOUND_LABEL, MetricClass.TRANSACTIONS_METRIC, 24, 34, false, HealthMetricOutputType.EXTERNAL) {
@@ -126,7 +126,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Upper aloud bound of total amount of transactions (including Zero spend transactions) that are sources";
+            return "The upper bound of amount of transactions (including ZeroSpend) that are a source.";
         }
     },
     SOURCES_LOWER_BOUND(SOURCES_LOWER_BOUND_LABEL, MetricClass.TRANSACTIONS_METRIC, -8, -6, false, HealthMetricOutputType.EXTERNAL) {
@@ -142,7 +142,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Lower aloud bound of total amount of transactions (including Zero spend transactions) that are sources";
+            return "The lower bound of amount of transactions (including ZeroSpend) that are a source.";
         }
     },
     WAITING_DCR_QUEUE(WAITING_DCR_QUEUE_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 5, false, HealthMetricOutputType.ALL) {
@@ -157,7 +157,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "A number of transactions with DSP consensus that are waiting to be indexed in the expected sequential order.";
+            return "The number of confirmed DSP transactions waiting to be indexed in sequential order.";
         }
     },
     CONFIRMATION_QUEUE(CONFIRMATION_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -172,7 +172,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Amount of DCRs and TCCs that are waiting for processing and confirmation.";
+            return "The number of DSP Confirmation Requests and transactions in Trust Chain Cluster waiting for confirmation.";
         }
     },
     WAITING_MISSING_TRANSACTION_INDEXES(WAITING_MISSING_TRANSACTION_INDEXES_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 5, false, HealthMetricOutputType.ALL) {
@@ -187,7 +187,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "A number of missing transactions that have yet to be indexed, either because of the expected sequential order or because of lack of DSP Consensus.";
+            return "The number of missing transactions (during startup) waiting to be indexed in sequential order.";
         }
     },
     TOTAL_POSTPONED_TRANSACTIONS(TOTAL_POSTPONED_TRANSACTIONS_LABEL, MetricClass.TRANSACTIONS_METRIC, 2, 4, false, HealthMetricOutputType.ALL) {
@@ -202,7 +202,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Total number of transactions that are considered postponed due to missing parents.";
+            return "The number of postponed transactions due to missing parents.";
         }
     },
     WEB_SOCKET_MESSAGES_QUEUE(WEB_SOCKET_MESSAGES_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 1000, false, HealthMetricOutputType.ALL) {
@@ -217,7 +217,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Queue size for websocket messages.";
+            return "The number of websocket messages waiting in queue.";
         }
     },
     PERCENTAGE_USED_HEAP_MEMORY(PERCENTAGE_USED_HEAP_MEMORY_LABEL, MetricClass.SYSTEM_METRIC, 95, 98, false, HealthMetricOutputType.ALL) {
@@ -232,7 +232,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Used heap memory in percents";
+            return "Percentage of used heap memory.";
         }
     },
     PERCENTAGE_USED_MEMORY(PERCENTAGE_USED_MEMORY_LABEL, MetricClass.SYSTEM_METRIC, 85, 95, false, HealthMetricOutputType.ALL) {
@@ -247,7 +247,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Used memory in percents";
+            return "Percentage of used memory.";
         }
     },
     CONNECTED_TO_RECOVERY(CONNECTED_TO_RECOVERY_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 1, false, HealthMetricOutputType.EXTERNAL) {
@@ -263,7 +263,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "Indicates weather the node is connected to recovery server.";
+            return "Indicates if node is connected to the recovery server.";
         }
     },
     PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 5, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -278,7 +278,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "ZeroMQ Subscriber Queue size for Transactions State";
+            return "The number of transaction state messages waiting in ZeroMQ for processing.";
         }
     },
     PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -293,7 +293,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "ZeroMQ Subscriber Queue size for Network State";
+            return "The number of network messages waiting in ZeroMQ for processing.";
         }
     },
     PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 40, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -304,12 +304,11 @@ public enum HealthMetric implements IHealthMetric {
         @Override
         public void calculateHealthMetric() {
             calculateHealthValueMetricState(this);
-
         }
 
         @Override
         public String getDescription() {
-            return "ZeroMQ Subscriber Queue size for Address";
+            return "The number of address messages waiting in ZeroMQ for processing.";
         }
     },
     PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -324,7 +323,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "ZeroMQ Subscriber Queue size for Transactions";
+            return "The number of transactions messages waiting in ZeroMQ for processing.";
         }
     },
     PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE(PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 10, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -339,7 +338,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "ZeroMQ Subscriber Queue size for Heartbeat";
+            return "The number of heartbeat messages waiting in ZeroMQ for processing.";
         }
     },
     ZERO_MQ_RECEIVER_QUEUE_SIZE(ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -354,7 +353,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "ZeroMQ Receiver Queue size";
+            return "The number of direct messages received via ZeroMQ.";
         }
     },
     PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -369,7 +368,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "ZeroMQ Publisher Queue size";
+            return "The number of messages waiting in ZeroMQ for propagation.";
         }
     },
     LIVE_FILES_SIZE(LIVE_FILES_SIZE_LABEL, MetricClass.DATABASE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -390,7 +389,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "The number of the live files";
+            return "The number of RocksDB live files.";
         }
     },
     LAST_BACKUP_ELAPSED(LAST_BACKUP_ELAPSED_LABEL, MetricClass.BACKUP_METRIC, 3600, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -413,7 +412,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "";
+            return "The time that elapsed since the last successful backup (seconds).";
         }
     },
     NUMBER_OF_LIVE_FILES_NOT_BACKED_UP(NUMBER_OF_LIVE_FILES_NOT_BACKED_UP_LABEL, MetricClass.BACKUP_METRIC, 1, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -437,7 +436,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "The number of live files that were not backed up";
+            return "The number of RocksDB live files not backed up.";
         }
     },
     BACKUP_SIZE(BACKUP_SIZE_LABEL, MetricClass.BACKUP_METRIC, 0, 0, false, HealthMetricOutputType.EXTERNAL) {
@@ -454,7 +453,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "The size of the last backup";
+            return "The size of the last RocksDB backup (bytes).";
         }
     },
     BACKUP_ENTIRE_DURATION(BACKUP_ENTIRE_DURATION_LABEL, MetricClass.BACKUP_METRIC, 75, 180, false, HealthMetricOutputType.EXTERNAL) {
@@ -475,7 +474,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "The duration of the entire backup process";
+            return "The duration of the entire backup (seconds).";
         }
     },
     BACKUP_DURATION(BACKUP_DURATION_LABEL, MetricClass.BACKUP_METRIC, 45, 90, false, HealthMetricOutputType.EXTERNAL) {
@@ -496,7 +495,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "The duration for backup creation";
+            return "The duration of RocksDB backup (seconds).";
         }
     },
     BACKUP_UPLOAD_DURATION(BACKUP_UPLOAD_DURATION_LABEL, MetricClass.BACKUP_METRIC, 20, 60, false, HealthMetricOutputType.EXTERNAL) {
@@ -517,7 +516,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "The duration for backup upload";
+            return "The duration of backup upload (seconds).";
         }
     },
     BACKUP_REMOVAL_DURATION(BACKUP_REMOVAL_DURATION_LABEL, MetricClass.BACKUP_METRIC, 10, 30, false, HealthMetricOutputType.EXTERNAL) {
@@ -538,7 +537,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "The duration for backup removal";
+            return "The duration of older backup removal (seconds).";
         }
     };
 
