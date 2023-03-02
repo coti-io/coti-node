@@ -1,6 +1,6 @@
 package io.coti.basenode.controllers;
 
-import io.coti.basenode.services.BaseNodeMonitorService;
+import io.coti.basenode.data.HealthState;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,9 +23,9 @@ public class BaseNodeHealthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK",
                     content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = BaseNodeMonitorService.HealthState.class))})})
+                            schema = @Schema(implementation = HealthState.class))})})
     @GetMapping(path = "/total/state")
-    public BaseNodeMonitorService.HealthState getNodeHealthState() {
+    public HealthState getNodeHealthState() {
         return monitorService.getLastTotalHealthState();
     }
 
