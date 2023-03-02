@@ -47,7 +47,7 @@ public class BaseNodeEventController {
         return nodeEventService.getEventTransactionDataResponse(Event.MULTI_DAG);
     }
 
-    @Operation(summary = "Get confirmed trust score consensus data for event trust score consensus",
+    @Operation(summary = "Get transaction data for event trust score consensus",
             operationId = "getConfirmedTrustScoreConsensusEvent")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK",
@@ -60,7 +60,7 @@ public class BaseNodeEventController {
         return nodeEventService.getConfirmedEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
     }
 
-    @Operation(summary = "Get trust score consensus data for event trust score consensus",
+    @Operation(summary = "Get transaction data for event trust score consensus",
             operationId = "getConfirmedTrustScoreConsensusEvent")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK",
