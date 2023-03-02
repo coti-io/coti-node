@@ -1,7 +1,7 @@
 package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.HealthMetricData;
-import io.coti.basenode.services.BaseNodeMonitorService;
+import io.coti.basenode.data.HealthState;
 import io.coti.basenode.services.HealthMetric;
 import org.springframework.boot.actuate.health.Health;
 
@@ -14,7 +14,7 @@ public interface IMonitorService {
 
     Health getHealthBuilder(HealthMetric healthMetric);
 
-    BaseNodeMonitorService.HealthState getLastTotalHealthState();
+    HealthState getLastTotalHealthState();
 
     HealthMetricData getHealthMetricData(HealthMetric healthMetric);
 
