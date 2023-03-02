@@ -38,8 +38,6 @@ public class FeeService {
     private BigDecimal feePercentage;
     @Value("${fullnode.seed.key:}")
     private String seed;
-    @Value("${regular.token.fullnode.fee}")
-    private BigDecimal regularTokenFullnodeFee;
     @Value("${secret.fullnode.seed.name.key:}")
     private String seedSecretName;
 
@@ -115,7 +113,7 @@ public class FeeService {
         } else {
             CurrencyData currencyData = currencies.getByHash(fullNodeFeeRequest.getOriginalCurrencyHash());
             if (currencyData != null && currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
-                amount = regularTokenFullnodeFee;
+                amount = nodeFeesService.calculateClassicFee(originalCurrencyHash, NodeFeeType.TOKEN_MINTING_FEE, originalAmount);
             } else {
                 return null;
             }

@@ -1,5 +1,7 @@
 package io.coti.financialserver.services;
 
+import io.coti.basenode.crypto.CryptoHelper;
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
 import io.coti.basenode.exceptions.CotiRunTimeException;
@@ -12,6 +14,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -35,6 +38,10 @@ public class InitializationService extends BaseNodeInitializationService {
     private String seed;
     @Value("${secret.financialserver.seed.name.key:}")
     private String seedSecretName;
+    @Value("${token.generation.fee:1}")
+    private BigDecimal defaultTokenGenerationFee;
+    @Value("${token.minting.fee:1}")
+    private BigDecimal defaultTokenMintingFee;
 
     @PostConstruct
     @Override
@@ -61,7 +68,11 @@ public class InitializationService extends BaseNodeInitializationService {
             communicationService.addSubscription(zerospendNetworkNodeData.getPropagationFullAddress(), NodeType.ZeroSpendServer);
             networkService.addListToSubscription(networkService.getMapFromFactory(NodeType.DspNode).values());
             communicationService.addSender(zerospendNetworkNodeData.getReceivingFullAddress(), NodeType.ZeroSpendServer);
-            nodeFeeTypeList.addAll(Arrays.asList(NodeFeeType.TOKEN_MINTING_FEE, NodeFeeType.TOKEN_GENERATION_FEE));
+
+            ConstantTokenFeeData defaultGenerationNodeConstantTokenFeeData = new ConstantTokenFeeData("*", NodeFeeType.TOKEN_GENERATION_FEE, defaultTokenGenerationFee);
+            ConstantTokenFeeData defaultMintingNodeConstantTokenFeeData = new ConstantTokenFeeData("*", NodeFeeType.TOKEN_MINTING_FEE, defaultTokenMintingFee);
+            defaultTokenFeeDataList.add(defaultGenerationNodeConstantTokenFeeData);
+            defaultTokenFeeDataList.add(defaultMintingNodeConstantTokenFeeData);
             super.initServices();
 
             distributionService.init();
