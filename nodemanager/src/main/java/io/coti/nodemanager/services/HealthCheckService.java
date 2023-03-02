@@ -1,9 +1,9 @@
 package io.coti.nodemanager.services;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.HealthState;
 import io.coti.basenode.data.LockData;
 import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.services.interfaces.IHealthCheckService;
 import lombok.extern.slf4j.Slf4j;
@@ -73,8 +73,8 @@ public class HealthCheckService implements IHealthCheckService {
                             networkNodeDataToCheck.getHttpFullAddress());
                     TimeUnit.SECONDS.sleep(RETRY_INTERVAL_IN_SECONDS);
                 }
-                BaseNodeMonitorService.HealthState reportedHealthState =
-                        restTemplate.getForObject(networkNodeDataToCheck.getHttpFullAddress() + NODE_HEALTH_END_POINT, BaseNodeMonitorService.HealthState.class);
+                HealthState reportedHealthState =
+                        restTemplate.getForObject(networkNodeDataToCheck.getHttpFullAddress() + NODE_HEALTH_END_POINT, HealthState.class);
 
                 if (reportedHealthState != null) {
                     log.debug("{} of address {} and port {} is responding to healthcheck {}.",

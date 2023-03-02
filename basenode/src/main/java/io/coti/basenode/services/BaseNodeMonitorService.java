@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutput;
+import io.coti.basenode.data.HealthState;
 import io.coti.basenode.services.interfaces.IMonitorService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -255,7 +256,4 @@ public class BaseNodeMonitorService implements IMonitorService {
         }
     }
 
-    public enum HealthState {
-        NA, NORMAL, WARNING, CRITICAL
-    }
 }

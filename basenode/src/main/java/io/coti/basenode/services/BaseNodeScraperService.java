@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.HealthMetricOutput;
+import io.coti.basenode.data.HealthState;
 import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.services.interfaces.IScraperInterface;
 import lombok.extern.slf4j.Slf4j;
@@ -144,7 +145,7 @@ public class BaseNodeScraperService implements IScraperInterface {
                            HashMap<String, String> metricTemplateMap) {
         String metricTemplateVal = metricTemplateMap.get(healthMetric.getMetricClass().name());
 
-        if (!healthMetric.getHealthMetricData().getLastHealthState().equals(BaseNodeMonitorService.HealthState.NA)) {
+        if (!healthMetric.getHealthMetricData().getLastHealthState().equals(HealthState.NA)) {
             if (metricsDetailed || !healthMetric.isDetailedLogs()) {
                 addMetric(metrics, metricTemplateVal, healthMetric, metricLabel, metricValue);
             }

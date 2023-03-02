@@ -1,8 +1,8 @@
 package io.coti.nodemanager.websocket;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.HealthState;
 import io.coti.basenode.data.NetworkNodeData;
-import io.coti.basenode.services.BaseNodeMonitorService;
 import io.coti.nodemanager.data.NetworkNodeStatus;
 import io.coti.nodemanager.websocket.data.NodeMessage;
 import io.coti.nodemanager.websocket.data.NotifyNodeHealthStateChange;
@@ -30,7 +30,7 @@ public class WebSocketSender {
                 new NodeMessage(networkNodeData, nodeStatus));
     }
 
-    public void notifyNodeHealthState(Hash nodeHash, BaseNodeMonitorService.HealthState healthState) {
+    public void notifyNodeHealthState(Hash nodeHash, HealthState healthState) {
         log.debug("Node {} is now reported with health state {} ", nodeHash, healthState);
         messagingSender.convertAndSend("/topic/nodes/health/",
                 new NotifyNodeHealthStateChange(nodeHash, healthState));
