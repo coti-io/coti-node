@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.*;
 
 import static io.coti.basenode.services.BaseNodeServiceManager.*;
@@ -26,6 +27,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private String serverPort;
     @Value("${server.url}")
     private String webServerUrl;
+    @Value("${regular.token.network.fee}")
+    private BigDecimal defaultTokenNetworkFee;
 
     @PostConstruct
     @Override
@@ -53,6 +56,8 @@ public class InitializationService extends BaseNodeInitializationService {
             if (networkService.getSingleNodeData(NodeType.FinancialServer) != null) {
                 networkService.addListToSubscription(new ArrayList<>(Collections.singletonList(networkService.getSingleNodeData(NodeType.FinancialServer))));
             }
+            ConstantTokenFeeData defaultNetworkConstantTokenFeeData = new ConstantTokenFeeData("*", NodeFeeType.NETWORK_FEE, defaultTokenNetworkFee);
+            defaultTokenFeeDataList.add(defaultNetworkConstantTokenFeeData);
 
             super.initServices();
             trustScoreService.init();

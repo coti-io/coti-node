@@ -1,6 +1,6 @@
 package io.coti.basenode.http;
 
-import io.coti.basenode.data.NodeFeeData;
+import io.coti.basenode.services.interfaces.ITokenFeeData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -10,7 +10,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class GetNodeFeesDataResponse extends BaseResponse {
 
-    private List<NodeFeeData> nodeFeeDataArrayList;
+    private List<ITokenFeeData> nodeFeeDataArrayList;
 
 
 }

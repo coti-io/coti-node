@@ -1,6 +1,7 @@
 package io.coti.basenode.crypto;
 
 import io.coti.basenode.data.Hash;
+import io.coti.basenode.data.NodeFeeType;
 import io.coti.basenode.data.SignatureData;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
@@ -229,6 +230,10 @@ public class CryptoHelper {
         byte[] secretBytes = decryptedSecret.getBytes(StandardCharsets.UTF_8);
         byte[] encryptedSecretBytes = encrypt(secretBytes, publicKey, algorithm);
         return Base64.getEncoder().encodeToString(encryptedSecretBytes);
+    }
+
+    public static Hash calculateTokenFeeHash(Hash tokenHash, NodeFeeType nodeFeeType) {
+        return cryptoHash(tokenHash.toHexString().concat(nodeFeeType.getHash().toHexString()).getBytes());
     }
 
 }

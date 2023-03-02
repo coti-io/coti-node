@@ -1,6 +1,7 @@
 package io.coti.financialserver.services;
 
 import io.coti.basenode.crypto.BaseTransactionCrypto;
+import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.NodeFeeType;
 import io.coti.basenode.data.TokenGenerationFeeBaseTransactionData;
@@ -41,7 +42,7 @@ public class FeeService {
 
     public ResponseEntity<IResponse> createTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
         try {
-            BigDecimal tokenGenerationFeeCalculated = calculateTokenGenerationFee(generateTokenRequest.getOriginatorCurrencyData().getTotalSupply());
+            BigDecimal tokenGenerationFeeCalculated = calculateTokenGenerationFee(generateTokenRequest);
             TokenGenerationServiceData tokenGenerationServiceData = new TokenGenerationServiceData(generateTokenRequest.getOriginatorCurrencyData(), generateTokenRequest.getCurrencyTypeData(), tokenGenerationFeeCalculated);
             TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData =
                     new TokenGenerationFeeBaseTransactionData(networkFeeAddress(), currencyService.getNativeCurrencyHash(),
@@ -57,12 +58,13 @@ public class FeeService {
         }
     }
 
-    public BigDecimal calculateTokenGenerationFee(BigDecimal totalSupply) {
-        return nodeFeesService.calculateClassicFee(NodeFeeType.TOKEN_GENERATION_FEE, totalSupply);
+    public BigDecimal calculateTokenGenerationFee(GenerateTokenFeeRequest generateTokenRequest) {
+        Hash tokenHash = OriginatorCurrencyCrypto.calculateHash(generateTokenRequest.getOriginatorCurrencyData().getSymbol());
+        return nodeFeesService.calculateClassicFee(tokenHash, NodeFeeType.TOKEN_GENERATION_FEE, generateTokenRequest.getOriginatorCurrencyData().getTotalSupply());
     }
 
-    public BigDecimal calculateTokenMintingFee(BigDecimal amount) {
-        return nodeFeesService.calculateClassicFee(NodeFeeType.TOKEN_MINTING_FEE, amount);
+    public BigDecimal calculateTokenMintingFee(Hash tokenHash, BigDecimal amount) {
+        return nodeFeesService.calculateClassicFee(tokenHash, NodeFeeType.TOKEN_MINTING_FEE, amount);
     }
 
     protected Hash networkFeeAddress() {

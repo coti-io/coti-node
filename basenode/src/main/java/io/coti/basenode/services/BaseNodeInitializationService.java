@@ -43,7 +43,7 @@ public abstract class BaseNodeInitializationService {
     @Value("${server.ip}")
     protected String nodeIp;
     protected String version;
-    protected List<NodeFeeType> nodeFeeTypeList = new ArrayList<>();
+    protected List<TokenFeeData> defaultTokenFeeDataList = new ArrayList<>();
     @Autowired
     private INodeServiceManager nodeServiceManager;
     @Value("${node.manager.ip}")
@@ -86,6 +86,7 @@ public abstract class BaseNodeInitializationService {
         potService.init();
         initCommunication();
         nodeEventService.init();
+        nodeFeesService.init(defaultTokenFeeDataList);
         log.info("The communication initialization is done");
         initTransactionSync();
         log.info("The transaction sync initialization is done");
@@ -94,7 +95,6 @@ public abstract class BaseNodeInitializationService {
         propagationSubscriber.initPropagationHandler();
         monitorService.init();
         scraperService.init();
-        nodeFeesService.init(nodeFeeTypeList);
     }
 
     public void initTransactionSync() {

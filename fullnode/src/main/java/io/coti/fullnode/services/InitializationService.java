@@ -35,6 +35,8 @@ public class InitializationService extends BaseNodeInitializationService {
     private BigDecimal nodeFee;
     @Value("${server.url}")
     private String webServerUrl;
+    @Value("${regular.token.fullnode.fee}")
+    private BigDecimal defaultTokenTransferFee;
 
     @PostConstruct
     @Override
@@ -58,6 +60,8 @@ public class InitializationService extends BaseNodeInitializationService {
                 communicationService.addSender(dspNetworkNodeData.get(i).getReceivingFullAddress(), NodeType.DspNode);
                 ((NetworkService) networkService).addToConnectedDspNodes(dspNetworkNodeData.get(i));
             }
+            ConstantTokenFeeData defaultTransferConstantTokenFeeData = new ConstantTokenFeeData("*", NodeFeeType.FULL_NODE_FEE, defaultTokenTransferFee);
+            defaultTokenFeeDataList.add(defaultTransferConstantTokenFeeData);
 
             super.initServices();
             feeService.init();
