@@ -47,11 +47,27 @@ public class BaseNodeEventController {
         return nodeEventService.getEventTransactionDataResponse(Event.MULTI_DAG);
     }
 
+    @Operation(summary = "Get confirmed trust score consensus data for event trust score consensus",
+            operationId = "getConfirmedTrustScoreConsensusEvent")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GetTransactionResponse.class))}),
+            @ApiResponse(responseCode = "400", description = "Event Not Found",
+                    content = @Content)})
     @GetMapping(path = "/trust-score-consensus/confirmed")
     public ResponseEntity<IResponse> getConfirmedTrustScoreConsensusEvent() {
         return nodeEventService.getConfirmedEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
     }
 
+    @Operation(summary = "Get trust score consensus data for event trust score consensus",
+            operationId = "getConfirmedTrustScoreConsensusEvent")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GetTransactionResponse.class))}),
+            @ApiResponse(responseCode = "400", description = "Event Not Found",
+                    content = @Content)})
     @GetMapping(path = "/trust-score-consensus")
     public ResponseEntity<IResponse> getTrustScoreConsensusTransactionData() {
         return nodeEventService.getEventTransactionDataResponse(Event.TRUST_SCORE_CONSENSUS);
