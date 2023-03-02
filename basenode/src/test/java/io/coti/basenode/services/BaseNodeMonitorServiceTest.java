@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.data.HealthMetricData;
+import io.coti.basenode.data.HealthState;
 import io.coti.basenode.services.interfaces.IMonitorService;
 import io.coti.basenode.services.interfaces.INetworkService;
 import io.coti.basenode.utilities.MonitorConfigurationProperties;
@@ -54,7 +55,7 @@ class BaseNodeMonitorServiceTest {
         healthMetricDataInitial.setMetricValue(0);
         healthMetricDataInitial.setPreviousMetricValue(0);
         healthMetricDataInitial.setDegradingCounter(0);
-        healthMetricDataInitial.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+        healthMetricDataInitial.setLastHealthState(HealthState.NA);
         healthMetricDataInitial.getAdditionalValues().clear();
     }
 
@@ -65,7 +66,7 @@ class BaseNodeMonitorServiceTest {
         HealthMetric healthMetric = HealthMetric.TOTAL_TRANSACTIONS_DELTA;
         initMetricData(healthMetric);
 
-        BaseNodeMonitorService.HealthState healthState = BaseNodeMonitorService.HealthState.NORMAL;
+        HealthState healthState = HealthState.NORMAL;
         totalTransactionsCheckHealthState(totalTransactionsFromLocal, totalTransactionsFromRecovery, healthState, healthMetric);
     }
 
@@ -78,7 +79,7 @@ class BaseNodeMonitorServiceTest {
         HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
         healthMetricData.increaseDegradingCounter();
 
-        BaseNodeMonitorService.HealthState healthState = BaseNodeMonitorService.HealthState.WARNING;
+        HealthState healthState = HealthState.WARNING;
         totalTransactionsCheckHealthState(totalTransactionsFromLocal, totalTransactionsFromRecovery, healthState, healthMetric);
     }
 
@@ -91,11 +92,11 @@ class BaseNodeMonitorServiceTest {
         HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
         healthMetricData.setDegradingCounter(3);
 
-        BaseNodeMonitorService.HealthState healthState = BaseNodeMonitorService.HealthState.CRITICAL;
+        HealthState healthState = HealthState.CRITICAL;
         totalTransactionsCheckHealthState(totalTransactionsFromLocal, totalTransactionsFromRecovery, healthState, healthMetric);
     }
 
-    private void totalTransactionsCheckHealthState(long totalTransactionsFromLocal, long totalTransactionsFromRecovery, BaseNodeMonitorService.HealthState healthState, HealthMetric healthMetric) {
+    private void totalTransactionsCheckHealthState(long totalTransactionsFromLocal, long totalTransactionsFromRecovery, HealthState healthState, HealthMetric healthMetric) {
         when(transactionHelper.getTotalTransactions()).thenReturn(totalTransactionsFromLocal);
         when(transactionHelper.getTotalNumberOfTransactionsFromRecovery()).thenReturn(totalTransactionsFromRecovery);
 
@@ -121,7 +122,7 @@ class BaseNodeMonitorServiceTest {
         HealthMetric healthMetric = HealthMetric.PERCENTAGE_USED_HEAP_MEMORY;
         initMetricData(healthMetric);
 
-        BaseNodeMonitorService.HealthState healthState = BaseNodeMonitorService.HealthState.NORMAL;
+        HealthState healthState = HealthState.NORMAL;
         healthMetric.doSnapshot();
         healthMetric.calculateHealthMetric();
         Assertions.assertEquals(healthState, monitorService.getHealthMetricData(healthMetric).getLastHealthState());
@@ -132,7 +133,7 @@ class BaseNodeMonitorServiceTest {
         HealthMetric healthMetric = HealthMetric.PERCENTAGE_USED_MEMORY;
         initMetricData(healthMetric);
 
-        BaseNodeMonitorService.HealthState healthState = BaseNodeMonitorService.HealthState.NORMAL;
+        HealthState healthState = HealthState.NORMAL;
         healthMetric.doSnapshot();
         healthMetric.calculateHealthMetric();
         Assertions.assertEquals(healthState, monitorService.getHealthMetricData(healthMetric).getLastHealthState());

@@ -3,6 +3,7 @@ package io.coti.basenode.services;
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutputType;
+import io.coti.basenode.data.HealthState;
 import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.services.interfaces.IHealthMetric;
 import io.coti.basenode.utilities.MemoryUtils;
@@ -35,7 +36,7 @@ public enum HealthMetric implements IHealthMetric {
             if (monitorService.getHealthMetricData(this).getMetricValue() > -1) {
                 baseCalculateHealthCounterMetricState(this);
             } else {
-                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
             }
         }
 
@@ -86,7 +87,7 @@ public enum HealthMetric implements IHealthMetric {
         @Override
         public void calculateHealthMetric() {
             HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
-            healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+            healthMetricData.setLastHealthState(HealthState.NA);
         }
 
         @Override
@@ -383,7 +384,7 @@ public enum HealthMetric implements IHealthMetric {
             if (dbRecoveryService != null && dbRecoveryService.isBackup()) {
                 calculateHealthValueMetricState(this);
             } else {
-                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
             }
         }
 
@@ -406,7 +407,7 @@ public enum HealthMetric implements IHealthMetric {
             if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
-                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
             }
         }
 
@@ -430,7 +431,7 @@ public enum HealthMetric implements IHealthMetric {
             if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
-                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
             }
         }
 
@@ -448,7 +449,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public void calculateHealthMetric() {
-            monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+            monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
         }
 
         @Override
@@ -468,7 +469,7 @@ public enum HealthMetric implements IHealthMetric {
             if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
-                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
             }
         }
 
@@ -489,7 +490,7 @@ public enum HealthMetric implements IHealthMetric {
             if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
-                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
             }
         }
 
@@ -510,7 +511,7 @@ public enum HealthMetric implements IHealthMetric {
             if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
-                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
             }
         }
 
@@ -531,7 +532,7 @@ public enum HealthMetric implements IHealthMetric {
             if (newBackupExecuted()) {
                 calculateHealthValueMetricState(this);
             } else {
-                monitorService.getHealthMetricData(this).setLastHealthState(BaseNodeMonitorService.HealthState.NA);
+                monitorService.getHealthMetricData(this).setLastHealthState(HealthState.NA);
             }
         }
 
@@ -583,15 +584,15 @@ public enum HealthMetric implements IHealthMetric {
                 healthMetricData.increaseDegradingCounter();
             }
             if (healthMetricData.getDegradingCounter() >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
+                healthMetricData.setLastHealthState(HealthState.CRITICAL);
             } else if (healthMetricData.getDegradingCounter() >= healthMetricData.getWarningThreshold()) {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
-            } else if (BaseNodeMonitorService.HealthState.NA.equals(healthMetricData.getLastHealthState())) {
-                healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
+                healthMetricData.setLastHealthState(HealthState.WARNING);
+            } else if (HealthState.NA.equals(healthMetricData.getLastHealthState())) {
+                healthMetricData.setLastHealthState(HealthState.NORMAL);
             }
         } else {
             healthMetricData.setDegradingCounter(0);
-            healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
+            healthMetricData.setLastHealthState(HealthState.NORMAL);
         }
     }
 
@@ -599,11 +600,11 @@ public enum HealthMetric implements IHealthMetric {
         HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
         long currentMetricValue = healthMetricData.getMetricValue();
         if (currentMetricValue >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
-            healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.CRITICAL);
+            healthMetricData.setLastHealthState(HealthState.CRITICAL);
         } else if (currentMetricValue >= healthMetricData.getWarningThreshold()) {
-            healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.WARNING);
+            healthMetricData.setLastHealthState(HealthState.WARNING);
         } else {
-            healthMetricData.setLastHealthState(BaseNodeMonitorService.HealthState.NORMAL);
+            healthMetricData.setLastHealthState(HealthState.NORMAL);
         }
     }
 
