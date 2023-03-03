@@ -6,6 +6,8 @@ import io.coti.basenode.data.interfaces.ISignValidatable;
 import io.coti.basenode.data.interfaces.ISignable;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Data
@@ -23,6 +25,7 @@ public class NetworkNodeData implements IEntity, ISignable, ISignValidatable {
     private transient Double trustScore;
     private String webServerUrl;
     private FeeData feeData;
+    private List<TokenFeeData> tokenFees = new ArrayList<>();
     private HealthState reportedHealthState;
     private SignatureData nodeSignature;
     private NodeRegistrationData nodeRegistrationData;

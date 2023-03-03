@@ -1,9 +1,6 @@
 package io.coti.basenode.controllers;
 
-import io.coti.basenode.http.AddressFileRequest;
-import io.coti.basenode.http.GetNodeFeesDataResponse;
-import io.coti.basenode.http.NodeFeeSetRequest;
-import io.coti.basenode.http.Response;
+import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.AddressResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,15 +70,39 @@ public class BaseNodeAdminController {
         return dbRecoveryService.manualBackupDB();
     }
 
-    @Operation(summary = "Set Node Fee", operationId = "setFeeValue")
+    @Operation(summary = "Set Node Constant Fee", operationId = "setFeeValue")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = GetNodeFeesDataResponse.class))}),
             @ApiResponse(responseCode = "400", description = "Invalid request parameters.",
                     content = @Content)})
-    @PostMapping(path = "/fee/set")
-    public ResponseEntity<IResponse> setFeeValue(@Valid @RequestBody NodeFeeSetRequest nodeFeeSetRequest) {
-        return nodeFeesService.setFeeValue(nodeFeeSetRequest);
+    @PostMapping(path = "/fee/set/constant")
+    public ResponseEntity<IResponse> setFeeValue(@Valid @RequestBody ConstantTokenFeeSetRequest constantTokenFeeSetRequest) {
+        return nodeFeesService.setFeeValue(constantTokenFeeSetRequest);
+    }
+
+    @Operation(summary = "Set Node Ratio Fee", operationId = "setFeeValue")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GetNodeFeesDataResponse.class))}),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters.",
+                    content = @Content)})
+    @PostMapping(path = "/fee/set/ratio")
+    public ResponseEntity<IResponse> setFeeValue(@Valid @RequestBody RatioTokenFeeSetRequest ratioTokenFeeSetRequest) {
+        return nodeFeesService.setFeeValue(ratioTokenFeeSetRequest);
+    }
+
+    @Operation(summary = "Delete Node Fee", operationId = "deleteFeeValue")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GetNodeFeesDataResponse.class))}),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters.",
+                    content = @Content)})
+    @DeleteMapping(path = "/fee/delete")
+    public ResponseEntity<IResponse> deleteFeeValue(@Valid @RequestBody DeleteTokenFeeRequest deleteTokenFeeRequest) {
+        return nodeFeesService.deleteFeeValue(deleteTokenFeeRequest);
     }
 }

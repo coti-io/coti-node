@@ -10,6 +10,7 @@ import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 import org.springframework.util.SerializationUtils;
 
+import java.io.InvalidClassException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -86,6 +87,20 @@ public abstract class Collection<T extends IEntity> {
             deserialized.setHash(hash);
         }
         return deserialized;
+    }
+
+    public boolean validate(Consumer<T> consumer) {
+        try (RocksIterator iterator = getIterator()) {
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                T deserialized = getDeserializedValue(iterator);
+                consumer.accept(deserialized);
+                iterator.next();
+            }
+            return true;
+        } catch (IllegalStateException | ClassCastException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     public void forEach(Consumer<T> consumer) {

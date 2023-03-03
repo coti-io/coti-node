@@ -68,6 +68,8 @@ public class BaseNodeHttpStringConstants {
 
     public static final String MULTI_DAG_IS_NOT_SUPPORTED = "The system is not supporting multi DAG.";
 
+    public static final String TOKEN_FEE_NOT_FOUND = "The specified token symbol not found in Fee List";
+
     protected BaseNodeHttpStringConstants() {
 
     }

@@ -108,7 +108,7 @@ public class MintingService extends BaseNodeMintingService {
                 mintingFee = mintingFeeQuoteData.getMintingFee();
             }
             if (mintingFee == null) {
-                mintingFee = feeService.calculateTokenMintingFee(tokenMintingServiceData.getMintingAmount());
+                mintingFee = feeService.calculateTokenMintingFee(tokenMintingServiceData.getMintingCurrencyHash(), tokenMintingServiceData.getMintingAmount());
             }
             TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = new TokenMintingFeeBaseTransactionData(feeService.networkFeeAddress(),
                     currencyService.getNativeCurrencyHash(), nodeIdentityService.getNodeHash(), mintingFee, Instant.now(), tokenMintingServiceData);
@@ -153,7 +153,7 @@ public class MintingService extends BaseNodeMintingService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(TOKEN_MINTING_REQUEST_INVALID_AMOUNT, STATUS_ERROR));
             }
             Instant createTime = Instant.now();
-            BigDecimal feeQuoteAmount = feeService.calculateTokenMintingFee(mintingAmount);
+            BigDecimal feeQuoteAmount = feeService.calculateTokenMintingFee(currencyHash, mintingAmount);
             MintingFeeQuoteData mintingFeeQuoteData = new MintingFeeQuoteData(currencyHash, createTime, mintingAmount, feeQuoteAmount);
             mintingFeeQuoteCrypto.signMessage(mintingFeeQuoteData);
 
