@@ -38,8 +38,6 @@ public class NetworkFeeService {
     private Hash networkFeeAddress;
     @Value("${network.fee.difference.validation}")
     private BigDecimal networkFeeDifferenceValidation;
-    @Value("${regular.token.network.fee}")
-    private BigDecimal regularTokenNetworkFee;
 
     public ResponseEntity<IResponse> createNetworkFee(NetworkFeeRequest networkFeeRequest) {
         try {
@@ -62,7 +60,7 @@ public class NetworkFeeService {
             } else {
                 CurrencyData currencyData = currencies.getByHash(fullNodeFeeData.getOriginalCurrencyHash());
                 if (currencyData != null && currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
-                    fee = regularTokenNetworkFee;
+                    fee = nodeFeesService.calculateClassicFee(fullNodeFeeData.getOriginalCurrencyHash(), NodeFeeType.NETWORK_FEE, fullNodeFeeData.getOriginalAmount());
                 } else {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(String.format(UNDEFINED_TOKEN_TYPE_FEE, fullNodeFeeData.getCurrencyHash()), STATUS_ERROR));
                 }
@@ -163,7 +161,7 @@ public class NetworkFeeService {
         } else {
             CurrencyData currencyData = currencies.getByHash(networkFeeData.getOriginalCurrencyHash());
             if (currencyData.getCurrencyTypeData().getCurrencyType() == CurrencyType.REGULAR_CMD_TOKEN) {
-                calculatedNetworkFee = regularTokenNetworkFee;
+                calculatedNetworkFee = nodeFeesService.calculateClassicFee(networkFeeData.getOriginalCurrencyHash(), NodeFeeType.NETWORK_FEE, networkFeeData.getOriginalAmount());
             } else {
                 return false;
             }
