@@ -1,23 +1,29 @@
 package io.coti.basenode.communication;
 
-import io.coti.basenode.communication.data.MonitorSocketData;
 import io.coti.basenode.communication.data.ReconnectMonitorData;
 import io.coti.basenode.communication.data.SenderSocketData;
+import io.coti.basenode.communication.data.ZeroMQMessageData;
 import io.coti.basenode.communication.interfaces.ISender;
+import io.coti.basenode.data.ConnectionZMQData;
 import io.coti.basenode.data.NodeType;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
-import zmq.SocketBase;
 
 import javax.annotation.PostConstruct;
 import java.nio.channels.ClosedSelectorException;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.coti.basenode.services.BaseNodeServiceManager.serializer;
@@ -26,34 +32,113 @@ import static io.coti.basenode.services.BaseNodeServiceManager.serializer;
 @Service
 public class ZeroMQSender implements ISender {
 
-    private static final String INTERRUPTED_MESSAGE = "Interrupted {}";
+    private static final String INTERRUPTED_MESSAGE = "ZeroMQSender interrupted ";
+    private static final String CONTEXT_TERMINATED = "CONTEXT_TERMINATED";
     private ZMQ.Context zeroMQContext;
     private SocketType socketType;
+    private ZMQ.Socket sender;
+    private ZMQ.Socket monitorSocket;
+    private String monitorAddress;
+    @Value("${server.ip}")
+    private String serverIp;
+    @Value("${application.name}")
+    private String applicationName;
+    private final CountDownLatch countDownLatch = new CountDownLatch(1);
+    private Thread senderThread;
+    private Thread monitorThread;
     private Map<String, SenderSocketData> receivingAddressToSenderSocketMapping;
+    private BlockingQueue<ZeroMQMessageData> sendMessageQueue;
     private final AtomicBoolean monitorInitialized = new AtomicBoolean(false);
     private Thread monitorReconnectThread;
     private final Map<String, ReconnectMonitorData> addressToReconnectMonitorMap = new ConcurrentHashMap<>();
 
     @PostConstruct
     private void init() {
-        zeroMQContext = ZMQ.context(1);
+        zeroMQContext = ZeroMQContext.getZeroMQContext();
         socketType = SocketType.DEALER;
+        sendMessageQueue = new LinkedBlockingQueue<>();
         receivingAddressToSenderSocketMapping = new ConcurrentHashMap<>();
+        startSenderThread();
+        startMonitorThread();
     }
+
+    private void startSenderThread() {
+        senderThread = new Thread(() -> {
+            sender = zeroMQContext.socket(socketType);
+            String identity = String.format("%s:%s::%d", applicationName, serverIp, Instant.now().toEpochMilli());
+            sender.setIdentity(identity.getBytes());
+            sender.setHWM(10000);
+            sender.setLinger(100);
+            try {
+                monitorAddress = ZeroMQUtils.createAndStartMonitorOnSocket(sender);
+                countDownLatch.countDown();
+                startSendingMessages();
+            } catch (CotiRunTimeException e) {
+                log.error("ZeroMQSender runtime exception : ", e);
+            } finally {
+                ZeroMQUtils.closeSocket(sender);
+            }
+        }, "DEALER");
+        senderThread.start();
+    }
+
+    private void startSendingMessages() {
+        while (!ZeroMQContext.isContextTerminated() && !Thread.currentThread().isInterrupted()) {
+            try {
+                ZeroMQMessageData messageData = sendMessageQueue.take();
+                processMessage(messageData);
+            } catch (InterruptedException e) {
+                log.error(INTERRUPTED_MESSAGE, e);
+                Thread.currentThread().interrupt();
+            } catch (ZMQException e) {
+                if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
+                    log.info("ZMQ Context is terminated");
+                    ZeroMQContext.setContextTerminated(true);
+                } else if (e.getErrorCode() == ZMQ.Error.EINTR.getCode()) {
+                    log.info("ZeroMQ sender thread is interrupted");
+                    break;
+                } else {
+                    log.error("ZeroMQ exception at sender thread", e);
+                }
+            }
+        }
+    }
+
+    private void processMessage(ZeroMQMessageData messageData) {
+        if (ConnectionZMQData.class.getName().equals(messageData.getChannel())) {
+            connectSender(messageData);
+        } else if (CONTEXT_TERMINATED.equals(messageData.getChannel())) {
+            log.info("ZeroMQ sender interrupted in thread ID: {} of thread: {}", Thread.currentThread().getId(), Thread.currentThread().getName());
+        } else {
+            sendMessage(messageData);
+        }
+    }
+
+    private void connectSender(ZeroMQMessageData messageData) {
+        byte[] message = messageData.getMessage();
+        ConnectionZMQData connectionData = (ConnectionZMQData) serializer.deserialize(message);
+        String receivingServerAddress = connectionData.getConnectionAddress();
+        if (sender.connect(receivingServerAddress)) {
+            log.info("ZeroMQ sender connecting in thread ID: {} of thread: {}", Thread.currentThread().getId(), Thread.currentThread().getName());
+            log.info("ZeroMQ sender connected to address {}", receivingServerAddress);
+            String[] portArray = connectionData.getConnectionAddress().split(":");
+            SenderSocketData senderSocketData = new SenderSocketData(Integer.parseInt(portArray[2]), connectionData.getConnectionNodeType());
+            receivingAddressToSenderSocketMapping.put(receivingServerAddress, senderSocketData);
+        } else {
+            log.error("ZeroMQ sender failed to connect to address {}", receivingServerAddress);
+        }
+    }
+
 
     @Override
     public void connectToNode(String receivingServerAddress, NodeType nodeType) {
         SenderSocketData senderSocketData = receivingAddressToSenderSocketMapping.get(receivingServerAddress);
         if (senderSocketData == null) {
-            senderSocketData = new SenderSocketData(zeroMQContext, nodeType);
-            ZMQ.Socket senderSocket = senderSocketData.getSenderSocket();
-            ZMQ.Socket monitorSocket = senderSocketData.getMonitorSocketData().getMonitorSocket();
-            senderSocketData.setMonitorThread(startMonitorThread(monitorSocket, receivingServerAddress));
-            if (senderSocket.connect(receivingServerAddress)) {
-                log.info("ZeroMQ sender connected to address {}", receivingServerAddress);
-                receivingAddressToSenderSocketMapping.put(receivingServerAddress, senderSocketData);
-            } else {
-                log.error("ZeroMQ sender failed to connect to address {}", receivingServerAddress);
+            try {
+                sendMessageQueue.put(new ZeroMQMessageData(ConnectionZMQData.class.getName(), serializer.serialize(new ConnectionZMQData(receivingServerAddress, nodeType))));
+            } catch (InterruptedException e) {
+                log.error(INTERRUPTED_MESSAGE, e);
+                Thread.currentThread().interrupt();
             }
         } else {
             log.error("ZeroMQ sender already connected to address {}", receivingServerAddress);
@@ -65,26 +150,38 @@ public class ZeroMQSender implements ISender {
         monitorInitialized.set(true);
     }
 
-    private Thread startMonitorThread(ZMQ.Socket monitorSocket, String receiverAddress) {
-        Thread monitorThread = new Thread(() -> {
-            AtomicBoolean contextTerminated = new AtomicBoolean(false);
-            AtomicBoolean closedSelector = new AtomicBoolean(false);
-            while (!contextTerminated.get() && !closedSelector.get() && !Thread.currentThread().isInterrupted()) {
-                getEvent(monitorSocket, contextTerminated, closedSelector);
+    private void startMonitorThread() {
+        monitorThread = new Thread(() -> {
+            try {
+                countDownLatch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-            ZeroMQUtils.closeSocket(monitorSocket);
-            log.info("ZeroMQ sender monitor thread is ending for receiver {}.", receiverAddress);
+            monitorSocket = ZeroMQUtils.createAndConnectMonitorSocket(zeroMQContext, monitorAddress);
+            AtomicBoolean closedSelector = new AtomicBoolean(false);
+            while (!ZeroMQContext.isContextTerminated() && !closedSelector.get() && !Thread.currentThread().isInterrupted()) {
+                getEvent(monitorSocket, closedSelector);
+            }
+            try {
+                if (ZeroMQContext.isContextTerminated()) {
+                    sendMessageQueue.put(new ZeroMQMessageData(CONTEXT_TERMINATED, null));
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                ZeroMQUtils.closeSocket(monitorSocket);
+                log.info("ZeroMQ sender monitor thread is ending, thread ID {}.", Thread.currentThread().getId());
+            }
         }, "MONITOR DEALER");
         monitorThread.start();
-        return monitorThread;
     }
 
-    private void getEvent(ZMQ.Socket monitorSocket, AtomicBoolean contextTerminated, AtomicBoolean closedSelector) {
+    private void getEvent(ZMQ.Socket monitorSocket, AtomicBoolean closedSelector) {
         try {
-            getEvent(monitorSocket, contextTerminated);
+            getEvent(monitorSocket);
         } catch (ZMQException e) {
             if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
-                contextTerminated.set(true);
+                ZeroMQContext.setContextTerminated(true);
             } else {
                 log.error("ZeroMQ exception at monitor sender thread", e);
             }
@@ -96,11 +193,11 @@ public class ZeroMQSender implements ISender {
         }
     }
 
-    private void getEvent(ZMQ.Socket monitorSocket, AtomicBoolean contextTerminated) {
+    private void getEvent(ZMQ.Socket monitorSocket) {
         if (monitorReconnectThread == null) {
             monitorReconnectThread = ZeroMQUtils.getMonitorReconnectThread(addressToReconnectMonitorMap, socketType);
         }
-        ZeroMQUtils.getClientServerEvent(monitorSocket, socketType, monitorInitialized, contextTerminated, addressToReconnectMonitorMap, this::getNodeTypeByAddress);
+        ZeroMQUtils.getClientServerEvent(monitorSocket, socketType, monitorInitialized, addressToReconnectMonitorMap, this::getNodeTypeByAddress);
     }
 
     private NodeType getNodeTypeByAddress(String address) {
@@ -110,28 +207,30 @@ public class ZeroMQSender implements ISender {
     @Override
     public <T extends IPropagatable> void send(T toSend, String address) {
         byte[] message = serializer.serialize(toSend);
-        synchronized (this) {
-            try {
-                ZMQ.Socket senderSocket = receivingAddressToSenderSocketMapping.get(address).getSenderSocket();
-                senderSocket.sendMore(toSend.getClass().getName());
-                boolean isSent = senderSocket.send(message);
-                if (!isSent) {
-                    SocketBase senderSocketBase = senderSocket.base();
-                    log.error("Error {} at sender socket. Socket channel status: {}", senderSocketBase.errno(), senderSocketBase.getFD().isOpen());
-                    return;
-                }
-                log.debug("Message {} was sent to {}", toSend, address);
-            } catch (ZMQException exception) {
-                log.error("Exception in sending", exception);
-            }
+        try {
+            sendMessageQueue.put(new ZeroMQMessageData(toSend.getClass().getName(), message));
+        } catch (InterruptedException e) {
+            log.error(INTERRUPTED_MESSAGE, e);
+            Thread.currentThread().interrupt();
         }
+    }
+
+    private void sendMessage(ZeroMQMessageData messageData) {
+        sender.sendMore(messageData.getChannel().getBytes());
+        boolean isSent = sender.send(messageData.getMessage());
+        log.info("ZeroMQ sender sending msg in thread ID: {} of thread: {}", Thread.currentThread().getId(), Thread.currentThread().getName());
+        if (!isSent) {
+            log.error("Error {} at sender socket. Socket channel status: {}", sender.errno(), sender.getFD().isOpen());
+            return;
+        }
+        log.debug("Message {} was sent to ROUTERS", messageData.getChannel());
     }
 
     @Override
     public void disconnectFromNode(String receivingFullAddress, NodeType nodeType) {
         SenderSocketData senderSocketData = receivingAddressToSenderSocketMapping.get(receivingFullAddress);
         if (senderSocketData != null) {
-            closeSenderSocketData(senderSocketData);
+            sender.disconnect(receivingFullAddress);
             log.info("ZeroMQ sender closing connection with node of type {} and address {}", nodeType, receivingFullAddress);
             receivingAddressToSenderSocketMapping.remove(receivingFullAddress);
             ZeroMQUtils.removeFromReconnectMonitor(addressToReconnectMonitorMap, receivingFullAddress);
@@ -140,46 +239,21 @@ public class ZeroMQSender implements ISender {
         }
     }
 
-    private void closeSenderSocketData(SenderSocketData senderSocketData) {
-        ZMQ.Socket sender = senderSocketData.getSenderSocket();
-        ZeroMQUtils.closeSocket(sender);
-        try {
-            // Waiting to sender socket to close
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            log.error(INTERRUPTED_MESSAGE, Thread.currentThread().getName());
-            Thread.currentThread().interrupt();
-        }
-
-        MonitorSocketData monitorSocketData = senderSocketData.getMonitorSocketData();
-        ZMQ.Socket monitorSocket = monitorSocketData.getMonitorSocket();
-        ZeroMQUtils.closeSocket(monitorSocket);
-
-        Thread monitorThread = senderSocketData.getMonitorThread();
-        try {
-            monitorThread.interrupt();
-            monitorThread.join();
-        } catch (InterruptedException e) {
-            log.error(INTERRUPTED_MESSAGE, Thread.currentThread().getName());
-            Thread.currentThread().interrupt();
-        }
-    }
-
     @Override
     public void shutdown() {
-        if (!receivingAddressToSenderSocketMapping.isEmpty()) {
+        if (sender != null) {
             log.info("Shutting down {}", this.getClass().getSimpleName());
-            receivingAddressToSenderSocketMapping.forEach((receiverAddress, senderSocketData) ->
-                    closeSenderSocketData(senderSocketData)
-            );
-        }
-        zeroMQContext.term();
-        if (monitorReconnectThread != null) {
             try {
-                monitorReconnectThread.interrupt();
-                monitorReconnectThread.join();
+                senderThread.interrupt();
+                senderThread.join();
+                monitorThread.interrupt();
+                monitorThread.join();
+                if (monitorReconnectThread != null) {
+                    monitorReconnectThread.interrupt();
+                    monitorReconnectThread.join();
+                }
             } catch (InterruptedException e) {
-                log.error(INTERRUPTED_MESSAGE, Thread.currentThread().getName());
+                log.error(INTERRUPTED_MESSAGE, e);
                 Thread.currentThread().interrupt();
             }
         }

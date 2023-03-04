@@ -1,16 +1,18 @@
 package io.coti.basenode.communication;
 
-import io.coti.basenode.communication.data.MonitorSocketData;
 import io.coti.basenode.communication.data.ReconnectMonitorData;
 import io.coti.basenode.data.NodeType;
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
-import org.zeromq.ZMQException;
 
+import java.lang.reflect.Field;
+import java.nio.channels.SocketChannel;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -20,38 +22,31 @@ public class ZeroMQUtils {
     private ZeroMQUtils() {
     }
 
-    public static int bindToRandomPort(ZMQ.Socket socket) {
-        boolean success = false;
-        int port = 10000;
-        while (!success) {
-            try {
-                success = socket.bind("tcp://*:" + port);
-                if (!success) {
-                    port++;
-                }
-            } catch (ZMQException exception) {
-                port++;
-            }
-        }
-        return port;
+    private static final ConcurrentHashMap<SocketType, Integer> socketDisconnectMap = new ConcurrentHashMap<>();
+
+    public static void initDisconnectMapForSocketType(SocketType socketType) {
+        socketDisconnectMap.put(socketType, 0);
     }
 
     public static void closeSocket(ZMQ.Socket socket) {
-        if (!Thread.currentThread().isInterrupted()) {
-            socket.close();
-        }
+        socket.setLinger(0);
+        socket.close();
+        log.info("ZeroMQ closing socket in thread ID: {} of thread: {}", Thread.currentThread().getId(), Thread.currentThread().getName());
     }
 
-    public static ZMQ.Socket createAndConnectMonitorSocket(ZMQ.Context zeroMQContext, ZMQ.Socket socket) {
+    public static String createAndStartMonitorOnSocket(ZMQ.Socket socket) {
         String monitorAddress = getMonitorSocketAddress(socket);
-        return createAndConnectMonitorSocket(zeroMQContext, socket, monitorAddress);
+        if (!socket.monitor(monitorAddress, ZMQ.EVENT_ALL)) {
+            throw new CotiRunTimeException("ZeroMQ was not able to initialize monitor on socket with address " + monitorAddress);
+        }
+        return monitorAddress;
     }
 
-    private static ZMQ.Socket createAndConnectMonitorSocket(ZMQ.Context zeroMQContext, ZMQ.Socket socket, String monitorAddress) {
-        socket.monitor(monitorAddress, ZMQ.EVENT_ALL);
+    public static ZMQ.Socket createAndConnectMonitorSocket(ZMQ.Context zeroMQContext, String monitorAddress) {
         ZMQ.Socket monitorSocket = zeroMQContext.socket(SocketType.PAIR);
         monitorSocket.setLinger(100);
         monitorSocket.connect(monitorAddress);
+        log.info("ZeroMQ connected in thread ID: {} of thread: {}", Thread.currentThread().getId(), Thread.currentThread().getName());
         return monitorSocket;
     }
 
@@ -59,43 +54,75 @@ public class ZeroMQUtils {
         return "inproc://" + socket.getSocketType().name() + Instant.now().toEpochMilli();
     }
 
-    public static MonitorSocketData getMonitorSocketData(ZMQ.Context zeroMQContext, ZMQ.Socket socket) {
-        String monitorAddress = getMonitorSocketAddress(socket);
-        ZMQ.Socket monitorSocket = createAndConnectMonitorSocket(zeroMQContext, socket, monitorAddress);
-        return new MonitorSocketData(monitorSocket, monitorAddress);
-    }
-
-    public static void getServerSocketEvent(ZMQ.Socket monitorSocket, SocketType socketType, AtomicBoolean monitorInitialized, AtomicBoolean contextTerminated) {
+    public static void getServerSocketEvent(ZMQ.Socket monitorSocket, SocketType socketType, AtomicBoolean monitorInitialized) {
         ZMQ.Event event = ZMQ.Event.recv(monitorSocket);
         if (event != null) {
             ZeroMQEvent zeroMQEvent = ZeroMQEvent.getEvent(event.getEvent());
-            if (zeroMQEvent.isDisplayLog() && (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized.get())) {
-                log.info("ZeroMQ {} event: {}", socketType, zeroMQEvent);
+
+            if (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized.get()) {
+                log.info("ZeroMQ getting server event {} on address: {}", zeroMQEvent, event.getAddress());
+            }
+            if (ZeroMQEvent.DISCONNECTED.equals(zeroMQEvent)) {
+                String remoteAddress = getRemoteAddressFromEvent(event);
+                updateDisconnectMap(socketType);
+                log.info("ZeroMQ disconnected from remote address {}", remoteAddress);
             }
 
         } else {
-            nullEventHandler(monitorSocket, socketType, contextTerminated);
+            nullEventHandler(monitorSocket, socketType);
         }
     }
 
-    private static void nullEventHandler(ZMQ.Socket monitorSocket, SocketType socketType, AtomicBoolean contextTerminated) {
+    private static void updateDisconnectMap(SocketType socketType) {
+        synchronized (socketDisconnectMap) {
+            socketDisconnectMap.put(socketType, socketDisconnectMap.get(socketType) + 1);
+        }
+    }
+
+    public static int getSocketDisconnects(SocketType socketType) {
+        int currentNumber;
+        synchronized (socketDisconnectMap) {
+            currentNumber = socketDisconnectMap.get(socketType);
+            socketDisconnectMap.put(socketType, 0);
+        }
+        return currentNumber;
+    }
+
+    @SuppressWarnings("java:S3011")
+    private static String getRemoteAddressFromEvent(ZMQ.Event event) {
+        if (event.resolveValue() instanceof SocketChannel) {
+            try {
+                Field namedField = event.resolveValue().getClass().getDeclaredField("remoteAddress");
+                namedField.setAccessible(true);
+                return namedField.get(event.resolveValue()).toString();
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                log.error("ZeroMQ was not able to identify remote address, failed with exception: ", e);
+                return "error";
+            }
+        }
+        return event.getAddress();
+    }
+
+    private static void nullEventHandler(ZMQ.Socket monitorSocket, SocketType socketType) {
         int errorCode = monitorSocket.base().errno();
         if (errorCode == ZMQ.Error.ETERM.getCode()) {
             log.info("ZeroMQ {} context terminated", socketType);
-            contextTerminated.set(true);
+            ZeroMQContext.setContextTerminated(true);
         }
     }
 
-    public static void getClientServerEvent(ZMQ.Socket monitorSocket, SocketType socketType, AtomicBoolean monitorInitialized, AtomicBoolean contextTerminated,
+    public static void getClientServerEvent(ZMQ.Socket monitorSocket, SocketType socketType, AtomicBoolean monitorInitialized,
                                             Map<String, ReconnectMonitorData> addressToReconnectMonitorMap, Function<String, NodeType> getNodeTypeByAddress) {
         ZMQ.Event event = ZMQ.Event.recv(monitorSocket);
         if (event != null) {
             String address = event.getAddress();
             ZeroMQEvent zeroMQEvent = ZeroMQEvent.getEvent(event.getEvent());
-            if (zeroMQEvent.isDisplayLog() && (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized.get())) {
-                log.info("ZeroMQ {} event {} for address {}", socketType, zeroMQEvent, address);
+            if (zeroMQEvent.isDisplayBeforeInit() || monitorInitialized.get()) {
+                log.info("ZeroMQ getting client event {} on address: {}", zeroMQEvent, event.getAddress());
             }
             if (zeroMQEvent.equals(ZeroMQEvent.DISCONNECTED)) {
+                String remoteAddress = getRemoteAddressFromEvent(event);
+                log.info("ZeroMQ disconnected from remote address {}", remoteAddress);
                 NodeType nodeType = getNodeTypeByAddress.apply(address);
                 addToReconnectMonitor(addressToReconnectMonitorMap, address, nodeType);
             } else if (zeroMQEvent.equals(ZeroMQEvent.CONNECTED)) {
@@ -104,7 +131,7 @@ public class ZeroMQUtils {
                 incrementRetriesInReconnectMonitor(addressToReconnectMonitorMap, address);
             }
         } else {
-            nullEventHandler(monitorSocket, socketType, contextTerminated);
+            nullEventHandler(monitorSocket, socketType);
         }
     }
 

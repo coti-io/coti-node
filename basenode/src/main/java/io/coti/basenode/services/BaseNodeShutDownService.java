@@ -1,5 +1,6 @@
 package io.coti.basenode.services;
 
+import io.coti.basenode.communication.ZeroMQContext;
 import io.coti.basenode.services.interfaces.IShutDownService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import static io.coti.basenode.services.BaseNodeServiceManager.*;
 public class BaseNodeShutDownService implements IShutDownService {
 
     public void shutdown() {
+        ZeroMQContext.terminate();
         shutDownServices();
     }
 
