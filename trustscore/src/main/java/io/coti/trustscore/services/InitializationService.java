@@ -59,8 +59,8 @@ public class InitializationService extends BaseNodeInitializationService {
             ConstantTokenFeeData defaultNetworkConstantTokenFeeData = new ConstantTokenFeeData("*", NodeFeeType.NETWORK_FEE, defaultTokenNetworkFee);
             defaultTokenFeeDataList.add(defaultNetworkConstantTokenFeeData);
 
-            super.initServices();
             trustScoreService.init();
+            super.initServices();
         } catch (CotiRunTimeException e) {
             log.error("Errors at {}", this.getClass().getSimpleName());
             e.logMessage();
