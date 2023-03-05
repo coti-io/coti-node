@@ -482,8 +482,13 @@ public class BaseNodeNetworkService implements INetworkService {
     @Override
     public NetworkData getNetworkData() {
         NetworkData networkData = new NetworkData();
-        networkData.setMultipleNodeMaps(multipleNodeMaps);
-        networkData.setSingleNodeNetworkDataMap(singleNodeNetworkDataMap);
+        Map<NodeType, Map<Hash, NetworkNodeData>> localMultipleNodeMaps = networkData.getMultipleNodeMaps();
+        for (Map.Entry<NodeType, Map<Hash, NetworkNodeData>> entry : multipleNodeMaps.entrySet()) {
+            localMultipleNodeMaps.get(entry.getKey()).putAll(entry.getValue());
+        }
+        Map<NodeType, NetworkNodeData> localSingleNodeNetworkDataMap = networkData.getSingleNodeNetworkDataMap();
+        localSingleNodeNetworkDataMap.putAll(singleNodeNetworkDataMap);
+
         return networkData;
     }
 
