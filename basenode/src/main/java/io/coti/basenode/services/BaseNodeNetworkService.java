@@ -430,8 +430,7 @@ public class BaseNodeNetworkService implements INetworkService {
             }
             handleConnectedZeroSpendServer(singleNodeType, newSingleNodeData, currentSingleNodeData);
             setSingleNodeData(singleNodeType, newSingleNodeData);
-        }
-        else {
+        } else {
             if (currentSingleNodeData != null) {
                 propagationSubscriber.disconnect(currentSingleNodeData.getPropagationFullAddress(), currentSingleNodeData.getNodeType());
             }
