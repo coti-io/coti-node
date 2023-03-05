@@ -1,6 +1,5 @@
 package io.coti.basenode.services;
 
-import io.coti.basenode.communication.ZeroMQSubscriber;
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;

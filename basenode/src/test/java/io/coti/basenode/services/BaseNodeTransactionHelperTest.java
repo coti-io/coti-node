@@ -25,6 +25,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -332,7 +333,7 @@ class BaseNodeTransactionHelperTest {
         dspConsensusResult.setDspConsensus(true);
         transactionData.setDspConsensusResult(dspConsensusResult);
         long index = 7;
-        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(TransactionTestUtils.generateRandomHash(), index, "7".getBytes(StandardCharsets.UTF_8));
         when(transactionIndexes.getByHash(any(Hash.class))).thenReturn(transactionIndexData);
 
         clusterService.attachToCluster(transactionData);

@@ -18,7 +18,7 @@ public class DisputeUpdateItemCrypto extends SignatureCrypto<DisputeUpdateItemDa
         ByteBuffer itemIdsBuffer = ByteBuffer.allocate(disputeUpdateItemData.getItemIds().size() * Long.BYTES);
         disputeUpdateItemData.getItemIds().forEach(itemIdsBuffer::putLong);
         byte[] itemIdsInBytes = itemIdsBuffer.array();
-        byte[] statusInBytes = disputeUpdateItemData.getStatus().toString().getBytes();
+        byte[] statusInBytes = disputeUpdateItemData.getStatus().toString().getBytes(StandardCharsets.UTF_8);
 
         int byteBufferLength = disputeHashInBytes.length + itemIdsInBytes.length + statusInBytes.length;
         ByteBuffer disputeUpdateDataBuffer = ByteBuffer.allocate(byteBufferLength)

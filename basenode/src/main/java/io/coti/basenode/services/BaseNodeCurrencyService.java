@@ -159,7 +159,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
     private void handleTransactionConfirmed(TransactionData transactionData, CurrencyData newCurrencyData, CurrencyData currencyData) {
         currencies.put(newCurrencyData);
         if (!newCurrencyData.getName().equals(currencyData.getName())) {
-            currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+            currencyNameIndexes.deleteByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes(StandardCharsets.UTF_8)));
             currencyNameIndexes.put(new CurrencyNameIndexData(newCurrencyData.getName(), newCurrencyData.getHash()));
         }
         if (!currencyData.getOriginatorHash().equals(newCurrencyData.getOriginatorHash())) {
@@ -171,7 +171,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     private void handleNewCurrencyData(TransactionData transactionData, CurrencyData currencyData, boolean transactionConfirmed) {
         if (transactionConfirmed && !isCurrencyNameUnique(currencyData.getHash(), currencyData.getName())) {
-            CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes()));
+            CurrencyNameIndexData previousCurrencyNameIndexData = currencyNameIndexes.getByHash(CryptoHelper.cryptoHash(currencyData.getName().getBytes(StandardCharsets.UTF_8)));
             Hash previousCurrencyHash = previousCurrencyNameIndexData.getCurrencyHash();
             removeUserCurrencyIndexByCurrencyHash(previousCurrencyHash);
             currencies.deleteByHash(previousCurrencyHash);
@@ -347,7 +347,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         CurrencyTypeData currencyTypeData = tokenGenerationFeeBaseTransactionData.getServiceData().getCurrencyTypeData();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
-        Hash currencyNameHash = CryptoHelper.cryptoHash(originatorCurrencyData.getName().getBytes());
+        Hash currencyNameHash = CryptoHelper.cryptoHash(originatorCurrencyData.getName().getBytes(StandardCharsets.UTF_8));
         try {
             synchronized (currencyLockData.addLockToLockMap(currencyHash)) {
                 synchronized (currencyNameLockData.addLockToLockMap(currencyNameHash)) {
@@ -373,7 +373,7 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
-        Hash currencyNameHash = CryptoHelper.cryptoHash(originatorCurrencyData.getName().getBytes());
+        Hash currencyNameHash = CryptoHelper.cryptoHash(originatorCurrencyData.getName().getBytes(StandardCharsets.UTF_8));
         try {
             synchronized (currencyLockData.addLockToLockMap(currencyHash)) {
                 synchronized (currencyNameLockData.addLockToLockMap(currencyNameHash)) {

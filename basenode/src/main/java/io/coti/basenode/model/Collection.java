@@ -10,7 +10,6 @@ import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 import org.springframework.util.SerializationUtils;
 
-import java.io.InvalidClassException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;

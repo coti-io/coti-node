@@ -17,7 +17,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
-import static io.coti.basenode.services.BaseNodeServiceManager.secretManagerService;
 import static java.lang.String.format;
 
 @Service
