@@ -1,7 +1,5 @@
 package io.coti.basenode.data;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.coti.basenode.crypto.OriginatorCurrencyCrypto;
 import io.coti.basenode.services.interfaces.ITokenFeeData;

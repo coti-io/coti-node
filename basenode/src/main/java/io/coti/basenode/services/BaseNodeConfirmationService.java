@@ -286,11 +286,11 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     }
 
     protected void continueHandleAddressHistoryChanges(TransactionData transactionData) {
-        // implemented by the sub classes
+        // implemented by the subclasses
     }
 
     protected void continueHandleConfirmedTransaction(TransactionData transactionData) {
-        // implemented by the sub classes
+        // implemented by the subclasses
     }
 
     @Override

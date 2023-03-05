@@ -18,7 +18,7 @@ public class DisputeCommentCrypto extends SignatureCrypto<DisputeCommentData> {
         ByteBuffer itemIdsBuffer = ByteBuffer.allocate(commentData.getItemIds().size() * Long.BYTES);
         commentData.getItemIds().forEach(itemIdsBuffer::putLong);
         byte[] itemIdsInBytes = itemIdsBuffer.array();
-        byte[] commentInBytes = commentData.getComment().getBytes();
+        byte[] commentInBytes = commentData.getComment().getBytes(StandardCharsets.UTF_8);
 
         int byteBufferLength = disputeHashInBytes.length + itemIdsInBytes.length + commentInBytes.length;
 
