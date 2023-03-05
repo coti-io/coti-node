@@ -82,7 +82,7 @@ public class TrustChainConfirmationService {
                 monitorTotalTrustScore(transactionData);
             }
         }
-        topologicalOrderedGraph.stream().forEach(
+        topologicalOrderedGraph.forEach(
                 transactionData -> transactionTrustChainTrustScoreMap.put(transactionData.getHash(), transactionData.getSenderTrustScore()));
         updateMonitorState();
 
