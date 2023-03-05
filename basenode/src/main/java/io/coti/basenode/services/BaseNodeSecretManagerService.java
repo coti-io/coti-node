@@ -50,7 +50,8 @@ public class BaseNodeSecretManagerService implements ISecretManagerService {
         try {
             byte[] privateKey = Files.readAllBytes(Paths.get(privateKeyFileName));
             return CryptoHelper.decryptString(encryptedSecret, privateKey, algorithm);
-        } catch (IOException | InvalidKeySpecException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException e) {
+        } catch (IOException | InvalidKeySpecException | InvalidKeyException | IllegalBlockSizeException |
+                 BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException e) {
             log.error(e.toString());
             return null;
         }
