@@ -53,14 +53,14 @@ public class SourceSelector implements ISourceSelector {
                 int lowIndex = roundedTrustScore - 1;
                 int highIndex = roundedTrustScore + 1;
 
-                neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore).stream().map(hash -> SerializationUtils.clone(sourceMap.get(hash))).collect(toList()));
+                neighbourSources.addAll(trustScoreToSourceListMapping.get(roundedTrustScore).stream().map(sourceMap::get).collect(toList()));
 
                 for (int trustScoreDifference = 0; trustScoreDifference < maxNeighbourhoodRadius; trustScoreDifference++) {
                     if (lowIndex >= 0) {
-                        neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex).stream().map(hash -> SerializationUtils.clone(sourceMap.get(hash))).collect(toList()));
+                        neighbourSources.addAll(trustScoreToSourceListMapping.get(lowIndex).stream().map(sourceMap::get).collect(toList()));
                     }
                     if (highIndex <= 100) {
-                        neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex).stream().map(hash -> SerializationUtils.clone(sourceMap.get(hash))).collect(toList()));
+                        neighbourSources.addAll(trustScoreToSourceListMapping.get(highIndex).stream().map(sourceMap::get).collect(toList()));
                     }
                     if ((double) neighbourSources.size() / numberOfSources > (double) minSourcePercentage / 100) {
                         break;
