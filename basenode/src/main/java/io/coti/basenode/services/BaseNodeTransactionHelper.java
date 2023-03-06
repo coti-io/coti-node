@@ -71,6 +71,8 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     @Override
     public void updateAddressTransactionHistory(TransactionData transactionData) {
 
+        need to create a threadpool
+
         Thread x = new Thread(() -> {
             transactionData.getBaseTransactions().forEach(baseTransactionData ->
                     updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
