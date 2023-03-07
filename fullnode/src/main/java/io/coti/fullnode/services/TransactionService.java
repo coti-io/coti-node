@@ -721,7 +721,7 @@ public class TransactionService extends BaseNodeTransactionService {
     @Scheduled(initialDelay = 10000, fixedDelay = 86400000)
     private void clearRejectedTransactions() {
         rejectedTransactions.forEach(rejectedTransaction -> {
-                    if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > REJECTED_TRANSACTIONS_TTL)) {
+                    if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > rejectedTransactionsTtl)) {
                         log.debug("removing rejected transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
                                 rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReasonDescription());
                         rejectedTransactions.delete(rejectedTransaction);
@@ -763,6 +763,47 @@ public class TransactionService extends BaseNodeTransactionService {
         } catch (Exception e) {
             log.error("Error sending address rejected transaction batch");
             log.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        try {
+            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
+            rejectedTransactions.forEach(rejectedTransaction -> rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction)));
+            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
+        } catch (Exception e) {
+            log.info("Exception while getting rejected transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            TRANSACTION_REJECTED_SERVER_ERROR,
+                            STATUS_ERROR));
+        }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
+        try {
+            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
+            deleteRejectedTransactionsRequest.getTransactionHashes().forEach(rejectedTransactionHash -> {
+                RejectedTransactionData rejectedTransaction = rejectedTransactions.getByHash(rejectedTransactionHash);
+                if (rejectedTransaction != null) {
+                    rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction));
+                    removeAddressFromRejectedTransactionsMap(rejectedTransaction);
+                    rejectedTransactions.deleteByHash(rejectedTransactionHash);
+                } else {
+                    log.warn("Rejected transaction was not found for hash: {}", rejectedTransactionHash);
+                }
+            });
+            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
+        } catch (Exception e) {
+            log.info("Exception while deleting rejected transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(
+                            TRANSACTION_DELETE_REJECTED_SERVER_ERROR,
+                            STATUS_ERROR));
         }
     }
 }

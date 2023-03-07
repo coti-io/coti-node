@@ -11,6 +11,7 @@ import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -37,10 +38,13 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
-    protected static final long REJECTED_TRANSACTIONS_TTL = Duration.ofDays(30).getSeconds();
+    protected long rejectedTransactionsTtl;
+    @Value("${number.of.days.ttl:30}")
+    private int numberOfDaysTTL;
 
     @Override
     public void init() {
+        this.rejectedTransactionsTtl = Duration.ofDays(numberOfDaysTTL).getSeconds();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
@@ -502,6 +506,11 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest, HttpServletResponse response) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
         throw new UnsupportedOperationException();
     }
 

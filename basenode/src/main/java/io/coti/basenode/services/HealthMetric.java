@@ -556,7 +556,7 @@ public enum HealthMetric implements IHealthMetric {
             return "The duration of older backup removal (seconds).";
         }
     },
-    REJECTED_TRANSACTIONS(REJECTED_TRANSACTIONS_LABEL, MetricClass.TRANSACTIONS_METRIC, 30, 0, true, HealthMetricOutputType.EXTERNAL) {
+    REJECTED_TRANSACTIONS(REJECTED_TRANSACTIONS_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 3, true, HealthMetricOutputType.EXTERNAL) {
         @Override
         public void doSnapshot() {
             baseDoSnapshot(this, rejectedTransactions.size());
@@ -564,7 +564,19 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public void calculateHealthMetric() {
-            calculateHealthValueMetricState(this);
+            HealthMetricData healthMetricData = monitorService.getHealthMetricData(this);
+            if (healthIsDegrading(healthMetricData)) {
+                healthMetricData.increaseDegradingCounter();
+            } else {
+                healthMetricData.setDegradingCounter(0);
+            }
+            if (healthMetricData.getDegradingCounter() >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
+                healthMetricData.setLastHealthState(HealthState.CRITICAL);
+            } else if (healthMetricData.getDegradingCounter() >= healthMetricData.getWarningThreshold()) {
+                healthMetricData.setLastHealthState(HealthState.WARNING);
+            } else {
+                healthMetricData.setLastHealthState(HealthState.NORMAL);
+            }
         }
 
         @Override

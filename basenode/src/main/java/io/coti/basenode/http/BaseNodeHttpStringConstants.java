@@ -24,6 +24,8 @@ public class BaseNodeHttpStringConstants {
     public static final String TRANSACTION_RESENT_NOT_AVAILABLE_MESSAGE = "Transaction requested to resend is not available in the database";
     public static final String TRANSACTION_RESENT_NOT_ALLOWED_MESSAGE = "Transaction is requested to resend not by the transaction sender";
     public static final String TRANSACTION_NONE_INDEXED_SERVER_ERROR = "Server error while getting none indexed transactions";
+    public static final String TRANSACTION_REJECTED_SERVER_ERROR = "Server error while getting rejected transactions";
+    public static final String TRANSACTION_DELETE_REJECTED_SERVER_ERROR = "Server error while deleting rejected transactions";
     public static final String TRANSACTION_POSTPONED_SERVER_ERROR = "Server error while getting postponed transactions";
     public static final String TRANSACTION_INTERNAL_ERROR_MESSAGE = "Internal error while adding new transaction";
     public static final String ILLEGAL_BASE_TRANSACTIONS_AMOUNT = "Illegal transaction - sum of base transactions must be 0!";
