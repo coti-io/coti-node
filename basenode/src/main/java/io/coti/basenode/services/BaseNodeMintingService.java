@@ -71,20 +71,19 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public void revertMintingAllocation(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
-        if (tokenMintingFeeData != null) {
-            Hash tokenHash = tokenMintingFeeData.getCurrencyHash();
-            try {
-                synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
-                    CurrencyData currencyFromDB = currencies.getByHash(tokenHash);
-                    BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
-                    if (currencyFromDB == null || mintableAmount == null) {
-                        log.error("Error in Minting revert. Token {} is invalid", tokenHash);
-                        return;
-                    }
-                    currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getAmount()));
+        if (tokenMintingFeeData == null) {
+            log.warn("There is no tokenMintingFeeData");
+            return;
+        }
+        Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
+        try {
+            synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {
+                BigDecimal mintableAmount = currencyService.getTokenMintableAmount(tokenHash);
+                if (mintableAmount == null) {
+                    log.error("Error in Minting revert. Token {} is invalid", tokenHash);
+                    return;
                 }
-            } finally {
-                tokenHashLockData.removeLockFromLocksMap(tokenHash);
+                currencyService.putToMintableAmountMap(tokenHash, mintableAmount.add(tokenMintingFeeData.getServiceData().getMintingAmount()));
             }
         } finally {
             tokenHashLockData.removeLockFromLocksMap(tokenHash);
@@ -99,12 +98,13 @@ public class BaseNodeMintingService implements IMintingService {
             TokenMintingServiceData tokenMintingFeeBaseTransactionServiceData = tokenMintingFeeBaseTransactionData.getServiceData();
             Hash tokenHash = tokenMintingFeeBaseTransactionServiceData.getMintingCurrencyHash();
 
-        if (currencyService.isNativeCurrency(tokenHash)) {
-            log.error("Error in Minting check. Token {} is Native currency", tokenHash);
-            return;
+            if (currencyService.isNativeCurrency(tokenHash)) {
+                log.error("Error in Minting check. Token {} is Native currency", tokenHash);
+                return;
+            }
+            currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
+            updateMintedAddress(tokenMintingFeeBaseTransactionServiceData);
         }
-        currencyService.synchronizedUpdateMintableAmountMapAndBalance(transactionData);
-        updateMintedAddress(tokenMintingFeeBaseTransactionServiceData);
     }
 
     @Override

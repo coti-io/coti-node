@@ -18,6 +18,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -54,7 +55,7 @@ class BaseNodeSecretManagerServiceTest {
             secret.append(c);
         }
 
-        Hash seed = CryptoHelper.cryptoHash(secret.toString().getBytes());
+        Hash seed = CryptoHelper.cryptoHash(secret.toString().getBytes(StandardCharsets.UTF_8));
 
         KeyPair keyPair = generateKeys(algorithm);
 

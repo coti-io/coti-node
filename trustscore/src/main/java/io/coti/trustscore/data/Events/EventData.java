@@ -32,8 +32,8 @@ public abstract class EventData implements IEntity, Serializable, ISignValidatab
             this.uniqueIdentifier = request.getUniqueIdentifier();
             this.eventDate = Instant.now();
             this.eventType = request.getEventType();
+            log.info(String.format("uniqueIdentifier: %s for type: %d", this.uniqueIdentifier.toHexString(), eventType.getValue()));
         }
-        log.info(String.format("uniqueIdentifier: %s for type: %d", this.uniqueIdentifier.toHexString(), eventType.getValue()));
     }
 
     @Override
