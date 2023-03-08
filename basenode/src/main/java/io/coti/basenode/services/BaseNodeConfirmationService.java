@@ -29,7 +29,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     private final AtomicBoolean initialTccConfirmationFinished = new AtomicBoolean(false);
     private PriorityBlockingQueue<DspConsensusResult> dcrConfirmationQueue;
     private PriorityBlockingQueue<TccInfo> tccConfirmationQueue;
-    private PriorityBlockingQueue<DspConsensusResult> waitingDspConsensusResults;
+    private PriorityQueue<DspConsensusResult> waitingDspConsensusResults;
     private Thread dcrMessageHandlerThread;
     private Thread tccInfoMessageHandlerThread;
     private Thread missingIndexesHandler;
@@ -38,7 +38,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
     public void init() {
         dcrConfirmationQueue = new PriorityBlockingQueue<>(11, Comparator.comparingLong(DspConsensusResult::getIndex));
         tccConfirmationQueue = new PriorityBlockingQueue<>(11, Comparator.comparing(TccInfo::getTrustChainConsensusTime));
-        waitingDspConsensusResults = new PriorityBlockingQueue<>(11, Comparator.comparingLong(DspConsensusResult::getIndex));
+        waitingDspConsensusResults = new PriorityQueue<>(11, Comparator.comparingLong(DspConsensusResult::getIndex));
         resendDcrCounter = 0;
         missingIndexesHandler = new Thread(this::handleMissingIndexes, "Missing Indexes");
         missingIndexesHandler.start();
@@ -171,7 +171,7 @@ public class BaseNodeConfirmationService implements IConfirmationService {
         Boolean isNewTransactionIndexInserted = optionalInsertNewTransactionIndex.get();
         DspConsensusResult dspConsensusResult = transactionData.getDspConsensusResult();
         if (Boolean.FALSE.equals(isNewTransactionIndexInserted)) {
-            waitingDspConsensusResults.put(dspConsensusResult);
+            waitingDspConsensusResults.add(dspConsensusResult);
             synchronized (missingIndexesLock) {
                 missingIndexesLock.notifyAll();
             }
