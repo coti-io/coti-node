@@ -14,6 +14,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static io.coti.basenode.data.TransactionState.*;
@@ -27,7 +30,6 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     private final AtomicLong totalTransactions = new AtomicLong(0);
     private Map<Hash, Stack<TransactionState>> transactionHashToTransactionStateStackMapping;
     private Set<Hash> noneIndexedTransactionHashes;
-
     private long totalNumberOfTransactionsFromRecovery = 0;
 
     @PostConstruct
@@ -71,37 +73,19 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
     @Override
     public void updateAddressTransactionHistory(TransactionData transactionData) {
 
-        need to create a threadpool
-
-        Thread x = new Thread(() -> {
+        Future<?> future = transactionHistoryExecutorService.submit(() -> {
             transactionData.getBaseTransactions().forEach(baseTransactionData ->
                     updateAddressTransactionsHistories(baseTransactionData.getAddressHash(), transactionData)
             );
             updateMintedAddress(transactionData);
         });
-        x.start();
+        future.get();
+
     }
 
-    public void updateMintedAddress(TransactionData transactionData) {
-        TokenMintingFeeBaseTransactionData tokenMintingFeeBaseTransactionData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
-        if (tokenMintingFeeBaseTransactionData != null) {
-            Hash receiverAddressHash = tokenMintingFeeBaseTransactionData.getServiceData().getReceiverAddress();
-            Optional<BaseTransactionData> identicalAddresses = transactionData.getBaseTransactions().stream().filter(t -> t.getAddressHash().equals(receiverAddressHash)).findFirst();
-            if (!identicalAddresses.isPresent()) {
-                updateAddressTransactionsHistories(receiverAddressHash, transactionData);
-            }
-        }
-    }
 
-    private void updateAddressTransactionsHistories(Hash addressHash, TransactionData transactionData) {
-        AddressTransactionsHistory addressHistory = Optional.ofNullable(addressTransactionsHistories.getByHash(addressHash))
-                .orElse(new AddressTransactionsHistory(addressHash));
 
-        if (!addressHistory.addTransactionHashToHistory(transactionData.getHash())) {
-            log.debug("Transaction {} is already in history of address {}", transactionData.getHash(), addressHash);
-        }
-        addressTransactionsHistories.put(addressHistory);
-    }
+
 
     public void updateAddressTransactionHistory(Map<Hash, AddressTransactionsHistory> addressToTransactionsHistoryMap, TransactionData transactionData) {
         transactionData.getBaseTransactions().forEach(baseTransactionData -> {
