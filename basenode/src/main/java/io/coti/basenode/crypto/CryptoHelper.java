@@ -221,7 +221,7 @@ public class CryptoHelper {
     }
 
     public static String decryptString(String encryptedSecret, byte[] privateKey, String algorithm) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
-        byte[] encryptedSecretBytes = Base64.getDecoder().decode(encryptedSecret.getBytes());
+        byte[] encryptedSecretBytes = Base64.getDecoder().decode(encryptedSecret.getBytes(StandardCharsets.UTF_8));
         byte[] decryptedSecretBytes = decrypt(encryptedSecretBytes, privateKey, algorithm);
         return new String(decryptedSecretBytes, StandardCharsets.UTF_8);
     }
@@ -233,7 +233,7 @@ public class CryptoHelper {
     }
 
     public static Hash calculateTokenFeeHash(Hash tokenHash, NodeFeeType nodeFeeType) {
-        return cryptoHash(tokenHash.toHexString().concat(nodeFeeType.getHash().toHexString()).getBytes());
+        return cryptoHash(tokenHash.toHexString().concat(nodeFeeType.getHash().toHexString()).getBytes(StandardCharsets.UTF_8));
     }
 
 }

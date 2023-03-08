@@ -71,6 +71,10 @@ public class BaseNodeMintingService implements IMintingService {
     @Override
     public void revertMintingAllocation(TransactionData transactionData) {
         TokenMintingFeeBaseTransactionData tokenMintingFeeData = nodeTransactionHelper.getTokenMintingFeeData(transactionData);
+        if (tokenMintingFeeData == null) {
+            log.warn("There is no tokenMintingFeeData");
+            return;
+        }
         Hash tokenHash = tokenMintingFeeData.getServiceData().getMintingCurrencyHash();
         try {
             synchronized (tokenHashLockData.addLockToLockMap(tokenHash)) {

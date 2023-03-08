@@ -22,6 +22,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +54,7 @@ class BaseNodeDspVoteServiceTest {
     BaseNodeTransactionHelper transactionHelper;
     @MockBean
     public INetworkService networkService;
-    private Map<Hash, TransactionIndexData> transactionIndexesMap = new HashMap<>();
+    private final Map<Hash, TransactionIndexData> transactionIndexesMap = new HashMap<>();
 
     @BeforeEach
     void init() {
@@ -87,7 +88,7 @@ class BaseNodeDspVoteServiceTest {
     void handleDspConsensusResultResend() {
         Hash transactionHash = HashTestUtils.generateRandomHash();
         NodeResendDcrData nodeResendDcrData = new NodeResendDcrData(transactionHash, NodeType.FullNode, 1L, 1L);
-        TransactionIndexData transactionIndexData = new TransactionIndexData(transactionHash, 1L, "1".getBytes());
+        TransactionIndexData transactionIndexData = new TransactionIndexData(transactionHash, 1L, "1".getBytes(StandardCharsets.UTF_8));
         transactionIndexesMap.put(new Hash(1L), transactionIndexData);
         when(transactionIndexes.getByHash(any(Hash.class))).then(a -> transactionIndexesMap.get(a.getArgument(0)));
         TransactionData transaction = TransactionTestUtils.createRandomTransaction();

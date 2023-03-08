@@ -88,7 +88,7 @@ class AddressServiceIntegrationTest {
     //}
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    private final String HISTORY_PORT = "7031";
+    private static final String HISTORY_PORT = "7031";
 
     @Autowired
     private AddressService addressService;
@@ -114,24 +114,24 @@ class AddressServiceIntegrationTest {
     @MockBean
     private FileService fileService;
 
-    private AddressData addressInLocalAddressesCollection = AddressTestUtils.generateRandomAddressData();
+    private final AddressData addressInLocalAddressesCollection = AddressTestUtils.generateRandomAddressData();
 
-    private RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutesInHistory = new RequestedAddressHashData(
+    private final RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutesInHistory = new RequestedAddressHashData(
             new Hash("9aaf17d8b83748d4e7a10e7a8ae02039d6557bf1825220e45965b25d03b5958fbd727548bcb5ca80f8af39cb078d7d8970d3331d508510776a8874450a12cd6395d51881")); // todo add to history to addresses collection
 
-    private RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutesInStorage = new RequestedAddressHashData(
+    private final RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutesInStorage = new RequestedAddressHashData(
             new Hash("b3c1ce55ef49d7ec0dc8555a9b8e0fc309905a5d2e318ec02c574a4dcee81aa529c7ee42bc06c17f2ccf17ecbfcbf4cd4cb7420435ff593c7efe2cad9439c207ee1b6290")); // todo add to elasticsearch
 
-    private RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutesNotFound = new RequestedAddressHashData(
+    private final RequestedAddressHashData addressInRequestedAddressesCollectionMoreThenTenMinutesNotFound = new RequestedAddressHashData(
             new Hash("9aaf17d8b83748d4e7a10e7a8ae02039d6557bf1825220e45965b25d03b5958fbd727548bcb5ca80f8af39cb078d7d8970d3331d508510776a8874450a12cd6395d51883"));
 
-    private RequestedAddressHashData addressNotFoundInFullNodeAndFoundInHistory = new RequestedAddressHashData(
+    private final RequestedAddressHashData addressNotFoundInFullNodeAndFoundInHistory = new RequestedAddressHashData(
             new Hash("9aaf17d8b83748d4e7a10e7a8ae02039d6557bf1825220e45965b25d03b5958fbd727548bcb5ca80f8af39cb078d7d8970d3331d508510776a8874450a12cd6395d51884"));  // todo add to history to addresses collection
 
-    private RequestedAddressHashData addressNotFoundInFullNodeAndFoundInStorage = new RequestedAddressHashData(
+    private final RequestedAddressHashData addressNotFoundInFullNodeAndFoundInStorage = new RequestedAddressHashData(
             new Hash("9aaf17d8b83748d4e7a10e7a8ae02039d6557bf1825220e45965b25d03b5958fbd727548bcb5ca80f8af39cb078d7d8970d3331d508510776a8874450a12cd6395d51885")); // todo add to elasticsearch
 
-    private RequestedAddressHashData addressNotFoundInFullNodeAndNotFound = new RequestedAddressHashData(
+    private final RequestedAddressHashData addressNotFoundInFullNodeAndNotFound = new RequestedAddressHashData(
             new Hash("9aaf17d8b83748d4e7a10e7a8ae02039d6557bf1825220e45965b25d03b5958fbd727548bcb5ca80f8af39cb078d7d8970d3331d508510776a8874450a12cd6395d51886"));
 
 

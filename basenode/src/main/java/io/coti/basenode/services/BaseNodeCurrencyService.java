@@ -370,7 +370,10 @@ public class BaseNodeCurrencyService implements ICurrencyService {
 
     public void revertCurrencyUnconfirmedRecord(TransactionData transactionData) {
         TokenGenerationFeeBaseTransactionData tokenGenerationFeeBaseTransactionData = nodeTransactionHelper.getTokenGenerationFeeData(transactionData);
-
+        if (tokenGenerationFeeBaseTransactionData == null) {
+            log.warn("There is no tokenGenerationFeeBaseTransactionData");
+            return;
+        }
         OriginatorCurrencyData originatorCurrencyData = tokenGenerationFeeBaseTransactionData.getServiceData().getOriginatorCurrencyData();
         Hash currencyHash = OriginatorCurrencyCrypto.calculateHash(originatorCurrencyData.getSymbol());
         Hash currencyNameHash = CryptoHelper.cryptoHash(originatorCurrencyData.getName().getBytes(StandardCharsets.UTF_8));
