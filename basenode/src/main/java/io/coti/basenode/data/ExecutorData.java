@@ -45,11 +45,11 @@ public class ExecutorData {
 
     public void waitForTermination(AtomicLong transactionsToProcess) {
         AtomicInteger completedFutures = new AtomicInteger(0);
-        AtomicLong transactionsToProcessCheck = new AtomicLong(transactionsToProcess.get());
+        AtomicLong submittedFutures = new AtomicLong(futuresToComplete.get());
         AtomicInteger checkCounter = new AtomicInteger(0);
         Thread monitorCompletionThread = getMonitorCompletionThread(completedFutures, transactionsToProcess);
         monitorCompletionThread.start();
-        while (waitForSubmitCompletion(transactionsToProcess, transactionsToProcessCheck, checkCounter)) {
+        while (waitForSubmitCompletion(transactionsToProcess, submittedFutures, checkCounter)) {
             LockSupport.parkNanos(500_000_000);
         }
         for (Future<?> future : futures) {
@@ -75,9 +75,9 @@ public class ExecutorData {
         }
     }
 
-    private boolean waitForSubmitCompletion(AtomicLong transactionsToProcess, AtomicLong transactionsToProcessCheck, AtomicInteger checkCounter) {
-        if (transactionsToProcessCheck.get() < transactionsToProcess.get()) {
-            transactionsToProcessCheck.set(transactionsToProcess.get());
+    private boolean waitForSubmitCompletion(AtomicLong transactionsToProcess, AtomicLong submittedFutures, AtomicInteger checkCounter) {
+        if (submittedFutures.get() < futuresToComplete.get()) {
+            submittedFutures.set(futuresToComplete.get());
             checkCounter.set(0);
             return true;
         } else {
