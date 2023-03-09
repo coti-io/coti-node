@@ -6,6 +6,7 @@ import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;
 import io.coti.basenode.http.data.ReducedTransactionResponseData;
+import io.coti.basenode.http.data.RejectedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -39,7 +40,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
     protected long rejectedTransactionsTtl;
-    @Value("${number.of.days.ttl:30}")
+    @Value("${rejected.transactions.days.ttl:30}")
     private int numberOfDaysTTL;
 
     @Override
@@ -421,7 +422,51 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public ResponseEntity<IResponse> getRejectedTransactions() {
-        throw new UnsupportedOperationException();
+        try {
+            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
+            rejectedTransactions.forEach(rejectedTransaction -> rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction)));
+            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
+        } catch (Exception e) {
+            log.error("Exception while getting rejected transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(TRANSACTION_REJECTED_SERVER_ERROR, STATUS_ERROR));
+        }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
+        try {
+            deleteRejectedTransactionsRequest.getTransactionHashes().forEach(rejectedTransactionHash -> {
+                if (rejectedTransactions.getByHash(rejectedTransactionHash) == null) {
+                    throw new TransactionValidationException("Rejected transaction was not found for hash: " + rejectedTransactionHash);
+                }
+            });
+
+            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
+            deleteRejectedTransactionsRequest.getTransactionHashes().forEach(rejectedTransactionHash -> {
+                RejectedTransactionData rejectedTransaction = rejectedTransactions.getByHash(rejectedTransactionHash);
+                rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction));
+                removeAddressFromRejectedTransactionsMap(rejectedTransaction);
+                rejectedTransactions.deleteByHash(rejectedTransactionHash);
+            });
+
+            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
+        } catch (TransactionValidationException e) {
+            log.error("Exception while deleting rejected transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(INVALID_PARAMETERS_MESSAGE, STATUS_ERROR));
+        } catch (Exception e) {
+            log.error("Exception while deleting rejected transactions", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(TRANSACTION_DELETE_REJECTED_SERVER_ERROR, STATUS_ERROR));
+        }
+    }
+
+    protected void removeAddressFromRejectedTransactionsMap(RejectedTransactionData rejectedTransaction) {
+        //Implemented in FullNode
     }
 
     @Override
@@ -506,11 +551,6 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public void getTransactionsByDate(GetTransactionsByDateRequest getTransactionsByDateRequest, HttpServletResponse response) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
         throw new UnsupportedOperationException();
     }
 

@@ -2,16 +2,9 @@ package io.coti.dspnode.services;
 
 import io.coti.basenode.data.*;
 import io.coti.basenode.exceptions.TransactionValidationException;
-import io.coti.basenode.http.DeleteRejectedTransactionsRequest;
-import io.coti.basenode.http.GetRejectedTransactionsResponse;
-import io.coti.basenode.http.Response;
-import io.coti.basenode.http.data.RejectedTransactionResponseData;
-import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +16,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.coti.basenode.constants.BaseNodeMessages.AUTHENTICATION_FAILED_MESSAGE;
 import static io.coti.basenode.constants.BaseNodeMessages.REJECTED_PARENT;
-import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
 import static io.coti.dspnode.services.NodeServiceManager.*;
 
 @Slf4j
@@ -148,46 +140,6 @@ public class TransactionService extends BaseNodeTransactionService {
                     processRejectedTransactions(entry.getKey());
                 }
             }
-        }
-    }
-
-    @Override
-    public ResponseEntity<IResponse> getRejectedTransactions() {
-        try {
-            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
-            rejectedTransactions.forEach(rejectedTransaction -> rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction)));
-            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
-        } catch (Exception e) {
-            log.info("Exception while getting rejected transactions", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            TRANSACTION_REJECTED_SERVER_ERROR,
-                            STATUS_ERROR));
-        }
-    }
-
-    @Override
-    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
-        try {
-            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
-            deleteRejectedTransactionsRequest.getTransactionHashes().forEach(rejectedTransactionHash -> {
-                RejectedTransactionData rejectedTransaction = rejectedTransactions.getByHash(rejectedTransactionHash);
-                if (rejectedTransaction != null) {
-                    rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction));
-                    rejectedTransactions.deleteByHash(rejectedTransactionHash);
-                } else {
-                    log.warn("Rejected transaction was not found for hash: {}", rejectedTransactionHash);
-                }
-            });
-            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
-        } catch (Exception e) {
-            log.info("Exception while deleting rejected transactions", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            TRANSACTION_DELETE_REJECTED_SERVER_ERROR,
-                            STATUS_ERROR));
         }
     }
 

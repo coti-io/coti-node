@@ -121,9 +121,11 @@ public class BaseNodeAdminController {
 
     @Operation(summary = "Delete Rejected Transactions", operationId = "deleteRejectedTransactions")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of Deleted Rejected Transactions",
+            @ApiResponse(responseCode = "200", description = "Successfully deleted rejected transactions",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = GetRejectedTransactionsResponse.class))}),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters.",
+                    content = @Content),
             @ApiResponse(responseCode = "500", description = "Server error while deleting rejected transactions",
                     content = @Content)})
     @DeleteMapping(path = "/transaction/rejected/delete")

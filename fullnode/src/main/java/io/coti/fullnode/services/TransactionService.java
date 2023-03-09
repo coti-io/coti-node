@@ -701,7 +701,8 @@ public class TransactionService extends BaseNodeTransactionService {
         });
     }
 
-    private void removeAddressFromRejectedTransactionsMap(RejectedTransactionData rejectedTransactionData) {
+    @Override
+    protected void removeAddressFromRejectedTransactionsMap(RejectedTransactionData rejectedTransactionData) {
         rejectedTransactionData.getTransactionData().getBaseTransactions().forEach(baseTransactionData -> {
             Set<Hash> transactionHashSet = addressToRejectedTransactionsMap.getOrDefault(baseTransactionData.getAddressHash(), Sets.newConcurrentHashSet());
             transactionHashSet.remove(rejectedTransactionData.getHash());
@@ -763,47 +764,6 @@ public class TransactionService extends BaseNodeTransactionService {
         } catch (Exception e) {
             log.error("Error sending address rejected transaction batch");
             log.error(e.getMessage());
-        }
-    }
-
-    @Override
-    public ResponseEntity<IResponse> getRejectedTransactions() {
-        try {
-            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
-            rejectedTransactions.forEach(rejectedTransaction -> rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction)));
-            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
-        } catch (Exception e) {
-            log.info("Exception while getting rejected transactions", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            TRANSACTION_REJECTED_SERVER_ERROR,
-                            STATUS_ERROR));
-        }
-    }
-
-    @Override
-    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
-        try {
-            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
-            deleteRejectedTransactionsRequest.getTransactionHashes().forEach(rejectedTransactionHash -> {
-                RejectedTransactionData rejectedTransaction = rejectedTransactions.getByHash(rejectedTransactionHash);
-                if (rejectedTransaction != null) {
-                    rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction));
-                    removeAddressFromRejectedTransactionsMap(rejectedTransaction);
-                    rejectedTransactions.deleteByHash(rejectedTransactionHash);
-                } else {
-                    log.warn("Rejected transaction was not found for hash: {}", rejectedTransactionHash);
-                }
-            });
-            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
-        } catch (Exception e) {
-            log.info("Exception while deleting rejected transactions", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            TRANSACTION_DELETE_REJECTED_SERVER_ERROR,
-                            STATUS_ERROR));
         }
     }
 }

@@ -1,6 +1,7 @@
 package io.coti.zerospend.services;
 
 import io.coti.basenode.data.*;
+import io.coti.basenode.http.DeleteRejectedTransactionsRequest;
 import io.coti.basenode.http.SetIndexesRequest;
 import io.coti.basenode.http.SetIndexesResponse;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -61,5 +62,15 @@ public class TransactionService extends BaseNodeTransactionService {
     public void totalTransactionsAmountFromRecovery() {
         TransactionsStateData transactionsStateData = new TransactionsStateData(nodeTransactionHelper.getTotalTransactions());
         propagationPublisher.propagate(transactionsStateData, Arrays.asList(NodeType.DspNode, NodeType.TrustScoreNode, NodeType.FinancialServer, NodeType.HistoryNode));
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
+        throw new UnsupportedOperationException();
     }
 }

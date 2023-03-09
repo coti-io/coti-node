@@ -4,6 +4,7 @@ import io.coti.basenode.crypto.CryptoHelper;
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.http.*;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.BaseNodeTransactionService;
 import io.coti.historynode.data.AddressTransactionsByAddress;
 import io.coti.historynode.data.AddressTransactionsByDate;
@@ -207,4 +208,13 @@ public class TransactionService extends BaseNodeTransactionService {
         return entitiesStorageConnector.storeInStorage(url, addEntitiesBulkRequest, AddHistoryEntitiesResponse.class);
     }
 
+    @Override
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
+        throw new UnsupportedOperationException();
+    }
 }
