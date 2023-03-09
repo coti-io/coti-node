@@ -3,6 +3,7 @@ package io.coti.fullnode.controllers;
 import io.coti.basenode.data.TransactionIndexData;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.ReducedTransactionResponseData;
+import io.coti.basenode.http.data.RejectedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.fullnode.http.AddTransactionResponse;
@@ -155,6 +156,11 @@ public class TransactionController {
         transactionService.getAddressTransactionBatch(getAddressTransactionBatchRequest, response, true);
     }
 
+    @Operation(summary = "Get rejected Transaction History for Multiple Addresses", operationId = "getAddressRejectedTransactionBatch")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = RejectedTransactionResponseData.class))})})
     @PostMapping(value = "/addressTransactions/rejected/batch")
     public void getAddressRejectedTransactionBatch(@Valid @RequestBody GetAddressTransactionBatchRequest getAddressTransactionBatchRequest, HttpServletResponse response) {
         transactionService.getAddressRejectedTransactionBatch(getAddressTransactionBatchRequest, response);
