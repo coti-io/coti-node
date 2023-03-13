@@ -6,11 +6,13 @@ import io.coti.basenode.exceptions.TransactionValidationException;
 import io.coti.basenode.http.*;
 import io.coti.basenode.http.data.ExtendedTransactionResponseData;
 import io.coti.basenode.http.data.ReducedTransactionResponseData;
+import io.coti.basenode.http.data.RejectedTransactionResponseData;
 import io.coti.basenode.http.data.TransactionResponseData;
 import io.coti.basenode.http.data.interfaces.ITransactionResponseData;
 import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.ITransactionService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,24 +40,24 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     protected Map<TransactionData, Boolean> postponedTransactionMap = new ConcurrentHashMap<>();  // true/false means new from full node or propagated transaction
     private final LockData transactionLockData = new LockData();
-    protected static final long REJECTED_TRANSACTIONS_TTL = Duration.ofDays(30).getSeconds();
+    private long rejectedTransactionsSecondsTTL;
+    @Value("${rejected.transactions.days.ttl:30}")
+    private int rejectedTransactionsDaysTTL;
 
     @Override
     public void init() {
+        this.rejectedTransactionsSecondsTTL = Duration.ofDays(rejectedTransactionsDaysTTL).getSeconds();
         log.info("{} is up", this.getClass().getSimpleName());
     }
 
     @Override
-    public void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response,
-                                    boolean isExtended, boolean isIncludeRuntimeTrustScore) {
+    public void getTransactionBatch(long startingIndex, long endingIndex, HttpServletResponse response, boolean isExtended, boolean isIncludeRuntimeTrustScore) {
         CustomHttpServletResponse customResponse = new CustomHttpServletResponse(response);
         PrintWriter output;
         try {
             if ((startingIndex < 0) || (startingIndex > endingIndex && endingIndex != -1) || (startingIndex > transactionIndexService.getLastTransactionIndexData().getIndex())
                     || (transactionIndexService.getLastTransactionIndexData().getIndex()) < endingIndex) {
-                customResponse.printResponse(new Response(
-                        TRANSACTION_INDEX_INVALID,
-                        STATUS_ERROR), HttpStatus.BAD_REQUEST.value());
+                customResponse.printResponse(new Response(TRANSACTION_INDEX_INVALID, STATUS_ERROR), HttpStatus.BAD_REQUEST.value());
                 return;
             }
             output = customResponse.getWriter();
@@ -80,9 +83,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 if (firstTransactionSent.get()) {
                     chunkService.sendChunk(",", output);
                 }
-                customResponse.printResponse(new Response(
-                        TRANSACTION_RESPONSE_ERROR,
-                        STATUS_ERROR), HttpStatus.INTERNAL_SERVER_ERROR.value());
+                customResponse.printResponse(new Response(TRANSACTION_RESPONSE_ERROR, STATUS_ERROR), HttpStatus.INTERNAL_SERVER_ERROR.value());
                 if (isChunkStarted) {
                     chunkService.endOfChunk(output);
                 }
@@ -188,11 +189,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             return ResponseEntity.ok(new GetTransactionsResponse(noneIndexedTransactions));
         } catch (Exception e) {
             log.info("Exception while getting none indexed transactions", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            TRANSACTION_NONE_INDEXED_SERVER_ERROR,
-                            STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(TRANSACTION_NONE_INDEXED_SERVER_ERROR, STATUS_ERROR));
         }
     }
 
@@ -205,8 +202,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             AtomicBoolean firstTransactionSent = new AtomicBoolean(false);
 
             noneIndexedTransactionHashes.forEach(transactionHash ->
-                    sendTransactionResponse(transactionHash, firstTransactionSent, output, isExtended, true)
-            );
+                    sendTransactionResponse(transactionHash, firstTransactionSent, output, isExtended, true));
             chunkService.endOfChunk(output);
         } catch (Exception e) {
             log.error("Error sending none-indexed transaction batch");
@@ -224,11 +220,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             return ResponseEntity.ok(new GetExtendedTransactionsResponse(topologicalOrderedPostponedTransactions));
         } catch (Exception e) {
             log.info("Exception while getting postponed transactions", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            TRANSACTION_POSTPONED_SERVER_ERROR,
-                            STATUS_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(TRANSACTION_POSTPONED_SERVER_ERROR, STATUS_ERROR));
         }
     }
 
@@ -271,8 +263,7 @@ public class BaseNodeTransactionService implements ITransactionService {
         }
     }
 
-    protected void checkTransactionAlreadyPropagatedAndStartHandle(TransactionData transactionData, AtomicBoolean
-            isTransactionAlreadyPropagated) {
+    protected void checkTransactionAlreadyPropagatedAndStartHandle(TransactionData transactionData, AtomicBoolean isTransactionAlreadyPropagated) {
         try {
             synchronized (transactionLockData.addLockToLockMap(transactionData.getHash())) {
                 isTransactionAlreadyPropagated.set(nodeTransactionHelper.isTransactionAlreadyPropagated(transactionData));
@@ -337,8 +328,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    protected void handlePostponedTransaction(TransactionData postponedTransaction,
-                                              boolean isTransactionFromFullNode) {
+    protected void handlePostponedTransaction(TransactionData postponedTransaction, boolean isTransactionFromFullNode) {
         if (!isTransactionFromFullNode) {
             handlePropagatedTransaction(postponedTransaction);
         }
@@ -349,8 +339,8 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public void handleMissingTransaction(TransactionData
-                                                 transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes, EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap) {
+    public void handleMissingTransaction(TransactionData transactionData, Set<Hash> trustChainUnconfirmedExistingTransactionHashes,
+                                         EnumMap<InitializationTransactionHandlerType, ExecutorData> missingTransactionExecutorMap) {
         boolean transactionExists = nodeTransactionHelper.isTransactionExists(transactionData);
         transactions.put(transactionData);
         if (!transactionExists) {
@@ -358,8 +348,7 @@ public class BaseNodeTransactionService implements ITransactionService {
                 addDataToMemory(transactionData);
                 continueHandleMissingTransaction(transactionData);
             });
-            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() ->
-            {
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> {
                 confirmationService.insertMissingTransaction(transactionData);
                 currencyService.handleMissingTransaction(transactionData);
                 mintingService.handleMissingTransaction(transactionData);
@@ -367,8 +356,7 @@ public class BaseNodeTransactionService implements ITransactionService {
             nodeTransactionHelper.incrementTotalTransactions();
         } else {
             missingTransactionExecutorMap.get(InitializationTransactionHandlerType.TRANSACTION).skipTask();
-            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() ->
-            {
+            missingTransactionExecutorMap.get(InitializationTransactionHandlerType.CONFIRMATION).submit(() -> {
                 confirmationService.insertMissingConfirmation(transactionData, trustChainUnconfirmedExistingTransactionHashes);
                 currencyService.handleMissingTransaction(transactionData);
                 mintingService.handleMissingTransaction(transactionData);
@@ -383,8 +371,7 @@ public class BaseNodeTransactionService implements ITransactionService {
     }
 
     @Override
-    public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong
-            receivedTransactionNumber, String monitorThreadName) {
+    public Thread monitorTransactionThread(String type, AtomicLong transactionNumber, AtomicLong receivedTransactionNumber, String monitorThreadName) {
         return new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
@@ -418,7 +405,56 @@ public class BaseNodeTransactionService implements ITransactionService {
 
     @Override
     public ResponseEntity<IResponse> getRejectedTransactions() {
-        throw new UnsupportedOperationException();
+        try {
+            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
+            rejectedTransactions.forEach(rejectedTransaction -> rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction)));
+            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
+        } catch (Exception e) {
+            log.error("Exception while getting rejected transactions", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(TRANSACTION_REJECTED_SERVER_ERROR, STATUS_ERROR));
+        }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
+        try {
+            deleteRejectedTransactionsRequest.getTransactionHashes().forEach(rejectedTransactionHash -> {
+                if (rejectedTransactions.getByHash(rejectedTransactionHash) == null) {
+                    throw new TransactionValidationException("Rejected transaction was not found for hash: " + rejectedTransactionHash);
+                }
+            });
+
+            List<RejectedTransactionResponseData> rejectedTransactionDataList = new ArrayList<>();
+            deleteRejectedTransactionsRequest.getTransactionHashes().forEach(rejectedTransactionHash -> {
+                RejectedTransactionData rejectedTransaction = rejectedTransactions.getByHash(rejectedTransactionHash);
+                rejectedTransactionDataList.add(new RejectedTransactionResponseData(rejectedTransaction));
+                removeAddressFromRejectedTransactionsMap(rejectedTransaction);
+                rejectedTransactions.deleteByHash(rejectedTransactionHash);
+            });
+
+            return ResponseEntity.ok(new GetRejectedTransactionsResponse(rejectedTransactionDataList));
+        } catch (TransactionValidationException e) {
+            log.error("Exception while deleting rejected transactions", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(INVALID_PARAMETERS_MESSAGE, STATUS_ERROR));
+        } catch (Exception e) {
+            log.error("Exception while deleting rejected transactions", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(TRANSACTION_DELETE_REJECTED_SERVER_ERROR, STATUS_ERROR));
+        }
+    }
+
+    protected void removeAddressFromRejectedTransactionsMap(RejectedTransactionData rejectedTransaction) {
+        //Implemented in FullNode
+    }
+
+    protected void clearRejectedTransactions() {
+        rejectedTransactions.forEach(rejectedTransaction -> {
+            if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > rejectedTransactionsSecondsTTL)) {
+                log.debug("Removing rejected transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
+                        rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReasonDescription());
+                rejectedTransactions.delete(rejectedTransaction);
+                removeAddressFromRejectedTransactionsMap(rejectedTransaction);
+            }
+        });
     }
 
     @Override
@@ -519,13 +555,13 @@ public class BaseNodeTransactionService implements ITransactionService {
         return postponedTransactionMap.size();
     }
 
-    protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter
-            output, boolean isExtended, boolean isIncludeRuntimeTrustScore) {
+    protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output,
+                                           boolean isExtended, boolean isIncludeRuntimeTrustScore) {
         sendTransactionResponse(transactionHash, firstTransactionSent, output, null, false, isExtended, isIncludeRuntimeTrustScore);
     }
 
-    protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter
-            output, Hash addressHash, boolean reduced, boolean extended, boolean includeRuntimeTrustScore) {
+    protected void sendTransactionResponse(Hash transactionHash, AtomicBoolean firstTransactionSent, PrintWriter output,
+                                           Hash addressHash, boolean reduced, boolean extended, boolean includeRuntimeTrustScore) {
         try {
             TransactionData transactionData = transactions.getByHash(transactionHash);
             if (transactionData != null) {

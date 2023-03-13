@@ -380,9 +380,7 @@ public class TransactionService extends BaseNodeTransactionService {
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            ADDRESS_TRANSACTIONS_SERVER_ERROR,
-                            STATUS_ERROR));
+                    .body(new Response(ADDRESS_TRANSACTIONS_SERVER_ERROR, STATUS_ERROR));
         }
     }
 
@@ -529,9 +527,7 @@ public class TransactionService extends BaseNodeTransactionService {
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(
-                            ADDRESS_TRANSACTIONS_SERVER_ERROR,
-                            STATUS_ERROR));
+                    .body(new Response(ADDRESS_TRANSACTIONS_SERVER_ERROR, STATUS_ERROR));
         }
     }
 
@@ -701,7 +697,8 @@ public class TransactionService extends BaseNodeTransactionService {
         });
     }
 
-    private void removeAddressFromRejectedTransactionsMap(RejectedTransactionData rejectedTransactionData) {
+    @Override
+    protected void removeAddressFromRejectedTransactionsMap(RejectedTransactionData rejectedTransactionData) {
         rejectedTransactionData.getTransactionData().getBaseTransactions().forEach(baseTransactionData -> {
             Set<Hash> transactionHashSet = addressToRejectedTransactionsMap.getOrDefault(baseTransactionData.getAddressHash(), Sets.newConcurrentHashSet());
             transactionHashSet.remove(rejectedTransactionData.getHash());
@@ -719,16 +716,8 @@ public class TransactionService extends BaseNodeTransactionService {
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 86400000)
-    private void clearRejectedTransactions() {
-        rejectedTransactions.forEach(rejectedTransaction -> {
-                    if (rejectedTransaction != null && (Instant.now().getEpochSecond() - rejectedTransaction.getRejectionTime().getEpochSecond() > REJECTED_TRANSACTIONS_TTL)) {
-                        log.debug("removing rejected transaction due to TTL. hash: {}, rejection time: {}, reason: {}",
-                                rejectedTransaction.getHash(), rejectedTransaction.getRejectionTime(), rejectedTransaction.getRejectionReasonDescription());
-                        rejectedTransactions.delete(rejectedTransaction);
-                        removeAddressFromRejectedTransactionsMap(rejectedTransaction);
-                    }
-                }
-        );
+    private void clearRejectedTransactionsScheduler() {
+        clearRejectedTransactions();
     }
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)

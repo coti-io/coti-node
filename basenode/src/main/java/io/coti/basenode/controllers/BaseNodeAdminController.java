@@ -105,4 +105,31 @@ public class BaseNodeAdminController {
     public ResponseEntity<IResponse> deleteFeeValue(@Valid @RequestBody DeleteTokenFeeRequest deleteTokenFeeRequest) {
         return nodeFeesService.deleteFeeValue(deleteTokenFeeRequest);
     }
+
+    @Operation(summary = "Retrieve List of Rejected Transactions by Admin", operationId = "getRejectedTransactions")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of Rejected Transactions",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GetRejectedTransactionsResponse.class))}),
+            @ApiResponse(responseCode = "500", description = "Server error while getting rejected transactions",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Response.class))})})
+    @GetMapping(path = "/transaction/rejected")
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        return transactionService.getRejectedTransactions();
+    }
+
+    @Operation(summary = "Delete Rejected Transactions", operationId = "deleteRejectedTransactions")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted rejected transactions",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GetRejectedTransactionsResponse.class))}),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters.",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Server error while deleting rejected transactions",
+                    content = @Content)})
+    @DeleteMapping(path = "/transaction/rejected/delete")
+    public ResponseEntity<IResponse> deleteRejectedTransactions(@Valid @RequestBody DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
+        return transactionService.deleteRejectedTransactions(deleteRejectedTransactionsRequest);
+    }
 }

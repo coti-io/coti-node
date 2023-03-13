@@ -3,6 +3,7 @@ package io.coti.financialserver.services;
 import io.coti.basenode.data.ReceiverBaseTransactionOwnerData;
 import io.coti.basenode.data.TransactionData;
 import io.coti.basenode.data.TransactionType;
+import io.coti.basenode.http.DeleteRejectedTransactionsRequest;
 import io.coti.basenode.http.Response;
 import io.coti.basenode.http.TransactionRequest;
 import io.coti.basenode.http.interfaces.IResponse;
@@ -56,5 +57,15 @@ public class TransactionService extends BaseNodeTransactionService {
                 rollingReserveService.setRollingReserveReleaseDate(transactionData, rbtOwnerData.getMerchantHash());
             }
         }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> getRejectedTransactions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResponseEntity<IResponse> deleteRejectedTransactions(DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
+        throw new UnsupportedOperationException();
     }
 }
