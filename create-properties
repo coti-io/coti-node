@@ -40,7 +40,7 @@ fi
 #  - MAXIMUM_FEE
 #  - FEE_PERCENTAGE
 if [ -z ${SERVER_IP} ]; then
-  SERVER_IP=$(curl -s ifconfig.me) 
+  SERVER_IP=$(getent ahostsv4 $SERVERNAME | awk '{print $1}' | head -1) 
   echo "Detected Server IP: $SERVER_IP"
 fi
 if [ -z ${SERVER_PORT} ]; then
