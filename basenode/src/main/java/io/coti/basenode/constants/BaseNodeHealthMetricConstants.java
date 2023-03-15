@@ -31,6 +31,7 @@ public class BaseNodeHealthMetricConstants {
     public static final String PROPAGATION_SUBSCRIBER_TRANSACTION_QUEUE_SIZE_LABEL = "PropagationSubscriberTransactionQueueSize";
     public static final String PROPAGATION_SUBSCRIBER_HEARTBEAT_QUEUE_SIZE_LABEL = "PropagationSubscriberHeartbeatQueueSize";
     public static final String ZERO_MQ_RECEIVER_QUEUE_SIZE_LABEL = "ZeroMQReceiverQueueSize";
+    public static final String ZERO_MQ_SOCKET_DISCONNECTS_LABEL = "ZeroMQSocketDisconnects";
     public static final String PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL = "PropagationPublisherQueueSize";
     public static final String LIVE_FILES_SIZE_LABEL = "LiveFilesSize";
     public static final String LAST_BACKUP_ELAPSED_LABEL = "LastBackupElapsedSeconds";

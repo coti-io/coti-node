@@ -80,12 +80,12 @@ public class ZeroMQUtils {
     }
 
     public static int getSocketDisconnects(SocketType socketType) {
-        int currentNumber;
+        Integer currentNumber;
         synchronized (socketDisconnectMap) {
             currentNumber = socketDisconnectMap.get(socketType);
             socketDisconnectMap.put(socketType, 0);
         }
-        return currentNumber;
+        return currentNumber != null ? currentNumber : 0;
     }
 
     @SuppressWarnings("java:S3011")
