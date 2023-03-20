@@ -1,8 +1,6 @@
 package io.coti.fullnode.services;
 
-import io.coti.basenode.data.Hash;
-import io.coti.basenode.data.TransactionData;
-import io.coti.basenode.data.UnconfirmedReceivedTransactionHashData;
+import io.coti.basenode.data.*;
 import io.coti.basenode.services.BaseNodeTransactionPropagationCheckService;
 import io.coti.fullnode.data.UnconfirmedReceivedTransactionHashFullNodeData;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,7 +23,7 @@ import static io.coti.fullnode.services.NodeServiceManager.*;
 public class TransactionPropagationCheckService extends BaseNodeTransactionPropagationCheckService {
 
     private static final long PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE = 60;
-    private static final int NUMBER_OF_RETRIES_FULL_NODE = 3;
+    private static final int NUMBER_OF_RETRIES_FULL_NODE = 4;
 
     @Override
     public void init() {
@@ -108,7 +107,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                     unconfirmedReceivedTransactionHashFullnodeData.setRetries(0);
                 } else {
                     log.info("Sending unconfirmed transaction {}", transactionData.getHash());
-                    sendUnconfirmedReceivedTransactionsFullNode(transactionData);
+                    sendUnconfirmedReceivedTransactionsFullNode(transactionData, unconfirmedReceivedTransactionHashFullnodeData);
                     unconfirmedReceivedTransactionHashFullnodeData.setRetries(unconfirmedReceivedTransactionHashFullnodeData.getRetries() - 1);
                 }
             }
@@ -117,7 +116,19 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
-    private void sendUnconfirmedReceivedTransactionsFullNode(TransactionData transactionData) {
+    private void sendUnconfirmedReceivedTransactionsFullNode(TransactionData transactionData, UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData) {
+        handleSenderReconnect(unconfirmedReceivedTransactionHashFullnodeData);
         networkService.sendDataToConnectedDspNodes(transactionData);
+    }
+
+    private void handleSenderReconnect(UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData) {
+        if (unconfirmedReceivedTransactionHashFullnodeData.getRetries() > 2) {
+            return;
+        }
+        List<NetworkNodeData> connectedDspNodes = new ArrayList<>(networkService.getMapFromFactory(NodeType.DspNode).values());
+        for (NetworkNodeData connectedDspNode : connectedDspNodes) {
+            communicationService.removeSender(connectedDspNode.getReceivingFullAddress(), NodeType.DspNode);
+            communicationService.addSender(connectedDspNode.getReceivingFullAddress(), NodeType.DspNode);
+        }
     }
 }
