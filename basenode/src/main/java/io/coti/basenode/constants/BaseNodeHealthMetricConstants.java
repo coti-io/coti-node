@@ -24,7 +24,7 @@ public class BaseNodeHealthMetricConstants {
     public static final String DCR_CONFIRMATION_QUEUE_SIZE_LABEL = "DcrConfirmationQueueSize";
     public static final String PERCENTAGE_USED_HEAP_MEMORY_LABEL = "PercentageUsedHeapMemory";
     public static final String PERCENTAGE_USED_MEMORY_LABEL = "PercentageUsedMemory";
-    public static final String CONNECTED_TO_RECOVERY_LABEL = "ConnectedToRecovery";
+    public static final String NOT_CONNECTED_TO_RECOVERY_LABEL = "NotConnectedToRecovery";
     public static final String PROPAGATION_SUBSCRIBER_TRANSACTIONS_STATE_QUEUE_SIZE_LABEL = "PropagationSubscriberTransactionsStateQueueSize";
     public static final String PROPAGATION_SUBSCRIBER_NETWORK_QUEUE_SIZE_LABEL = "PropagationSubscriberNetworkQueueSize";
     public static final String PROPAGATION_SUBSCRIBER_ADDRESS_QUEUE_SIZE_LABEL = "PropagationSubscriberAddressQueueSize";

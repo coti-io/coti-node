@@ -16,6 +16,7 @@ public class HealthMetricData {
 
     private long metricValue;
     private long previousMetricValue;
+    private long worstMetricValue;
     private Instant snapshotTime;
     private HealthState lastHealthState;
     private int degradingCounter;
@@ -37,6 +38,7 @@ public class HealthMetricData {
     public HealthMetricData(HealthMetric healthMetric) {
         this.metricValue = 0;
         this.previousMetricValue = 0;
+        this.worstMetricValue = 0;
         this.lastHealthState = HealthState.NA;
         this.degradingCounter = 0;
         this.warningThreshold = healthMetric.getDefaultWarningThreshold();
@@ -53,6 +55,10 @@ public class HealthMetricData {
 
     public void increaseDegradingCounter() {
         this.degradingCounter += 1;
+    }
+
+    public void decreaseDegradingCounter() {
+        this.degradingCounter -= 1;
     }
 
     public void addValue(String metricName, HealthMetricOutputType healthMetricOutputType, String metricLabel, long metricValue) {
