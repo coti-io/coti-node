@@ -136,17 +136,10 @@ public class BaseNodeMonitorService implements IMonitorService {
         Health.Builder builder = new Health.Builder();
         HealthMetricData healthMetricData = getHealthMetricData(healthMetric);
 
-        if (healthMetric.isDetailedLogs() && !allowTransactionMonitoringDetailed) {
-            return null;
-        }
-
         if (!HealthMetric.isToAddExternalMetric(healthMetric.getHealthMetricOutputType()) ||
                 healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
             builder.unknown();
-            return builder.build();
-        }
-
-        if (healthMetricData.getLastHealthState().ordinal() == HealthState.CRITICAL.ordinal()) {
+        } else if (healthMetricData.getLastHealthState().ordinal() == HealthState.CRITICAL.ordinal()) {
             builder.down();
         } else {
             builder.up();
@@ -162,11 +155,15 @@ public class BaseNodeMonitorService implements IMonitorService {
             configMap.put("CriticalThreshold", criticalThreshold);
         }
         builder.withDetail("PreviousMetricValue", healthMetricData.getPreviousMetricValue());
+        builder.withDetail("WorstMetricValue", healthMetricData.getWorstMetricValue());
         builder.withDetail("MetricValue", healthMetricData.getMetricValue());
         if (healthMetricData.getDegradingCounter() > 0) {
             builder.withDetail("Counter", healthMetricData.getDegradingCounter());
         }
-        healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
+        boolean addDetails = allowTransactionMonitoringDetailed || !healthMetric.isDetailedLogs();
+        if (addDetails) {
+            healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
+        }
         builder.withDetail("Configuration", configMap);
         builder.withDetail("Description", healthMetric.getDescription());
         return builder.build();

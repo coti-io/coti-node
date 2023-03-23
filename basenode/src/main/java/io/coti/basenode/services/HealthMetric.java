@@ -16,7 +16,7 @@ import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 public enum HealthMetric implements IHealthMetric {
 
-    TOTAL_TRANSACTIONS_DELTA(TOTAL_TRANSACTIONS_DELTA_LABEL, MetricClass.TRANSACTIONS_METRIC, 2, 3, true, HealthMetricOutputType.EXTERNAL) {
+    TOTAL_TRANSACTIONS_DELTA(TOTAL_TRANSACTIONS_DELTA_LABEL, MetricClass.TRANSACTIONS_METRIC, 2, 5, true, HealthMetricOutputType.EXTERNAL) {
         @Override
         public void doSnapshot() {
             long totalTransactions = nodeTransactionHelper.getTotalTransactions();
@@ -25,7 +25,7 @@ public enum HealthMetric implements IHealthMetric {
             long totalTransactionsFromRecoveryServer = nodeTransactionHelper.getTotalNumberOfTransactionsFromRecovery();
             if (totalTransactionsFromRecoveryServer > 0) {
                 healthMetricData.addValue(TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, HealthMetricOutputType.EXTERNAL, TOTAL_TRANSACTIONS_FROM_RECOVERY_LABEL, totalTransactionsFromRecoveryServer);
-                baseDoSnapshot(this, totalTransactionsFromRecoveryServer - totalTransactions);
+                baseDoSnapshot(this, Math.abs(totalTransactionsFromRecoveryServer - totalTransactions));
             } else {
                 baseDoSnapshot(this, (long) -1);
             }
@@ -251,7 +251,7 @@ public enum HealthMetric implements IHealthMetric {
             return "Percentage of used memory.";
         }
     },
-    CONNECTED_TO_RECOVERY(CONNECTED_TO_RECOVERY_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 1, false, HealthMetricOutputType.EXTERNAL) {
+    NOT_CONNECTED_TO_RECOVERY(NOT_CONNECTED_TO_RECOVERY_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 1, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
             int notConnectedToRecovery = !networkService.isConnectedToRecovery() ? 1 : 0;
             baseDoSnapshot(this, (long) notConnectedToRecovery);
@@ -575,13 +575,14 @@ public enum HealthMetric implements IHealthMetric {
     }
 
     private static boolean healthIsDegrading(HealthMetricData healthMetricData) {
-        return Math.abs(healthMetricData.getMetricValue()) > Math.abs(healthMetricData.getPreviousMetricValue());
+        return Math.abs(healthMetricData.getMetricValue()) > Math.abs(healthMetricData.getWorstMetricValue());
     }
 
     private static void calculateHealthCounterMetricState(HealthMetricData healthMetricData) {
         if (healthMetricData.getMetricValue() != 0) {
             if (healthIsDegrading(healthMetricData)) {
                 healthMetricData.increaseDegradingCounter();
+                healthMetricData.setWorstMetricValue(healthMetricData.getMetricValue());
             }
             if (healthMetricData.getDegradingCounter() >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
                 healthMetricData.setLastHealthState(HealthState.CRITICAL);
@@ -592,6 +593,7 @@ public enum HealthMetric implements IHealthMetric {
             }
         } else {
             healthMetricData.setDegradingCounter(0);
+            healthMetricData.setWorstMetricValue(0);
             healthMetricData.setLastHealthState(HealthState.NORMAL);
         }
     }
@@ -599,6 +601,9 @@ public enum HealthMetric implements IHealthMetric {
     private static void calculateHealthValueMetricState(HealthMetric healthMetric) {
         HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
         long currentMetricValue = healthMetricData.getMetricValue();
+        if (healthIsDegrading(healthMetricData)) {
+            healthMetricData.setWorstMetricValue(healthMetricData.getMetricValue());
+        }
         if (currentMetricValue >= healthMetricData.getCriticalThreshold() && healthMetricData.getCriticalThreshold() >= healthMetricData.getWarningThreshold()) {
             healthMetricData.setLastHealthState(HealthState.CRITICAL);
         } else if (currentMetricValue >= healthMetricData.getWarningThreshold()) {
