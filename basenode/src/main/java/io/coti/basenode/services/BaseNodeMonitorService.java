@@ -143,10 +143,7 @@ public class BaseNodeMonitorService implements IMonitorService {
         if (!HealthMetric.isToAddExternalMetric(healthMetric.getHealthMetricOutputType()) ||
                 healthMetricData.getLastHealthState().ordinal() == HealthState.NA.ordinal()) {
             builder.unknown();
-            return builder.build();
-        }
-
-        if (healthMetricData.getLastHealthState().ordinal() == HealthState.CRITICAL.ordinal()) {
+        } else if (healthMetricData.getLastHealthState().ordinal() == HealthState.CRITICAL.ordinal()) {
             builder.down();
         } else {
             builder.up();
@@ -166,7 +163,10 @@ public class BaseNodeMonitorService implements IMonitorService {
         if (healthMetricData.getDegradingCounter() > 0) {
             builder.withDetail("Counter", healthMetricData.getDegradingCounter());
         }
-        healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
+        boolean addDetails = !healthMetric.isDetailedLogs() || (healthMetric.isDetailedLogs() && allowTransactionMonitoringDetailed);
+        if (addDetails) {
+            healthMetricData.getAdditionalValues().forEach((key, value) -> builder.withDetail(key, value.getValue()));
+        }
         builder.withDetail("Configuration", configMap);
         builder.withDetail("Description", healthMetric.getDescription());
         return builder.build();

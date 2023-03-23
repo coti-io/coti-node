@@ -5,14 +5,14 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 import static io.coti.basenode.services.BaseNodeServiceManager.monitorService;
-import static io.coti.basenode.services.HealthMetric.CONNECTED_TO_RECOVERY;
+import static io.coti.basenode.services.HealthMetric.NOT_CONNECTED_TO_RECOVERY;
 
 @Component
 public class ConnectedToRecoveryHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        return monitorService.getHealthBuilder(CONNECTED_TO_RECOVERY);
+        return monitorService.getHealthBuilder(NOT_CONNECTED_TO_RECOVERY);
     }
 
 }
