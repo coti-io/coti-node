@@ -146,6 +146,12 @@ public class ZeroMQSender implements ISender {
     }
 
     @Override
+    public boolean checkAddressConnected(String receivingAddress) {
+        SenderSocketData senderSocketData = receivingAddressToSenderSocketMapping.get(receivingAddress);
+        return senderSocketData != null;
+    }
+
+    @Override
     public void initMonitor() {
         monitorInitialized.set(true);
     }

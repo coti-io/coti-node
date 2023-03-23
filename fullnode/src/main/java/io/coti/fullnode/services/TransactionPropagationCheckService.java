@@ -24,7 +24,7 @@ import static io.coti.fullnode.services.NodeServiceManager.*;
 public class TransactionPropagationCheckService extends BaseNodeTransactionPropagationCheckService {
 
     private static final long PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE = 60;
-    private static final int NUMBER_OF_RETRIES_FULL_NODE = 4;
+    private static final int NUMBER_OF_RETRIES_FULL_NODE = 5;
 
     @Override
     public void init() {
@@ -125,13 +125,12 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     private void handleSenderReconnect(UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData, AtomicBoolean reconnectDone) {
-        if (reconnectDone.get() || unconfirmedReceivedTransactionHashFullnodeData.getRetries() > 2) {
+        if (reconnectDone.get() || unconfirmedReceivedTransactionHashFullnodeData.getRetries() != 3 ) {
             return;
         }
         List<NetworkNodeData> connectedDspNodes = new ArrayList<>(networkService.getMapFromFactory(NodeType.DspNode).values());
         for (NetworkNodeData connectedDspNode : connectedDspNodes) {
-            communicationService.removeSender(connectedDspNode.getReceivingFullAddress(), NodeType.DspNode);
-            communicationService.addSender(connectedDspNode.getReceivingFullAddress(), NodeType.DspNode);
+            communicationService.senderReconnect(connectedDspNode.getReceivingFullAddress(), NodeType.DspNode);
             reconnectDone.set(true);
         }
     }

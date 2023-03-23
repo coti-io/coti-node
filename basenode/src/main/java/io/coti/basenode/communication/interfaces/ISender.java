@@ -14,4 +14,6 @@ public interface ISender {
     void disconnectFromNode(String receivingFullAddress, NodeType nodeType);
 
     void shutdown();
+
+    boolean checkAddressConnected(String receivingAddress);
 }

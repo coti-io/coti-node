@@ -192,11 +192,10 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     private void handleSenderReconnect(String zeroSpendReceivingAddress, UnconfirmedReceivedTransactionHashDspNodeData dspNodeData, AtomicBoolean reconnectDone) {
-        if (reconnectDone.get() || dspNodeData.getRetries() > 3) {
+        if (reconnectDone.get() || dspNodeData.getRetries() != 3) {
             return;
         }
-        communicationService.removeSender(zeroSpendReceivingAddress, NodeType.ZeroSpendServer);
-        communicationService.addSender(zeroSpendReceivingAddress, NodeType.ZeroSpendServer);
+        communicationService.senderReconnect(zeroSpendReceivingAddress, NodeType.ZeroSpendServer);
         reconnectDone.set(true);
     }
 }

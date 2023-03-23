@@ -2,6 +2,7 @@ package io.coti.basenode.services;
 
 import io.coti.basenode.data.*;
 import io.coti.basenode.data.interfaces.IPropagatable;
+import io.coti.basenode.exceptions.CotiRunTimeException;
 import io.coti.basenode.services.interfaces.ICommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,22 @@ public class CommunicationService implements ICommunicationService {
     @Override
     public void removeSender(String receivingFullAddress, NodeType nodeType) {
         zeroMQSender.disconnectFromNode(receivingFullAddress, nodeType);
+    }
+
+    @Override
+    public void senderReconnect(String receivingFullAddress, NodeType nodeType) {
+        int counter = 0;
+        while (counter == 0 || (counter < 2 && !zeroMQSender.checkAddressConnected(receivingFullAddress))) {
+            zeroMQSender.disconnectFromNode(receivingFullAddress, nodeType);
+            zeroMQSender.connectToNode(receivingFullAddress, nodeType);
+            counter++;
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CotiRunTimeException(String.format("Error while sleep waiting for sender reconnect, error: %s", e));
+            }
+        }
     }
 
     @Override
