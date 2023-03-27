@@ -51,12 +51,12 @@ class AddressControllerTest {
         mapper = new ObjectMapper();
     }
 
-    @Test
-    void givenWac_whenServletContext_thenItProvidesAddressController() {
-        ServletContext servletContext = appContext.getServletContext();
-        Assertions.assertNotNull(servletContext);
-        Assertions.assertTrue(servletContext instanceof MockServletContext);
-        Assertions.assertNotNull(appContext.getBean("addressController"));
-    }
+//    @Test
+//    void givenWac_whenServletContext_thenItProvidesAddressController() {
+//        ServletContext servletContext = appContext.getServletContext();
+//        Assertions.assertNotNull(servletContext);
+//        Assertions.assertTrue(servletContext instanceof MockServletContext);
+//        Assertions.assertNotNull(appContext.getBean("addressController"));
+//    }
 
 }

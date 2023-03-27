@@ -15,6 +15,12 @@
             <groupId>io.coti</groupId>
             <artifactId>basenode</artifactId>
             <version>3.2.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-webmvc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

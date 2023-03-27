@@ -18,16 +18,16 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.MainResponse;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.xcontent.XContentBuilder;
+import org.elasticsearch.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.elasticsearch.xcontent.XContentFactory.jsonBuilder;
 
 
 @Slf4j
@@ -233,7 +233,8 @@ public class DbConnectorService implements IDbConnectorService {
     private void sendCreateIndexRequest(String index, boolean fromColdStorage) {
         try {
             CreateIndexRequest request = new CreateIndexRequest(index);
-            request.settings(Settings.builder()
+            Settings.Builder builder = Settings.builder();
+            request.settings(builder
                     .put("index.number_of_shards", INDEX_NUMBER_OF_SHARDS)
                     .put("index.number_of_replicas", INDEX_NUMBER_OF_REPLICAS)
             );
@@ -255,7 +256,7 @@ public class DbConnectorService implements IDbConnectorService {
             buildObjectName(objectName, builder);
             builder.endObject();
             PutMappingRequest request = new PutMappingRequest(index);
-            request.source(builder);
+            request.source();
             if (fromColdStorage) {
                 restColdStorageClient.indices().putMapping(request, RequestOptions.DEFAULT);
             } else {
