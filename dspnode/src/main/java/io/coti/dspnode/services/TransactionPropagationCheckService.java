@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static io.coti.dspnode.services.NodeServiceManager.*;
@@ -135,12 +134,11 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
             log.error("ZeroSpendServer is not in the network. Failed to send unconfirmed transactions.");
             return;
         }
-        AtomicBoolean reconnectDone = new AtomicBoolean();
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
                 .filter(entry -> entry.getValue().getCreatedTime().plusSeconds(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_DSP_NODE).isBefore(Instant.now()))
-                .forEach(entry -> sendUnconfirmedReceivedTransactionsDSP(entry, reconnectDone));
+                .forEach(this::sendUnconfirmedReceivedTransactionsDSP);
         List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
@@ -151,7 +149,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
     }
 
-    private void sendUnconfirmedReceivedTransactionsDSP(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry, AtomicBoolean reconnectDone) {
+    private void sendUnconfirmedReceivedTransactionsDSP(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
         Hash transactionHash = entry.getKey();
         UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData = (UnconfirmedReceivedTransactionHashDspNodeData) entry.getValue();
         try {
@@ -161,7 +159,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                 if (transactionData == null) {
                     unconfirmedReceivedTransactionHashDspNodeData.setRetries(0);
                 } else {
-                    sendUnconfirmedReceivedTransactionsDSP(transactionData, unconfirmedReceivedTransactionHashDspNodeData, reconnectDone);
+                    sendUnconfirmedReceivedTransactionsDSP(transactionData, unconfirmedReceivedTransactionHashDspNodeData);
                     unconfirmedReceivedTransactionHashDspNodeData.setRetries(unconfirmedReceivedTransactionHashDspNodeData.getRetries() - 1);
                 }
             }
@@ -170,7 +168,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
     }
 
-    private void sendUnconfirmedReceivedTransactionsDSP(TransactionData transactionData, UnconfirmedReceivedTransactionHashDspNodeData dspNodeData, AtomicBoolean reconnectDone) {
+    private void sendUnconfirmedReceivedTransactionsDSP(TransactionData transactionData, UnconfirmedReceivedTransactionHashDspNodeData dspNodeData) {
         if (!dspNodeData.isDspVoteOnly()) {
             log.info("Sending unconfirmed transaction {} to ZeroSpendServer", transactionData.getHash());
             propagationPublisher.propagate(transactionData, Arrays.asList(
@@ -186,16 +184,15 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         if (transactionDspVote != null) {
             log.info("Sending dsp vote for transaction {} to ZeroSpendServer", transactionData.getHash());
             String zeroSpendReceivingAddress = networkService.getSingleNodeData(NodeType.ZeroSpendServer).getReceivingFullAddress();
-            handleSenderReconnect(zeroSpendReceivingAddress, dspNodeData, reconnectDone);
+            handleSenderReconnect(zeroSpendReceivingAddress, dspNodeData);
             zeroMQSender.send(transactionDspVote, zeroSpendReceivingAddress);
         }
     }
 
-    private void handleSenderReconnect(String zeroSpendReceivingAddress, UnconfirmedReceivedTransactionHashDspNodeData dspNodeData, AtomicBoolean reconnectDone) {
-        if (reconnectDone.get() || dspNodeData.getRetries() != 3) {
+    private void handleSenderReconnect(String zeroSpendReceivingAddress, UnconfirmedReceivedTransactionHashDspNodeData dspNodeData) {
+        if (dspNodeData.getRetries() != 3) {
             return;
         }
         communicationService.senderReconnect(zeroSpendReceivingAddress, NodeType.ZeroSpendServer);
-        reconnectDone.set(true);
     }
 }

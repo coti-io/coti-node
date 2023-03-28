@@ -74,17 +74,11 @@ public class ZeroMQUtils {
     }
 
     private static void updateDisconnectMap(SocketType socketType) {
-        synchronized (socketDisconnectMap) {
-            socketDisconnectMap.put(socketType, socketDisconnectMap.get(socketType) + 1);
-        }
+        socketDisconnectMap.computeIfPresent(socketType, (key, oldValue) -> oldValue + 1);
     }
 
     public static int getSocketDisconnects(SocketType socketType) {
-        Integer currentNumber;
-        synchronized (socketDisconnectMap) {
-            currentNumber = socketDisconnectMap.get(socketType);
-            socketDisconnectMap.put(socketType, 0);
-        }
+        Integer currentNumber = socketDisconnectMap.put(socketType, 0);
         return currentNumber != null ? currentNumber : 0;
     }
 

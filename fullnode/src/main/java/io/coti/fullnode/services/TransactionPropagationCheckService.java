@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static io.coti.fullnode.services.NodeServiceManager.*;
@@ -82,12 +81,11 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
             log.error("FullNode is not connected to any DspNode. Failed to send unconfirmed transactions.");
             return;
         }
-        AtomicBoolean reconnectDone = new AtomicBoolean();
         unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
                 .filter(entry -> entry.getValue().getCreatedTime().plusSeconds(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_FULL_NODE).isBefore(Instant.now()))
-                .forEach(entry -> sendUnconfirmedReceivedTransactionsFullNode(entry, reconnectDone));
+                .forEach(this::sendUnconfirmedReceivedTransactionsFullNode);
         List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
                 .entrySet()
                 .stream()
@@ -98,7 +96,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
     }
 
-    private void sendUnconfirmedReceivedTransactionsFullNode(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry, AtomicBoolean reconnectDone) {
+    private void sendUnconfirmedReceivedTransactionsFullNode(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
         Hash transactionHash = entry.getKey();
         UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData = (UnconfirmedReceivedTransactionHashFullNodeData) entry.getValue();
         try {
@@ -109,7 +107,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                     unconfirmedReceivedTransactionHashFullnodeData.setRetries(0);
                 } else {
                     log.info("Sending unconfirmed transaction {}", transactionData.getHash());
-                    sendUnconfirmedReceivedTransactionsFullNode(transactionData, unconfirmedReceivedTransactionHashFullnodeData, reconnectDone);
+                    sendUnconfirmedReceivedTransactionsFullNode(transactionData, unconfirmedReceivedTransactionHashFullnodeData);
                     unconfirmedReceivedTransactionHashFullnodeData.setRetries(unconfirmedReceivedTransactionHashFullnodeData.getRetries() - 1);
                 }
             }
@@ -119,19 +117,18 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
     }
 
     private void sendUnconfirmedReceivedTransactionsFullNode(TransactionData transactionData,
-                                                             UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData, AtomicBoolean reconnectDone) {
-        handleSenderReconnect(unconfirmedReceivedTransactionHashFullnodeData, reconnectDone);
+                                                             UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData) {
+        handleSenderReconnect(unconfirmedReceivedTransactionHashFullnodeData);
         networkService.sendDataToConnectedDspNodes(transactionData);
     }
 
-    private void handleSenderReconnect(UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData, AtomicBoolean reconnectDone) {
-        if (reconnectDone.get() || unconfirmedReceivedTransactionHashFullnodeData.getRetries() != 3 ) {
+    private void handleSenderReconnect(UnconfirmedReceivedTransactionHashFullNodeData unconfirmedReceivedTransactionHashFullnodeData) {
+        if (unconfirmedReceivedTransactionHashFullnodeData.getRetries() != 3) {
             return;
         }
         List<NetworkNodeData> connectedDspNodes = new ArrayList<>(networkService.getMapFromFactory(NodeType.DspNode).values());
         for (NetworkNodeData connectedDspNode : connectedDspNodes) {
             communicationService.senderReconnect(connectedDspNode.getReceivingFullAddress(), NodeType.DspNode);
-            reconnectDone.set(true);
         }
     }
 }

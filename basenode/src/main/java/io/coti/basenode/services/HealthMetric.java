@@ -386,7 +386,7 @@ public enum HealthMetric implements IHealthMetric {
 
         @Override
         public String getDescription() {
-            return "ZeroMQ Number of Socket Disconnects";
+            return "Number of times (per second) that the ZeroMQ Dealer (client) disconnected from Router (server)";
         }
     },
     PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {

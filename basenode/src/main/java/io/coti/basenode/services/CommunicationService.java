@@ -43,17 +43,30 @@ public class CommunicationService implements ICommunicationService {
 
     @Override
     public void senderReconnect(String receivingFullAddress, NodeType nodeType) {
-        int counter = 0;
-        while (counter == 0 || (counter < 2 && !zeroMQSender.checkAddressConnected(receivingFullAddress))) {
-            zeroMQSender.disconnectFromNode(receivingFullAddress, nodeType);
+        if (zeroMQSender.isNewlyConnectedToNode(receivingFullAddress)) {
+            return;
+        }
+        int numberOfReconnectAttempts = 0;
+        do {
+            if (zeroMQSender.isConnectedToNode(receivingFullAddress)) {
+                zeroMQSender.disconnectFromNode(receivingFullAddress, nodeType);
+            }
             zeroMQSender.connectToNode(receivingFullAddress, nodeType);
-            counter++;
+            waitUntilConnected(receivingFullAddress);
+            numberOfReconnectAttempts++;
+        } while (numberOfReconnectAttempts < 3 && !zeroMQSender.isConnectedToNode(receivingFullAddress));
+    }
+
+    private static void waitUntilConnected(String receivingFullAddress) {
+        int numberOfChecks = 0;
+        while (numberOfChecks < 25 && !zeroMQSender.isConnectedToNode(receivingFullAddress)) {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new CotiRunTimeException(String.format("Error while sleep waiting for sender reconnect, error: %s", e));
             }
+            numberOfChecks++;
         }
     }
 

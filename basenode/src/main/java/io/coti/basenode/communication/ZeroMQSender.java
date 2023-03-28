@@ -146,9 +146,18 @@ public class ZeroMQSender implements ISender {
     }
 
     @Override
-    public boolean checkAddressConnected(String receivingAddress) {
+    public boolean isConnectedToNode(String receivingAddress) {
         SenderSocketData senderSocketData = receivingAddressToSenderSocketMapping.get(receivingAddress);
         return senderSocketData != null;
+    }
+
+    @Override
+    public boolean isNewlyConnectedToNode(String receivingAddress) {
+        SenderSocketData senderSocketData = receivingAddressToSenderSocketMapping.get(receivingAddress);
+        if (senderSocketData == null) {
+            return false;
+        }
+        return senderSocketData.getSenderConnectionTime().plusSeconds(60).isAfter(Instant.now());
     }
 
     @Override
