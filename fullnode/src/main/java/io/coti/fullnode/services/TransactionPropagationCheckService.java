@@ -128,7 +128,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         }
         List<NetworkNodeData> connectedDspNodes = new ArrayList<>(networkService.getMapFromFactory(NodeType.DspNode).values());
         for (NetworkNodeData connectedDspNode : connectedDspNodes) {
-            communicationService.senderReconnect(connectedDspNode.getReceivingFullAddress(), NodeType.DspNode);
+            communicationService.reconnectSender(connectedDspNode.getReceivingFullAddress(), NodeType.DspNode);
         }
     }
 }

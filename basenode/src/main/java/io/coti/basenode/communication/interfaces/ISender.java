@@ -7,7 +7,7 @@ public interface ISender {
 
     void connectToNode(String receivingServerAddress, NodeType nodeType);
 
-    boolean isNewlyConnectedToNode(String receivingAddress);
+    boolean isRecentlyConnectedToNode(String receivingAddress);
 
     void initMonitor();
 

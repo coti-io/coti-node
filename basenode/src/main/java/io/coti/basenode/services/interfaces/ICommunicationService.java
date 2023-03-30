@@ -18,7 +18,7 @@ public interface ICommunicationService {
 
     void removeSender(String receivingFullAddress, NodeType nodeType);
 
-    void senderReconnect(String receivingFullAddress, NodeType nodeType);
+    void reconnectSender(String receivingFullAddress, NodeType nodeType);
 
     void addSubscription(String propagationServerAddress, NodeType publisherNodeType);
 

@@ -376,7 +376,7 @@ public enum HealthMetric implements IHealthMetric {
     },
     ZERO_MQ_SOCKET_DISCONNECTS(ZERO_MQ_SOCKET_DISCONNECTS_LABEL, MetricClass.QUEUE_METRIC, 10, 20, false, HealthMetricOutputType.EXTERNAL) {
         public void doSnapshot() {
-            baseDoSnapshot(this, (long) ZeroMQUtils.getSocketDisconnects(SocketType.ROUTER));
+            baseDoSnapshot(this, (long) ZeroMQUtils.getSocketDisconnects(SocketType.ROUTER, true));
         }
 
         @Override

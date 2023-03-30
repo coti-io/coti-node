@@ -193,6 +193,6 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
         if (dspNodeData.getRetries() != 3) {
             return;
         }
-        communicationService.senderReconnect(zeroSpendReceivingAddress, NodeType.ZeroSpendServer);
+        communicationService.reconnectSender(zeroSpendReceivingAddress, NodeType.ZeroSpendServer);
     }
 }
