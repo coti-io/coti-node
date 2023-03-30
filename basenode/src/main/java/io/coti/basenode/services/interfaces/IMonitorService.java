@@ -2,8 +2,10 @@ package io.coti.basenode.services.interfaces;
 
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthState;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.HealthMetric;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -27,4 +29,6 @@ public interface IMonitorService {
     void initNodeMonitor();
 
     boolean monitoringStarted();
+
+    ResponseEntity<IResponse> refreshThresholds();
 }

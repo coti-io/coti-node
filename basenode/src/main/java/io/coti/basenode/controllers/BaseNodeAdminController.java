@@ -132,4 +132,16 @@ public class BaseNodeAdminController {
     public ResponseEntity<IResponse> deleteRejectedTransactions(@Valid @RequestBody DeleteRejectedTransactionsRequest deleteRejectedTransactionsRequest) {
         return transactionService.deleteRejectedTransactions(deleteRejectedTransactionsRequest);
     }
+
+    @Operation(summary = "Refresh Health Indicators Thresholds", operationId = "refreshThresholds")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Set of successfully refreshed threshold keys",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Response.class))}),
+            @ApiResponse(responseCode = "500", description = "Server error while updating thresholds",
+                    content = @Content)})
+    @GetMapping(path = "/health/threshold/refresh")
+    public ResponseEntity<IResponse> refreshThresholds() {
+        return monitorService.refreshThresholds();
+    }
 }

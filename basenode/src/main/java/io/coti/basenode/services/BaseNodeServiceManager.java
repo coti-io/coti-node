@@ -12,6 +12,7 @@ import io.coti.basenode.services.liveview.LiveViewService;
 import io.coti.basenode.utilities.MonitorConfigurationProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.endpoint.RefreshEndpoint;
 import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -106,6 +107,7 @@ public class BaseNodeServiceManager implements INodeServiceManager {
     public static TransactionVotes transactionVotes;
     public static INodeIdentityService nodeIdentityService;
     public static ISecretManagerService secretManagerService;
+    public static RefreshEndpoint refreshEndpoint;
 
     @Autowired
     public INodeIdentityService autowiredNodeIdentityService;
@@ -267,6 +269,8 @@ public class BaseNodeServiceManager implements INodeServiceManager {
     public IDatabaseService autowiredDatabaseService;
     @Autowired
     public ISubscriberHandler autowiredSubscriberHandler;
+    @Autowired
+    public RefreshEndpoint autowiredRefreshEndpoint;
 
     public void init() {
         List<Field> autowiredFields = Arrays.stream(this.getClass().getFields()).filter(p -> p.getDeclaredAnnotation(Autowired.class) != null).collect(Collectors.toList());

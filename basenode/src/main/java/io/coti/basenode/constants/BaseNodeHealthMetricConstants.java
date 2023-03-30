@@ -44,6 +44,9 @@ public class BaseNodeHealthMetricConstants {
     public static final String BACKUP_REMOVAL_DURATION_LABEL = "BackupRemovalDuration";
 
 
+    public static final String SET_WARNING_THRESHOLD = "setWarningThreshold";
+    public static final String SET_CRITICAL_THRESHOLD = "setCriticalThreshold";
+
     private BaseNodeHealthMetricConstants() {
     }
 }
