@@ -12,9 +12,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
+import org.springframework.cloud.endpoint.RefreshEndpoint;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -24,7 +30,9 @@ import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.TOTAL_TRA
 import static io.coti.basenode.services.BaseNodeServiceManager.*;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {BaseNodeMonitorService.class, MonitorConfigurationProperties.class})
+@ContextConfiguration(classes = {BaseNodeMonitorService.class, MonitorConfigurationProperties.class,
+        RefreshEndpoint.class})
+@ImportAutoConfiguration(RefreshAutoConfiguration.class)
 @EnableConfigurationProperties(value = MonitorConfigurationProperties.class)
 @TestPropertySource(locations = "classpath:test.properties")
 @SpringBootTest
@@ -41,14 +49,16 @@ class BaseNodeMonitorServiceTest {
     public MonitorConfigurationProperties monitorConfigurationPropertiesLocal;
     @MockBean
     BaseNodeTransactionHelper transactionHelper;
+    @Autowired
+    RefreshEndpoint refresher;
 
     @BeforeEach
     void init() {
         nodeTransactionHelper = transactionHelper;
         monitorConfigurationProperties = monitorConfigurationPropertiesLocal;
         monitorService = monitorServiceLocal;
+        refreshEndpoint = refresher;
         monitorService.initNodeMonitor();
-
     }
 
     private void initMetricData(HealthMetric healthMetric) {
@@ -91,7 +101,7 @@ class BaseNodeMonitorServiceTest {
         HealthMetric healthMetric = HealthMetric.TOTAL_TRANSACTIONS_DELTA;
         initMetricData(healthMetric);
         HealthMetricData healthMetricData = monitorService.getHealthMetricData(healthMetric);
-        healthMetricData.setDegradingCounter(3);
+        healthMetricData.setDegradingCounter(4);
 
         HealthState healthState = HealthState.CRITICAL;
         totalTransactionsCheckHealthState(totalTransactionsFromLocal, totalTransactionsFromRecovery, healthState, healthMetric);

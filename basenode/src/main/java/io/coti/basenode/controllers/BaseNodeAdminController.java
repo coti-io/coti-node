@@ -135,7 +135,7 @@ public class BaseNodeAdminController {
 
     @Operation(summary = "Refresh Health Indicators Thresholds", operationId = "refreshThresholds")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Set of successfully refreshed threshold keys",
+            @ApiResponse(responseCode = "200", description = "Health indicators thresholds successfully updated",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = Response.class))}),
             @ApiResponse(responseCode = "500", description = "Server error while updating thresholds",

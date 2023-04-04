@@ -20,7 +20,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -79,14 +78,13 @@ public class BaseNodeMonitorService implements IMonitorService {
 
     @Override
     public ResponseEntity<IResponse> refreshThresholds() {
-        Set<String> keys;
         try {
-            keys = (Set<String>) refreshEndpoint.refresh();
+            refreshEndpoint.refresh();
             monitorConfigurationProperties.updateThresholds(healthMetrics);
         } catch (InvocationTargetException | IllegalAccessException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(GENERAL_EXCEPTION_ERROR, STATUS_ERROR));
         }
-        return ResponseEntity.status(HttpStatus.OK).body(new Response(keys.toString(), STATUS_SUCCESS));
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(HEALTH_INDICATORS_THRESHOLD_UPDATE_SUCCESS, STATUS_SUCCESS));
     }
 
     private void updateHealthMetricsSnapshot() {
