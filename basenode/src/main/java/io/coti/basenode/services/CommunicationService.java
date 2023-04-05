@@ -41,6 +41,34 @@ public class CommunicationService implements ICommunicationService {
     }
 
     @Override
+    public void reconnectSender(String receivingFullAddress, NodeType nodeType) {
+        if (zeroMQSender.isRecentlyConnectedToNode(receivingFullAddress)) {
+            return;
+        }
+        int numberOfReconnectAttempts = 0;
+        do {
+            if (zeroMQSender.isConnectedToNode(receivingFullAddress)) {
+                zeroMQSender.disconnectFromNode(receivingFullAddress, nodeType);
+            }
+            zeroMQSender.connectToNode(receivingFullAddress, nodeType);
+            waitUntilConnected(receivingFullAddress);
+            numberOfReconnectAttempts++;
+        } while (numberOfReconnectAttempts < 3 && !zeroMQSender.isConnectedToNode(receivingFullAddress));
+    }
+
+    private static void waitUntilConnected(String receivingFullAddress) {
+        int numberOfChecks = 0;
+        while (numberOfChecks < 25 && !zeroMQSender.isConnectedToNode(receivingFullAddress)) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            numberOfChecks++;
+        }
+    }
+
+    @Override
     public void addSubscription(String propagationServerAddress, NodeType publisherNodeType) {
         propagationSubscriber.connectAndSubscribeToServer(propagationServerAddress, publisherNodeType);
     }

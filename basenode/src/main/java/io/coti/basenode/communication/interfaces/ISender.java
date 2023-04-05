@@ -7,6 +7,8 @@ public interface ISender {
 
     void connectToNode(String receivingServerAddress, NodeType nodeType);
 
+    boolean isRecentlyConnectedToNode(String receivingAddress);
+
     void initMonitor();
 
     <T extends IPropagatable> void send(T toSend, String address);
@@ -14,4 +16,6 @@ public interface ISender {
     void disconnectFromNode(String receivingFullAddress, NodeType nodeType);
 
     void shutdown();
+
+    boolean isConnectedToNode(String receivingAddress);
 }

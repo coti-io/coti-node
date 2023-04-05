@@ -1,6 +1,7 @@
 package io.coti.basenode.services;
 
 import io.coti.basenode.communication.ZeroMQSubscriberQueue;
+import io.coti.basenode.communication.ZeroMQUtils;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutputType;
 import io.coti.basenode.data.HealthState;
@@ -8,6 +9,7 @@ import io.coti.basenode.data.MetricClass;
 import io.coti.basenode.services.interfaces.IHealthMetric;
 import io.coti.basenode.utilities.MemoryUtils;
 import lombok.Getter;
+import org.zeromq.SocketType;
 
 import java.time.Instant;
 
@@ -221,6 +223,21 @@ public enum HealthMetric implements IHealthMetric {
             return "The number of postponed transactions due to missing parents.";
         }
     },
+    RESEND_UNCONFIRMED_RETRIES_COUNTER(RESEND_UNCONFIRMED_RETRIES_COUNTER_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 3, false, HealthMetricOutputType.EXTERNAL) {
+        public void doSnapshot() {
+            baseDoSnapshot(this, (long) transactionPropagationCheckService.getMaximumNumberOfRetries());
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            calculateHealthValueMetricState(this);
+        }
+
+        @Override
+        public String getDescription() {
+            return "Retries counter for resend unconfirmed transactions";
+        }
+    },
     WEB_SOCKET_MESSAGES_QUEUE(WEB_SOCKET_MESSAGES_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 1000, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) webSocketMessageService.getMessageQueueSize());
@@ -370,6 +387,21 @@ public enum HealthMetric implements IHealthMetric {
         @Override
         public String getDescription() {
             return "The number of direct messages received via ZeroMQ.";
+        }
+    },
+    ZERO_MQ_SOCKET_DISCONNECTS(ZERO_MQ_SOCKET_DISCONNECTS_LABEL, MetricClass.QUEUE_METRIC, 10, 20, false, HealthMetricOutputType.EXTERNAL) {
+        public void doSnapshot() {
+            baseDoSnapshot(this, (long) ZeroMQUtils.getSocketDisconnects(SocketType.ROUTER, true));
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            calculateHealthValueMetricState(this);
+        }
+
+        @Override
+        public String getDescription() {
+            return "Number of times (per second) that the ZeroMQ Dealer (client) disconnected from Router (server)";
         }
     },
     PROPAGATION_PUBLISHER_QUEUE_SIZE(PROPAGATION_PUBLISHER_QUEUE_SIZE_LABEL, MetricClass.QUEUE_METRIC, 100, 0, false, HealthMetricOutputType.EXTERNAL) {

@@ -29,4 +29,6 @@ public interface ITransactionPropagationCheckService {
     void addUnconfirmedTransactionDSPVote(TransactionDspVote transactionDspVote);
 
     void addPropagatedUnconfirmedTransaction(Hash hash);
+
+    int getMaximumNumberOfRetries();
 }
