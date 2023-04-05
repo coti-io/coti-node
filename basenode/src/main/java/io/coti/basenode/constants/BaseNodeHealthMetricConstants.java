@@ -18,6 +18,7 @@ public class BaseNodeHealthMetricConstants {
     public static final String NUMBER_OF_TIMES_TCC_NOT_CHANGED_LABEL = "NumberOfTimesTrustScoreNotChanged";
     public static final String WAITING_MISSING_TRANSACTION_INDEXES_LABEL = "WaitingMissingTransactionIndexes";
     public static final String TOTAL_POSTPONED_TRANSACTIONS_LABEL = "PostponedTransactions";
+    public static final String RESEND_UNCONFIRMED_RETRIES_COUNTER_LABEL = "ResendUnconfirmedRetriesCounter";
     public static final String REJECTED_TRANSACTIONS_LABEL = "RejectedTransactions";
     public static final String WEB_SOCKET_MESSAGES_QUEUE_LABEL = "WebSocketMessagesQueue";
     public static final String TCC_CONFIRMATION_QUEUE_LABEL = "TccConfirmationQueueSize";

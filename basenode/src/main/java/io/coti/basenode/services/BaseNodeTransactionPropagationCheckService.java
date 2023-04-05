@@ -61,4 +61,13 @@ public class BaseNodeTransactionPropagationCheckService implements ITransactionP
     public void addPropagatedUnconfirmedTransaction(Hash hash) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public int getMaximumNumberOfRetries() {
+        return 0;
+    }
+
+    protected void removeUnconfirmedReceivedTransactionsFromHashesMap(Hash transactionHash) {
+        unconfirmedReceivedTransactionHashesMap.remove(transactionHash);
+    }
 }

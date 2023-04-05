@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.coti.dspnode.services.NodeServiceManager.*;
 
@@ -139,14 +139,17 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
                 .stream()
                 .filter(entry -> entry.getValue().getCreatedTime().plusSeconds(PERIOD_IN_SECONDS_BEFORE_PROPAGATE_AGAIN_DSP_NODE).isBefore(Instant.now()))
                 .forEach(this::sendUnconfirmedReceivedTransactionsDSP);
-        List<Hash> unconfirmedTransactionsToRemove = unconfirmedReceivedTransactionHashesMap
-                .entrySet()
-                .stream()
-                .filter(entry -> ((UnconfirmedReceivedTransactionHashDspNodeData) entry.getValue()).getRetries() <= 0)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
+        List<Hash> unconfirmedTransactionsToRemove = new ArrayList<>();
+        List<Hash> unconfirmedTransactionsToRemoveFromMap = new ArrayList<>();
+        unconfirmedReceivedTransactionHashesMap.forEach((key, value) -> {
+            if (((UnconfirmedReceivedTransactionHashDspNodeData) value).getRetries() < 0) {
+                unconfirmedTransactionsToRemove.add(key);
+            } else if (((UnconfirmedReceivedTransactionHashDspNodeData) value).getRetries() == 0) {
+                unconfirmedTransactionsToRemoveFromMap.add(key);
+            }
+        });
         unconfirmedTransactionsToRemove.forEach(this::removeConfirmedReceiptTransaction);
+        unconfirmedTransactionsToRemoveFromMap.forEach(this::removeUnconfirmedReceivedTransactionsFromHashesMap);
     }
 
     private void sendUnconfirmedReceivedTransactionsDSP(Map.Entry<Hash, UnconfirmedReceivedTransactionHashData> entry) {
@@ -157,7 +160,7 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
             synchronized (transactionHashLockData.addLockToLockMap(transactionHash)) {
                 TransactionData transactionData = transactions.getByHash(transactionHash);
                 if (transactionData == null) {
-                    unconfirmedReceivedTransactionHashDspNodeData.setRetries(0);
+                    unconfirmedReceivedTransactionHashDspNodeData.setRetries(-1);
                 } else {
                     sendUnconfirmedReceivedTransactionsDSP(transactionData, unconfirmedReceivedTransactionHashDspNodeData);
                     unconfirmedReceivedTransactionHashDspNodeData.setRetries(unconfirmedReceivedTransactionHashDspNodeData.getRetries() - 1);
@@ -194,5 +197,23 @@ public class TransactionPropagationCheckService extends BaseNodeTransactionPropa
             return;
         }
         communicationService.reconnectSender(zeroSpendReceivingAddress, NodeType.ZeroSpendServer);
+    }
+
+    @Override
+    public int getMaximumNumberOfRetries() {
+        AtomicInteger maxRetries = new AtomicInteger(NUMBER_OF_RETRIES_DSP_NODE);
+        unconfirmedReceivedTransactionHashes.forEach(unconfirmedReceivedTransaction -> {
+            UnconfirmedReceivedTransactionHashDspNodeData unconfirmedReceivedTransactionHashDspNodeData =
+                    (UnconfirmedReceivedTransactionHashDspNodeData) unconfirmedReceivedTransactionHashesMap.get(unconfirmedReceivedTransaction.getHash());
+            if (unconfirmedReceivedTransactionHashDspNodeData == null) {
+                maxRetries.set(0);
+            } else {
+                int retries = unconfirmedReceivedTransactionHashDspNodeData.getRetries();
+                if (retries >= 0 && retries < maxRetries.get()) {
+                    maxRetries.set(retries);
+                }
+            }
+        });
+        return NUMBER_OF_RETRIES_DSP_NODE - maxRetries.get();
     }
 }

@@ -223,6 +223,21 @@ public enum HealthMetric implements IHealthMetric {
             return "The number of postponed transactions due to missing parents.";
         }
     },
+    RESEND_UNCONFIRMED_RETRIES_COUNTER(RESEND_UNCONFIRMED_RETRIES_COUNTER_LABEL, MetricClass.TRANSACTIONS_METRIC, 1, 3, false, HealthMetricOutputType.EXTERNAL) {
+        public void doSnapshot() {
+            baseDoSnapshot(this, (long) transactionPropagationCheckService.getMaximumNumberOfRetries());
+        }
+
+        @Override
+        public void calculateHealthMetric() {
+            calculateHealthValueMetricState(this);
+        }
+
+        @Override
+        public String getDescription() {
+            return "Retries counter for resend unconfirmed transactions";
+        }
+    },
     WEB_SOCKET_MESSAGES_QUEUE(WEB_SOCKET_MESSAGES_QUEUE_LABEL, MetricClass.QUEUE_METRIC, 100, 1000, false, HealthMetricOutputType.ALL) {
         public void doSnapshot() {
             baseDoSnapshot(this, (long) webSocketMessageService.getMessageQueueSize());
