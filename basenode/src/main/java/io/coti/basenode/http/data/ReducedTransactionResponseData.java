@@ -14,6 +14,9 @@ public class ReducedTransactionResponseData implements ITransactionResponseData 
     private boolean sent;
     private boolean received;
 
+    public ReducedTransactionResponseData() {
+    }
+
     public ReducedTransactionResponseData(TransactionData transactionData, Hash addressHash) {
         hash = transactionData.getHash().toHexString();
         attachmentTime = transactionData.getAttachmentTime();

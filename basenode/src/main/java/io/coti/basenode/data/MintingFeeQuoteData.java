@@ -26,7 +26,7 @@ public class MintingFeeQuoteData implements ISignable, ISignValidatable, Seriali
     @NotNull
     private @Valid SignatureData signatureData;
 
-    private MintingFeeQuoteData() {
+    public MintingFeeQuoteData() {
     }
 
     public MintingFeeQuoteData(Hash currencyHash, Instant createTime, BigDecimal mintingAmount, BigDecimal mintingFee) {

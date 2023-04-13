@@ -27,7 +27,7 @@ public class TokenMintingServiceData implements ITokenServiceData, ISignValidata
     @NotNull
     private @Valid SignatureData signature;
 
-    private TokenMintingServiceData() {
+    public TokenMintingServiceData() {
     }
 
     @Override

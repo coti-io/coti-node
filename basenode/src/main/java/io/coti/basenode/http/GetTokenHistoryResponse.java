@@ -12,6 +12,10 @@ public class GetTokenHistoryResponse extends BaseResponse {
 
     private Set<TransactionResponseData> transactions;
 
+    public GetTokenHistoryResponse() {
+        super();
+    }
+
     public GetTokenHistoryResponse(Set<TransactionResponseData> transactions) {
         this.transactions = transactions;
     }

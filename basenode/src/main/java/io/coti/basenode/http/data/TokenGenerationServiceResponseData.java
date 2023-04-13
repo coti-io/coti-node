@@ -14,6 +14,9 @@ public class TokenGenerationServiceResponseData implements ITransactionResponseD
     private CurrencyTypeResponseData currencyTypeData;
     private BigDecimal feeAmount;
 
+    public TokenGenerationServiceResponseData() {
+    }
+
     public TokenGenerationServiceResponseData(BaseTransactionData baseTransactionData) {
         originatorCurrencyData = new OriginatorCurrencyResponseData(((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getOriginatorCurrencyData());
         currencyTypeData = new CurrencyTypeResponseData(((TokenGenerationFeeBaseTransactionData) baseTransactionData).getServiceData().getCurrencyTypeData());

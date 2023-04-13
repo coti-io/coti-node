@@ -10,6 +10,10 @@ public class ExtendedTransactionResponseData extends TransactionResponseData {
 
     private String nodeHash;
 
+    public ExtendedTransactionResponseData() {
+        super();
+    }
+
     public ExtendedTransactionResponseData(TransactionData transactionData) {
         super(transactionData);
         this.nodeHash = transactionData.getNodeHash().toString();

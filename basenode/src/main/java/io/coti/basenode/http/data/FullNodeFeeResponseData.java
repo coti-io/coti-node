@@ -8,6 +8,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class FullNodeFeeResponseData extends OutputBaseTransactionResponseData {
 
+    public FullNodeFeeResponseData() {
+        super();
+    }
+
     public FullNodeFeeResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
     }

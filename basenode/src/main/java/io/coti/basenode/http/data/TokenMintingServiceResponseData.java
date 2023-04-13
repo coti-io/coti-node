@@ -21,6 +21,9 @@ public class TokenMintingServiceResponseData implements ITransactionResponseData
     private String signerHash;
     private SignatureData signature;
 
+    public TokenMintingServiceResponseData() {
+    }
+
     public TokenMintingServiceResponseData(BaseTransactionData baseTransactionData) {
         TokenMintingServiceData tokenMintingServiceData = ((TokenMintingFeeBaseTransactionData) baseTransactionData).getServiceData();
         this.setMintingAmount(tokenMintingServiceData.getMintingAmount());
