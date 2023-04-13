@@ -105,4 +105,16 @@ public class BaseNodeAdminController {
     public ResponseEntity<IResponse> deleteFeeValue(@Valid @RequestBody DeleteTokenFeeRequest deleteTokenFeeRequest) {
         return nodeFeesService.deleteFeeValue(deleteTokenFeeRequest);
     }
+
+    @Operation(summary = "Refresh Health Indicators Thresholds", operationId = "refreshThresholds")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Health indicators thresholds successfully updated",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Response.class))}),
+            @ApiResponse(responseCode = "500", description = "Server error while updating thresholds",
+                    content = @Content)})
+    @GetMapping(path = "/health/threshold/refresh")
+    public ResponseEntity<IResponse> refreshThresholds() {
+        return monitorService.refreshThresholds();
+    }
 }

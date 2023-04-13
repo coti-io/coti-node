@@ -3,11 +3,15 @@ package io.coti.basenode.services;
 import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.data.HealthMetricOutput;
 import io.coti.basenode.data.HealthState;
+import io.coti.basenode.http.Response;
+import io.coti.basenode.http.interfaces.IResponse;
 import io.coti.basenode.services.interfaces.IMonitorService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +23,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static io.coti.basenode.services.BaseNodeServiceManager.dbRecoveryService;
-import static io.coti.basenode.services.BaseNodeServiceManager.monitorConfigurationProperties;
+import static io.coti.basenode.http.BaseNodeHttpStringConstants.*;
+import static io.coti.basenode.services.BaseNodeServiceManager.*;
 
 @Slf4j
 @Service
@@ -70,6 +74,17 @@ public class BaseNodeMonitorService implements IMonitorService {
         } catch (InvocationTargetException | IllegalAccessException e) {
             log.error(e.toString());
         }
+    }
+
+    @Override
+    public ResponseEntity<IResponse> refreshThresholds() {
+        try {
+            refreshEndpoint.refresh();
+            monitorConfigurationProperties.updateThresholds(healthMetrics);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(GENERAL_EXCEPTION_ERROR, STATUS_ERROR));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(new Response(HEALTH_INDICATORS_THRESHOLD_UPDATE_SUCCESS, STATUS_SUCCESS));
     }
 
     private void updateHealthMetricsSnapshot() {

@@ -70,6 +70,8 @@ public class BaseNodeHttpStringConstants {
 
     public static final String TOKEN_FEE_NOT_FOUND = "The specified token symbol not found in Fee List";
 
+    public static final String HEALTH_INDICATORS_THRESHOLD_UPDATE_SUCCESS = "Health indicators thresholds successfully updated";
+
     protected BaseNodeHttpStringConstants() {
 
     }
