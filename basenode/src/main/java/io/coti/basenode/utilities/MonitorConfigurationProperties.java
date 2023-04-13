@@ -4,6 +4,7 @@ import io.coti.basenode.data.HealthMetricData;
 import io.coti.basenode.services.HealthMetric;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -12,7 +13,11 @@ import java.util.InputMismatchException;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.SET_CRITICAL_THRESHOLD;
+import static io.coti.basenode.constants.BaseNodeHealthMetricConstants.SET_WARNING_THRESHOLD;
+
 @ConfigurationProperties(prefix = "monitor")
+@RefreshScope
 public class MonitorConfigurationProperties {
 
     @Setter
@@ -42,7 +47,7 @@ public class MonitorConfigurationProperties {
     }
 
     public void updateThresholds(Map<HealthMetric, HealthMetricData> healthMetrics) throws InvocationTargetException, IllegalAccessException {
-        setThresholdValues(warning, healthMetrics, "setWarningThreshold");
-        setThresholdValues(critical, healthMetrics, "setCriticalThreshold");
+        setThresholdValues(warning, healthMetrics, SET_WARNING_THRESHOLD);
+        setThresholdValues(critical, healthMetrics, SET_CRITICAL_THRESHOLD);
     }
 }
