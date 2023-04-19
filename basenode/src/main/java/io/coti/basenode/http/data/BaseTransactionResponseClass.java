@@ -20,4 +20,13 @@ public enum BaseTransactionResponseClass {
     public Class<? extends BaseTransactionResponseData> getResponseClass() {
         return responseClass;
     }
+
+    public static BaseTransactionResponseClass getName(Class<?> baseTransactionClass) {
+        for (BaseTransactionResponseClass name : values()) {
+            if (name.getResponseClass() == baseTransactionClass) {
+                return name;
+            }
+        }
+        return null;
+    }
 }

@@ -17,6 +17,10 @@ public class NetworkFeeResponseData extends OutputBaseTransactionResponseData {
     private BigDecimal reducedAmount;
     private List<TrustScoreNodeResultResponseData> networkFeeTrustScoreNodeResult;
 
+    public NetworkFeeResponseData() {
+        super();
+    }
+
     public NetworkFeeResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
 

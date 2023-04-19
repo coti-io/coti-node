@@ -34,6 +34,9 @@ public class TokenResponseData implements IResponseData {
     private BigDecimal mintedAmount;
     private BigDecimal mintableAmount;
 
+    public TokenResponseData() {
+    }
+
     public TokenResponseData(CurrencyData token) {
         this.currencyName = token.getName();
         this.currencySymbol = token.getSymbol();

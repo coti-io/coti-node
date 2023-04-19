@@ -1,6 +1,8 @@
 package io.coti.basenode.http.data;
 
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import io.coti.basenode.data.BaseTransactionData;
 import io.coti.basenode.data.BaseTransactionName;
 import io.coti.basenode.http.data.interfaces.IResponseData;
@@ -10,6 +12,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, property = "name")
+@JsonTypeIdResolver(BaseTransactionResponseDataResolver.class)
 public abstract class BaseTransactionResponseData implements IResponseData {
 
     private String hash;

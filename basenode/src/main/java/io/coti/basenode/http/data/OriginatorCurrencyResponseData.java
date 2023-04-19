@@ -18,6 +18,9 @@ public class OriginatorCurrencyResponseData implements ITransactionResponseData 
     protected SignatureData originatorSignature;
     private String description;
 
+    public OriginatorCurrencyResponseData() {
+    }
+
     public OriginatorCurrencyResponseData(OriginatorCurrencyData originatorCurrencyData) {
         this.setName(originatorCurrencyData.getName());
         this.setSymbol(originatorCurrencyData.getSymbol());

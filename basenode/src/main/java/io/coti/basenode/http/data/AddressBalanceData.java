@@ -11,6 +11,9 @@ public class AddressBalanceData implements Serializable {
     private BigDecimal addressBalance;
     private BigDecimal addressPreBalance;
 
+    public AddressBalanceData() {
+    }
+
     public AddressBalanceData(BigDecimal addressBalance, BigDecimal addressPreBalance) {
         this.addressBalance = addressBalance;
         this.addressPreBalance = addressPreBalance;

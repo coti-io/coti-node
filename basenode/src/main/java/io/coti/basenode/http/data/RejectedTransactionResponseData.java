@@ -13,6 +13,10 @@ public class RejectedTransactionResponseData extends ExtendedTransactionResponse
     private Instant rejectionTime;
     private String rejectionReasonDescription;
 
+    public RejectedTransactionResponseData() {
+        super();
+    }
+
     public RejectedTransactionResponseData(RejectedTransactionData rejectedTransaction) {
         super(rejectedTransaction.getTransactionData());
         this.rejectionTime = rejectedTransaction.getRejectionTime();

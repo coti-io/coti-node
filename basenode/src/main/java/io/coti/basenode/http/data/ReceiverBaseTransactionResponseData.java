@@ -11,6 +11,10 @@ public class ReceiverBaseTransactionResponseData extends OutputBaseTransactionRe
 
     private String receiverDescription;
 
+    public ReceiverBaseTransactionResponseData() {
+        super();
+    }
+
     public ReceiverBaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
 

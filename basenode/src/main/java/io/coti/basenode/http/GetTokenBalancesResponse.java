@@ -13,6 +13,10 @@ public class GetTokenBalancesResponse extends BaseResponse {
 
     private Map<Hash, Map<Hash, AddressBalanceData>> tokenBalances;
 
+    public GetTokenBalancesResponse() {
+        super();
+    }
+
     public GetTokenBalancesResponse(Map<Hash, Map<Hash, AddressBalanceData>> tokenBalances) {
         this.tokenBalances = tokenBalances;
     }

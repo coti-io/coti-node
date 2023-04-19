@@ -11,6 +11,10 @@ public class GetUserTrustScoreResponse extends BaseResponse {
     private double trustScore;
     private String userType;
 
+    public GetUserTrustScoreResponse() {
+        super();
+    }
+
     public GetUserTrustScoreResponse(String userHash, double trustScore, String userType) {
         this.userHash = userHash;
         this.trustScore = trustScore;
