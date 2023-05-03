@@ -13,14 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.web3j.abi.datatypes.Bool;
+import sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Service
 @Slf4j
@@ -41,8 +40,10 @@ public class HealthCheckService implements IHealthCheckService {
     private final Map<Hash, Thread> hashToThreadMap = new ConcurrentHashMap<>();
     private final LockData nodeHashLockData = new LockData();
 
+    private ExecutorService executorService;
     @Override
     public void init() {
+        executorService = Executors.newFixedThreadPool(20);
         nodesHealthCheck();
         initRestTemplate();
     }
@@ -146,11 +147,17 @@ public class HealthCheckService implements IHealthCheckService {
         while (!Thread.currentThread().isInterrupted() && !terminateThread) {
             try {
                 Thread.sleep(5000);
-                NetworkNodeData networkNodeDataToRemove = checkAndDeleteNodeIfNeeded(networkNodeData);
-                if (networkNodeDataToRemove != null) {
-                    networkService.removeNode(networkNodeDataToRemove);
-                    nodeManagementService.propagateNetworkChanges();
-                    hashToThreadMap.remove(nodeHash);
+                Future<Boolean> future = executorService.submit( () -> {
+                    NetworkNodeData networkNodeDataToRemove = checkAndDeleteNodeIfNeeded(networkNodeData);
+                    if (networkNodeDataToRemove != null) {
+                        networkService.removeNode(networkNodeDataToRemove);
+                        nodeManagementService.propagateNetworkChanges();
+                        hashToThreadMap.remove(nodeHash);
+                        return Boolean.FALSE;
+                    }
+                    return Boolean.TRUE;
+                });
+                if (future.get().equals(Boolean.FALSE)) {
                     terminateThread = true;
                 }
             } catch (InterruptedException e) {
@@ -170,6 +177,7 @@ public class HealthCheckService implements IHealthCheckService {
     public void shutdown() {
         log.info("Shutting down {}", this.getClass().getSimpleName());
         try {
+            executorService.awaitTermination(10, TimeUnit.SECONDS);
             hashToThreadMap.forEach((nodeHash, thread) -> {
                 thread.interrupt();
                 try {
