@@ -49,8 +49,8 @@ public class HealthCheckService implements IHealthCheckService {
 
     private void initRestTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(CONNECT_TIMEOUT);
-        factory.setReadTimeout(READ_TIMEOUT);
+//        factory.setConnectTimeout(CONNECT_TIMEOUT);
+//        factory.setReadTimeout(READ_TIMEOUT);
         restTemplate = new RestTemplate(factory);
     }
 
