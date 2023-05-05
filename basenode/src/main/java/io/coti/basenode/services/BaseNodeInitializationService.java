@@ -27,6 +27,8 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PreDestroy;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -133,6 +135,7 @@ public abstract class BaseNodeInitializationService {
     }
 
     public void initServices() {
+        initLog();
         awsService.init();
         dbRecoveryService.init();
         addressService.init();
@@ -350,6 +353,21 @@ public abstract class BaseNodeInitializationService {
     public void shutdown() {
         Thread.currentThread().setName("PreDestroy");
         shutDownService.shutdown();
+    }
+    private void initLog() {
+        System.setErr(new PrintStream(new OutputStream() {
+            StringBuilder sb = new StringBuilder();
+
+            @Override
+            public void write(int b) {
+                if (b == '\n') {
+                    log.error("system.err: ".concat(sb.toString()));
+                    sb = new StringBuilder();
+                } else {
+                    sb.append((char) b);
+                }
+            }
+        }));
     }
 
 }
