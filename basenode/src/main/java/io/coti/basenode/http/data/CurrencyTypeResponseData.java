@@ -20,6 +20,9 @@ public class CurrencyTypeResponseData implements ITransactionResponseData {
     protected String signerHash;
     protected SignatureData signature;
 
+    public CurrencyTypeResponseData() {
+    }
+
     public CurrencyTypeResponseData(CurrencyTypeData currencyTypeData) {
 
         this.setCurrencyType(currencyTypeData.getCurrencyType());

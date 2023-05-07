@@ -12,6 +12,10 @@ public class EventInputBaseTransactionResponseData extends BaseTransactionRespon
     protected String event;
     protected boolean hardFork;
 
+    public EventInputBaseTransactionResponseData() {
+        super();
+    }
+
     public EventInputBaseTransactionResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
         EventInputBaseTransactionData eventInputBaseTransactionData = (EventInputBaseTransactionData) baseTransactionData;

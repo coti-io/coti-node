@@ -17,6 +17,10 @@ public class RollingReserveResponseData extends OutputBaseTransactionResponseDat
     private BigDecimal reducedAmount;
     private List<TrustScoreNodeResultResponseData> rollingReserveTrustScoreNodeResult;
 
+    public RollingReserveResponseData() {
+        super();
+    }
+
     public RollingReserveResponseData(BaseTransactionData baseTransactionData) {
         super(baseTransactionData);
 

@@ -2,6 +2,7 @@ package io.coti.basenode.http;
 
 import io.coti.basenode.data.Hash;
 import io.coti.basenode.http.data.TimeOrder;
+import io.coti.basenode.http.interfaces.IRequest;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -11,7 +12,7 @@ import java.time.Instant;
 import java.util.Set;
 
 @Data
-public class GetAddressTransactionBatchByTimestampRequest {
+public class GetAddressTransactionBatchByTimestampRequest implements IRequest {
 
     @NotNull(message = "Address Hashes must not be blank")
     private Set<@Valid Hash> addresses;
