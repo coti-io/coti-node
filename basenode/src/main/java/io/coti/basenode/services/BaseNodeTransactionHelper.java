@@ -279,10 +279,16 @@ public class BaseNodeTransactionHelper implements ITransactionHelper {
             log.error("Reverting minting transaction: {}", transactionData.getHash());
             mintingService.revertMintingAllocation(transactionData);
         }
+        if (transactionData.getType() == TransactionType.TokenGeneration) {
+            log.error("Reverting token generation transaction: {}", transactionData.getHash());
+            currencyService.revertCurrencyUnconfirmedRecord(transactionData);
+        }
     }
 
     private void revertSavedInDB(TransactionData transactionData) {
         log.error("Reverting transaction saved in DB: {}", transactionData.getHash());
+        transactions.deleteByHash(transactionData.getHash());
+        totalTransactions.decrementAndGet();
     }
 
     private void revertPreBalance(TransactionData transactionData) {
